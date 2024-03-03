@@ -23,8 +23,8 @@ kwargs_sample_realization = {'log10_sigma_sub': ['UNIFORM',-2.5,-1.0],
 kwargs_sample_source = {'source_size_pc': ['UNIFORM', 1, 10]}
 kwargs_sample_macro_fixed = {
     'satellite_1_theta_E': ['UNIFORM', 0.05, 0.15], # 1 pixel in imaging fit, 0.11 arcsec / pixel 0.5 pixel to 1.5 pixel range
-    'satellite_1_x': ['GAUSSIAN', -0.03660684072738696, 0.030],
-    'satellite_1_y': ['GAUSSIAN', 0.24602286780288063, 0.030],
+    'satellite_1_x': ['GAUSSIAN', 1.19838485283687, 0.030],
+    'satellite_1_y': ['GAUSSIAN', 0.2397138170015728, 0.030],
     # 'a4_a': ['FIXED', data_class.a4a_true],
     # 'a3_a': ['FIXED', data_class.a3a_true],
      #'delta_phi_m3': ['FIXED', data_class.delta_phi_m3_true],
