@@ -22,6 +22,15 @@ class _WFI2033ModelBase(ModelBase):
                 elif param_fixed == 'satellite_1_y':
                     kwargs_lens_fixed[2]['center_y'] = macromodel_samples_fixed[param_fixed]
                     kwargs_lens_init[2]['center_y'] = macromodel_samples_fixed[param_fixed]
+                elif param_fixed == 'satellite_2_theta_E':
+                    kwargs_lens_fixed[3]['theta_E'] = macromodel_samples_fixed[param_fixed]
+                    kwargs_lens_init[3]['theta_E'] = macromodel_samples_fixed[param_fixed]
+                elif param_fixed == 'satellite_2_x':
+                    kwargs_lens_fixed[3]['center_x'] = macromodel_samples_fixed[param_fixed]
+                    kwargs_lens_init[3]['center_x'] = macromodel_samples_fixed[param_fixed]
+                elif param_fixed == 'satellite_2_y':
+                    kwargs_lens_fixed[3]['center_y'] = macromodel_samples_fixed[param_fixed]
+                    kwargs_lens_init[3]['center_y'] = macromodel_samples_fixed[param_fixed]
                 else:
                     kwargs_lens_fixed[0][param_fixed] = macromodel_samples_fixed[param_fixed]
                     kwargs_lens_init[0][param_fixed] = macromodel_samples_fixed[param_fixed]
@@ -138,7 +147,7 @@ class WFI2033ModelEPLM3M4ShearObservedConvention(_WFI2033ModelBase):
                              {'theta_E': 0.8, 'center_x': -4.0, 'center_y': -0.08}]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens,
                                self._data.z_lens, 0.745]
-        index_lens_split = [0, 1, 2, 3]
+        index_lens_split = [0, 1, 2]
         if kwargs_lens_macro_init is not None:
             for i in range(0, len(kwargs_lens_macro_init)):
                 for param_name in kwargs_lens_macro_init[i].keys():
