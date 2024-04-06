@@ -59,6 +59,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
 
     filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, filename_acceptance_ratio, \
     filename_macromodel_samples = filenames(output_path, job_index)
+    filename_mags2 = output_path + 'job_' + str(job_index) + '/fluxes2.txt'
+
     # if the required directories do not exist, create them
     if os.path.exists(output_path) is False:
         proc = subprocess.Popen(['mkdir', output_path])
@@ -92,6 +94,10 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
         print('\nSIMULATION ALREADY FINISHED.')
         return
 
+    if 'source_size_pc_2' in kwargs_sample_source:
+        dual_flag = True
+    else:
+        dual_flag = False
     # Initialize stuff for the inference
     parameter_array = None
     mags_out = None
@@ -122,15 +128,27 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
         random_seed = random_seed_init + seed_counter
         if random_seed > 4294967295:
             random_seed = random_seed - 4294967296
-
-        magnifications, images, realization_samples, source_samples, macromodel_samples, macromodel_samples_fixed, \
-        logL_imaging_data, fitting_sequence, stat, flux_ratio_likelihood_weight, bic, param_names_realization, param_names_source, param_names_macro, \
-        param_names_macro_fixed, _, _, _ = forward_model_single_iteration(data_class, model, preset_model_name, kwargs_sample_realization,
-                                            kwargs_sample_source, kwargs_sample_fixed_macromodel, log_mlow_mass_sheets,
-                                            rescale_grid_size, rescale_grid_resolution, image_data_grid_resolution_rescale,
-                                            verbose, random_seed, n_pso_particles, n_pso_iterations, num_threads,
-                                            n_max_shapelets, astrometric_uncertainty, resample_kwargs_lens, kde_sampler,
-                                                                    use_imaging_data, fitting_sequence_kwargs, test_mode)
+        
+        if dual_flag:
+            # RK: added mag2 unpacking
+            magnifications, magnifications2, images, realization_samples, source_samples, macromodel_samples, macromodel_samples_fixed, \
+            logL_imaging_data, fitting_sequence, stat, stat2, flux_ratio_likelihood_weight, flux_ratio_likelihood_weigh2, bic, \
+            param_names_realization, param_names_source, param_names_macro, \
+            param_names_macro_fixed, _, _, _ = forward_model_single_iteration(data_class, model, preset_model_name, kwargs_sample_realization,
+                                                kwargs_sample_source, kwargs_sample_fixed_macromodel, log_mlow_mass_sheets,
+                                                rescale_grid_size, rescale_grid_resolution, image_data_grid_resolution_rescale,
+                                                verbose, random_seed, n_pso_particles, n_pso_iterations, num_threads,
+                                                n_max_shapelets, astrometric_uncertainty, resample_kwargs_lens, kde_sampler,
+                                                                        use_imaging_data, fitting_sequence_kwargs, test_mode)
+        else: 
+            magnifications, images, realization_samples, source_samples, macromodel_samples, macromodel_samples_fixed, \
+            logL_imaging_data, fitting_sequence, stat, flux_ratio_likelihood_weight, bic, param_names_realization, param_names_source, param_names_macro, \
+            param_names_macro_fixed, _, _, _ = forward_model_single_iteration(data_class, model, preset_model_name, kwargs_sample_realization,
+                                                kwargs_sample_source, kwargs_sample_fixed_macromodel, log_mlow_mass_sheets,
+                                                rescale_grid_size, rescale_grid_resolution, image_data_grid_resolution_rescale,
+                                                verbose, random_seed, n_pso_particles, n_pso_iterations, num_threads,
+                                                n_max_shapelets, astrometric_uncertainty, resample_kwargs_lens, kde_sampler,
+                                                                        use_imaging_data, fitting_sequence_kwargs, test_mode)
 
         seed_counter += 1
         acceptance_rate_counter += 1
@@ -164,10 +182,15 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                 parameter_array = params
             else:
                 parameter_array = np.vstack((parameter_array, params))
+            if dual_flag:
+                if mags_out is None:
+                    mags_out2 = magnifications2
+                else:
+                    mags_out2 = np.vstack((mags_out2, magnifications2))    
             if mags_out is None:
                 mags_out = magnifications
             else:
-                mags_out = np.vstack((mags_out, magnifications))
+                mags_out = np.vstack((mags_out, magnifications))                
             if macromodel_samples_array is None:
                 macromodel_samples_array = np.array(macromodel_samples)
             else:
@@ -225,6 +248,15 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                     for col in range(0, ncols):
                         f.write(str(np.round(mags_out[row, col], 5)) + ' ')
                     f.write('\n')
+            if dual_flag:        
+                if verbose:
+                    print('writing flux ratio output to ' +filename_mags2)
+                with open(filename_mags2, 'a') as f:
+                    nrows, ncols = int(mags_out2.shape[0]), int(mags_out2.shape[1])
+                    for row in range(0, nrows):
+                        for col in range(0, ncols):
+                            f.write(str(np.round(mags_out2[row, col], 5)) + ' ')
+                        f.write('\n')        
 
             if readout_macromodel_samples:
                 if verbose:
@@ -266,6 +298,10 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     model_class = model(data_class, kde_sampler, shapelets_order=n_max_shapelets)
     realization_dict, realization_samples, realization_param_names = sample_prior(kwargs_sample_realization)
     source_dict, source_samples, source_param_names = sample_prior(kwargs_sample_source)
+    if 'source_size_pc_2' in source_dict:
+        dual_flag = True
+    else:
+        dual_flag = False
     macromodel_samples_fixed_dict, samples_macromodel_fixed, param_names_macro_fixed = sample_prior(kwargs_sample_macro_fixed)
     if 'SUBSTRUCTURE_REALIZATION' in realization_param_names:
         if verbose: print('using a user-specified dark matter realization')
@@ -394,14 +430,35 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     source_model_quasar, kwargs_source = setup_gaussian_source(source_dict['source_size_pc'],
                                                                np.mean(source_x), np.mean(source_y),
                                                                astropy_cosmo, data_class.z_source)
+    
+    
     grid_size = rescale_grid_size * auto_raytracing_grid_size(source_dict['source_size_pc'])
+
     grid_resolution = rescale_grid_resolution * auto_raytracing_grid_resolution(source_dict['source_size_pc'])
+
     magnifications, images = model_class.image_magnification_gaussian(source_model_quasar,
                                                                       kwargs_source,
                                                                       lens_model_init,
                                                                       kwargs_lens_init,
                                                                       kwargs_solution,
                                                                       grid_size, grid_resolution)
+    
+    if dual_flag:
+        #copying these lines from above but four source size 2
+        source_model_quasar2, kwargs_source2 = setup_gaussian_source(source_dict['source_size_pc_2'], #RK in the script make sure it uses source_size_pc and _2 keywords
+                                                                   np.mean(source_x), np.mean(source_y),
+                                                                   astropy_cosmo, data_class.z_source)
+        
+        grid_size2 = rescale_grid_size * auto_raytracing_grid_size(source_dict['source_size_pc_2']) #RK adding this
+        
+        grid_resolution2 = rescale_grid_resolution * auto_raytracing_grid_resolution(source_dict['source_size_pc_2'])
+
+        magnifications2, images = model_class.image_magnification_gaussian(source_model_quasar2,
+                                                                          kwargs_source2,
+                                                                          lens_model_init,
+                                                                          kwargs_lens_init,
+                                                                          kwargs_solution,
+                                                                          grid_size2, grid_resolution2)
     tend = time()
     if verbose:
         print('computed magnifications in '+str(np.round(tend - t0, 1))+' seconds')
@@ -461,12 +518,31 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     flux_ratio_likelihood_weight = flux_ratio_likelihood(data_class.magnifications, magnifications,
                                                          data_class.flux_uncertainty, data_class.uncertainty_in_fluxes,
                                                          data_class.keep_flux_ratio_index)
+    
+    if dual_flag:
+        #copying these lines from above but for magnifications2
+        #RK: no flux_ratios_data2 implemented yet
+        # it looks like the flux_ratios are never saved just printed below
+        stat2, flux_ratios2, flux_ratios_data = flux_ratio_summary_statistic(data_class.magnifications,
+                                                                           magnifications2,
+                                                                           data_class.flux_uncertainty,
+                                                                           data_class.keep_flux_ratio_index,
+                                                                           data_class.uncertainty_in_fluxes)
+        
+        # no data_class2 yet
+        flux_ratio_likelihood_weight2 = flux_ratio_likelihood(data_class.magnifications, magnifications2,
+                                                             data_class.flux_uncertainty, data_class.uncertainty_in_fluxes,
+                                                             data_class.keep_flux_ratio_index)
 
     if verbose:
         print('flux ratios data: ', flux_ratios_data)
         print('flux ratios model: ', flux_ratios)
         print('statistic: ', stat)
         print('flux_ratio_likelihood_weight', flux_ratio_likelihood_weight)
+        if dual_flag:
+            print('flux ratios model 2: ', flux_ratios2)
+            print('statistic2: ', stat2)
+            print('flux_ratio_likelihood_weight2', flux_ratio_likelihood_weight2)
         if use_imaging_data:
             print('BIC: ', bic)
     if use_imaging_data:
@@ -542,9 +618,15 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         modelPlot.substructure_plot(band_index=0, **kwargs_plot)
         plt.show()
         a=input('')
-
-    return magnifications, images, realization_samples, source_samples, samples_macromodel, samples_macromodel_fixed, \
-           logL_imaging_data, fitting_sequence, \
-           stat, flux_ratio_likelihood_weight, bic, realization_param_names, \
-           source_param_names, param_names_macro, \
-           param_names_macro_fixed, kwargs_model_plot, lens_model, kwargs_solution
+    if dual_flag:    
+        return magnifications, magnifications2, images, realization_samples, source_samples, samples_macromodel, samples_macromodel_fixed, \
+               logL_imaging_data, fitting_sequence, \
+               stat, stat2, flux_ratio_likelihood_weight, flux_ratio_likelihood_weight2, bic, realization_param_names, \
+               source_param_names, param_names_macro, \
+               param_names_macro_fixed, kwargs_model_plot, lens_model, kwargs_solution
+    else:      
+        return magnifications, images, realization_samples, source_samples, samples_macromodel, samples_macromodel_fixed, \
+               logL_imaging_data, fitting_sequence, \
+               stat, flux_ratio_likelihood_weight, bic, realization_param_names, \
+               source_param_names, param_names_macro, \
+               param_names_macro_fixed, kwargs_model_plot, lens_model, kwargs_solution
