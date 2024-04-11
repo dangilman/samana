@@ -126,8 +126,11 @@ class WFI2033ModelEPLM3M4ShearObservedConvention(_WFI2033ModelBase):
     @property
     def prior_lens(self):
         return [[0, 'gamma', 2.0, 0.2], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005], [2, 'center_x', 0.245, 0.05],
-                [2, 'center_y', 2.037, 0.05], [2, 'theta_E', 0.05, 0.05], [3, 'center_x', -4.0, 0.1],
-                [3, 'center_y', -0.08, 0.1], [3, 'theta_E', 0.9, 0.1]]
+                [2, 'center_y', 2.037, 0.05], [2, 'theta_E', 0.05, 0.05],
+                #[3, 'center_x', -4.0, 0.1],
+                #[3, 'center_y', -0.08, 0.1],
+                #[3, 'theta_E', 0.9, 0.1]
+                ]
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
@@ -136,8 +139,8 @@ class WFI2033ModelEPLM3M4ShearObservedConvention(_WFI2033ModelBase):
         # satellite observed position: -4.0 -0.08
         # satellite inferred position from lens mdoel: -3.659, 0.00812
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR', 'SIS', 'SIS']
-        kwargs_lens_macro = [{'theta_E': 1.2363967422373972, 'gamma': 2.2217392289109097, 'e1': -0.3695749167777887,
-                              'e2': -0.1894447241763164, 'center_x': 0.008717948372366814,
+        kwargs_lens_macro = [{'theta_E': 1.2363967422373972, 'gamma': 2.2217392289109097, 'e1': -0.1,
+                              'e2': -0.2, 'center_x': 0.008717948372366814,
                               'center_y': -0.04343534216241877, 'a3_a': 0.0, 'delta_phi_m3': -0.5080741201623616,
                               'a4_a': 0.0, 'delta_phi_m4': 0.0},
                              {'gamma1': -0.01935293564446043, 'gamma2': 0.01759784833305446, 'ra_0': 0.0,

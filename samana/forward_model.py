@@ -335,6 +335,11 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         if verbose:
             print('running fitting sequence...')
             t0 = time()
+        # if index_lens_split has a different length from lens_model_list,
+        # it means we have a macromodel with deflectors at different redshifts
+        if len(index_lens_split) != len(kwargs_model['lens_model_list']):
+            raise Exception('image data reconstruction with decoupled deflectors at multiple '
+                            'lens planes is not yet implemented!')
         fitting_sequence = FittingSequence(data_class.kwargs_data_joint,
                                            kwargs_model,
                                            kwargs_constraints,
@@ -353,12 +358,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             likelihood_module = fitting_sequence.likelihoodModule
             print(likelihood_module.log_likelihood(kwargs_result, verbose=True))
         kwargs_solution = kwargs_result['kwargs_lens']
-        lens_model = LensModel(lens_model_list=kwargs_model['lens_model_list'],
-                               lens_redshift_list=kwargs_model['lens_redshift_list'],
-                               multi_plane=kwargs_model['multi_plane'],
-                               decouple_multi_plane=kwargs_model['decouple_multi_plane'],
-                               kwargs_multiplane_model=kwargs_model['kwargs_multiplane_model'],
-                               z_source=kwargs_model['z_source'])
+        kwargs_multiplane_model = kwargs_model['kwargs_multiplane_model']
 
     else:
         param_class = auto_param_class(lens_model_init.lens_model_list,
@@ -375,12 +375,25 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                              simplex_n_iterations=500
                                              )
         kwargs_solution, _ = opt.optimize(20, 50, verbose=verbose, seed=seed)
-        lens_model = LensModel(lens_model_list=kwargs_model['lens_model_list'],
-                               lens_redshift_list=kwargs_model['lens_redshift_list'],
-                               multi_plane=kwargs_model['multi_plane'],
-                               decouple_multi_plane=kwargs_model['decouple_multi_plane'],
-                               kwargs_multiplane_model=opt.kwargs_multiplane_model,
-                               z_source=kwargs_model['z_source'])
+        kwargs_multiplane_model = opt.kwargs_multiplane_model
+
+    # if index_lens_split has a different length from lens_model_list,
+    # it means we have a macromodel with deflectors at different redshifts
+    if len(index_lens_split) != len(kwargs_model['lens_model_list']):
+        lens_model_list_solution = []
+        lens_redshift_list_solution = []
+        for index_split in index_lens_split:
+            lens_model_list_solution.append(kwargs_model['lens_model_list'][index_split])
+            lens_redshift_list_solution.append(kwargs_model['lens_redshift_list'][index_split])
+        kwargs_model['lens_model_list'] = lens_model_list_solution
+        kwargs_model['lens_redshift_list'] = lens_redshift_list_solution
+
+    lens_model = LensModel(lens_model_list=kwargs_model['lens_model_list'],
+                           lens_redshift_list=kwargs_model['lens_redshift_list'] ,
+                           multi_plane=kwargs_model['multi_plane'],
+                           decouple_multi_plane=kwargs_model['decouple_multi_plane'],
+                           kwargs_multiplane_model=kwargs_multiplane_model,
+                           z_source=kwargs_model['z_source'])
 
     if verbose:
         print('\n')
@@ -391,6 +404,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
 
     source_x, source_y = lens_model.ray_shooting(data_class.x_image, data_class.y_image,
                                                  kwargs_solution)
+
     source_model_quasar, kwargs_source = setup_gaussian_source(source_dict['source_size_pc'],
                                                                np.mean(source_x), np.mean(source_y),
                                                                astropy_cosmo, data_class.z_source)
@@ -443,10 +457,10 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         bic = -1000
         logL_imaging_data = -1000
         # here we replace the lens model used to solve for the four quasar point sources with a lens model that
-        # is defined across the entrie image plane. This is useful for visualizing the kappa maps, but is not strictly
+        # is defined across the entire image plane. This is useful for visualizing the kappa maps, but is not strictly
         # necessary to run the code.
-        lens_model = LensModel(lens_model_list=kwargs_model['lens_model_list'],
-                               lens_redshift_list=kwargs_model['lens_redshift_list'],
+        lens_model = LensModel(lens_model_list=kwargs_model['lens_model_list'] ,
+                               lens_redshift_list=kwargs_model['lens_redshift_list'] ,
                                multi_plane=kwargs_model['multi_plane'],
                                decouple_multi_plane=kwargs_model['decouple_multi_plane'],
                                kwargs_multiplane_model=kwargs_model['kwargs_multiplane_model'],

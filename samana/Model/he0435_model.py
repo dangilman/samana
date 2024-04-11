@@ -134,8 +134,11 @@ class HE0435ModelEPLM3M4ShearObservedConvention(_HE0435ModelBase):
 
     @property
     def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005], [2, 'center_x', -2.6, 0.1],
-                [2, 'center_y', -3.65, 0.1], [2, 'theta_E', 0.2, 0.05]]
+        return [[0, 'gamma', 2.0, 0.2], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005],
+                #[2, 'center_x', -2.6, 0.1],
+                #[2, 'center_y', -3.65, 0.1],
+                #[2, 'theta_E', 0.25, 0.1]
+                ]
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
@@ -147,7 +150,7 @@ class HE0435ModelEPLM3M4ShearObservedConvention(_HE0435ModelBase):
                               'center_y': -0.04343534216241877, 'a3_a': 0.0, 'delta_phi_m3': -0.5080741201623616,
                               'a4_a': 0.0, 'delta_phi_m4': 0.0},
                              {'gamma1': -0.01935293564446043, 'gamma2': 0.01759784833305446, 'ra_0': 0.0,
-                              'dec_0': 0.0}, {'theta_E': 0.4082477870113892, 'center_x': -2.539340372689504,
+                              'dec_0': 0.0}, {'theta_E': 0.35, 'center_x': -2.539340372689504,
                                               'center_y': -3.592817067434825}]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens,
                                0.78]
