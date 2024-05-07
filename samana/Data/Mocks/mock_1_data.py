@@ -2,6 +2,7 @@ import numpy as np
 from samana.Data.Mocks.base import MockBase
 from samana.Data.ImageData.MockImageData.mock_1_simple import image_data as simple_image_data
 from samana.Data.ImageData.MockImageData.mock_1_cosmos import image_data as cosmos_image_data
+from samana.Data.ImageData.MockImageData.mock_1_cosmos import image_data_new as cosmos_image_data_new
 from samana.Data.ImageData.MockImageData.mock_1_cosmos_wdm import image_data as cosmos_image_data_wdm
 from samana.Data.ImageData.MockImageData.mock_1_2038 import image_data as simulated_2038_image_data
 from samana.Data.ImageData.MockImageData.mock_1_cosmos_psf3 import image_data as cosmos_image_data_psf3
@@ -51,6 +52,35 @@ class Mock1DataPSF3(Mock1Data):
                       'pixel_size': deltaPix,
                       'truncation': 5}
         return kwargs_psf
+
+class Mock1DataNew(MockBase):
+    """
+    Created with pyHalo commit d9772f6
+    Includes the Galacticus truncation model applied to CDM subhalos
+    """
+    def __init__(self, super_sample_factor=1.0, cosmos_source=True):
+
+        z_lens = 0.5
+        z_source = 2.2
+        x_image = np.array([-0.89778621,  0.74734589, -0.24599752,  0.70958954])
+        y_image = np.array([-0.6912581 ,  0.61500878,  0.84860177, -0.48576415])
+        magnifications_true = np.array([3.82156356, 7.17056328, 4.24261308, 4.23036913])
+        magnification_measurement_errors = 0.0
+        magnifications = np.array(magnifications_true) + np.array(magnification_measurement_errors)
+        astrometric_uncertainties = [0.003] * 4
+        flux_ratio_uncertainties = None
+
+        self.a3a_true = -0.004010
+        self.a4a_true = -0.004488
+        self.delta_phi_m3_true = -0.08689
+        self.delta_phi_m4_true = 0.0
+        if cosmos_source:
+            image_data = cosmos_image_data_new
+        else:
+            raise Exception('only cosmos source implemented for this class')
+        super(Mock1DataNew, self).__init__(z_lens, z_source, x_image, y_image,
+                                    magnifications, astrometric_uncertainties, flux_ratio_uncertainties,
+                                        image_data, super_sample_factor)
 
 class Mock1DataWDM(MockBase):
 
