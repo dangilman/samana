@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 from lenstronomy.Plots.model_plot import ModelPlot
 from lenstronomy.Plots import chain_plot
 from lenstronomy.LensModel.lens_model import LensModel
-from trikde.pdfs import IndependentLikelihoods
 
 __all__ = ['nmax_bic_minimize',
            'cut_on_data',
