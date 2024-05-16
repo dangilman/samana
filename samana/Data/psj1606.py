@@ -7,7 +7,7 @@ class _PSJ1606(ImagingDataBase):
     def __init__(self, x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
                  uncertainty_in_fluxes, supersample_factor=1.0):
 
-        z_lens = 0.32
+        z_lens = 0.92
         z_source = 1.7
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
@@ -34,6 +34,7 @@ class _PSJ1606(ImagingDataBase):
         likelihood_mask = np.ones_like(_xx)
         inds = np.where(np.sqrt(_xx ** 2 + _yy ** 2) >= window_size / 2)
         likelihood_mask[inds] = 0.0
+
         return likelihood_mask, likelihood_mask
 
     @property
@@ -129,20 +130,20 @@ class PSJ1606_HST(_PSJ1606):
         super(PSJ1606_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
                                           uncertainty_in_fluxes=True, supersample_factor=supersample_factor)
 
-import matplotlib.pyplot as plt
-
-xc = np.array([1.6217, -0.0005, 0.8328, 0.4948]) - 0.5
-yc = np.array([0.5890, 0.0003, -0.3170, 0.7377]) - 0.2
-fc = np.array([0.867,1.0, 0.670, 0.694])
-
-lens = PSJ1606_HST()
-flux_ratios = np.round(lens.magnifications/lens.magnifications[0],2)
-
-colors = ['k', 'r','g','m']
-for i in range(0, 4):
-    plt.scatter(lens.x_image[i], lens.y_image[i],color=colors[i])
-    plt.scatter(xc[i], yc[i], color=colors[i],marker='+')
-    plt.annotate(str(flux_ratios[i]),
-                 xy=(lens.x_image[i], lens.y_image[i]),color=colors[i])
-
-plt.show()
+# import matplotlib.pyplot as plt
+#
+# xc = np.array([1.6217, -0.0005, 0.8328, 0.4948]) - 0.5
+# yc = np.array([0.5890, 0.0003, -0.3170, 0.7377]) - 0.2
+# fc = np.array([0.867,1.0, 0.670, 0.694])
+#
+# lens = PSJ1606_HST()
+# flux_ratios = np.round(lens.magnifications/lens.magnifications[0],2)
+#
+# colors = ['k', 'r','g','m']
+# for i in range(0, 4):
+#     plt.scatter(lens.x_image[i], lens.y_image[i],color=colors[i])
+#     plt.scatter(xc[i], yc[i], color=colors[i],marker='+')
+#     plt.annotate(str(flux_ratios[i]),
+#                  xy=(lens.x_image[i], lens.y_image[i]),color=colors[i])
+#
+# plt.show()

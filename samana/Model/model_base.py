@@ -1,5 +1,6 @@
 from lenstronomy.LensModel.Util.decouple_multi_plane_util import *
 from lenstronomy.Workflow.fitting_sequence import FittingSequence
+from copy import deepcopy
 from samana.image_magnification_util import magnification_finite_decoupled
 import numpy as np
 
@@ -11,41 +12,55 @@ class ModelBase(object):
         self._data = data_class
         self.kde_sampler = kde_sampler
 
-    def gaussian_source_clump(self, beta_x, beta_y, sigma_x, sigma_y):
+    def gaussian_source_clump(self, center_x, center_y, kwargs_init=None):
 
         source_model_list = ['GAUSSIAN_ELLIPSE']
-        kwargs_source = [{'amp': 1.0, 'sigma': 0.0025, 'center_x': beta_x, 'center_y': beta_y, 'e1': 0.0, 'e2': 0.0}]
+        if kwargs_init is None:
+            kwargs_source = [{'amp': 1.0, 'sigma': 0.05, 'center_x': center_x, 'center_y': center_y, 'e1': 0.0, 'e2': 0.0}]
+        else:
+            kwargs_source = deepcopy(kwargs_init)
+            kwargs_source['center_x'], kwargs_source['center_y'] = center_x, center_y
         kwargs_source_sigma = [
-            {'amp': 10.0, 'sigma': 0.005, 'center_x': sigma_x, 'center_y': sigma_y, 'e1': 0.1, 'e2': 0.1}]
+            {'amp': 10.0, 'sigma': 0.05, 'center_x': 0.025, 'center_y': 0.025, 'e1': 0.1, 'e2': 0.1}]
         kwargs_lower_source = [
-            {'amp': 0.00001, 'sigma': 0.00000001, 'center_x': beta_x - 5 * sigma_x, 'center_y': beta_y - 5 * sigma_y,
+            {'amp': 0.00001, 'sigma': 0.0, 'center_x': center_x - 0.2, 'center_y': center_y - 0.2,
              'e1': -0.5, 'e2': -0.5}]
         kwargs_upper_source = [
-            {'amp': 100, 'sigma': 0.01, 'center_x': beta_x + 5 * sigma_x, 'center_y': beta_y + 5 * sigma_y,
+            {'amp': 100, 'sigma': 0.75, 'center_x': center_x + 0.2, 'center_y': center_y + 0.2,
              'e1': 0.5, 'e2': 0.5}]
         kwargs_source_fixed = [{}]
         return source_model_list, kwargs_source, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source, kwargs_upper_source
 
-    def shapetlet_source_clump(self, beta_x, beta_y, sigma_x, sigma_y, n_max_clump=4):
+    def shapelet_source_clump(self, center_x, center_y, n_max_clump=4, beta_clump=0.05, kwargs_init=None):
 
         source_model_list = ['SHAPELETS']
-        kwargs_source = [{'amp': 1.0, 'beta': 0.005, 'center_x': beta_x, 'center_y': beta_y, 'n_max': n_max_clump}]
-        kwargs_source_sigma = [{'amp': 1.0, 'beta': 0.005, 'center_x': 0.05, 'center_y': 0.05, 'n_max': 1}]
+        if kwargs_init is None:
+            kwargs_source = [{'amp': 1.0, 'beta': beta_clump, 'center_x': center_x, 'center_y': center_y, 'n_max': n_max_clump}]
+        else:
+            kwargs_source = deepcopy(kwargs_init)
+            kwargs_source['center_x'], kwargs_source['center_y'] = center_x, center_y
+            kwargs_source['n_max'] = n_max_clump
+            kwargs_source['beta'] = beta_clump
+        kwargs_source_sigma = [{'amp': 1.0, 'beta': 0.2 * beta_clump, 'center_x': 0.05, 'center_y': 0.05, 'n_max': 1}]
         kwargs_lower_source = [
-            {'amp': 1e-9, 'beta': 0.0, 'center_x': beta_x - 5 * sigma_x, 'center_y': beta_y - 5 * sigma_y, 'n_max': 0}]
-        kwargs_upper_source = [{'amp': 100.0, 'beta': 0.05, 'center_x': beta_x + 5 * sigma_x, 'center_y': beta_y + 5 * sigma_y,
+            {'amp': 1e-9, 'beta': 0.0, 'center_x': center_x - 0.2, 'center_y': center_y - 0.2, 'n_max': 0}]
+        kwargs_upper_source = [{'amp': 100.0, 'beta': beta_clump * 20, 'center_x': center_x + 0.2, 'center_y': center_y + 0.2,
                                 'n_max': n_max_clump + 1}]
         kwargs_source_fixed = [{'n_max': n_max_clump}]
         return source_model_list, kwargs_source, kwargs_source_sigma, kwargs_source_fixed, \
                kwargs_lower_source, kwargs_upper_source
 
-    def setup_point_source_model(self):
+    def setup_point_source_model(self, fix_image_positions=True):
         point_source_model_list = ['LENSED_POSITION']
         kwargs_ps_init = [{'ra_image': self._data.x_image, 'dec_image': self._data.y_image}]
-        kwargs_ps_sigma = [{'ra_image': [1e-5] * 4, 'dec_image': [1e-5] * 4}]
-        kwargs_ps_fixed = [{'ra_image': self._data.x_image, 'dec_image': self._data.y_image}]
-        kwargs_lower_ps = [{'ra_image': -10 + np.ones_like(self._data.x_image), 'dec_image': -10 + np.ones_like(self._data.y_image)}]
-        kwargs_upper_ps = [{'ra_image': 10 + np.ones_like(self._data.x_image), 'dec_image': 10 + np.ones_like(self._data.y_image)}]
+        kwargs_ps_sigma = [{'ra_image': [5e-3] * 4, 'dec_image': [5e-3] * 4}]
+        if fix_image_positions:
+            kwargs_ps_fixed = [{'ra_image': self._data.x_image,
+                                'dec_image': self._data.y_image}]
+        else:
+            kwargs_ps_fixed = [{}]
+        kwargs_lower_ps = [{'ra_image': -10 + np.zeros_like(self._data.x_image), 'dec_image': -10 + np.zeros_like(self._data.y_image)}]
+        kwargs_upper_ps = [{'ra_image': 10 + np.zeros_like(self._data.x_image), 'dec_image': 10 + np.zeros_like(self._data.y_image)}]
         ps_params = [kwargs_ps_init, kwargs_ps_sigma, kwargs_ps_fixed, kwargs_lower_ps, kwargs_upper_ps]
         return point_source_model_list, ps_params
 
@@ -89,7 +104,8 @@ class ModelBase(object):
                         'lens_light_model_list': lens_light_model_list,
                         'point_source_model_list': point_source_list,
                         'additional_images_list': [False],
-                        'fixed_magnification_list': [True],
+                        # check what fixed_magnification list does
+                        'fixed_magnification_list': [False] * len(point_source_list),
                         'observed_convention_index': observed_convention_index}
         lens_model_init, kwargs_lens_init, index_lens_split = None, None, None
         if decoupled_multiplane:

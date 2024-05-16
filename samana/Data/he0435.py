@@ -4,7 +4,9 @@ from samana.Data.ImageData.he0435_814w import image_data, psf_error_map, psf_mod
 from samana.Data.ImageData.he0435_f555W import image_data as image_data_f555w
 from samana.Data.ImageData.he0435_f555W import psf_model as psf_model_f555w
 from samana.Data.ImageData.he0435_f555W import psf_error_map as psf_error_map_f555w
-
+from samana.Data.ImageData.he0435_nircam import image_data as image_data_nircam
+from samana.Data.ImageData.he0435_nircam import psf_model as psf_model_nircam
+from samana.Data.ImageData.he0435_nircam import psf_error_map as psf_error_map_nircam
 
 class _HE0435(ImagingDataBase):
 
@@ -21,9 +23,15 @@ class _HE0435(ImagingDataBase):
             self._psf_error_map_init = psf_error_map
             self._image_data = image_data
         elif self._filter == 'f555w':
-            self._psf_error_map_init = psf_model_f555w
+            self._psf_estimate_init = psf_model_f555w
             self._psf_error_map_init = psf_error_map_f555w
             self._image_data = image_data_f555w
+        elif self._filter == 'jwst_nircam':
+            self._psf_estimate_init = psf_model_nircam
+            self._psf_error_map_init = psf_error_map_nircam
+            self._image_data = image_data_nircam
+        else:
+            raise Exception('filter '+str(image_data_filter)+' not recognized.')
         self._supersample_factor = supersample_factor
         image_band = [self.kwargs_data, self.kwargs_psf, self.kwargs_numerics]
         multi_band_list = [image_band]
@@ -37,8 +45,8 @@ class _HE0435(ImagingDataBase):
 
     def likelihood_masks(self, x_image, y_image):
         deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size = self.coordinate_properties
-        _x = np.linspace(-window_size / 2, window_size / 2, image_data.shape[0])
-        _y = np.linspace(-window_size / 2, window_size / 2, image_data.shape[0])
+        _x = np.linspace(-window_size / 2, window_size / 2, self._image_data.shape[0])
+        _y = np.linspace(-window_size / 2, window_size / 2, self._image_data.shape[1])
         _xx, _yy = np.meshgrid(_x, _y)
         likelihood_mask = np.ones_like(_xx)
         inds = np.where(np.sqrt(_xx ** 2 + _yy ** 2) >= window_size / 2)
@@ -58,6 +66,13 @@ class _HE0435(ImagingDataBase):
         elif self._filter == 'f555w':
             kwargs_data = {'background_rms': 0.007946,
                            'exposure_time': 2030.0,
+                           'ra_at_xy_0': ra_at_xy_0,
+                           'dec_at_xy_0': dec_at_xy_0,
+                           'transform_pix2angle': transform_pix2angle,
+                           'image_data': self._image_data}
+        elif self._filter == 'jwst_nircam':
+            kwargs_data = {'background_rms': 0.02397,
+                           'exposure_time': 451.0,
                            'ra_at_xy_0': ra_at_xy_0,
                            'dec_at_xy_0': dec_at_xy_0,
                            'transform_pix2angle': transform_pix2angle,
@@ -89,6 +104,14 @@ class _HE0435(ImagingDataBase):
             transform_pix2angle = np.array([[-5.00058808e-02, -6.76926675e-06],
                                             [-6.75236526e-06,  4.99999710e-02]])
             return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
+        elif self._filter == 'jwst_nircam':
+            deltaPix = 0.031
+            window_size = 160 * deltaPix
+            ra_at_xy_0 = -2.48
+            dec_at_xy_0 = -2.48
+            transform_pix2angle = np.array([[0.031, 0.0],
+                                            [0.0, 0.031]])
+            return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
         else:
             raise Exception('filter must be either f814w or f555w')
 
@@ -98,7 +121,6 @@ class _HE0435(ImagingDataBase):
                       'kernel_point_source': self._psf_estimate_init,
                       'psf_error_map': self._psf_error_map_init}
         return kwargs_psf
-
 
 class HE0435_HST(_HE0435):
 
@@ -131,6 +153,42 @@ class HE0435_HST(_HE0435):
         flux_uncertainties = [0.05, 0.049, 0.048, 0.056]
         uncertainty_in_fluxes = True
         super(HE0435_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties,
+                                          flux_uncertainties, uncertainty_in_fluxes=uncertainty_in_fluxes,
+                                         supersample_factor=supersample_factor, image_data_filter=image_data_filter)
+
+class HE0435_JWST(_HE0435):
+
+    def __init__(self, supersample_factor=1.0):
+        """
+
+        :param image_position_uncertainties: list of astrometric uncertainties for each image
+        i.e. [0.003, 0.003, 0.003, 0.003]
+        :param flux_uncertainties: list of flux ratio uncertainties in percentage, or None if these are handled
+        post-processing
+        :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
+        :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
+        """
+
+        image_data_filter = 'jwst_nircam'
+        def rotate(x, y, theta):
+            return x * np.cos(theta) - y * np.sin(theta), x * np.sin(theta) + y * np.cos(theta)
+
+        x_image = np.array([-1.272, -0.306,  1.152,  0.384])
+        y_image = np.array([-0.156,  1.092,  0.636, -1.026])
+        # caluclated from image data
+        x_shifts = np.array([-0.01, 0., 0.025, -0.149])
+        y_shifts = np.array([0.12, 0.026, -0.08, -0.038])
+        x_image += x_shifts
+        y_image += y_shifts
+
+        theta = -0.4 * np.pi
+        x_image, y_image = rotate(x_image, y_image, theta)
+
+        magnifications = [0.96, 0.976, 1.0, 0.65]
+        image_position_uncertainties = [0.005] * 4
+        flux_uncertainties = [0.05, 0.049, 0.048, 0.056]
+        uncertainty_in_fluxes = True
+        super(HE0435_JWST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties,
                                           flux_uncertainties, uncertainty_in_fluxes=uncertainty_in_fluxes,
                                          supersample_factor=supersample_factor, image_data_filter=image_data_filter)
 

@@ -86,7 +86,7 @@ class WFI2033_HST(_WFI2033):
         y_image = np.array([ 0.953,  1.068, -0.307, -0.585])
         # caluclated from image data
         x_shifts = -0.05
-        y_shifts = -0.04
+        y_shifts = -0.04 - 0.01
         x_image += x_shifts
         y_image += y_shifts
 

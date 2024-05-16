@@ -6,10 +6,95 @@ from samana.output_storage import Output
 import matplotlib.pyplot as plt
 from lenstronomy.Plots.model_plot import ModelPlot
 from lenstronomy.Plots import chain_plot
+from lenstronomy.LensModel.lens_model import LensModel
 from trikde.pdfs import IndependentLikelihoods
 
+__all__ = ['nmax_bic_minimize',
+           'cut_on_data',
+           'simulation_output_to_density',
+           'likelihood_function_change',
+           'quick_setup']
 
-def nmax_bic_minimize(data, model_class, fitting_kwargs_list, n_max_list, verbose=True, make_plots=False):
+def quick_setup(lens_ID):
+
+    if lens_ID == 'B1422':
+        from samana.Data.b1422 import B1422_HST as data_class
+        from samana.Model.b1422_model import B1422ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'HE0435':
+        from samana.Data.he0435 import HE0435_JWST as data_class
+        from samana.Model.he0435_model import HE0435ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'J0248':
+        from samana.Data.j0248 import J0248_JWST as data_class
+        from samana.Model.j0248_model import J0248ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'J0259':
+        from samana.Data.j0259 import J0259_JWST as data_class
+        from samana.Model.j0259_model import J0259ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'J0607':
+        from samana.Data.j0607 import J0607JWST as data_class
+        from samana.Model.j0607_model import J0607ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'J0608':
+        from samana.Data.j0608 import J0608JWST as data_class
+        from samana.Model.j0608_model import J0608ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'J0659':
+        from samana.Data.j0659 import J0659JWST as data_class
+        from samana.Model.j0659_model import J0659ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'J1042':
+        from samana.Data.j1042 import J1042JWST as data_class
+        from samana.Model.j1042_model import J1042ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'J1131':
+        from samana.Data.j1131 import J1131JWST as data_class
+        from samana.Model.j1131_model import J1131ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'J1251':
+        from samana.Data.j1251 import J1251_JWST as data_class
+        from samana.Model.j1251_model import J1251ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'J1537':
+        from samana.Data.j1537 import J1537JWST as data_class
+        from samana.Model.j1537_model import J1537ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'J2026':
+        from samana.Data.j2026 import J2026JWST as data_class
+        from samana.Model.j2026_model import J2026ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'J2205':
+        from samana.Data.j2205 import J2205_JWST as data_class
+        from samana.Model.j2205_model import J2205ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'J2344':
+        from samana.Data.j2344 import J2344_JWST as data_class
+        from samana.Model.j2344_model import J2344ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'M1134':
+        from samana.Data.m1134 import M1134_JWST as data_class
+        from samana.Model.m1134_model import M1134ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'MG0414':
+        from samana.Data.mg0414 import MG0414 as data_class
+        from samana.Model.mg0414_model import MG0414ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'PG1115':
+        from samana.Data.pg1115 import PG1115_HST as data_class
+        from samana.Model.pg1115_model import PG1115ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'PSJ0147':
+        from samana.Data.psj0147 import PSJ0147_JWST as data_class
+        from samana.Model.psj0147_model import PSJ0147ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'PSJ1606':
+        from samana.Data.psj1606 import PSJ1606_JWST as data_class
+        from samana.Model.psj1606_model import PSJ1606ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'RXJ0911':
+        from samana.Data.rxj0911 import RXJ0911_HST as data_class
+        from samana.Model.rxj0911_model import RXJ0911ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'RXJ1131':
+        raise Exception('not yet implemented')
+    elif lens_ID == 'WFI2033':
+        from samana.Data.wfi2033 import WFI2033_HST as data_class
+        from samana.Model.wfi2033_model import WFI2033ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'WGD2038':
+        from samana.Data.wgd2038 import WGD2038_JWST as data_class
+        from samana.Model.wgd2038_model import  WGD2038ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'J0405':
+        from samana.Data.wgdj0405 import WGDJ0405_JWST as data_class
+        from samana.Model.wgdj0405_model import WGDJ0405ModelEPLM3M4Shear as model_class
+    else:
+        raise Exception('lens ID '+str(lens_ID)+' not recognized!')
+
+    return data_class, model_class
+
+def nmax_bic_minimize(data, model_class, fitting_kwargs_list, n_max_list,
+                      verbose=True, make_plots=False, return_magnifications=True):
     """
 
     :param data:
@@ -21,7 +106,13 @@ def nmax_bic_minimize(data, model_class, fitting_kwargs_list, n_max_list, verbos
     """
     bic_list = []
     chain_list_list = []
-    for n_max in n_max_list:
+    magnification = np.empty((len(n_max_list), 4))
+    magnification_sigma = np.empty((len(n_max_list), 4))
+
+    if return_magnifications:
+        assert fitting_kwargs_list[-1][0] == 'MCMC', 'When returning magnifications, last step in fitting sequence must ' \
+                                                     'be a MCMC'
+    for idx, n_max in enumerate(n_max_list):
         if n_max == 0:
             model = model_class(data, shapelets_order=None)
         else:
@@ -40,13 +131,35 @@ def nmax_bic_minimize(data, model_class, fitting_kwargs_list, n_max_list, verbos
         bic = fitting_sequence.bic
         bic_list.append(bic)
         chain_list_list.append(chain_list)
+
+        if return_magnifications:
+
+            samples_mcmc = chain_list[-1][1]
+            param_class = fitting_sequence.param_class
+            indexes = np.random.randint(0, samples_mcmc.shape[0], size=100)
+            mags = np.empty((len(indexes), 4))
+            lens_model = LensModel(kwargs_model['lens_model_list'],
+                                   lens_redshift_list=kwargs_model['lens_redshift_list'],
+                                   z_source=kwargs_model['z_source'],
+                                   observed_convention_index=kwargs_model['observed_convention_index'],
+                                   multi_plane=True)
+            for i, j in enumerate(indexes):
+                kw = param_class.args2kwargs(samples_mcmc[j])
+                x = kw['kwargs_ps'][0]['ra_image']
+                y = kw['kwargs_ps'][0]['dec_image']
+                m = np.absolute(lens_model.magnification(x, y, kw['kwargs_lens']))
+                mags[i,:] = m
+            magnification[idx,:] = np.median(mags, axis=0)
+            magnification_sigma[idx, :] = np.std(mags, axis=0)
+
         if make_plots:
             kwargs_result = fitting_sequence.best_fit()
 
             multi_band_list = data.kwargs_data_joint['multi_band_list']
             modelPlot = ModelPlot(multi_band_list, kwargs_model, kwargs_result, arrow_size=0.02,
                                   cmap_string="gist_heat",
-                                  fast_caustic=True)
+                                  fast_caustic=True,
+                                  image_likelihood_mask_list=[data.likelihood_mask])
             for i in range(len(chain_list)):
                 chain_plot.plot_chain_list(chain_list, i)
             f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
@@ -82,7 +195,8 @@ def nmax_bic_minimize(data, model_class, fitting_kwargs_list, n_max_list, verbos
             #a = input('continue')
         print('bic: ', bic)
         print('bic list: ', bic_list)
-    return bic_list, chain_list_list
+
+    return bic_list, chain_list_list, magnification, magnification_sigma
 
 def cut_on_data(output, data,
                 ABC_flux_ratio_likelihood=True,

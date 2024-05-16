@@ -1,15 +1,14 @@
 from samana.Data.data_base import ImagingDataBase
 import numpy as np
-from samana.Data.ImageData.j1537_f814w import image_data, psf_model, psf_error_map
+from samana.Data.ImageData.j2344_f814W import psf_model, psf_error_map, image_data
 
-
-class _J1537(ImagingDataBase):
+class _J2344(ImagingDataBase):
 
     def __init__(self, x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
                  uncertainty_in_fluxes, supersample_factor=1):
 
-        z_lens = 0.59
-        z_source = 1.72
+        z_lens = 0.5
+        z_source = 1.3
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
         self._psf_estimate_init = psf_model
@@ -20,7 +19,7 @@ class _J1537(ImagingDataBase):
         multi_band_list = [image_band]
         kwargs_data_joint = {'multi_band_list': multi_band_list, 'multi_band_type': 'multi-linear'}
         likelihood_mask, likelihood_mask_imaging_weights = self.likelihood_masks(x_image, y_image)
-        super(_J1537, self).__init__(z_lens, z_source,
+        super(_J2344, self).__init__(z_lens, z_source,
                                        kwargs_data_joint, x_image, y_image,
                                        magnifications, image_position_uncertainties, flux_uncertainties,
                                        uncertainty_in_fluxes, keep_flux_ratio_index, likelihood_mask,
@@ -40,8 +39,8 @@ class _J1537(ImagingDataBase):
     @property
     def kwargs_data(self):
         _, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, _ = self.coordinate_properties
-        kwargs_data = {'background_rms': 0.00590974,
-                       'exposure_time': 1428,
+        kwargs_data = {'background_rms': 0.005473,
+                       'exposure_time': 1428.0,
                        'ra_at_xy_0': ra_at_xy_0,
                        'dec_at_xy_0': dec_at_xy_0,
                        'transform_pix2angle': transform_pix2angle,
@@ -57,11 +56,11 @@ class _J1537(ImagingDataBase):
     def coordinate_properties(self):
 
         deltaPix = 0.04
-        window_size = 4.88
-        ra_at_xy_0 = 2.4414149
-        dec_at_xy_0 = -2.439195
-        transform_pix2angle = np.array([[-4.00100145e-02, -1.31814815e-05],
-       [-1.31741243e-05,  3.99999786e-02]])
+        window_size = 2.24
+        ra_at_xy_0 = 1.120848
+        dec_at_xy_0 = -1.119639
+        transform_pix2angle = np.array([[-4.00174412e-02, -1.28727237e-05],
+       [-1.28688820e-05,  3.99999802e-02]])
         return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
 
     @property
@@ -71,7 +70,7 @@ class _J1537(ImagingDataBase):
                       'psf_error_map': self._psf_error_map_init}
         return kwargs_psf
 
-class J1537JWST(_J1537):
+class J2344_JWST(_J2344):
 
     def __init__(self):
         """
@@ -83,16 +82,15 @@ class J1537JWST(_J1537):
         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
-        x_image = np.array( [ 1.42722809, -0.56577191, -1.42077191,  0.67722809])
-        y_image = np.array( [-0.71655342, -1.04555342,  0.92744658,  1.04644658])
-        horizontal_shift = -0.025
-        vertical_shift = 0.024
+        x_image = np.array([ 0.40485391, -0.23432247, -0.47637189,  0.10375929])
+        y_image = np.array([-0.16814461, -0.50453344,  0.15320995,  0.50092163])
+        horizontal_shift = 0.0
+        vertical_shift = 0.0
         x_image += horizontal_shift
         y_image += vertical_shift
         image_position_uncertainties = [0.005] * 4 # 5 arcsec
-        flux_uncertainties = [0.02/0.73, 0.02/0.94, 0.02/0.73]
-        magnifications = np.array([1.0, 0.73, 0.94, 0.73])
-        super(J1537JWST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
-                                                uncertainty_in_fluxes=False)
-
+        flux_uncertainties = None
+        magnifications = np.array([1.0] * 4)
+        super(J2344_JWST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
+                                          uncertainty_in_fluxes=False)
 

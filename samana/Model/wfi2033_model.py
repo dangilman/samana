@@ -137,17 +137,15 @@ class WFI2033ModelEPLM3M4ShearObservedConvention(_WFI2033ModelBase):
         # 0.245 2.037
         # -4.0 -0.08
         # satellite observed position: -4.0 -0.08
-        # satellite inferred position from lens mdoel: -3.659, 0.00812
+        # satellite inferred position from lens model: -3.7056, -0.14765
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR', 'SIS', 'SIS']
-        kwargs_lens_macro = [{'theta_E': 1.2363967422373972, 'gamma': 2.2217392289109097, 'e1': -0.1,
-                              'e2': -0.2, 'center_x': 0.008717948372366814,
-                              'center_y': -0.04343534216241877, 'a3_a': 0.0, 'delta_phi_m3': -0.5080741201623616,
-                              'a4_a': 0.0, 'delta_phi_m4': 0.0},
-                             {'gamma1': -0.01935293564446043, 'gamma2': 0.01759784833305446, 'ra_0': 0.0,
-                              'dec_0': 0.0},
-                             {'theta_E': 0.05, 'center_x': 0.245,
-                                              'center_y': 2.037},
-                             {'theta_E': 0.8, 'center_x': -4.0, 'center_y': -0.08}]
+        kwargs_lens_macro = [{'theta_E': 1.0132433996923365, 'gamma': 2.249988059286743, 'e1': -0.06752859713433747,
+                              'e2': 0.14688963289111892, 'center_x': -0.0733386322208671,
+                              'center_y': -0.016497479550054307, 'a3_a': 0.0,
+                              'delta_phi_m3': -0.1293835622154349, 'a4_a': 0.0, 'delta_phi_m4': -0.018710557972236738},
+                             {'gamma1': 0.18064156252999108, 'gamma2': -0.08382923416962305, 'ra_0': 0.0, 'dec_0': 0.0},
+                             {'theta_E': 0.09557984210599564, 'center_x': 0.2109876011562729, 'center_y': 1.986792353941162},
+                             {'theta_E': 0.8874, 'center_x': -4.0, 'center_y': -0.08}]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens,
                                self._data.z_lens, 0.745]
         index_lens_split = [0, 1, 2]
@@ -181,3 +179,64 @@ class WFI2033ModelEPLM3M4ShearObservedConvention(_WFI2033ModelBase):
                              kwargs_upper_lens]
 
         return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
+
+class WFI2033ModelEPLM3M4Shear(WFI2033ModelEPLM3M4ShearObservedConvention):
+
+    @property
+    def prior_lens(self):
+        return [[0, 'gamma', 2.0, 0.2], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005], [2, 'center_x', 0.245, 0.05],
+                [2, 'center_y', 2.037, 0.05], [2, 'theta_E', 0.05, 0.05],
+                [3, 'center_x', -3.7056, 0.2],
+                [3, 'center_y', -0.14765, 0.2],
+                [3, 'theta_E', 0.9, 0.1]
+                ]
+
+    def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
+
+        # 0.245 2.037
+        # -4.0 -0.08
+        # satellite observed position: -4.0 -0.08
+        # satellite inferred position from lens model: -3.7056, -0.14765
+        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR', 'SIS', 'SIS']
+        kwargs_lens_macro = [{'theta_E': 1.0132433996923365, 'gamma': 2.249988059286743, 'e1': -0.06752859713433747,
+                              'e2': 0.14688963289111892, 'center_x': -0.0733386322208671,
+                              'center_y': -0.016497479550054307, 'a3_a': 0.0,
+                              'delta_phi_m3': -0.1293835622154349, 'a4_a': 0.0, 'delta_phi_m4': -0.018710557972236738},
+                             {'gamma1': 0.18064156252999108, 'gamma2': -0.08382923416962305, 'ra_0': 0.0, 'dec_0': 0.0},
+                             {'theta_E': 0.09557984210599564, 'center_x': 0.2109876011562729,
+                              'center_y': 1.986792353941162},
+                             {'theta_E': 0.8874, 'center_x': -3.7056, 'center_y': -0.14765}]
+        redshift_list_macro = [self._data.z_lens, self._data.z_lens,
+                               self._data.z_lens, 0.745]
+        index_lens_split = [0, 1, 2]
+        if kwargs_lens_macro_init is not None:
+            for i in range(0, len(kwargs_lens_macro_init)):
+                for param_name in kwargs_lens_macro_init[i].keys():
+                    kwargs_lens_macro[i][param_name] = kwargs_lens_macro_init[i][param_name]
+        kwargs_lens_init = kwargs_lens_macro
+        kwargs_lens_sigma = [{'theta_E': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'e1': 0.2, 'e2': 0.2, 'gamma': 0.1,
+                              'a4_a': 0.01, 'a3_a': 0.005, 'delta_phi_m3': np.pi / 12, 'delta_phi_m4': np.pi / 16},
+                             {'gamma1': 0.05, 'gamma2': 0.05},
+                             {'theta_E': 0.01, 'center_x': 0.05, 'center_y': 0.05},
+                             {'theta_E': 0.1, 'center_x': 0.05, 'center_y': 0.05}]
+        kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}, {}, {}]
+        kwargs_lower_lens = [
+            {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.5, 'a4_a': -0.1,
+             'a3_a': -0.1, 'delta_phi_m3': -np.pi / 6, 'delta_phi_m4': -10.0},
+            {'gamma1': -0.5, 'gamma2': -0.5},
+            {'theta_E': 0.001, 'center_x': -10, 'center_y': -10},
+            {'theta_E': 0.5, 'center_x': -10, 'center_y': -10}]
+        kwargs_upper_lens = [
+            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.5, 'a4_a': 0.1,
+             'a3_a': 0.1, 'delta_phi_m3': np.pi / 6, 'delta_phi_m4': 10.0},
+            {'gamma1': 0.5, 'gamma2': 0.5},
+            {'theta_E': 0.5, 'center_x': 10, 'center_y': 10},
+            {'theta_E': 1.5, 'center_x': 10, 'center_y': 10}
+        ]
+        kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
+                                                                             kwargs_lens_init, macromodel_samples_fixed)
+        lens_model_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_lens_fixed, kwargs_lower_lens,
+                             kwargs_upper_lens]
+
+        return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
+
