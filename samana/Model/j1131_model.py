@@ -92,9 +92,11 @@ class _J1131ModelBase(ModelBase):
     def setup_lens_light_model(self):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
-        kwargs_lens_light_init = [{'amp': 1, 'R_sersic': 1.6452002754550978, 'n_sersic': 5.987400769106289,
-                                   'e1': -0.21898640790289997, 'e2': 0.04375143939159559,
-                                   'center_x': -0.002038190595305853, 'center_y': -0.036437173559225405}]
+        kwargs_lens_light_init = [
+            {'amp': 4.357314741211401, 'R_sersic': 1.6479352765425814, 'n_sersic': 7.705059149551987,
+             'e1': -0.19180776763617577, 'e2': 0.06262554412983402, 'center_x': -0.011977656523020293,
+             'center_y': -0.02823695414788643}
+        ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
         kwargs_lower_lens_light = [

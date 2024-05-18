@@ -122,6 +122,8 @@ class ModelBase(object):
                 print('done.')
             kwargs_model['kwargs_multiplane_model'] = kwargs_decoupled_class_setup['kwargs_multiplane_model']
             kwargs_model['decouple_multi_plane'] = True
+            kwargs_model['lens_model_list'] = kwargs_decoupled_class_setup['lens_model_list']
+            kwargs_model['lens_redshift_list'] = kwargs_decoupled_class_setup['lens_redshift_list']
         return kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split
 
     def setup_special_params(self, delta_x_image=None, delta_y_image=None):

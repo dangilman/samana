@@ -186,9 +186,9 @@ class WFI2033ModelEPLM3M4Shear(WFI2033ModelEPLM3M4ShearObservedConvention):
     def prior_lens(self):
         return [[0, 'gamma', 2.0, 0.2], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005], [2, 'center_x', 0.245, 0.05],
                 [2, 'center_y', 2.037, 0.05], [2, 'theta_E', 0.05, 0.05],
-                [3, 'center_x', -3.7056, 0.2],
-                [3, 'center_y', -0.14765, 0.2],
-                [3, 'theta_E', 0.9, 0.1]
+                # [3, 'center_x', -3.7056, 0.2],
+                # [3, 'center_y', -0.14765, 0.2],
+                # [3, 'theta_E', 0.9, 0.1]
                 ]
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):

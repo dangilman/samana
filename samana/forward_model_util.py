@@ -24,6 +24,36 @@ class KwargsLensSampler(object):
         kwargs_lens_light_init = self._param_class.args2kwargs(sample)['kwargs_lens_light']
         return kwargs_lens_init, kwargs_source_init, kwargs_lens_light_init
 
+def split_kwargs_params(kwargs_params, index_lens_split):
+    """
+    Return only the lens params that have been decoupled from the rest of the lens system
+    :param kwargs_lens_params:
+    :param index_lens_split:
+    :return:
+    """
+    num_lens_model = len(kwargs_params['lens_model'][0])
+    if num_lens_model == len(index_lens_split):
+        return kwargs_params
+    else:
+        kwargs_lens_init = []
+        kwargs_lens_sigma = []
+        kwargs_lens_fixed = []
+        kwargs_lower_lens = []
+        kwargs_upper_lens = []
+        for index in index_lens_split:
+            kwargs_lens_init.append(kwargs_params['lens_model'][0][index])
+            kwargs_lens_sigma.append(kwargs_params['lens_model'][1][index])
+            kwargs_lens_fixed.append(kwargs_params['lens_model'][2][index])
+            kwargs_lower_lens.append(kwargs_params['lens_model'][3][index])
+            kwargs_upper_lens.append(kwargs_params['lens_model'][4][index])
+        params_lensmodel = [kwargs_lens_init,
+                            kwargs_lens_sigma,
+                            kwargs_lens_fixed,
+                            kwargs_lower_lens,
+                            kwargs_upper_lens]
+        kwargs_params['lens_model'] = params_lensmodel
+        return kwargs_params
+
 def sample_prior(kwargs_prior):
 
     prior_samples_dict = {}
@@ -283,7 +313,7 @@ def flux_ratio_likelihood(measured_fluxes, model_fluxes, measurement_uncertainti
             else:
                 df = (model_flux_ratios[i] - measured_flux_ratios[i]) / measurement_uncertainties[i]
             importance_weight += df ** 2
-        return np.exp(-0.5 * importance_weight)
+        return 0.5 * importance_weight
 
 def check_solution(source_x, source_y, tolerance=0.0001):
     """

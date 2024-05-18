@@ -1,6 +1,6 @@
 from pyHalo.preset_models import preset_model_from_name
 from samana.forward_model_util import filenames, sample_prior, align_realization, \
-    flux_ratio_summary_statistic, flux_ratio_likelihood
+    flux_ratio_summary_statistic, flux_ratio_likelihood, split_kwargs_params
 from lenstronomy.LensModel.lens_model import LensModel
 from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_resolution, auto_raytracing_grid_size
 from lenstronomy.Workflow.fitting_sequence import FittingSequence
@@ -124,7 +124,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
             random_seed = random_seed - 4294967296
 
         magnifications, images, realization_samples, source_samples, macromodel_samples, macromodel_samples_fixed, \
-        logL_imaging_data, fitting_sequence, stat, flux_ratio_likelihood_weight, bic, param_names_realization, param_names_source, param_names_macro, \
+        logL_imaging_data, fitting_sequence, stat, log_flux_ratio_likelihood, bic, param_names_realization, param_names_source, param_names_macro, \
         param_names_macro_fixed, _, _, _ = forward_model_single_iteration(data_class, model, preset_model_name, kwargs_sample_realization,
                                             kwargs_sample_source, kwargs_sample_fixed_macromodel, log_mlow_mass_sheets,
                                             rescale_grid_size, rescale_grid_resolution, image_data_grid_resolution_rescale,
@@ -153,10 +153,10 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
             params = np.append(realization_samples, source_samples)
             params = np.append(params, bic)
             params = np.append(params, stat)
-            params = np.append(params, flux_ratio_likelihood_weight)
+            params = np.append(params, log_flux_ratio_likelihood)
             params = np.append(params, logL_imaging_data)
             params = np.append(params, random_seed)
-            param_names = param_names_realization + param_names_source + ['bic', 'summary_statistic', 'flux_ratio_likelihood',
+            param_names = param_names_realization + param_names_source + ['bic', 'summary_statistic', 'flux_ratio_log_likelihood',
                                                                           'logL_image_data', 'seed']
             acceptance_ratio = accepted_realizations_counter / iteration_counter
 
@@ -326,6 +326,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         macromodel_samples_fixed=macromodel_samples_fixed_dict)
     kwargs_constraints = model_class.kwargs_constraints
     kwargs_likelihood = model_class.kwargs_likelihood
+    kwargs_params = split_kwargs_params(kwargs_params, index_lens_split)
+
     if astrometric_uncertainty:
         kwargs_constraints['point_source_offset'] = True
     else:
@@ -335,8 +337,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         if verbose:
             print('running fitting sequence...')
             t0 = time()
-        # if index_lens_split has a different length from lens_model_list,
-        # it means we have a macromodel with deflectors at different redshifts
+        #if index_lens_split has a different length from lens_model_list,
+        #it means we have a macromodel with deflectors at different redshifts
         if len(index_lens_split) != len(kwargs_model['lens_model_list']):
             raise Exception('image data reconstruction with decoupled deflectors at multiple '
                             'lens planes is not yet implemented!')
@@ -377,19 +379,9 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         kwargs_solution, _ = opt.optimize(20, 50, verbose=verbose, seed=seed)
         kwargs_multiplane_model = opt.kwargs_multiplane_model
 
-    # if index_lens_split has a different length from lens_model_list,
-    # it means we have a macromodel with deflectors at different redshifts
-    if len(index_lens_split) != len(kwargs_model['lens_model_list']):
-        lens_model_list_solution = []
-        lens_redshift_list_solution = []
-        for index_split in index_lens_split:
-            lens_model_list_solution.append(kwargs_model['lens_model_list'][index_split])
-            lens_redshift_list_solution.append(kwargs_model['lens_redshift_list'][index_split])
-        kwargs_model['lens_model_list'] = lens_model_list_solution
-        kwargs_model['lens_redshift_list'] = lens_redshift_list_solution
 
     lens_model = LensModel(lens_model_list=kwargs_model['lens_model_list'],
-                           lens_redshift_list=kwargs_model['lens_redshift_list'] ,
+                           lens_redshift_list=kwargs_model['lens_redshift_list'],
                            multi_plane=kwargs_model['multi_plane'],
                            decouple_multi_plane=kwargs_model['decouple_multi_plane'],
                            kwargs_multiplane_model=kwargs_multiplane_model,
@@ -472,15 +464,17 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                                        data_class.keep_flux_ratio_index,
                                                                        data_class.uncertainty_in_fluxes)
 
-    flux_ratio_likelihood_weight = flux_ratio_likelihood(data_class.magnifications, magnifications,
+    _flux_ratio_likelihood_weight = flux_ratio_likelihood(data_class.magnifications, magnifications,
                                                          data_class.flux_uncertainty, data_class.uncertainty_in_fluxes,
                                                          data_class.keep_flux_ratio_index)
+    logl_flux = -np.log(_flux_ratio_likelihood_weight)
+    log_flux_ratio_likelihood = min(abs(logl_flux), -100)
 
     if verbose:
         print('flux ratios data: ', flux_ratios_data)
         print('flux ratios model: ', flux_ratios)
         print('statistic: ', stat)
-        print('flux_ratio_likelihood_weight', flux_ratio_likelihood_weight)
+        print('log flux_ratio likelihood: ', log_flux_ratio_likelihood)
         if use_imaging_data:
             print('BIC: ', bic)
     if use_imaging_data:
@@ -555,10 +549,10 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                        'super_sample_factor': 5}
         modelPlot.substructure_plot(band_index=0, **kwargs_plot)
         plt.show()
-        a=input('')
+        a=input('continue?')
 
     return magnifications, images, realization_samples, source_samples, samples_macromodel, samples_macromodel_fixed, \
            logL_imaging_data, fitting_sequence, \
-           stat, flux_ratio_likelihood_weight, bic, realization_param_names, \
+           stat, log_flux_ratio_likelihood, bic, realization_param_names, \
            source_param_names, param_names_macro, \
            param_names_macro_fixed, kwargs_model_plot, lens_model, kwargs_solution

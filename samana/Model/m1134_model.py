@@ -113,7 +113,7 @@ class M1134ModelEPLM3M4Shear(_M1134ModelBase):
 
     @property
     def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005]]
+        return [[0, 'gamma', 2.0, 0.1], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005]]
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
@@ -122,7 +122,7 @@ class M1134ModelEPLM3M4Shear(_M1134ModelBase):
                               'e2': -0.21505434288569872,
                               'center_x': -0.03220791761086604, 'center_y': 0.018787679101787424,
                               'a3_a': 0.0, 'delta_phi_m3': 0.03925717418140915,
-                              'a4_a': 0.0, 'delta_phi_m4': 1.1365477114054872}, 
+                              'a4_a': 0.0, 'delta_phi_m4': 1.1365477114054872},
                              {'gamma1': -0.0072982499421284696, 'gamma2': 0.28317784333401524, 'ra_0': 0.0, 'dec_0': 0.0}]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]

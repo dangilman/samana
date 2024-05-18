@@ -219,9 +219,6 @@ class HE0435ModelEPLM3M4Shear(HE0435ModelEPLM3M4ShearObservedConvention):
     @property
     def prior_lens(self):
         return [[0, 'gamma', 2.0, 0.2], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005],
-                [2, 'center_x', -2.4501, 0.1],
-                [2, 'center_y', -3.223, 0.1],
-                [2, 'theta_E', 0.37, 0.1]
                 ]
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
