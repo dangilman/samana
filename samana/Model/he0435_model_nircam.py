@@ -3,12 +3,14 @@ import numpy as np
 import pickle
 
 
-class _HE0435ModelBase(ModelBase):
+class _HE0435NircamModelBase(ModelBase):
 
-    def __init__(self, data_class, kde_sampler, shapelets_order):
+    def __init__(self, data_class, kde_sampler, shapelets_order, include_source_blobs, n_max_blobs):
         self._shapelets_order = shapelets_order
+        self._include_souce_blobs = include_source_blobs
+        self._n_max_blobs = n_max_blobs
         self._image_plane_source_list = None
-        super(_HE0435ModelBase, self).__init__(data_class, kde_sampler)
+        super(_HE0435NircamModelBase, self).__init__(data_class, kde_sampler)
 
     def update_kwargs_fixed_macro(self, lens_model_list_macro, kwargs_lens_fixed, kwargs_lens_init, macromodel_samples_fixed=None):
 
@@ -69,50 +71,51 @@ class _HE0435ModelBase(ModelBase):
             kwargs_source_fixed += [{'n_max': n_max}]
             self._image_plane_source_list += [False]
 
-        self._image_plane_source_list += [True]
-        point_of_interest_x1 = -1.1
-        point_of_interest_y1 = 0.1
-        source_model_list_clump, kwargs_source_clump, kwargs_source_sigma_clump, kwargs_source_fixed_clump, \
-        kwargs_lower_source_clump, kwargs_upper_source_clump = self.shapelet_source_clump(point_of_interest_x1,
-                                                                                          point_of_interest_y1,
-                                                                                          n_max_clump=5,
-                                                                                          beta_clump=0.16)
-        source_model_list += source_model_list_clump
-        kwargs_source_init += kwargs_source_clump
-        kwargs_source_sigma += kwargs_source_sigma_clump
-        kwargs_lower_source += kwargs_lower_source_clump
-        kwargs_upper_source += kwargs_upper_source_clump
-        kwargs_source_fixed += kwargs_source_fixed_clump
-
-        self._image_plane_source_list += [True]
-        point_of_interest_x2 = 0.475
-        point_of_interest_y2 = -1.2
-        source_model_list_clump, kwargs_source_clump, kwargs_source_sigma_clump, kwargs_source_fixed_clump, \
-        kwargs_lower_source_clump, kwargs_upper_source_clump = self.shapelet_source_clump(point_of_interest_x2,
-                                                                                          point_of_interest_y2,
-                                                                                          beta_clump=0.05,
-                                                                                          n_max_clump=5)
-        source_model_list += source_model_list_clump
-        kwargs_source_init += kwargs_source_clump
-        kwargs_source_sigma += kwargs_source_sigma_clump
-        kwargs_lower_source += kwargs_lower_source_clump
-        kwargs_upper_source += kwargs_upper_source_clump
-        kwargs_source_fixed += kwargs_source_fixed_clump
-
-        self._image_plane_source_list += [True]
-        point_of_interest_x3 = -0.04
-        point_of_interest_y3 = 1.44
-        source_model_list_clump, kwargs_source_clump, kwargs_source_sigma_clump, kwargs_source_fixed_clump, \
-        kwargs_lower_source_clump, kwargs_upper_source_clump = self.shapelet_source_clump(point_of_interest_x3,
-                                                                                          point_of_interest_y3,
-                                                                                          n_max_clump=5,
-                                                                                          beta_clump=0.05)
-        source_model_list += source_model_list_clump
-        kwargs_source_init += kwargs_source_clump
-        kwargs_source_sigma += kwargs_source_sigma_clump
-        kwargs_lower_source += kwargs_lower_source_clump
-        kwargs_upper_source += kwargs_upper_source_clump
-        kwargs_source_fixed += kwargs_source_fixed_clump
+        if self._include_souce_blobs:
+            self._image_plane_source_list += [True]
+            point_of_interest_x1 = -1.025
+            point_of_interest_y1 = 0.22
+            source_model_list_clump, kwargs_source_clump, kwargs_source_sigma_clump, kwargs_source_fixed_clump, \
+            kwargs_lower_source_clump, kwargs_upper_source_clump = self.shapelet_source_clump(point_of_interest_x1,
+                                                                                              point_of_interest_y1,
+                                                                                              n_max_clump=self._n_max_blobs,
+                                                                                              beta_clump=0.05)
+            source_model_list += source_model_list_clump
+            kwargs_source_init += kwargs_source_clump
+            kwargs_source_sigma += kwargs_source_sigma_clump
+            kwargs_lower_source += kwargs_lower_source_clump
+            kwargs_upper_source += kwargs_upper_source_clump
+            kwargs_source_fixed += kwargs_source_fixed_clump
+            #
+            # self._image_plane_source_list += [True]
+            # point_of_interest_x2 = 0.475
+            # point_of_interest_y2 = -1.2
+            # source_model_list_clump, kwargs_source_clump, kwargs_source_sigma_clump, kwargs_source_fixed_clump, \
+            # kwargs_lower_source_clump, kwargs_upper_source_clump = self.shapelet_source_clump(point_of_interest_x2,
+            #                                                                                   point_of_interest_y2,
+            #                                                                                   beta_clump=0.05,
+            #                                                                                   n_max_clump=5)
+            # source_model_list += source_model_list_clump
+            # kwargs_source_init += kwargs_source_clump
+            # kwargs_source_sigma += kwargs_source_sigma_clump
+            # kwargs_lower_source += kwargs_lower_source_clump
+            # kwargs_upper_source += kwargs_upper_source_clump
+            # kwargs_source_fixed += kwargs_source_fixed_clump
+            #
+            # self._image_plane_source_list += [True]
+            # point_of_interest_x3 = -0.04
+            # point_of_interest_y3 = 1.44
+            # source_model_list_clump, kwargs_source_clump, kwargs_source_sigma_clump, kwargs_source_fixed_clump, \
+            # kwargs_lower_source_clump, kwargs_upper_source_clump = self.shapelet_source_clump(point_of_interest_x3,
+            #                                                                                   point_of_interest_y3,
+            #                                                                                   n_max_clump=5,
+            #                                                                                   beta_clump=0.05)
+            # source_model_list += source_model_list_clump
+            # kwargs_source_init += kwargs_source_clump
+            # kwargs_source_sigma += kwargs_source_sigma_clump
+            # kwargs_lower_source += kwargs_lower_source_clump
+            # kwargs_upper_source += kwargs_upper_source_clump
+            # kwargs_source_fixed += kwargs_source_fixed_clump
 
         source_params = [kwargs_source_init, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source,
                          kwargs_upper_source]
@@ -122,10 +125,11 @@ class _HE0435ModelBase(ModelBase):
     def setup_lens_light_model(self):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
-        kwargs_lens_light_init = [{'amp': 471.11980002046084, 'R_sersic': 0.9759081988329124, 'n_sersic': 4.576916858936774,
-                                   'e1': 0.053049296668584434, 'e2': 0.09235823030652504,
-                                   'center_x': -0.007630921757462184,
-                                   'center_y': -0.016252576212836392}]
+        kwargs_lens_light_init = [
+            {'amp': 306.15179761817427, 'R_sersic': 1.028061447952791, 'n_sersic': 4.443232182177677,
+             'e1': 0.0559315849182795, 'e2': 0.09341343307121905, 'center_x': 0.0013421254629133244,
+             'center_y': -0.010411140290881226}
+        ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
         kwargs_lower_lens_light = [
@@ -154,33 +158,34 @@ class _HE0435ModelBase(ModelBase):
         return kwargs_likelihood
 
 
-class HE0435ModelEPLM3M4ShearObservedConvention(_HE0435ModelBase):
+class HE0435ModelNircamEPLM3M4ShearObservedConvention(_HE0435NircamModelBase):
 
-    def __init__(self, data_class, kde_sampler=None, shapelets_order=None):
-        super(HE0435ModelEPLM3M4ShearObservedConvention, self).__init__(data_class, kde_sampler, shapelets_order)
+    def __init__(self, data_class, kde_sampler=None, shapelets_order=None, include_source_blobs=False,
+                 n_max_blobs=8):
+        super(HE0435ModelNircamEPLM3M4ShearObservedConvention, self).__init__(data_class,
+                                                                              kde_sampler,
+                                                                              shapelets_order,
+                                                                              include_source_blobs,
+                                                                              n_max_blobs)
 
     @property
     def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005],
-                [2, 'center_x', -2.6, 0.2],
-                [2, 'center_y', -3.65, 0.2],
+        return [[0, 'gamma', 2.0, 0.1], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005],
+                [2, 'center_x', -4.2, 0.2],
+                [2, 'center_y', 1.35, 0.2],
                 [2, 'theta_E', 0.25, 0.1]
                 ]
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
-        # satellite observed position: -2.6 -3.65
-        # satellite inferred position from lens mdoel: -2.4501, -3.223
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR', 'SIS']
-        kwargs_lens_macro = [{'theta_E': 1.183879459825199, 'gamma': 2.1932908582668946, 'e1': 0.036681457593259845,
-                              'e2': 0.03307337024314603, 'center_x': -0.006229479709622775,
-                              'center_y': -0.0016358162588540096, 'a3_a': 0.0,
-                              'delta_phi_m3': -0.1584880442965335, 'a4_a': 0.0,
-                              'delta_phi_m4': -0.051442949784854586},
-                             {'gamma1': -0.02777010089244484, 'gamma2': -0.04988889392094336,
-                              'ra_0': 0.0, 'dec_0': 0.0},
-                             {'theta_E': 0.37122592808914573,
-                              'center_x': -2.6038643123922185, 'center_y': -3.7803605088642662}]
+        kwargs_lens_macro = [
+            {'theta_E': 1.1778927407630202, 'gamma': 2.1715769335116764, 'e1': 0.05819312551789523,
+             'e2': 0.1199644307864586, 'center_x': 0.0007622692384399802, 'center_y': -0.0027688317014858007,
+             'a3_a': 0.0, 'delta_phi_m3': -0.13807471874163363, 'a4_a': 0.0, 'delta_phi_m4': -0.0875170451788644},
+            {'gamma1': -0.005759199062677984, 'gamma2': -0.05226478062092215, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.36940399665014434, 'center_x': -4.208596548630573, 'center_y': 1.363938783578341}
+        ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens,
                                0.78]
         index_lens_split = [0, 1]
@@ -210,31 +215,32 @@ class HE0435ModelEPLM3M4ShearObservedConvention(_HE0435ModelBase):
 
         return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
 
+class HE0435ModelNircamEPLM3M4Shear(_HE0435NircamModelBase):
 
-class HE0435ModelEPLM3M4Shear(HE0435ModelEPLM3M4ShearObservedConvention):
-
-    def __init__(self, data_class, kde_sampler=None, shapelets_order=None):
-        super(HE0435ModelEPLM3M4Shear, self).__init__(data_class, kde_sampler, shapelets_order)
+    def __init__(self, data_class, kde_sampler=None, shapelets_order=None, include_source_blobs=False,
+                 n_max_blobs=8):
+        super(HE0435ModelNircamEPLM3M4Shear, self).__init__(data_class,
+                                                              kde_sampler,
+                                                              shapelets_order,
+                                                              include_source_blobs,
+                                                              n_max_blobs)
 
     @property
     def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005],
-                ]
+        return [[0, 'gamma', 2.0, 0.1]]
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
         # satellite observed position: -2.6 -3.65
         # satellite inferred position from lens mdoel: -2.4501, -3.223
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR', 'SIS']
-        kwargs_lens_macro = [{'theta_E': 1.183879459825199, 'gamma': 2.1932908582668946, 'e1': 0.036681457593259845,
-                              'e2': 0.03307337024314603, 'center_x': -0.006229479709622775,
-                              'center_y': -0.0016358162588540096, 'a3_a': 0.0,
-                              'delta_phi_m3': -0.1584880442965335, 'a4_a': 0.0,
-                              'delta_phi_m4': -0.051442949784854586},
-                             {'gamma1': -0.02777010089244484, 'gamma2': -0.04988889392094336,
-                              'ra_0': 0.0, 'dec_0': 0.0},
-                             {'theta_E': 0.37122592808914573,
-                              'center_x': -2.4501, 'center_y': -3.223}]
+        kwargs_lens_macro = [
+            {'theta_E': 1.1778927407630202, 'gamma': 2.1715769335116764, 'e1': 0.05819312551789523,
+             'e2': 0.1199644307864586, 'center_x': 0.0007622692384399802, 'center_y': -0.0027688317014858007,
+             'a3_a': 0.0, 'delta_phi_m3': -0.13807471874163363, 'a4_a': 0.0, 'delta_phi_m4': -0.0875170451788644},
+            {'gamma1': -0.005759199062677984, 'gamma2': -0.05226478062092215, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.36940399665014434, 'center_x': -3.6631, 'center_y': 1.0098}
+            ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens,
                                0.78]
         index_lens_split = [0, 1]

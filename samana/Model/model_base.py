@@ -12,39 +12,37 @@ class ModelBase(object):
         self._data = data_class
         self.kde_sampler = kde_sampler
 
-    def gaussian_source_clump(self, center_x, center_y, kwargs_init=None):
+    def gaussian_source_clump(self, center_x, center_y, sigma):
 
         source_model_list = ['GAUSSIAN_ELLIPSE']
-        if kwargs_init is None:
-            kwargs_source = [{'amp': 1.0, 'sigma': 0.05, 'center_x': center_x, 'center_y': center_y, 'e1': 0.0, 'e2': 0.0}]
-        else:
-            kwargs_source = deepcopy(kwargs_init)
-            kwargs_source['center_x'], kwargs_source['center_y'] = center_x, center_y
+        kwargs_source = [{'amp': 1.0, 'sigma': sigma, 'center_x': center_x, 'center_y': center_y, 'e1': 0.0, 'e2': 0.0}]
         kwargs_source_sigma = [
-            {'amp': 10.0, 'sigma': 0.05, 'center_x': 0.025, 'center_y': 0.025, 'e1': 0.1, 'e2': 0.1}]
+            {'amp': 10.0, 'sigma': 0.25 * kwargs_source[0]['sigma'], 'center_x': 0.05, 'center_y': 0.05, 'e1': 0.1, 'e2': 0.1}]
         kwargs_lower_source = [
-            {'amp': 0.00001, 'sigma': 0.0, 'center_x': center_x - 0.2, 'center_y': center_y - 0.2,
+            {'amp': 0.00001, 'sigma': 0.0, 'center_x': center_x - 10, 'center_y': center_y - 10,
              'e1': -0.5, 'e2': -0.5}]
         kwargs_upper_source = [
-            {'amp': 100, 'sigma': 0.75, 'center_x': center_x + 0.2, 'center_y': center_y + 0.2,
+            {'amp': 100, 'sigma': 0.5, 'center_x': center_x + 10, 'center_y': center_y + 10,
              'e1': 0.5, 'e2': 0.5}]
         kwargs_source_fixed = [{}]
         return source_model_list, kwargs_source, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source, kwargs_upper_source
 
-    def shapelet_source_clump(self, center_x, center_y, n_max_clump=4, beta_clump=0.05, kwargs_init=None):
+    def shapelet_source_clump(self, center_x, center_y, n_max_clump=4, beta_clump=0.05):
 
         source_model_list = ['SHAPELETS']
-        if kwargs_init is None:
-            kwargs_source = [{'amp': 1.0, 'beta': beta_clump, 'center_x': center_x, 'center_y': center_y, 'n_max': n_max_clump}]
-        else:
-            kwargs_source = deepcopy(kwargs_init)
-            kwargs_source['center_x'], kwargs_source['center_y'] = center_x, center_y
-            kwargs_source['n_max'] = n_max_clump
-            kwargs_source['beta'] = beta_clump
-        kwargs_source_sigma = [{'amp': 1.0, 'beta': 0.2 * beta_clump, 'center_x': 0.05, 'center_y': 0.05, 'n_max': 1}]
+        kwargs_source = [{'amp': 1.0, 'beta': beta_clump,
+                              'center_x': center_x, 'center_y': center_y, 'n_max': n_max_clump}]
+        kwargs_source_sigma = [{'amp': 1.0, 'beta': 0.2 * beta_clump,
+                                'center_x': 0.05, 'center_y': 0.05, 'n_max': 1}]
         kwargs_lower_source = [
-            {'amp': 1e-9, 'beta': 0.0, 'center_x': center_x - 0.2, 'center_y': center_y - 0.2, 'n_max': 0}]
-        kwargs_upper_source = [{'amp': 100.0, 'beta': beta_clump * 20, 'center_x': center_x + 0.2, 'center_y': center_y + 0.2,
+            {'amp': 1e-9, 'beta': 0.0,
+             'center_x': center_x - 10.0,
+             'center_y': center_y - 10.0,
+             'n_max': 0}]
+        kwargs_upper_source = [{'amp': 100.0,
+                                'beta': beta_clump * 20,
+                                'center_x': center_x + 10.0,
+                                'center_y': center_y + 10.0,
                                 'n_max': n_max_clump + 1}]
         kwargs_source_fixed = [{'n_max': n_max_clump}]
         return source_model_list, kwargs_source, kwargs_source_sigma, kwargs_source_fixed, \

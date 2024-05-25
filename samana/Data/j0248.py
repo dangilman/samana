@@ -1,6 +1,10 @@
 from samana.Data.data_base import ImagingDataBase
 import numpy as np
 from samana.Data.ImageData.j0248_f814W import psf_model, psf_error_map, image_data
+from samana.data_util import mask_quasar_images
+from lenstronomy.Data.coord_transforms import Coordinates
+from copy import deepcopy
+
 
 class _J0248(ImagingDataBase):
 
@@ -34,6 +38,14 @@ class _J0248(ImagingDataBase):
         likelihood_mask = np.ones_like(_xx)
         inds = np.where(np.sqrt(_xx ** 2 + _yy ** 2) >= window_size / 2)
         likelihood_mask[inds] = 0.0
+        # coords = Coordinates(transform_pix2angle, ra_at_xy_0, dec_at_xy_0)
+        # ra_grid, dec_grid = coords.coordinate_grid(*_xx.shape)
+        # mask_radius_arcsec = 0.3
+        # likelihood_mask_imaging_weights = mask_quasar_images(deepcopy(likelihood_mask),
+        #                                                      x_image, y_image,
+        #                                                      ra_grid,
+        #                                                      dec_grid,
+        #                                                      mask_radius_arcsec)
         return likelihood_mask, likelihood_mask
 
     @property

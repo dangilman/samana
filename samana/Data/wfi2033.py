@@ -1,12 +1,11 @@
 from samana.Data.data_base import ImagingDataBase
 import numpy as np
-from samana.Data.ImageData.wfi2033_814w import image_data, psf_error_map, psf_model
 
 
 class _WFI2033(ImagingDataBase):
 
     def __init__(self, x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
-                 uncertainty_in_fluxes, supersample_factor=1.0):
+                 uncertainty_in_fluxes, supersample_factor=1.0, image_data=None, psf_model=None, psf_error_map=None):
 
         z_lens = 0.66
         z_source = 1.66
@@ -28,8 +27,8 @@ class _WFI2033(ImagingDataBase):
 
     def likelihood_masks(self, x_image, y_image):
         deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size = self.coordinate_properties
-        _x = np.linspace(-window_size / 2, window_size / 2, image_data.shape[0])
-        _y = np.linspace(-window_size / 2, window_size / 2, image_data.shape[0])
+        _x = np.linspace(-window_size / 2, window_size / 2, self._image_data.shape[0])
+        _y = np.linspace(-window_size / 2, window_size / 2, self._image_data.shape[0])
         _xx, _yy = np.meshgrid(_x, _y)
         likelihood_mask = np.ones_like(_xx)
         inds = np.where(np.sqrt(_xx ** 2 + _yy ** 2) >= window_size / 2.)
@@ -37,30 +36,9 @@ class _WFI2033(ImagingDataBase):
         return likelihood_mask, likelihood_mask
 
     @property
-    def kwargs_data(self):
-        _, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, _ = self.coordinate_properties
-        kwargs_data = {'background_rms': 0.0058,
-                       'exposure_time': 2085.0,
-                       'ra_at_xy_0': ra_at_xy_0,
-                       'dec_at_xy_0': dec_at_xy_0,
-                       'transform_pix2angle': transform_pix2angle,
-                       'image_data': self._image_data}
-        return kwargs_data
-
-    @property
     def kwargs_numerics(self):
         return {'supersampling_factor': int(self._supersample_factor),
                 'supersampling_convolution': False}
-
-    @property
-    def coordinate_properties(self):
-        deltaPix = 0.05
-        window_size = 112 * deltaPix
-        ra_at_xy_0 = 2.8044480233
-        dec_at_xy_0 = -2.7982320
-        transform_pix2angle = np.array([[-5.00479193e-02, -3.15096429e-05],
-                                        [-3.15326310e-05,  4.99999618e-02]])
-        return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
 
     @property
     def kwargs_psf(self):
@@ -90,16 +68,78 @@ class WFI2033_HST(_WFI2033):
         x_image += x_shifts
         y_image += y_shifts
 
-        # delta_x_image = np.array([-0.01314664, -0.00057129, 0.00157636, -0.00519599])
-        # delta_y_image = np.array([0.01332557, 0.03394125, 0.01965914, -0.00873674])
-        # x_image += delta_x_image
-        # y_image += delta_y_image
-
+        from samana.Data.ImageData.wfi2033_814w import image_data, psf_error_map, psf_model
         magnifications = [1.,   0.65, 0.5,  0.53]
         image_position_uncertainties = [0.005] * 4
         flux_uncertainties = [0.03, 0.03/0.64, 0.02/0.5, 0.02/0.53]
         uncertainty_in_fluxes = True
         super(WFI2033_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties,
-                                          flux_uncertainties, uncertainty_in_fluxes=uncertainty_in_fluxes,
-                                         supersample_factor=supersample_factor)
+                                          flux_uncertainties, uncertainty_in_fluxes,
+                                         supersample_factor, image_data, psf_model, psf_error_map)
 
+    @property
+    def kwargs_data(self):
+        _, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, _ = self.coordinate_properties
+        kwargs_data = {'background_rms': 0.0058,
+                       'exposure_time': 2085.0,
+                       'ra_at_xy_0': ra_at_xy_0,
+                       'dec_at_xy_0': dec_at_xy_0,
+                       'transform_pix2angle': transform_pix2angle,
+                       'image_data': self._image_data}
+        return kwargs_data
+
+    @property
+    def coordinate_properties(self):
+        deltaPix = 0.05
+        window_size = 112 * deltaPix
+        ra_at_xy_0 = 2.8044480233
+        dec_at_xy_0 = -2.7982320
+        transform_pix2angle = np.array([[-5.00479193e-02, -3.15096429e-05],
+                                        [-3.15326310e-05, 4.99999618e-02]])
+        return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
+
+class WFI2033_NIRCAM(_WFI2033):
+
+    def __init__(self, supersample_factor=1.0):
+        """
+
+        :param image_position_uncertainties: list of astrometric uncertainties for each image
+        i.e. [0.003, 0.003, 0.003, 0.003]
+        :param flux_uncertainties: list of flux ratio uncertainties in percentage, or None if these are handled
+        post-processing
+        :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
+        :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
+        """
+
+        x_image = np.array([-1.21229309, -0.90455656,  1.07524968,  0.09857087])
+        y_image = np.array([-0.08147999,  0.56125997,  1.03543648, -0.88244067])
+
+        from samana.Data.ImageData.wfi2033_nircam_dithered import image_data, psf_error_map, psf_model
+
+        magnifications = [1.,   0.65, 0.5,  0.53]
+        image_position_uncertainties = [0.005] * 4
+        flux_uncertainties = [0.03, 0.03/0.64, 0.02/0.5, 0.02/0.53]
+        uncertainty_in_fluxes = True
+        super(WFI2033_NIRCAM, self).__init__(x_image, y_image, magnifications, image_position_uncertainties,
+                                          flux_uncertainties, uncertainty_in_fluxes,
+                                         supersample_factor, image_data, psf_model, psf_error_map)
+
+    @property
+    def kwargs_data(self):
+        _, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, _ = self.coordinate_properties
+        kwargs_data = {'background_rms': 0.01376,
+                       'exposure_time': 1803.776,
+                       'ra_at_xy_0': ra_at_xy_0,
+                       'dec_at_xy_0': dec_at_xy_0,
+                       'transform_pix2angle': transform_pix2angle,
+                       'image_data': self._image_data}
+        return kwargs_data
+
+    @property
+    def coordinate_properties(self):
+        deltaPix = 0.0315
+        window_size = 150 * deltaPix
+        ra_at_xy_0 = -2.457
+        dec_at_xy_0 = -2.457
+        transform_pix2angle = np.array([[ 0.0315,  -0.], [-0., 0.0315]])
+        return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size

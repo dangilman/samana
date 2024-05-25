@@ -23,7 +23,7 @@ class _J1537ModelBase(ModelBase):
 
     @property
     def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2]]
+        return [[0, 'gamma', 2.0, 0.1]]
 
     def setup_source_light_model(self):
 

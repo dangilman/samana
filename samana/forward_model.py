@@ -17,11 +17,11 @@ from time import time
 
 def forward_model(output_path, job_index, n_keep, data_class, model, preset_model_name,
                   kwargs_sample_realization, kwargs_sample_source, kwargs_sample_fixed_macromodel,
-                  tolerance, log_mlow_mass_sheets=6.0, n_max_shapelets=None,
+                  tolerance, log_mlow_mass_sheets=6.0, kwargs_model_class={},
                   rescale_grid_size=1.0, rescale_grid_resolution=2.0, readout_macromodel_samples=True,
                   verbose=False, random_seed_init=None, readout_steps=10, write_sampling_rate=True,
                   n_pso_particles=10, n_pso_iterations=50, num_threads=1, astrometric_uncertainty=True,
-                  resample_kwargs_lens=False, kde_sampler=None, image_data_grid_resolution_rescale=1.0,
+                  kde_sampler=None, image_data_grid_resolution_rescale=1.0,
                   use_imaging_data=True, fitting_sequence_kwargs=None, test_mode=False):
     """
 
@@ -36,7 +36,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     :param kwargs_sample_fixed_macromodel:
     :param tolerance:
     :param log_mlow_mass_sheets:
-    :param n_max_shapelets:
+    :param kwargs_model_class:
     :param rescale_grid_size:
     :param rescale_grid_resolution:
     :param readout_macromodel_samples:
@@ -48,7 +48,6 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     :param n_pso_iterations:
     :param num_threads:
     :param astrometric_uncertainty:
-    :param resample_kwargs_lens:
     :param kde_sampler:
     :param image_data_grid_resolution_rescale:
     :param use_imaging_data:
@@ -129,8 +128,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                             kwargs_sample_source, kwargs_sample_fixed_macromodel, log_mlow_mass_sheets,
                                             rescale_grid_size, rescale_grid_resolution, image_data_grid_resolution_rescale,
                                             verbose, random_seed, n_pso_particles, n_pso_iterations, num_threads,
-                                            n_max_shapelets, astrometric_uncertainty, resample_kwargs_lens, kde_sampler,
-                                                                    use_imaging_data, fitting_sequence_kwargs, test_mode)
+                                            kwargs_model_class, astrometric_uncertainty, kde_sampler,
+                                            use_imaging_data, fitting_sequence_kwargs, test_mode)
 
         seed_counter += 1
         acceptance_rate_counter += 1
@@ -241,6 +240,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                         for col in range(0, ncols):
                             f.write(str(np.round(macromodel_samples_array[row, col], 5)) + ' ')
                         f.write('\n')
+
             parameter_array = None
             mags_out = None
             macromodel_samples_array = None
@@ -252,8 +252,9 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
 def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_sample_realization,
                             kwargs_sample_source, kwargs_sample_macro_fixed, log_mlow_mass_sheets=6.0, rescale_grid_size=1.0,
                             rescale_grid_resolution=2.0, image_data_grid_resolution_rescale=1.0, verbose=False, seed=None,
-                                   n_pso_particles=10, n_pso_iterations=50, num_threads=1, n_max_shapelets=None, astrometric_uncertainty=True,
-                                   resample_kwargs_lens=False, kde_sampler=None, use_imaging_data=True,
+                                   n_pso_particles=10, n_pso_iterations=50, num_threads=1,
+                                   kwargs_model_class={}, astrometric_uncertainty=True,
+                                   kde_sampler=None, use_imaging_data=True,
                                    fitting_kwargs_list=None,
                                    test_mode=False):
 
@@ -263,7 +264,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         delta_x_image, delta_y_image = data_class.perturb_image_positions()
     else:
         delta_x_image, delta_y_image = np.zeros(len(data_class.x_image)), np.zeros(len(data_class.y_image))
-    model_class = model(data_class, kde_sampler, shapelets_order=n_max_shapelets)
+    model_class = model(data_class, kde_sampler, **kwargs_model_class)
     realization_dict, realization_samples, realization_param_names = sample_prior(kwargs_sample_realization)
     source_dict, source_samples, source_param_names = sample_prior(kwargs_sample_source)
     macromodel_samples_fixed_dict, samples_macromodel_fixed, param_names_macro_fixed = sample_prior(kwargs_sample_macro_fixed)
@@ -283,16 +284,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         print(realization_dict)
         print('FIXED MACROMODEL SAMPLES: ')
         print(macromodel_samples_fixed_dict)
-    if resample_kwargs_lens:
-        if model_class.kde_sampler is None:
-            raise Exception('if resample_kwargs_lens is True, the model class must be instantiated with an instance of'
-                            'KwargsLensSampler.')
-        else:
-            kwargs_lens_macro_init, _, _ = model_class.kde_sampler.draw()
-            if verbose:
-                print('starting point for PSO: ', kwargs_lens_macro_init)
-    else:
-        kwargs_lens_macro_init = None
+
+    kwargs_lens_macro_init = None
     kwargs_params = model_class.kwargs_params(kwargs_lens_macro_init=kwargs_lens_macro_init,
                                               delta_x_image=-delta_x_image,
                                               delta_y_image=-delta_y_image,
@@ -300,6 +293,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     pixel_size = data_class.coordinate_properties[0] / data_class.kwargs_numerics['supersampling_factor']
     kwargs_model_align, _, _, _ = model_class.setup_kwargs_model(
         decoupled_multiplane=False,
+        kwargs_lens_macro_init=kwargs_lens_macro_init,
         macromodel_samples_fixed=macromodel_samples_fixed_dict)
     kwargs_lens_align = kwargs_params['lens_model'][0]
     if preset_realization:
@@ -319,6 +313,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split = model_class.setup_kwargs_model(
         decoupled_multiplane=True,
         lens_model_list_halos=lens_model_list_halos,
+        kwargs_lens_macro_init=kwargs_lens_macro_init,
         grid_resolution=grid_resolution_image_data,
         redshift_list_halos=list(redshift_list_halos),
         kwargs_halos=kwargs_halos,

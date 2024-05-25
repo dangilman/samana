@@ -121,7 +121,7 @@ class J1042ModelEPLM3M4Shear(_J1042ModelBase):
 
     @property
     def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005],
+        return [[0, 'gamma', 2.0, 0.1], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005],
                 [2, 'center_x', 1.65539, 0.05], [2, 'center_y', -0.2967, 0.05], [2, 'theta_E', 0.05, 0.05]]
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):

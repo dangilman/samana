@@ -20,8 +20,8 @@ def quick_setup(lens_ID):
         from samana.Data.b1422 import B1422_HST as data_class
         from samana.Model.b1422_model import B1422ModelEPLM3M4Shear as model_class
     elif lens_ID == 'HE0435':
-        from samana.Data.he0435 import HE0435_JWST as data_class
-        from samana.Model.he0435_model import HE0435ModelEPLM3M4Shear as model_class
+        from samana.Data.he0435 import HE0435_NIRCAM as data_class
+        from samana.Model.he0435_model_nircam import HE0435ModelNircamEPLM3M4Shear as model_class
     elif lens_ID == 'J0248':
         from samana.Data.j0248 import J0248_JWST as data_class
         from samana.Model.j0248_model import J0248ModelEPLM3M4Shear as model_class
@@ -80,7 +80,7 @@ def quick_setup(lens_ID):
         raise Exception('not yet implemented')
     elif lens_ID == 'WFI2033':
         from samana.Data.wfi2033 import WFI2033_HST as data_class
-        from samana.Model.wfi2033_model import WFI2033ModelEPLM3M4Shear as model_class
+        from samana.Model.wfi2033_model_hst import WFI2033ModelEPLM3M4Shear as model_class
     elif lens_ID == 'WGD2038':
         from samana.Data.wgd2038 import WGD2038_JWST as data_class
         from samana.Model.wgd2038_model import  WGD2038ModelEPLM3M4Shear as model_class
@@ -89,11 +89,11 @@ def quick_setup(lens_ID):
         from samana.Model.wgdj0405_model import WGDJ0405ModelEPLM3M4Shear as model_class
     else:
         raise Exception('lens ID '+str(lens_ID)+' not recognized!')
-
     return data_class, model_class
 
 def nmax_bic_minimize(data, model_class, fitting_kwargs_list, n_max_list,
-                      verbose=True, make_plots=False, return_magnifications=True):
+                      verbose=True, make_plots=False, return_magnifications=False,
+                      **kwargs_model_model_class):
     """
 
     :param data:
@@ -113,9 +113,9 @@ def nmax_bic_minimize(data, model_class, fitting_kwargs_list, n_max_list,
                                                      'be a MCMC'
     for idx, n_max in enumerate(n_max_list):
         if n_max == 0:
-            model = model_class(data, shapelets_order=None)
+            model = model_class(data, shapelets_order=None, **kwargs_model_model_class)
         else:
-            model = model_class(data, shapelets_order=n_max)
+            model = model_class(data, shapelets_order=n_max, **kwargs_model_model_class)
         kwargs_params = model.kwargs_params()
         kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split = model.setup_kwargs_model()
         kwargs_constraints = model.kwargs_constraints
