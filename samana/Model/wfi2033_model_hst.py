@@ -129,7 +129,7 @@ class WFI2033ModelEPLM3M4ShearObservedConvention(_WFI2033ModelBase):
 
     @property
     def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.1], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005], [2, 'center_x', 0.245, 0.05],
+        return [[0, 'gamma', 2.0, 0.1], [2, 'center_x', 0.245, 0.05],
                 [2, 'center_y', 2.037, 0.05], [2, 'theta_E', 0.05, 0.05],
                 #[3, 'center_x', -4.0, 0.1],
                 #[3, 'center_y', -0.08, 0.1],

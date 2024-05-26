@@ -115,13 +115,13 @@ class J1251ModelEPLM3M4Shear(_J1251ModelBase):
 
     @property
     def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005]]
+        return [[0, 'gamma', 2.0, 0.1]]
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR']
         kwargs_lens_macro = [
-            {'theta_E': 0.8367838424385758, 'gamma': 2.1, 'e1': -0.14963717901216292,
+            {'theta_E': 0.8367838424385758, 'gamma': 2.0, 'e1': -0.14963717901216292,
              'e2': 0.14911718946072536, 'center_x': 0.0007906216492182234, 'center_y': -0.011699990073143547,
              'a3_a': 0.0, 'delta_phi_m3': -0.3837653661998099, 'a4_a': 0.0, 'delta_phi_m4': 1.940069946088214},
             {'gamma1': 0.10302034219934438, 'gamma2': -0.05540078618830167, 'ra_0': 0.0, 'dec_0': 0.0}

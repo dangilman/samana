@@ -115,16 +115,16 @@ class J0259ModelEPLM3M4Shear(_J0259ModelBase):
 
     @property
     def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.1], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005]]
+        return [[0, 'gamma', 2.0, 0.1]]
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR']
         kwargs_lens_macro = [
-            {'theta_E': 0.7369527718657329, 'gamma': 2.1937521160887608, 'e1': -0.08050885101244437,
-             'e2': 0.009287893139704151, 'center_x': -0.013250122099100866, 'center_y': 0.008078960001261536,
-             'a3_a': 0.0, 'delta_phi_m3': 0.22987261028257142, 'a4_a': 0.0, 'delta_phi_m4': 1.8881239601300293},
-            {'gamma1': 0.03504176304303244, 'gamma2': -0.05897384069865829, 'ra_0': 0.0, 'dec_0': 0.0}
+            {'theta_E': 0.7388976491475181, 'gamma': 2.0207714179139913, 'e1': -0.09341613499931459,
+             'e2': 0.02675840192710889, 'center_x': -0.009954860813042005, 'center_y': 0.007651162466162202,
+             'a3_a': 0.0, 'delta_phi_m3': 0.38268377239528223, 'a4_a': 0.0, 'delta_phi_m4': 1.6597784052207643},
+            {'gamma1': 0.015958642535888357, 'gamma2': -0.043547721967914246, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]

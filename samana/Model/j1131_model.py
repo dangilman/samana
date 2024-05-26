@@ -43,7 +43,7 @@ class _J1131ModelBase(ModelBase):
 
     @property
     def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2]]
+        return [[0, 'gamma', 2.0, 0.1]]
 
     def setup_source_light_model(self):
 
@@ -131,7 +131,7 @@ class J1131ModelEPLM3M4Shear(_J1131ModelBase):
 
     @property
     def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.1], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005]]
+        return [[0, 'gamma', 2.0, 0.1]]
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 

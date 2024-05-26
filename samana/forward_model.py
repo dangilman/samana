@@ -18,7 +18,7 @@ from time import time
 def forward_model(output_path, job_index, n_keep, data_class, model, preset_model_name,
                   kwargs_sample_realization, kwargs_sample_source, kwargs_sample_fixed_macromodel,
                   tolerance, log_mlow_mass_sheets=6.0, kwargs_model_class={},
-                  rescale_grid_size=1.0, rescale_grid_resolution=2.0, readout_macromodel_samples=True,
+                  rescale_grid_size=1.5, rescale_grid_resolution=2.0, readout_macromodel_samples=True,
                   verbose=False, random_seed_init=None, readout_steps=10, write_sampling_rate=True,
                   n_pso_particles=10, n_pso_iterations=50, num_threads=1, astrometric_uncertainty=True,
                   kde_sampler=None, image_data_grid_resolution_rescale=1.0,
