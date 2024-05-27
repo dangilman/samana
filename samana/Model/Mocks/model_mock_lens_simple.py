@@ -84,10 +84,10 @@ class MockModelBase(ModelBase):
     @property
     def kwargs_likelihood(self):
         kwargs_likelihood = {'check_bounds': True,
-                             'force_no_add_image': True,
+                             'force_no_add_image': False,
                              'source_marg': False,
                              'image_position_uncertainty': 5e-3,
-                             'check_matched_source_position': True,
+                             'check_matched_source_position': False,
                              'source_position_sigma': 0.0001,
                              'source_position_likelihood': False,
                              'prior_lens': self.prior_lens,
