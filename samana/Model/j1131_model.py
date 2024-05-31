@@ -69,20 +69,20 @@ class _J1131ModelBase(ModelBase):
             kwargs_source_fixed += [{'n_max': n_max}]
             self._image_plane_source_list += [False]
 
-        self._image_plane_source_list += [True]
-        point_of_interest_x1 = 0.84
-        point_of_interest_y1 = 0.05
-        source_model_list_clump, kwargs_source_clump, kwargs_source_sigma_clump, kwargs_source_fixed_clump, \
-        kwargs_lower_source_clump, kwargs_upper_source_clump = self.shapelet_source_clump(point_of_interest_x1,
-                                                                                          point_of_interest_y1,
-                                                                                          n_max_clump=5,
-                                                                                          beta_clump=0.07)
-        source_model_list += source_model_list_clump
-        kwargs_source_init += kwargs_source_clump
-        kwargs_source_sigma += kwargs_source_sigma_clump
-        kwargs_lower_source += kwargs_lower_source_clump
-        kwargs_upper_source += kwargs_upper_source_clump
-        kwargs_source_fixed += kwargs_source_fixed_clump
+        # self._image_plane_source_list += [True]
+        # point_of_interest_x1 = 0.84
+        # point_of_interest_y1 = 0.05
+        # source_model_list_clump, kwargs_source_clump, kwargs_source_sigma_clump, kwargs_source_fixed_clump, \
+        # kwargs_lower_source_clump, kwargs_upper_source_clump = self.shapelet_source_clump(point_of_interest_x1,
+        #                                                                                   point_of_interest_y1,
+        #                                                                                   n_max_clump=5,
+        #                                                                                   beta_clump=0.07)
+        # source_model_list += source_model_list_clump
+        # kwargs_source_init += kwargs_source_clump
+        # kwargs_source_sigma += kwargs_source_sigma_clump
+        # kwargs_lower_source += kwargs_lower_source_clump
+        # kwargs_upper_source += kwargs_upper_source_clump
+        # kwargs_source_fixed += kwargs_source_fixed_clump
 
         source_params = [kwargs_source_init, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source,
                          kwargs_upper_source]

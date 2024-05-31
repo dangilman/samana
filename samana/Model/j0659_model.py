@@ -91,10 +91,11 @@ class _J0659ModelBase(ModelBase):
         if self._shapelets_order is not None:
             n_max = int(self._shapelets_order)
             source_model_list += ['SHAPELETS']
-            kwargs_source_init += [{'amp': 1.0, 'beta': 0.01, 'center_x': 0.018, 'center_y': -0.031,
+            # having beta very small results in the extended source attempting to become a point source
+            kwargs_source_init += [{'amp': 1.0, 'beta': 0.25, 'center_x': 0.018, 'center_y': -0.031,
                                     'n_max': n_max}]
             kwargs_source_sigma += [{'amp': 10.0, 'beta': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'n_max': 1}]
-            kwargs_lower_source += [{'amp': 10.0, 'beta': 0.0, 'center_x': -10.0, 'center_y': -10.0, 'n_max': 0}]
+            kwargs_lower_source += [{'amp': 10.0, 'beta': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'n_max': 0}]
             kwargs_upper_source += [{'amp': 10.0, 'beta': 0.5, 'center_x': 10.0, 'center_y': 10.0, 'n_max': n_max+1}]
             kwargs_source_fixed += [{'n_max': n_max}]
         source_params = [kwargs_source_init, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source,

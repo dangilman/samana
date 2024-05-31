@@ -7,10 +7,21 @@ import numpy as np
 
 class ModelBase(object):
 
-    def __init__(self, data_class, kde_sampler=None):
+    def __init__(self, data_class, kde_sampler=None, *args, **kwargs):
 
         self._data = data_class
         self.kde_sampler = kde_sampler
+
+    def add_uniform_lens_light(self):
+
+        kwargs_light = [{'amp': 0.0}]
+        kwargs_light_sigma = [{'amp': 2.0}]
+        kwargs_light_fixed = [{}]
+        kwargs_lower_light = [{'amp': -100}]
+        kwargs_upper_light = [{'amp': 100}]
+
+        return kwargs_light, kwargs_light_sigma, kwargs_light_fixed, \
+               kwargs_lower_light, kwargs_upper_light
 
     def gaussian_source_clump(self, center_x, center_y, sigma):
 
