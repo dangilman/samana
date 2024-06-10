@@ -177,6 +177,9 @@ def _inds_compute_grid(grid_r, r_min, r_max, inds_compute):
 
 def setup_gaussian_source(source_fwhm_pc, source_x, source_y, astropy_cosmo, z_source):
 
+    if astropy_cosmo is None:
+        from lenstronomy.Cosmo.background import Background
+        astropy_cosmo = Background().cosmo
     kpc_per_arcsec = 1/astropy_cosmo.arcsec_per_kpc_proper(z_source).value
     source_sigma = 1e-3 * source_fwhm_pc / 2.354820 / kpc_per_arcsec
     kwargs_source_light = [{'amp': 1.0, 'center_x': source_x, 'center_y': source_y, 'sigma': source_sigma}]

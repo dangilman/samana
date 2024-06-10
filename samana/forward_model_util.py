@@ -32,6 +32,8 @@ def split_kwargs_params(kwargs_params, index_lens_split):
     :return:
     """
     num_lens_model = len(kwargs_params['lens_model'][0])
+    if index_lens_split is None:
+        return kwargs_params
     if num_lens_model == len(index_lens_split):
         return kwargs_params
     else:
@@ -244,7 +246,7 @@ def flux_ratio_summary_statistic(normalized_magnifcations_measured, model_magnif
     # account for measurement uncertainties in the measured fluxes or flux ratios
     if uncertainty_in_fluxes:
         if measurement_uncertainties is None:
-            mags_with_uncertainties = np.deepcopy(model_magnifications)
+            mags_with_uncertainties = deepcopy(model_magnifications)
         else:
             assert len(measurement_uncertainties) == len(model_magnifications)
             mags_with_uncertainties = [model_magnifications[j] +
@@ -288,7 +290,7 @@ def flux_ratio_likelihood(measured_fluxes, model_fluxes, measurement_uncertainti
         n_draw = 500000
         measured_flux_ratios = measured_fluxes[1:] / measured_fluxes[0]
         if measurement_uncertainties is None:
-            _model_flux = deepcopy(model_fluxes)
+            _model_flux = np.atleast_2d(deepcopy(model_fluxes))
         else:
             _model_flux = np.random.normal(model_fluxes, measurement_uncertainties, size=(n_draw, 4))
         model_flux_ratios = _model_flux[:, 1:] / _model_flux[:, 0, np.newaxis]

@@ -22,7 +22,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   verbose=False, random_seed_init=None, readout_steps=10, write_sampling_rate=True,
                   n_pso_particles=10, n_pso_iterations=50, num_threads=1, astrometric_uncertainty=True,
                   kde_sampler=None, image_data_grid_resolution_rescale=1.0,
-                  use_imaging_data=True, fitting_sequence_kwargs=None, test_mode=False):
+                  use_imaging_data=True, fitting_sequence_kwargs=None, test_mode=False,
+                  use_decoupled_multiplane_approximation=True):
     """
 
     :param output_path:
@@ -129,7 +130,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                             rescale_grid_size, rescale_grid_resolution, image_data_grid_resolution_rescale,
                                             verbose, random_seed, n_pso_particles, n_pso_iterations, num_threads,
                                             kwargs_model_class, astrometric_uncertainty, kde_sampler,
-                                            use_imaging_data, fitting_sequence_kwargs, test_mode)
+                                            use_imaging_data, fitting_sequence_kwargs, test_mode, use_decoupled_multiplane_approximation)
 
         seed_counter += 1
         acceptance_rate_counter += 1
@@ -256,7 +257,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                    kwargs_model_class={}, astrometric_uncertainty=True,
                                    kde_sampler=None, use_imaging_data=True,
                                    fitting_kwargs_list=None,
-                                   test_mode=False):
+                                   test_mode=False,
+                                   use_decoupled_multiplane_approximation=True):
 
     # set the random seed for reproducibility
     np.random.seed(seed)
@@ -311,7 +313,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     astropy_cosmo = realization.lens_cosmo.cosmo.astropy
 
     kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split = model_class.setup_kwargs_model(
-        decoupled_multiplane=True,
+        decoupled_multiplane=use_decoupled_multiplane_approximation,
         lens_model_list_halos=lens_model_list_halos,
         kwargs_lens_macro_init=kwargs_lens_macro_init,
         grid_resolution=grid_resolution_image_data,
@@ -358,29 +360,54 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         kwargs_multiplane_model = kwargs_model['kwargs_multiplane_model']
 
     else:
-        param_class = auto_param_class(lens_model_init.lens_model_list,
-                                       kwargs_lens_align,
-                                       macromodel_samples_fixed_dict)
-        kwargs_lens_init = kwargs_lens_align + kwargs_lens_init[len(kwargs_lens_align):]
-        opt = Optimizer.decoupled_multiplane(data_class.x_image,
-                                             data_class.y_image,
-                                             lens_model_init,
-                                             kwargs_lens_init,
-                                             index_lens_split,
-                                             param_class,
-                                             tol_simplex_func=1e-5,
-                                             simplex_n_iterations=500
-                                             )
-        kwargs_solution, _ = opt.optimize(20, 50, verbose=verbose, seed=seed)
-        kwargs_multiplane_model = opt.kwargs_multiplane_model
 
+        if use_decoupled_multiplane_approximation:
+            param_class = auto_param_class(lens_model_init.lens_model_list,
+                                           kwargs_lens_align,
+                                           macromodel_samples_fixed_dict)
+            kwargs_lens_init = kwargs_lens_align + kwargs_lens_init[len(kwargs_lens_align):]
+            opt = Optimizer.decoupled_multiplane(data_class.x_image,
+                                                 data_class.y_image,
+                                                 lens_model_init,
+                                                 kwargs_lens_init,
+                                                 index_lens_split,
+                                                 param_class,
+                                                 tol_simplex_func=1e-5,
+                                                 simplex_n_iterations=500
+                                                 )
+            kwargs_solution, _ = opt.optimize(20, 50, verbose=verbose, seed=seed)
+            kwargs_multiplane_model = opt.kwargs_multiplane_model
+        else:
 
-    lens_model = LensModel(lens_model_list=kwargs_model['lens_model_list'],
-                           lens_redshift_list=kwargs_model['lens_redshift_list'],
-                           multi_plane=kwargs_model['multi_plane'],
-                           decouple_multi_plane=kwargs_model['decouple_multi_plane'],
-                           kwargs_multiplane_model=kwargs_multiplane_model,
-                           z_source=kwargs_model['z_source'])
+            kwargs_lens_init = kwargs_lens_align + kwargs_halos
+            param_class = auto_param_class(lens_model_init.lens_model_list,
+                                           kwargs_lens_init,
+                                           macromodel_samples_fixed_dict)
+            opt = Optimizer.full_raytracing(data_class.x_image,
+                                            data_class.y_image,
+                                            lens_model_init.lens_model_list,
+                                            lens_model_init.redshift_list,
+                                            data_class.z_lens,
+                                            data_class.z_source,
+                                            param_class,
+                                            tol_simplex_func=1e-5,
+                                            simplex_n_iterations=500,
+                                            particle_swarm=True)
+            kwargs_solution, _ = opt.optimize(20, 50, verbose=verbose, seed=seed)
+            kwargs_multiplane_model = opt.kwargs_multiplane_model
+
+    if use_decoupled_multiplane_approximation:
+        lens_model = LensModel(lens_model_list=kwargs_model['lens_model_list'],
+                               lens_redshift_list=kwargs_model['lens_redshift_list'],
+                               multi_plane=kwargs_model['multi_plane'],
+                               decouple_multi_plane=kwargs_model['decouple_multi_plane'],
+                               kwargs_multiplane_model=kwargs_multiplane_model,
+                               z_source=kwargs_model['z_source'])
+    else:
+        lens_model = LensModel(lens_model_list=lens_model_init.lens_model_list,
+                               lens_redshift_list=lens_model_init.redshift_list,
+                               multi_plane=True,
+                               z_source=kwargs_model['z_source'])
 
     if verbose:
         print('\n')
@@ -410,7 +437,11 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
 
     samples_macromodel = []
     param_names_macro = []
-    for lm in kwargs_solution:
+    if use_decoupled_multiplane_approximation:
+        j_max = len(index_lens_split)
+    else:
+        j_max = len(kwargs_model_align)
+    for lm in kwargs_solution[0:j_max]:
         for key in lm.keys():
             samples_macromodel.append(lm[key])
             param_names_macro.append(key)
@@ -441,17 +472,24 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             print('imaging data likelihood (without custom mask): ', logL_imaging_data_no_custom_mask)
             print('imaging data likelihood (with custom mask): ', logL_imaging_data)
     else:
+
         bic = -1000
         logL_imaging_data = -1000
         # here we replace the lens model used to solve for the four quasar point sources with a lens model that
         # is defined across the entire image plane. This is useful for visualizing the kappa maps, but is not strictly
         # necessary to run the code.
-        lens_model = LensModel(lens_model_list=kwargs_model['lens_model_list'] ,
-                               lens_redshift_list=kwargs_model['lens_redshift_list'] ,
-                               multi_plane=kwargs_model['multi_plane'],
-                               decouple_multi_plane=kwargs_model['decouple_multi_plane'],
-                               kwargs_multiplane_model=kwargs_model['kwargs_multiplane_model'],
-                               z_source=kwargs_model['z_source'])
+        if use_decoupled_multiplane_approximation:
+            lens_model = LensModel(lens_model_list=kwargs_model['lens_model_list'] ,
+                                   lens_redshift_list=kwargs_model['lens_redshift_list'] ,
+                                   multi_plane=kwargs_model['multi_plane'],
+                                   decouple_multi_plane=kwargs_model['decouple_multi_plane'],
+                                   kwargs_multiplane_model=kwargs_model['kwargs_multiplane_model'],
+                                   z_source=kwargs_model['z_source'])
+        else:
+            lens_model = LensModel(lens_model_list=lens_model_init.lens_model_list,
+                                   lens_redshift_list=lens_model_init.redshift_list,
+                                   multi_plane=True,
+                                   z_source=kwargs_model['z_source'])
 
     stat, flux_ratios, flux_ratios_data = flux_ratio_summary_statistic(data_class.magnifications,
                                                                        magnifications,

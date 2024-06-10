@@ -96,7 +96,7 @@ class ModelBase(object):
                            grid_resolution=0.05, verbose=False, macromodel_samples_fixed=None,
                            observed_convention_index=None):
 
-        lens_model_list_macro, redshift_list_macro, _, _ = self.setup_lens_model(kwargs_lens_macro_init,
+        lens_model_list_macro, redshift_list_macro, _, lens_model_params = self.setup_lens_model(kwargs_lens_macro_init,
                                                                                  macromodel_samples_fixed)
         source_model_list, _ = self.setup_source_light_model()
         lens_light_model_list, _ = self.setup_lens_light_model()
@@ -116,7 +116,21 @@ class ModelBase(object):
                         # check what fixed_magnification list does
                         'fixed_magnification_list': [False] * len(point_source_list),
                         'observed_convention_index': observed_convention_index}
-        lens_model_init, kwargs_lens_init, index_lens_split = None, None, None
+
+        if kwargs_halos is not None:
+            kwargs_lens_init = [lens_model_params[0]]
+            lm_list = lens_model_list_macro + lens_model_list_halos
+            z_list = list(redshift_list_macro) + list(redshift_list_halos)
+        else:
+            kwargs_lens_init = [lens_model_params[0]]
+            lm_list = lens_model_list_macro
+            z_list = list(redshift_list_macro)
+
+        index_lens_split = None
+        lens_model_init = LensModel(lm_list,
+                                    lens_redshift_list=z_list,
+                                    z_source=self._data.z_source,
+                                    multi_plane=True)
         if decoupled_multiplane:
             if verbose:
                 print('setting up decoupled multi-plane approximation...')

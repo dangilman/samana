@@ -41,7 +41,7 @@ class _WGD2038ModelBase(ModelBase):
         if self._shapelets_order is not None:
             n_max = int(self._shapelets_order)
             source_model_list += ['SHAPELETS']
-            kwargs_source_init += [{'amp': 1.0, 'beta': 0.105884, 'center_x': 0.018, 'center_y': -0.031,
+            kwargs_source_init += [{'amp': 1.0, 'beta': 0.1, 'center_x': 0.018, 'center_y': -0.031,
                                     'n_max': n_max}]
             kwargs_source_sigma += [{'amp': 10.0, 'beta': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'n_max': 1}]
             kwargs_lower_source += [{'amp': 10.0, 'beta': 0.0, 'center_x': -10.0, 'center_y': -10.0, 'n_max': 0}]
@@ -103,10 +103,10 @@ class WGD2038ModelEPLM3M4Shear(_WGD2038ModelBase):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR']
         kwargs_lens_macro = [
-            {'theta_E': 1.3733549048519522, 'gamma': 2.302233358648358, 'e1': -0.05305476556032125,
-             'e2': 0.18882543339170252, 'center_x': -0.015033963454071275, 'center_y': -0.017585368327253176,
-             'a3_a': 0.0, 'delta_phi_m3': 0.30725812941241887, 'a4_a': 0.0, 'delta_phi_m4': -0.013146133238934623},
-            {'gamma1': 0.03295982081795009, 'gamma2': -0.07577916357397325, 'ra_0': 0.0, 'dec_0': 0.0}
+            {'theta_E': 1.373110252353113, 'gamma': 2.16718926046087, 'e1': -0.04581141607598479,
+             'e2': 0.15755767819518052, 'center_x': -0.017588676603218164, 'center_y': -0.007060446926688036,
+             'a3_a': 0.0, 'delta_phi_m3': 0.25137211729238096, 'a4_a': 0.0, 'delta_phi_m4': -0.08534801354415275},
+            {'gamma1': 0.027097934961958177, 'gamma2': -0.06131031657529149, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]
