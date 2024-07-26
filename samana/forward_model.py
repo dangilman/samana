@@ -23,7 +23,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   n_pso_particles=10, n_pso_iterations=50, num_threads=1, astrometric_uncertainty=True,
                   kde_sampler=None, image_data_grid_resolution_rescale=1.0,
                   use_imaging_data=True, fitting_sequence_kwargs=None, test_mode=False,
-                  use_decoupled_multiplane_approximation=True):
+                  use_decoupled_multiplane_approximation=True, fixed_realization_list=None):
     """
 
     :param output_path:
@@ -54,6 +54,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     :param use_imaging_data:
     :param fitting_sequence_kwargs:
     :param test_mode:
+    :param fixed_realization_list:
     :return:
     """
 
@@ -87,11 +88,16 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
         _m = None
         write_param_names = True
         write_param_names_macromodel_samples = True
-
+    if fixed_realization_list is not None:
+        if verbose:
+            if len(fixed_realization_list) != n_keep:
+                print('you specified n_keep = '+str(n_keep)+' but also gave a list of precomputed substructure '
+                                                            'realizations. The code will run once per realization. '
+                                                            'New n_keep = '+str(len(fixed_realization_list)))
+            n_keep = len(fixed_realization_list)
     if n_kept >= n_keep:
         print('\nSIMULATION ALREADY FINISHED.')
         return
-
     # Initialize stuff for the inference
     parameter_array = None
     mags_out = None
@@ -122,7 +128,10 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
         random_seed = random_seed_init + seed_counter
         if random_seed > 4294967295:
             random_seed = random_seed - 4294967296
-
+        if fixed_realization_list is not None:
+            fixed_realization = fixed_realization_list[acceptance_rate_counter]
+        else:
+            fixed_realization = None
         magnifications, images, realization_samples, source_samples, macromodel_samples, macromodel_samples_fixed, \
         logL_imaging_data, fitting_sequence, stat, log_flux_ratio_likelihood, bic, param_names_realization, param_names_source, param_names_macro, \
         param_names_macro_fixed, _, _, _ = forward_model_single_iteration(data_class, model, preset_model_name, kwargs_sample_realization,
@@ -130,7 +139,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                             rescale_grid_size, rescale_grid_resolution, image_data_grid_resolution_rescale,
                                             verbose, random_seed, n_pso_particles, n_pso_iterations, num_threads,
                                             kwargs_model_class, astrometric_uncertainty, kde_sampler,
-                                            use_imaging_data, fitting_sequence_kwargs, test_mode, use_decoupled_multiplane_approximation)
+                                            use_imaging_data, fitting_sequence_kwargs, test_mode,
+                                            use_decoupled_multiplane_approximation, fixed_realization)
 
         seed_counter += 1
         acceptance_rate_counter += 1
@@ -258,7 +268,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                    kde_sampler=None, use_imaging_data=True,
                                    fitting_kwargs_list=None,
                                    test_mode=False,
-                                   use_decoupled_multiplane_approximation=True):
+                                   use_decoupled_multiplane_approximation=True,
+                                   fixed_realization=None):
 
     # set the random seed for reproducibility
     np.random.seed(seed)
@@ -270,9 +281,9 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     realization_dict, realization_samples, realization_param_names = sample_prior(kwargs_sample_realization)
     source_dict, source_samples, source_param_names = sample_prior(kwargs_sample_source)
     macromodel_samples_fixed_dict, samples_macromodel_fixed, param_names_macro_fixed = sample_prior(kwargs_sample_macro_fixed)
-    if 'SUBSTRUCTURE_REALIZATION' in realization_param_names:
-        if verbose: print('using a user-specified dark matter realization')
-        realization_init = realization_dict['SUBSTRUCTURE_REALIZATION']
+    if fixed_realization is not None:
+        if verbose: print('using a precomputed dark matter realization')
+        realization_init = fixed_realization
         preset_realization = True
     else:
         present_model_function = preset_model_from_name(preset_model_name)
@@ -552,6 +563,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                               image_likelihood_mask_list=[data_class.likelihood_mask_imaging_weights])
         if use_imaging_data:
             chain_plot.plot_chain_list(chain_list, 0)
+            print('num degrees of freedom: ', fitting_sequence.likelihoodModule.effective_num_data_points(**kwargs_result))
+
         f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
         modelPlot.data_plot(ax=axes[0, 0])
         modelPlot.model_plot(ax=axes[0, 1])
