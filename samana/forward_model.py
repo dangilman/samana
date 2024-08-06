@@ -94,7 +94,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                 print('you specified n_keep = '+str(n_keep)+' but also gave a list of precomputed substructure '
                                                             'realizations. The code will run once per realization. '
                                                             'New n_keep = '+str(len(fixed_realization_list)))
-            n_keep = len(fixed_realization_list)
+        n_keep = len(fixed_realization_list)
     if n_kept >= n_keep:
         print('\nSIMULATION ALREADY FINISHED.')
         return
