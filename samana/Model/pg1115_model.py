@@ -76,7 +76,7 @@ class _PG1115ModelBase(ModelBase):
                              'source_marg': False,
                              'image_position_uncertainty': 5e-3,
                              'source_position_likelihood': False,
-                             'check_matched_source_position': False,
+                             #'check_matched_source_position': False,
                              'source_position_sigma': 0.0001,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
