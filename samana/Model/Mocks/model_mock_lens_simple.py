@@ -87,7 +87,7 @@ class MockModelBase(ModelBase):
                              'force_no_add_image': False,
                              'source_marg': False,
                              'image_position_uncertainty': 5e-3,
-                             'check_matched_source_position': False,
+                             #'check_matched_source_position': False,
                              'source_position_sigma': 0.0001,
                              'source_position_likelihood': False,
                              'prior_lens': self.prior_lens,
