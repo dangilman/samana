@@ -5,7 +5,7 @@ import pickle
 
 class _WFI2033ModelBase(ModelBase):
 
-    def __init__(self, data_class, kde_sampler, shapelets_order):
+    def __init__(self, data_class, kde_sampler=None, shapelets_order=None):
         self._shapelets_order = shapelets_order
         super(_WFI2033ModelBase, self).__init__(data_class, kde_sampler)
 
@@ -43,7 +43,9 @@ class _WFI2033ModelBase(ModelBase):
                               'num_point_source_list': [len(self._data.x_image)],
                               'solver_type': 'PROFILE_SHEAR',
                               'point_source_offset': True,
-                              'joint_lens_with_light': [[1, 2, ['center_x', 'center_y']]]
+                              'joint_lens_with_light': [[1, 2, ['center_x', 'center_y']],
+                                                       # [2, 3, ['center_x', 'center_y']]
+                                                        ]
                               }
         if self._shapelets_order is not None:
             kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
@@ -84,24 +86,47 @@ class _WFI2033ModelBase(ModelBase):
 
     def setup_lens_light_model(self):
 
-        lens_light_model_list = ['SERSIC_ELLIPSE', 'SERSIC']
+        lens_light_model_list = ['SERSIC_ELLIPSE', 'SERSIC',
+                                # 'SERSIC'
+                                 ]
         kwargs_lens_light_init = [
             {'amp': 2.988675202076953, 'R_sersic': 2.312873512068243, 'n_sersic': 5.229966623889376,
              'e1': -0.07879614332928109, 'e2': 0.07352985080432621, 'center_x': -0.04825428196460036,
              'center_y': -0.04868561928572901},
             {'amp': 6362.943163277013, 'R_sersic': 0.009497235147221821, 'n_sersic': 3.734262409628431,
-             'center_x': 0.21228905644270246, 'center_y': 1.9896170594129898}
+             'center_x': 0.21228905644270246, 'center_y': 1.9896170594129898},
+         #   {'amp': 1.943163277013, 'R_sersic': 2.0, 'n_sersic': 4.0,
+         #    'center_x': self._satellite_x, 'center_y': self._satellite_y}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1},
-            {'R_sersic': 0.01, 'n_sersic': 0.25, 'center_x': 0.1, 'center_y': 0.1}]
+            {'R_sersic': 0.01, 'n_sersic': 0.25, 'center_x': 0.1, 'center_y': 0.1},
+        #    {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}
+        ]
         kwargs_lower_lens_light = [
             {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10.0, 'center_y': -10.0},
-            {'R_sersic': 0.0001, 'n_sersic': 0.5, 'center_x': -10.0, 'center_y': -10.0}]
+            {'R_sersic': 0.0001, 'n_sersic': 0.5, 'center_x': -10.0, 'center_y': -10.0},
+         #   {'R_sersic': 0.001, 'n_sersic': 0.5, 'center_x': -10.0, 'center_y': -10.0}
+        ]
         kwargs_upper_lens_light = [
             {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10},
-            {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
-        kwargs_lens_light_fixed = [{}, {}]
+            {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10},
+       # {'R_sersic': 5.0, 'n_sersic': 10.0, 'center_x': 10.0, 'center_y': 10.0}
+            ]
+        kwargs_lens_light_fixed = [{},
+                                   {},
+                                   {}
+                                   ]
+
+        include_uniform_comp = True
+        if include_uniform_comp:
+            lens_light_model_list += ['UNIFORM']
+            kwargs_lens_light_init += [{'amp': 3.986}]
+            kwargs_lens_light_sigma += [{'amp': 1.0}]
+            kwargs_lower_lens_light += [{'amp': -1000}]
+            kwargs_upper_lens_light += [{'amp': 1000}]
+            kwargs_lens_light_fixed += [{}]
+
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
 
@@ -124,8 +149,8 @@ class _WFI2033ModelBase(ModelBase):
 
 class WFI2033ModelEPLM3M4ShearObservedConvention(_WFI2033ModelBase):
 
-    def __init__(self, data_class, kde_sampler=None, shapelets_order=None):
-        super(WFI2033ModelEPLM3M4ShearObservedConvention, self).__init__(data_class, kde_sampler, shapelets_order)
+    _satellite_x = -4.0
+    _satellite_y = -0.08
 
     @property
     def prior_lens(self):
@@ -149,7 +174,7 @@ class WFI2033ModelEPLM3M4ShearObservedConvention(_WFI2033ModelBase):
                               'delta_phi_m3': -0.1293835622154349, 'a4_a': 0.0, 'delta_phi_m4': -0.018710557972236738},
                              {'gamma1': 0.18064156252999108, 'gamma2': -0.08382923416962305, 'ra_0': 0.0, 'dec_0': 0.0},
                              {'theta_E': 0.09557984210599564, 'center_x': 0.2109876011562729, 'center_y': 1.986792353941162},
-                             {'theta_E': 0.8874, 'center_x': -4.0, 'center_y': -0.08}]
+                             {'theta_E': 0.8874, 'center_x': self._satellite_x, 'center_y': self._satellite_y}]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens,
                                self._data.z_lens, 0.745]
         index_lens_split = [0, 1, 2]
@@ -186,6 +211,9 @@ class WFI2033ModelEPLM3M4ShearObservedConvention(_WFI2033ModelBase):
 
 class WFI2033ModelEPLM3M4Shear(WFI2033ModelEPLM3M4ShearObservedConvention):
 
+    _satellite_x = -3.873537518
+    _satellite_y = -0.159589891
+
     @property
     def prior_lens(self):
         return [[0, 'gamma', 2.0, 0.1], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005], [2, 'center_x', 0.245, 0.05],
@@ -208,7 +236,7 @@ class WFI2033ModelEPLM3M4Shear(WFI2033ModelEPLM3M4ShearObservedConvention):
              'delta_phi_m3': 0.16709974394986865, 'a4_a': 0.0, 'delta_phi_m4': -0.14810669089991801},
             {'gamma1': 0.16684542942450115, 'gamma2': -0.04997559877244375, 'ra_0': 0.0, 'dec_0': 0.0},
             {'theta_E': 0.09491605731769136, 'center_x': 0.21228905644270246, 'center_y': 1.9896170594129898},
-            {'theta_E': 1.194794372005678, 'center_x': -3.873537518115985, 'center_y': -0.1595898915464294}
+            {'theta_E': 0.8874, 'center_x': self._satellite_x, 'center_y': self._satellite_y}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens,
                                self._data.z_lens, 0.745]
