@@ -1,5 +1,5 @@
 import numpy as np
-
+from lenstronomy.Data.coord_transforms import Coordinates
 
 class ImagingDataBase(object):
 
@@ -47,6 +47,12 @@ class ImagingDataBase(object):
         self._x = self._x_image_init + delta_x_image
         self._y = self._y_image_init + delta_y_image
         return delta_x_image, delta_y_image
+
+    @property
+    def coordinate_system(self):
+        _, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, _ = self.coordinate_properties
+        coords = Coordinates(transform_pix2angle, ra_at_xy_0, dec_at_xy_0)
+        return coords
 
     @property
     def x_image(self):

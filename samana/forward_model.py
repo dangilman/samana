@@ -281,6 +281,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     realization_dict, realization_samples, realization_param_names = sample_prior(kwargs_sample_realization)
     source_dict, source_samples, source_param_names = sample_prior(kwargs_sample_source)
     macromodel_samples_fixed_dict, samples_macromodel_fixed, param_names_macro_fixed = sample_prior(kwargs_sample_macro_fixed)
+
     if fixed_realization is not None:
         if verbose: print('using a precomputed dark matter realization')
         realization_init = fixed_realization
@@ -456,6 +457,11 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         for key in lm.keys():
             samples_macromodel.append(lm[key])
             param_names_macro.append(key)
+    if use_decoupled_multiplane_approximation:
+        for fixed_param in ['satellite_1_theta_E', 'satellite_1_x', 'satellite_1_y']:
+            if fixed_param in macromodel_samples_fixed_dict.keys():
+                samples_macromodel.append(macromodel_samples_fixed_dict[fixed_param])
+                param_names_macro.append(fixed_param)
     samples_macromodel = np.array(samples_macromodel)
 
     if use_imaging_data:
