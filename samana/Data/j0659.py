@@ -202,9 +202,19 @@ class J0659JWST_MIRIImaging(_J0659MIRIImaging):
         """
         x_image = np.array([ 1.92868455, -2.63631545,  0.69968455,  1.84268455])
         y_image = np.array([-0.74780858, -1.50780858,  2.03419142,  1.13519142])
+        horizontal_shift = np.array([-0.02353441, -0.03271309, -0.00903864, -0.0362673 ])
+        vertical_shift = np.array([ 0.02834304,  0.02132144, -0.00341592,  0.03068618])
+        # x_image = np.array([1.93268455, -2.67131545, 0.69168455, 1.81868455])
+        # y_image = np.array([-0.74780858, -1.51780858, 2.02119142, 1.13719142])
+        # horizontal_shift = np.array([-0.02494995,  0.00773485, -0.00694279, -0.01560509])
+        # vertical_shift = np.array([0.0251512 , 0.02953734, 0.00480343, 0.02590996])
+
         # from fitting
-        horizontal_shift = -0.02
-        vertical_shift = 0.01
+        # x_image = np.array([ 1.88220099, -2.70432278,  0.69039362,  1.79369873])
+        # y_image = np.array([-0.70388747, -1.47943076,  2.04599013,  1.15358033])
+        # horizontal_shift = -0.0
+        # vertical_shift = 0.0
+
         x_image += horizontal_shift
         y_image += vertical_shift
         image_position_uncertainties = [0.005] * 4 # 5 arcsec

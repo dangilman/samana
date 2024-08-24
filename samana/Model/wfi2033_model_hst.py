@@ -114,18 +114,21 @@ class _WFI2033ModelBase(ModelBase):
        # {'R_sersic': 5.0, 'n_sersic': 10.0, 'center_x': 10.0, 'center_y': 10.0}
             ]
         kwargs_lens_light_fixed = [{},
-                                   {},
                                    {}
+                                   #{}
                                    ]
 
         include_uniform_comp = True
         if include_uniform_comp:
+            kwargs_light_uniform, kwargs_light_sigma_uniform, kwargs_light_fixed_uniform, \
+            kwargs_lower_light_uniform, kwargs_upper_light_uniform = \
+                self.add_uniform_lens_light(4.0, 1.0)
             lens_light_model_list += ['UNIFORM']
-            kwargs_lens_light_init += [{'amp': 3.986}]
-            kwargs_lens_light_sigma += [{'amp': 1.0}]
-            kwargs_lower_lens_light += [{'amp': -1000}]
-            kwargs_upper_lens_light += [{'amp': 1000}]
-            kwargs_lens_light_fixed += [{}]
+            kwargs_lens_light_init += kwargs_light_uniform
+            kwargs_lens_light_sigma += kwargs_light_sigma_uniform
+            kwargs_lower_lens_light += kwargs_lower_light_uniform
+            kwargs_upper_lens_light += kwargs_upper_light_uniform
+            kwargs_lens_light_fixed += kwargs_light_fixed_uniform
 
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]

@@ -12,10 +12,10 @@ class ModelBase(object):
         self._data = data_class
         self.kde_sampler = kde_sampler
 
-    def add_uniform_lens_light(self):
+    def add_uniform_lens_light(self, amp_init=0.0, amp_sigma=1.0):
 
-        kwargs_light = [{'amp': 0.0}]
-        kwargs_light_sigma = [{'amp': 2.0}]
+        kwargs_light = [{'amp': amp_init}]
+        kwargs_light_sigma = [{'amp': amp_sigma}]
         kwargs_light_fixed = [{}]
         kwargs_lower_light = [{'amp': -100}]
         kwargs_upper_light = [{'amp': 100}]

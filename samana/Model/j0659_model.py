@@ -46,33 +46,6 @@ class _J0659ModelBase(ModelBase):
     def prior_lens(self):
         return [[0, 'gamma', 2.0, 0.2]]
 
-    # def setup_source_light_model(self):
-    #
-    #     source_model_list = ['UNIFORM']
-    #     kwargs_source_init = [
-    #         {'amp': 0.004229672145693155}
-    #     ]
-    #     kwargs_source_sigma = [{'amp': 1.0}]
-    #     kwargs_lower_source = [
-    #         {'amp':0.0}]
-    #     kwargs_upper_source = [
-    #         {'amp': 10.0}]
-    #     kwargs_source_fixed = [{}]
-    #
-    #     if self._shapelets_order is not None:
-    #         n_max = int(self._shapelets_order)
-    #         source_model_list += ['SHAPELETS']
-    #         kwargs_source_init += [{'amp': 1.0, 'beta': 0.01, 'center_x': 0.018, 'center_y': -0.031,
-    #                                 'n_max': n_max}]
-    #         kwargs_source_sigma += [{'amp': 10.0, 'beta': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'n_max': 1}]
-    #         kwargs_lower_source += [{'amp': 10.0, 'beta': 0.0, 'center_x': -10.0, 'center_y': -10.0, 'n_max': 0}]
-    #         kwargs_upper_source += [{'amp': 10.0, 'beta': 0.5, 'center_x': 10.0, 'center_y': 10.0, 'n_max': n_max + 1}]
-    #         kwargs_source_fixed += [{'n_max': n_max}]
-    #     source_params = [kwargs_source_init, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source,
-    #                      kwargs_upper_source]
-    #
-    #     return source_model_list, source_params
-
     def setup_source_light_model(self):
 
         source_model_list = ['SERSIC_ELLIPSE']
@@ -84,7 +57,7 @@ class _J0659ModelBase(ModelBase):
         kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -11, 'center_y': -11.0}]
-        kwargs_upper_source = [{'R_sersic': 10.0, 'n_sersic': 100.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 11.0, 'center_y': 11.0}]
+        kwargs_upper_source = [{'R_sersic': 10.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 11.0, 'center_y': 11.0}]
         kwargs_source_fixed = [{}]
 
         if self._shapelets_order is not None:
@@ -123,6 +96,19 @@ class _J0659ModelBase(ModelBase):
             {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10},
         {'R_sersic': 1.0, 'n_sersic': 10.0, 'center_x': 10.0, 'center_y': 10.0}]
         kwargs_lens_light_fixed = [{}, {}]
+
+        include_uniform_comp = True
+        if include_uniform_comp:
+            kwargs_light_uniform, kwargs_light_sigma_uniform, kwargs_light_fixed_uniform, \
+            kwargs_lower_light_uniform, kwargs_upper_light_uniform = \
+                self.add_uniform_lens_light(0.0, 1.0)
+            lens_light_model_list += ['UNIFORM']
+            kwargs_lens_light_init += kwargs_light_uniform
+            kwargs_lens_light_sigma += kwargs_light_sigma_uniform
+            kwargs_lower_lens_light += kwargs_lower_light_uniform
+            kwargs_upper_lens_light += kwargs_upper_light_uniform
+            kwargs_lens_light_fixed += kwargs_light_fixed_uniform
+
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
 
@@ -204,36 +190,41 @@ class J0659ModelEPLM3M4Shear_AssumeStar(_J0659ModelBase):
         return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
 
 
-class J0659ModelEPLM3M4Shear_AssumeGalaxy(_J0659ModelBase):
+class J0659ModelEPLM3M4Shear(_J0659ModelBase):
 
     def __init__(self, data_class, kde_sampler=None, shapelets_order=None):
-        super(J0659ModelEPLM3M4Shear_AssumeGalaxy, self).__init__(data_class, kde_sampler, shapelets_order)
+        super(J0659ModelEPLM3M4Shear, self).__init__(data_class, kde_sampler, shapelets_order)
 
     def q_prior(self, kwargs_lens,
                 kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
                 kwargs_extinction, kwargs_tracer_source):
 
         e1, e2 = kwargs_lens[0]['e1'], kwargs_lens[0]['e2']
-        if abs(e1) > 0.6 or abs(e1) > 0.6:
+        _, q = ellipticity2phi_q(e1, e2)
+        if q < 0.5:
             return -1e9
-        phiq, q = ellipticity2phi_q(e1, e2)
-        return -0.5 * (q - 0.95) ** 2 / 0.1 ** 2
+        else:
+            return -0.5 * (q - 0.95) ** 2 / 0.1 ** 2
 
     @property
     def prior_lens(self):
         return [[0, 'gamma', 2.0, 0.1],
-                [2, 'theta_E', 0.2, 0.2]]
+                [2, 'theta_E', 0.25, 0.2]]
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None, assume_star=False):
 
         star_x, star_y = self._data.satellite_or_star_coords
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR', 'SIS']
         kwargs_lens_macro = [
-            {'theta_E': 2.1605631755867893, 'gamma': 1.9560591845864295, 'e1': -0.037496027239971266,
-             'e2': -0.05399604866482186, 'center_x': 0.046135644852520676, 'center_y': -0.22132533038219016,
-             'a3_a': 0.0, 'delta_phi_m3': -0.36971825331534836, 'a4_a': 0.0, 'delta_phi_m4': 0.51992745655839},
-            {'gamma1': 0.04347299847870509, 'gamma2': 0.06341935451688109, 'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.25, 'center_x': star_x, 'center_y': star_y}
+            {'theta_E': 2.110376719062807, 'gamma': 2.107846612166999, 'e1': -0.10067152279571845,
+             'e2': -0.09932806481697574, 'center_x': 0.1580550975465694,
+             'center_y': -0.19976114596138794,
+             'a3_a': 0.0, 'delta_phi_m3': 0.23880200801764606,
+             'a4_a': 0.0, 'delta_phi_m4': 1.0967614287388183},
+            {'gamma1': 0.01703484417956671, 'gamma2': 0.08728891096532397,
+             'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.320825567758849, 'center_x': star_x,
+             'center_y': star_y}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1, 2]
