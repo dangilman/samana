@@ -107,6 +107,10 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     accepted_realizations_counter = 0
     acceptance_rate_counter = 0
     iteration_counter = 0
+    # estimate the sampling rate (CPU minutes per realization) after this many iterations
+    readout_sampling_rate_index = 10
+    if n_keep < readout_sampling_rate_index:
+        readout_sampling_rate_index = deepcopy(n_keep)
     acceptance_ratio = np.nan
     sampling_rate = np.nan
     t0 = time()
@@ -145,7 +149,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
         seed_counter += 1
         acceptance_rate_counter += 1
         # Once we have computed a couple realizations, keep a log of the time it takes to run per realization
-        if acceptance_rate_counter == 10:
+        if acceptance_rate_counter == readout_sampling_rate_index:
             time_elapsed = time() - t0
             time_elapsed_minutes = time_elapsed / 60
             sampling_rate = time_elapsed_minutes / acceptance_rate_counter
