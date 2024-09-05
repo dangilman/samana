@@ -204,7 +204,7 @@ class HE0435ModelEPLM3M4Shear(HE0435ModelEPLM3M4ShearObservedConvention):
 
         # satellite observed position: -2.6 -3.65
         # satellite inferred position from lens mdoel: -2.4501, -3.223
-        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR', 'SIS']
+        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR', 'SIS']
         kwargs_lens_macro = [{'theta_E': 1.183879459825199, 'gamma': 2.1932908582668946, 'e1': 0.036681457593259845,
                               'e2': 0.03307337024314603, 'center_x': -0.006229479709622775,
                               'center_y': -0.0016358162588540096, 'a3_a': 0.0,

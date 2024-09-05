@@ -1,44 +1,30 @@
 from samana.Data.data_base import ImagingDataBase
 import numpy as np
 
-
-class _J0248(ImagingDataBase):
+class _J0147(ImagingDataBase):
 
     def __init__(self, x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
                  uncertainty_in_fluxes, supersample_factor, image_data_type):
 
-        z_lens = 0.5
-        z_source = 2.44
+        z_lens = 0.68  # fiducial
+        z_source = 2.38
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
         if image_data_type == 'HST814W':
-            from samana.Data.ImageData.j0248_f814W import psf_model, psf_error_map, image_data
-            self._psf_estimate_init = psf_model
-            self._psf_error_map_init = psf_error_map
-            self._image_data = image_data
-            self._psf_supersampling_factor = 1
-            self._deltaPix = 0.04
-            self._window_size = 2.96
-            self._ra_at_xy_0 = 1.4794297
-            self._dec_at_xy_0 = -1.48027077
-            self._transform_pix2angle = np.array([[-3.99919120e-02,  7.32418926e-06],
-                                            [ 7.33473592e-06,  3.99999834e-02]])
-            self._background_rms = 0.005795
-            self._exposure_time = 1428.0
-            self._noise_map = None
+            raise Exception('not HST imaging avaialble for this system')
 
         elif image_data_type == 'MIRI540W':
-            from samana.Data.ImageData.j0248_MIRI540W import psf_model, image_data, noise_map
+            from samana.Data.ImageData.j0147_MIRI540W import psf_model, image_data, noise_map
             self._psf_estimate_init = psf_model
             self._psf_error_map_init = None
             self._image_data = image_data
             self._psf_supersampling_factor = 3
-            self._deltaPix = 0.11086
-            self._window_size = 3.65838
-            self._ra_at_xy_0 = 1.3880446788929826
-            self._dec_at_xy_0 = 2.1847897503203315
-            self._transform_pix2angle = np.array([[0.02414379, -0.10826771],
-                                                  [-0.10826771, -0.02414379]])
+            self._deltaPix = 0.11047640950177343
+            self._window_size = 6.407631751102859
+            self._ra_at_xy_0 = 1.6953711678359449
+            self._dec_at_xy_0 = 4.201736423262119
+            self._transform_pix2angle = np.array([[0.04321319, -0.10167427],
+                                                  [-0.10167427, -0.04321319]])
             self._background_rms = None
             self._exposure_time = None
             self._noise_map = noise_map
@@ -46,12 +32,11 @@ class _J0248(ImagingDataBase):
             raise Exception('image data type must be either HST814W or MIRI540W')
 
         self._supersample_factor = supersample_factor
-
         image_band = [self.kwargs_data, self.kwargs_psf, self.kwargs_numerics]
         multi_band_list = [image_band]
         kwargs_data_joint = {'multi_band_list': multi_band_list, 'multi_band_type': 'multi-linear'}
         likelihood_mask, likelihood_mask_imaging_weights = self.likelihood_masks(x_image, y_image)
-        super(_J0248, self).__init__(z_lens, z_source,
+        super(_J0147, self).__init__(z_lens, z_source,
                                        kwargs_data_joint, x_image, y_image,
                                        magnifications, image_position_uncertainties, flux_uncertainties,
                                        uncertainty_in_fluxes, keep_flux_ratio_index, likelihood_mask,
@@ -106,38 +91,7 @@ class _J0248(ImagingDataBase):
                       }
         return kwargs_psf
 
-class J0248_HST(_J0248):
-
-    def __init__(self):
-        """
-
-        :param image_position_uncertainties: list of astrometric uncertainties for each image
-        i.e. [0.003, 0.003, 0.003, 0.003]
-        :param flux_uncertainties: list of flux ratio uncertainties in percentage, or None if these are handled
-        post-processing
-        :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
-        :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
-        """
-        x_image = np.array([ 0.3827822 , -0.52452975, -0.66897894,  0.33092538])
-        y_image = np.array([ 0.62079534,  0.65874007, -0.17619568, -0.78839384])
-        horizontal_shift = 0.0
-        vertical_shift = 0.0
-        x_image += horizontal_shift
-        y_image += vertical_shift
-        image_position_uncertainties = [0.005] * 4 # 5 arcsec
-        flux_uncertainties = None
-        uncertainty_in_fluxes = False
-        magnifications = np.array([1.0] * 4)
-        super(J0248_HST, self).__init__(x_image,
-                                     y_image,
-                                     magnifications,
-                                     image_position_uncertainties,
-                                     flux_uncertainties,
-                                     uncertainty_in_fluxes,
-                                     supersample_factor=1,
-                                     image_data_type='HST814W')
-
-class J0248_MIRI(_J0248):
+class J0147_MIRI(_J0147):
 
     def __init__(self, supersample_factor=1):
         """
@@ -149,10 +103,11 @@ class J0248_MIRI(_J0248):
         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
-        x_image = np.array([0.34, -0.66019, -0.5158, 0.3901])
-        y_image = np.array([-0.8, -0.18994, 0.646989, 0.60956])
-        horizontal_shift = 0.005
-        vertical_shift = -0.01
+
+        x_image = np.array([-0.31403245, -1.22027629, 0.02470712, 1.18960163])
+        y_image = np.array([-1.78907366, 1.3487013, 1.4475247, 1.03284766])
+        horizontal_shift = 0.02
+        vertical_shift = -0.005
         x_image += horizontal_shift
         y_image += vertical_shift
         image_position_uncertainties = [0.005] * 4 # 5 arcsec
@@ -160,7 +115,7 @@ class J0248_MIRI(_J0248):
         uncertainty_in_fluxes = False
         magnifications = np.array([1.0] * 4)
         image_data_type = 'MIRI540W'
-        super(J0248_MIRI, self).__init__(x_image,
+        super(J0147_MIRI, self).__init__(x_image,
                                      y_image,
                                      magnifications,
                                      image_position_uncertainties,
@@ -168,4 +123,3 @@ class J0248_MIRI(_J0248):
                                      uncertainty_in_fluxes,
                                      supersample_factor,
                                      image_data_type)
-

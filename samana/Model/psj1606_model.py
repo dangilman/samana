@@ -120,7 +120,7 @@ class PSJ1606ModelEPLM3M4Shear(_PSJ1606ModelBase):
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
-        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR', 'SIS']
+        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR', 'SIS']
         kwargs_lens_macro = [{'theta_E': 0.6613364668206294, 'gamma': 2.0, 'e1': 0.22299879030756636, 'e2': 0.12198011366332132,
           'center_x': 0.053527710995482466, 'center_y': -0.03609935287371285,
           'a3_a': 0.0, 'delta_phi_m3': 0.48799225675778923, 'a4_a': 0.0, 'delta_phi_m4': 0.0},

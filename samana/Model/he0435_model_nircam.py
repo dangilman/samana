@@ -243,7 +243,10 @@ class HE0435ModelNircamEPLM3M4Shear(_HE0435NircamModelBase):
 
         # satellite observed position: -2.6 -3.65
         # satellite inferred position from lens mdoel: -2.4501, -3.223
-        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR', 'SIS']
+        if self._spherical_multipole:
+            lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR', 'SIS']
+        else:
+            lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR', 'SIS']
         kwargs_lens_macro = [
             {'theta_E': 1.1778927407630202, 'gamma': 2.1715769335116764, 'e1': 0.05819312551789523,
              'e2': 0.1199644307864586, 'center_x': 0.0007622692384399802, 'center_y': -0.0027688317014858007,

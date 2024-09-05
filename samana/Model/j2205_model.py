@@ -97,6 +97,19 @@ class _J2205ModelBase(ModelBase):
             {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10},
             {'R_sersic': 10, 'n_sersic': 10.0, 'center_x': gal_x + 0.2, 'center_y': gal_y + 0.2}]
         kwargs_lens_light_fixed = [{}, {}]
+
+        add_uniform_component = True
+        if add_uniform_component:
+            lens_light_model_list += ['UNIFORM']
+            kwargs_light_uniform, kwargs_light_sigma_uniform, kwargs_light_fixed_uniform, \
+                kwargs_lower_light_uniform, kwargs_upper_light_uniform = self.add_uniform_lens_light(-1.28, 1.0)
+
+            kwargs_lens_light_init += kwargs_light_uniform
+            kwargs_lens_light_sigma += kwargs_light_sigma_uniform
+            kwargs_lens_light_fixed += kwargs_light_fixed_uniform
+            kwargs_lower_lens_light += kwargs_lower_light_uniform
+            kwargs_upper_lens_light += kwargs_upper_light_uniform
+
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
 
@@ -130,7 +143,10 @@ class J2205ModelEPLM3M4Shear(_J2205ModelBase):
 
         gal_x = -1.122
         gal_y = 0.194
-        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR', 'SIS']
+        if self._spherical_multipole:
+            lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR', 'SIS']
+        else:
+            lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR', 'SIS']
         kwargs_lens_macro = [
             {'theta_E': 0.7666428454526221, 'gamma': 1.7496657525311452, 'e1': -0.09664375968254033,
              'e2': -0.018052998991494037, 'center_x': -0.01644643093471435, 'center_y': -0.0012640439638166375,

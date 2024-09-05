@@ -101,12 +101,16 @@ class WGD2038ModelEPLM3M4Shear(_WGD2038ModelBase):
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
-        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR']
+        if self._spherical_multipole:
+            lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR']
+        else:
+            lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
         kwargs_lens_macro = [
-            {'theta_E': 1.373110252353113, 'gamma': 2.16718926046087, 'e1': -0.04581141607598479,
-             'e2': 0.15755767819518052, 'center_x': -0.017588676603218164, 'center_y': -0.007060446926688036,
-             'a3_a': 0.0, 'delta_phi_m3': 0.25137211729238096, 'a4_a': 0.0, 'delta_phi_m4': -0.08534801354415275},
-            {'gamma1': 0.027097934961958177, 'gamma2': -0.06131031657529149, 'ra_0': 0.0, 'dec_0': 0.0}
+            {'theta_E': 1.374646045398614, 'gamma': 2.189593713995333, 'e1': -0.04958844555000785,
+             'e2': 0.16916023267630587, 'center_x': -0.02626198911033561, 'center_y': -0.01549338966241764,
+             'a3_a': 0.003686050954493584, 'delta_phi_m3': 0.1648278118903945, 'a4_a': 0.004868967035533458,
+             'delta_phi_m4': -0.04903707789457426},
+            {'gamma1': 0.029244188728792735, 'gamma2': -0.06183496342919175, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]

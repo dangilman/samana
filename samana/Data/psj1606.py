@@ -71,40 +71,6 @@ class _PSJ1606(ImagingDataBase):
                       'psf_error_map': self._psf_error_map_init}
         return kwargs_psf
 
-class PSJ1606_JWST(_PSJ1606):
-
-    def __init__(self, supersample_factor=1.0):
-        """
-
-        :param image_position_uncertainties: list of astrometric uncertainties for each image
-        i.e. [0.003, 0.003, 0.003, 0.003]
-        :param flux_uncertainties: list of flux ratio uncertainties in percentage, or None if these are handled
-        post-processing
-        :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
-        :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
-        """
-        Acoords = np.array([0, 0])
-        Ccoords = np.array(
-            [-0.79179357, -0.90458793])  # These names were reordered to be consistent with double dark matter vision
-        Bcoords = np.array([-1.62141215, -0.59165656])
-        Dcoords = np.array([-1.1289198, 0.15184604])
-        x = np.array([Acoords[0], Bcoords[0], Ccoords[0], Dcoords[0]])
-        x_image = x - x.mean()
-        y = np.array([Acoords[1], Bcoords[1], Ccoords[1], Dcoords[1]])
-        y_image = y - y.mean()
-
-        # this aligns the jwst images with the HST images, and the satellite position relative to HST data
-        # THE SATELLITE POSITION IN THE MODEL CLASS IS ALREADY ALIGNED TO HST DATA
-        x_offset = -0.037
-        y_offset = -0.038
-        x_image += x_offset
-        y_image += y_offset
-        image_position_uncertainties = [0.005] * 4
-        flux_uncertainties = [0.02/1.01, 0.01/0.59, 0.02/0.75]
-        magnifications = np.array([1.0, 1.01, 0.59, 0.75])
-        super(PSJ1606_JWST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
-                                          uncertainty_in_fluxes=False, supersample_factor=supersample_factor)
-
 class PSJ1606_HST(_PSJ1606):
 
     def __init__(self, supersample_factor=1.0):
@@ -117,18 +83,42 @@ class PSJ1606_HST(_PSJ1606):
         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
-        x_image = [0.838, -0.784, 0.048, -0.289]
-        y_image = [0.378, -0.211, -0.527, 0.528]
-
-        x_offset = 0.01
-        y_offset = -0.08
-        x_image = np.array(x_image) + x_offset
-        y_image = np.array(y_image) + y_offset
-        magnifications = np.array([1.0, 1.0, 0.59, 0.79])
+        x_image = np.array([0.8715, -0.7495, 0.0795, -0.2575])
+        y_image = np.array([0.28925, -0.30275, -0.61575, 0.44125])
+        x_offset = -0.016
+        y_offset = -0.005
+        x_image += x_offset
+        y_image += y_offset
         image_position_uncertainties = [0.005] * 4
-        flux_uncertainties = [0.03, 0.03, 0.02 / 0.6, 0.02 / 0.78]
+        flux_uncertainties = [0.02/1.01, 0.01/0.59, 0.02/0.75]
+        magnifications = np.array([1.0, 1.01, 0.59, 0.75])
         super(PSJ1606_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
-                                          uncertainty_in_fluxes=True, supersample_factor=supersample_factor)
+                                          uncertainty_in_fluxes=False, supersample_factor=supersample_factor)
+
+# class PSJ1606_HST(_PSJ1606):
+#
+#     def __init__(self, supersample_factor=1.0):
+#         """
+#
+#         :param image_position_uncertainties: list of astrometric uncertainties for each image
+#         i.e. [0.003, 0.003, 0.003, 0.003]
+#         :param flux_uncertainties: list of flux ratio uncertainties in percentage, or None if these are handled
+#         post-processing
+#         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
+#         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
+#         """
+#         x_image = [0.838, -0.784, 0.048, -0.289]
+#         y_image = [0.378, -0.211, -0.527, 0.528]
+#
+#         x_offset = 0.01
+#         y_offset = -0.08
+#         x_image = np.array(x_image) + x_offset
+#         y_image = np.array(y_image) + y_offset
+#         magnifications = np.array([1.0, 1.0, 0.59, 0.79])
+#         image_position_uncertainties = [0.005] * 4
+#         flux_uncertainties = [0.03, 0.03, 0.02 / 0.6, 0.02 / 0.78]
+#         super(PSJ1606_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
+#                                           uncertainty_in_fluxes=True, supersample_factor=supersample_factor)
 
 # import matplotlib.pyplot as plt
 #

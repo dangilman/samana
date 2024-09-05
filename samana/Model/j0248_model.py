@@ -91,6 +91,17 @@ class _J0248ModelBase(ModelBase):
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
 
+        add_uniform_light = True
+        if add_uniform_light:
+            kwargs_uniform, kwargs_uniform_sigma, kwargs_uniform_fixed, \
+                kwargs_uniform_lower, kwargs_uniform_upper = self.add_uniform_lens_light()
+            lens_light_model_list += ['UNIFORM']
+            kwargs_lens_light_init += kwargs_uniform
+            kwargs_lens_light_sigma += kwargs_uniform_sigma
+            kwargs_lens_light_fixed += kwargs_uniform_fixed
+            kwargs_lower_lens_light += kwargs_uniform_lower
+            kwargs_upper_lens_light += kwargs_uniform_upper
+
         return lens_light_model_list, lens_light_params
 
     @property
@@ -119,7 +130,7 @@ class J0248ModelEPLM3M4Shear(_J0248ModelBase):
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
-        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR']
+        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
         kwargs_lens_macro = [
             {'theta_E': 0.801582922725, 'gamma': 2.0, 'e1': -0.10172397525980102,
              'e2': 0.4651569758117118, 'center_x': -0.029784681478575034, 'center_y': 0.11457294728413082, 'a3_a': 0.0,

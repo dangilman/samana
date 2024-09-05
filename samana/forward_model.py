@@ -23,7 +23,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   n_pso_particles=10, n_pso_iterations=50, num_threads=1, astrometric_uncertainty=True,
                   kde_sampler=None, image_data_grid_resolution_rescale=1.0,
                   use_imaging_data=True, fitting_sequence_kwargs=None, test_mode=False,
-                  use_decoupled_multiplane_approximation=True, fixed_realization_list=None):
+                  use_decoupled_multiplane_approximation=True, fixed_realization_list=None,
+                  macromodel_readout_function=None):
     """
 
     :param output_path:
@@ -55,6 +56,9 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     :param fitting_sequence_kwargs:
     :param test_mode:
     :param fixed_realization_list:
+    :param macromodel_readout_function: a function that takes as input the keyword arguments of the optimized
+    lens model and the dictionary of fixed macromodel parameters, and returns an array of macromodel parameters to save,
+    as well as a list of parameter names
     :return:
     """
 
@@ -144,7 +148,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                             verbose, random_seed, n_pso_particles, n_pso_iterations, num_threads,
                                             kwargs_model_class, astrometric_uncertainty, kde_sampler,
                                             use_imaging_data, fitting_sequence_kwargs, test_mode,
-                                            use_decoupled_multiplane_approximation, fixed_realization)
+                                            use_decoupled_multiplane_approximation, fixed_realization, macromodel_readout_function)
 
         seed_counter += 1
         acceptance_rate_counter += 1
@@ -273,7 +277,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                    fitting_kwargs_list=None,
                                    test_mode=False,
                                    use_decoupled_multiplane_approximation=True,
-                                   fixed_realization=None):
+                                   fixed_realization=None, macromodel_readout_function=None):
 
     # set the random seed for reproducibility
     np.random.seed(seed)
@@ -292,6 +296,9 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         preset_realization = True
     else:
         present_model_function = preset_model_from_name(preset_model_name)
+        if 'cone_opening_angle_arcsec' not in realization_dict.keys():
+            theta_E = model_class.setup_lens_model()[-1][0][0]['theta_E']
+            realization_dict['cone_opening_angle_arcsec'] = 6.0 * theta_E
         realization_init = present_model_function(data_class.z_lens, data_class.z_source, **realization_dict)
         preset_realization = False
     if verbose:
@@ -304,15 +311,16 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         print(macromodel_samples_fixed_dict)
 
     kwargs_lens_macro_init = None
+    kwargs_model_align, _, _, _ = model_class.setup_kwargs_model(
+        decoupled_multiplane=False,
+        kwargs_lens_macro_init=kwargs_lens_macro_init,
+        macromodel_samples_fixed=macromodel_samples_fixed_dict)
     kwargs_params = model_class.kwargs_params(kwargs_lens_macro_init=kwargs_lens_macro_init,
                                               delta_x_image=-delta_x_image,
                                               delta_y_image=-delta_y_image,
                                               macromodel_samples_fixed=macromodel_samples_fixed_dict)
     pixel_size = data_class.coordinate_properties[0] / data_class.kwargs_numerics['supersampling_factor']
-    kwargs_model_align, _, _, _ = model_class.setup_kwargs_model(
-        decoupled_multiplane=False,
-        kwargs_lens_macro_init=kwargs_lens_macro_init,
-        macromodel_samples_fixed=macromodel_samples_fixed_dict)
+
     kwargs_lens_align = kwargs_params['lens_model'][0]
     if preset_realization:
         realization = realization_init
@@ -451,22 +459,26 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         print('computed magnifications in '+str(np.round(tend - t0, 1))+' seconds')
         print('magnifications: ', magnifications)
 
-    samples_macromodel = []
-    param_names_macro = []
-    if use_decoupled_multiplane_approximation:
-        j_max = len(index_lens_split)
+    if macromodel_readout_function is not None:
+        samples_macromodel, param_names_macro = macromodel_readout_function(kwargs_solution, macromodel_samples_fixed_dict)
     else:
-        j_max = len(kwargs_model_align)
-    for lm in kwargs_solution[0:j_max]:
-        for key in lm.keys():
-            samples_macromodel.append(lm[key])
-            param_names_macro.append(key)
-    if use_decoupled_multiplane_approximation:
-        for fixed_param in ['satellite_1_theta_E', 'satellite_1_x', 'satellite_1_y']:
-            if fixed_param in macromodel_samples_fixed_dict.keys():
-                samples_macromodel.append(macromodel_samples_fixed_dict[fixed_param])
-                param_names_macro.append(fixed_param)
-    samples_macromodel = np.array(samples_macromodel)
+        param_names_macro = []
+        samples_macromodel = []
+        if use_decoupled_multiplane_approximation:
+            j_max = len(index_lens_split)
+        else:
+            j_max = len(kwargs_model_align)
+        for lm in kwargs_solution[0:j_max]:
+            for key in lm.keys():
+                samples_macromodel.append(lm[key])
+                param_names_macro.append(key)
+        if use_decoupled_multiplane_approximation:
+            for fixed_param in ['satellite_1_theta_E', 'satellite_1_x', 'satellite_1_y',
+                                'satellite_2_theta_E', 'satellite_2_x', 'satellite_2_y']:
+                if fixed_param in macromodel_samples_fixed_dict.keys():
+                    samples_macromodel.append(macromodel_samples_fixed_dict[fixed_param])
+                    param_names_macro.append(fixed_param)
+        samples_macromodel = np.array(samples_macromodel)
 
     if use_imaging_data:
         bic = fitting_sequence.bic

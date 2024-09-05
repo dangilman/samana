@@ -135,7 +135,7 @@ class J1131ModelEPLM3M4Shear(_J1131ModelBase):
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
-        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR']
+        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
         kwargs_lens_macro = [{'theta_E': 0.8687554718510386, 'gamma': 2.029950423709146, 'e1': -0.15735208890494373,
                               'e2': 0.04762054468632072, 'center_x': -0.0023009221360999568,
                               'center_y': -0.05401737572547581, 'a3_a': 0.0,

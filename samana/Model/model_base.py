@@ -7,6 +7,8 @@ import numpy as np
 
 class ModelBase(object):
 
+    _spherical_multipole = False
+
     def __init__(self, data_class, kde_sampler=None, *args, **kwargs):
 
         self._data = data_class

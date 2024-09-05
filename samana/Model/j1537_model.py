@@ -17,8 +17,8 @@ class _J1537ModelBase(ModelBase):
                               'solver_type': 'PROFILE_SHEAR',
                               'point_source_offset': True
                               }
-        # if self._shapelets_order is not None:
-        #     kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
+        if self._shapelets_order is not None:
+             kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
         return kwargs_constraints
 
     @property
@@ -42,7 +42,7 @@ class _J1537ModelBase(ModelBase):
             source_model_list = ['SHAPELETS']
             kwargs_source_init = [{'amp': 1.0, 'beta': 0.0589, 'center_x': 0.018, 'center_y': -0.031,
                                     'n_max': n_max}]
-            kwargs_source_sigma = [{'amp': 10.0, 'beta': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'n_max': 1}]
+            kwargs_source_sigma = [{'amp': 10.0, 'beta': 0.08, 'center_x': 0.1, 'center_y': 0.1, 'n_max': 1}]
             kwargs_lower_source = [{'amp': 10.0, 'beta': 0.0, 'center_x': -10.0, 'center_y': -10.0, 'n_max': 0}]
             kwargs_upper_source = [{'amp': 10.0, 'beta': 0.5, 'center_x': 10.0, 'center_y': 10.0, 'n_max': n_max+1}]
             kwargs_source_fixed = [{'n_max': n_max}]
@@ -54,10 +54,11 @@ class _J1537ModelBase(ModelBase):
     def setup_lens_light_model(self):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
-        kwargs_lens_light_init = [{'amp': 2.512583456718902, 'R_sersic': 1.6517522322413456,
-                                   'n_sersic': 6.857474985794543, 'e1': -0.041457909082188334,
-                                   'e2': 0.13084271174561354, 'center_x': -0.024747095801151267,
-                                   'center_y': 0.03586623195966182}]
+        kwargs_lens_light_init = [
+            {'amp': 0.2903299253210497, 'R_sersic': 6.156629320813526, 'n_sersic': 9.997002153610675,
+             'e1': -0.04839034932783541, 'e2': 0.13399653909148815, 'center_x': -0.02071253106507734,
+             'center_y': 0.040168714294272996}
+        ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
         kwargs_lower_lens_light = [
@@ -96,12 +97,13 @@ class J1537ModelEPLM3M4Shear(_J1537ModelBase):
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
-        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR']
-        kwargs_lens_macro = [{'theta_E': 1.403484361388377, 'gamma': 2.0637423108711266, 'e1': -0.01524110151269279,
-          'e2': 0.045075418992553275, 'center_x': -0.017497673261921, 'center_y': 0.014750743776041146,
-          'a3_a': 0.0, 'delta_phi_m3': 0.3635967840936209,
-          'a4_a': 0.0, 'delta_phi_m4': -0.3749309826766692},
-         {'gamma1': 0.07608334757325473, 'gamma2': -0.12353481132723423, 'ra_0': 0.0, 'dec_0': 0.0}]
+        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
+        kwargs_lens_macro = [
+            {'theta_E': 1.3995740944935433, 'gamma': 2.1119312176212826, 'e1': 0.0034740189666655746,
+             'e2': 0.013653891623438216, 'center_x': -0.023300423603577855, 'center_y': 0.01944275113479937,
+             'a3_a': 0.0, 'delta_phi_m3': -0.4373204113065346, 'a4_a': 0.0, 'delta_phi_m4': 0.5970557298331496},
+            {'gamma1': 0.0851999128560513, 'gamma2': -0.13903555309738413, 'ra_0': 0.0, 'dec_0': 0.0}
+        ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]
         if kwargs_lens_macro_init is not None:

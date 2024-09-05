@@ -509,8 +509,9 @@ class EPLMultipole34FreeShear(PowerLawParamManager):
 def auto_param_class(lens_model_list_macro, kwargs_lens_init, macromodel_samples_fixed_dict):
 
     macromodel_samples_fixed_param_names = macromodel_samples_fixed_dict.keys()
-
-    if lens_model_list_macro[0] == 'EPL_MULTIPOLE_M3M4' and lens_model_list_macro[1] == 'SHEAR':
+    condition_1 = lens_model_list_macro[0] == 'EPL_MULTIPOLE_M3M4_ELL' and lens_model_list_macro[1] == 'SHEAR'
+    condition_2 = lens_model_list_macro[0] == 'EPL_MULTIPOLE_M3M4' and lens_model_list_macro[1] == 'SHEAR'
+    if condition_1 or condition_2:
         if 'a4_a' not in macromodel_samples_fixed_param_names:
             raise Exception(
                 'when specifying a param class with an m=4 multi-pole moment, the amplitude of the multi-moment '

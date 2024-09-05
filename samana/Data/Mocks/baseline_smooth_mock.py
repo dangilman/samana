@@ -47,7 +47,7 @@ class BaselineSmoothMockModel(MockModelBase):
         return source_model_list, source_params
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
-        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR']
+        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
         kwargs_lens_macro = [{'theta_E': 1.0, 'center_x': 0.0, 'center_y': 0.0, 'e1': -0.1, 'e2': -0.1,
                               'gamma': 1.8894064923991685, 'a4_a': 0.0,
                               'a3_a': 0.0, 'delta_phi_m3': 0.0,

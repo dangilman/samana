@@ -232,7 +232,7 @@ class WFI2033ModelEPLM3M4Shear(WFI2033ModelEPLM3M4ShearObservedConvention):
         # -4.0 -0.08
         # satellite observed position: -4.0 -0.08
         # satellite inferred position from lens model: -3.7056, -0.14765
-        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR', 'SIS', 'SIS']
+        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR', 'SIS', 'SIS']
         kwargs_lens_macro = [
             {'theta_E': 0.9912126548542992, 'gamma': 2.154473001360359, 'e1': -0.1490547449226145,
              'e2': 0.18157594473479932, 'center_x': -0.08101002574825644, 'center_y': -0.02869132259069882, 'a3_a': 0.0,

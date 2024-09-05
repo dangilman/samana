@@ -68,30 +68,30 @@ class _WGD2038(ImagingDataBase):
                       'kernel_point_source': self._psf_estimate_init,
                       'psf_error_map': self._psf_error_map_init}
         return kwargs_psf
+#
+# class WGD2038_HST(_WGD2038):
+#
+#     def __init__(self, supersample_factor=1.0):
+#         """
+#
+#         :param image_position_uncertainties: list of astrometric uncertainties for each image
+#         i.e. [0.003, 0.003, 0.003, 0.003]
+#         :param flux_uncertainties: list of flux ratio uncertainties in percentage, or None if these are handled
+#         post-processing
+#         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
+#         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
+#         """
+#
+#         x_image = np.array([-1.474, 0.832, -0.686, 0.706])
+#         y_image = np.array([0.488, -1.22, -1.191, 0.869])
+#         magnifications = [0.862069, 1., 0.793103, 0.396552]
+#         image_position_uncertainties = [0.005]*4
+#         flux_uncertainties = [0.01, 0.02/1.16, 0.02/0.92, 0.01/0.46] # percent uncertainty
+#         super(WGD2038_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties,
+#                                          flux_uncertainties,
+#                                          uncertainty_in_fluxes=True, supersample_factor=supersample_factor)
 
 class WGD2038_HST(_WGD2038):
-
-    def __init__(self, supersample_factor=1.0):
-        """
-
-        :param image_position_uncertainties: list of astrometric uncertainties for each image
-        i.e. [0.003, 0.003, 0.003, 0.003]
-        :param flux_uncertainties: list of flux ratio uncertainties in percentage, or None if these are handled
-        post-processing
-        :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
-        :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
-        """
-
-        x_image = np.array([-1.474, 0.832, -0.686, 0.706])
-        y_image = np.array([0.488, -1.22, -1.191, 0.869])
-        magnifications = [0.862069, 1., 0.793103, 0.396552]
-        image_position_uncertainties = [0.005]*4
-        flux_uncertainties = [0.01, 0.02/1.16, 0.02/0.92, 0.01/0.46] # percent uncertainty
-        super(WGD2038_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties,
-                                         flux_uncertainties,
-                                         uncertainty_in_fluxes=True, supersample_factor=supersample_factor)
-
-class WGD2038_JWST(_WGD2038):
 
     def __init__(self):
         """
@@ -103,14 +103,17 @@ class WGD2038_JWST(_WGD2038):
         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
-        index_reordering = [3,1,2,0]
-        x_shift = -0.02
-        y_shift = -0.007
-        x_image = np.array([ 0.71909739,  0.84809739, -0.66290261, -1.45890261])[index_reordering] + x_shift
-        y_image = np.array([ 0.88371611, -1.20728389, -1.17828389,  0.49971611])[index_reordering] + y_shift
+        # to match narrow-line flux ratios
+        #index_reordering = [3,1,2,0]
+        x_image = np.array([-1.49025, 0.81675, -0.69425, 0.68775])
+        y_image = np.array([0.48425, -1.22275, -1.19375, 0.86825])
+        horizontal_shift = 0.0
+        vertical_shift = 0.0
+        x_image += horizontal_shift
+        y_image += vertical_shift
         image_position_uncertainties = [0.005] * 4 # 5 marcsec
         flux_uncertainties = None
-        magnifications = np.array([1.0] * 4)[index_reordering]
-        super(WGD2038_JWST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
+        magnifications = np.array([1.0] * 4)
+        super(WGD2038_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
                                           uncertainty_in_fluxes=False)
 

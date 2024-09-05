@@ -77,6 +77,18 @@ class _WGDJ0405ModelBase(ModelBase):
         kwargs_upper_lens_light = [
             {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
         kwargs_lens_light_fixed = [{}]
+
+        add_uniform_light = True
+        if add_uniform_light:
+            kwargs_uniform, kwargs_uniform_sigma, kwargs_uniform_fixed, \
+            kwargs_uniform_lower, kwargs_uniform_upper = self.add_uniform_lens_light()
+            lens_light_model_list += ['UNIFORM']
+            kwargs_lens_light_init += kwargs_uniform
+            kwargs_lens_light_sigma += kwargs_uniform_sigma
+            kwargs_lens_light_fixed += kwargs_uniform_fixed
+            kwargs_lower_lens_light += kwargs_uniform_lower
+            kwargs_upper_lens_light += kwargs_uniform_upper
+
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
 
@@ -108,12 +120,16 @@ class WGDJ0405ModelEPLM3M4Shear(_WGDJ0405ModelBase):
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
-        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR']
-        kwargs_lens_macro = [
-            {'theta_E': 0.7007655668337255, 'gamma': 2.1251945977784623, 'e1': -0.00677743741870227,
-             'e2': 0.08189532661302334, 'center_x': 0.01180892437591702, 'center_y': -0.0640104137648545, 'a3_a': 0.0,
-             'delta_phi_m3': -0.11331895947984125, 'a4_a': 0.0, 'delta_phi_m4': -0.7671878447029608},
-            {'gamma1': 0.021155735202814593, 'gamma2': 0.0038544349934040794, 'ra_0': 0.0, 'dec_0': 0.0}
+        if self._spherical_multipole:
+            lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR']
+        else:
+            lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
+
+        kwargs_lens_macro = [{'theta_E': 0.701709090577765, 'gamma': 2.05041843119839, 'e1': 0.012231725749341144,
+                              'e2': 0.11707331701981957, 'center_x': 0.002935664545050347,
+                              'center_y': -0.04529761400091298, 'a3_a': 0.011110998465578207, 'delta_phi_m3': 0.0,
+                              'a4_a': 0.0013895732262101273, 'delta_phi_m4': 0.0},
+                             {'gamma1': 0.036398132230776974, 'gamma2': 0.026348041412976014, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]

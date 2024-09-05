@@ -78,7 +78,7 @@ class _J1042(ImagingDataBase):
                       'psf_error_map': self._psf_error_map_init}
         return kwargs_psf
 
-class J1042JWST(_J1042):
+class J1042_HST(_J1042):
 
     def __init__(self):
         """
@@ -90,16 +90,16 @@ class J1042JWST(_J1042):
         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
-        x_image = np.array([-0.76930023,  0.81439063, 0.66778075, -0.00159419])
-        y_image = np.array([ 0.65240278,  0.10628356, -0.45875266, -0.80610109])
-        horizontal_shift = -0.01
-        vertical_shift = 0.01
+        x_image = np.array([0.827, 0.68, 0.01, -0.757])
+        y_image = np.array([0.10825, -0.45675, -0.80575, 0.65425])
+        horizontal_shift = -0.005
+        vertical_shift = 0.0
         x_image += horizontal_shift
         y_image += vertical_shift
         image_position_uncertainties = [0.005] * 4 # 5 arcsec
         flux_uncertainties = None
         magnifications = np.array([1.0] * 4)
-        super(J1042JWST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
+        super(J1042_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
                                           uncertainty_in_fluxes=False)
 
 # data = J1042JWST()

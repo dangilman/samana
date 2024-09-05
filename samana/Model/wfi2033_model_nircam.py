@@ -252,7 +252,7 @@ class WFI2033NircamModelEPLM3M4Shear(_WFI2033ModelNircamBase):
         # -1.578481764045944, 1.3689577497404388 first satellite
         # -2.165625453981066 -3.3645306348834603 second bigger satellite
 
-        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR', 'SIS', 'SIS']
+        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR', 'SIS', 'SIS']
         kwargs_lens_macro = [
             {'theta_E': 0.9819352178051077, 'gamma': 2.1, 'e1': -0.060421075894487926,
              'e2': -0.08953109900982839, 'center_x': -0.009227587610902884, 'center_y': 0.010009574939230213,

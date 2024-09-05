@@ -71,7 +71,7 @@ class _J1537(ImagingDataBase):
                       'psf_error_map': self._psf_error_map_init}
         return kwargs_psf
 
-class J1537JWST(_J1537):
+class J1537_HST(_J1537):
 
     def __init__(self):
         """
@@ -83,16 +83,16 @@ class J1537JWST(_J1537):
         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
-        x_image = np.array( [ 1.42722809, -0.56577191, -1.42077191,  0.67722809])
-        y_image = np.array( [-0.71655342, -1.04555342,  0.92744658,  1.04644658])
-        horizontal_shift = -0.025
-        vertical_shift = 0.024
+        x_image = np.array([1.42175, -0.57125, -1.42625, 0.67175])
+        y_image = np.array([-0.7145, -1.0435, 0.9295, 1.0485])
+        horizontal_shift = -0.0
+        vertical_shift = 0.0
         x_image += horizontal_shift
         y_image += vertical_shift
         image_position_uncertainties = [0.005] * 4 # 5 arcsec
         flux_uncertainties = [0.02/0.73, 0.02/0.94, 0.02/0.73]
         magnifications = np.array([1.0, 0.73, 0.94, 0.73])
-        super(J1537JWST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
+        super(J1537_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
                                                 uncertainty_in_fluxes=False)
 
 

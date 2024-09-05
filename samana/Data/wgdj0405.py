@@ -9,17 +9,12 @@ from lenstronomy.Data.coord_transforms import Coordinates
 
 class _WGDJ0405(ImagingDataBase):
 
-    def __init__(self, image_position_uncertainties, flux_uncertainties, magnifications,
-                 uncertainty_in_fluxes, supersample_factor):
+    def __init__(self, x_image, y_image, magnifications, image_position_uncertainties,
+                 flux_uncertainties, uncertainty_in_fluxes, supersample_factor):
 
         z_lens = 0.3
         z_source = 1.7
 
-        x_image_offset = -0.01
-        y_image_offset = -0.05
-        # astrometric data
-        x_image = np.array([0.708, -0.358, 0.363, -0.515]) + x_image_offset
-        y_image = np.array([-0.244, -0.567, 0.592, 0.454]) + y_image_offset
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
 
@@ -87,28 +82,33 @@ class _WGDJ0405(ImagingDataBase):
                       'psf_error_map': self._psf_error_map_init}
         return kwargs_psf
 
+# class WGDJ0405_HST(_WGDJ0405):
+#
+#     def __init__(self, supersample_factor=1):
+#
+#         image_position_uncertainty = [0.005] * 4 # m.a.s.
+#         normalized_magnifications = np.array([0.8, 0.52, 1.0, 0.94])
+#         flux_uncertainties = np.array([0.04, 0.04/0.65, 0.03/1.25, 0.04/1.17])
+#         uncertainty_in_fluxes = True
+#         super(WGDJ0405_HST, self).__init__(image_position_uncertainty, flux_uncertainties, normalized_magnifications,
+#                                                        uncertainty_in_fluxes, supersample_factor)
+
 class WGDJ0405_HST(_WGDJ0405):
 
     def __init__(self, supersample_factor=1):
 
-        image_position_uncertainty = [0.005] * 4 # m.a.s.
-        normalized_magnifications = np.array([0.8, 0.52, 1.0, 0.94])
-        flux_uncertainties = np.array([0.04, 0.04/0.65, 0.03/1.25, 0.04/1.17])
-        uncertainty_in_fluxes = True
-        super(WGDJ0405_HST, self).__init__(image_position_uncertainty, flux_uncertainties, normalized_magnifications,
-                                                       uncertainty_in_fluxes, supersample_factor)
-
-class WGDJ0405_JWST(_WGDJ0405):
-
-    def __init__(self, supersample_factor=1):
-
-        image_position_uncertainty = [0.005] * 4  # m.a.s.
-        normalized_magnifications = np.array([1.00, 0.70, 1.07, 1.28])
+        x_image = np.array([0.693, -0.372, 0.349, -0.53])
+        y_image = np.array([-0.28, -0.605, 0.556, 0.417])
+        horizontal_shift = 0.0
+        vertical_shift = 0.0
+        x_image += horizontal_shift
+        y_image += vertical_shift
+        image_position_uncertainties = [0.005] * 4  # m.a.s.
+        magnifications = np.array([1.00, 0.70, 1.07, 1.28])
         flux_uncertainties = np.array([0.03] * 3)
         uncertainty_in_fluxes = False
-        super(WGDJ0405_JWST, self).__init__(image_position_uncertainty, flux_uncertainties,
-                                                       normalized_magnifications,
-                                                       uncertainty_in_fluxes, supersample_factor)
+        super(WGDJ0405_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties,
+                                        flux_uncertainties, uncertainty_in_fluxes, supersample_factor)
 
 # xc = np.array([1.0656, 0.0026, 0.7222, -0.1562]) - 0.35
 # yc = np.array([0.3204, -0.0017, 1.1589, 1.0206]) - 0.6
