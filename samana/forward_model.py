@@ -442,7 +442,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
 
     source_x, source_y = lens_model.ray_shooting(data_class.x_image, data_class.y_image,
                                                  kwargs_solution)
-
+    if verbose and use_imaging_data:
+        print('recovered source position: ', source_x, source_y)
     source_model_quasar, kwargs_source = setup_gaussian_source(source_dict['source_size_pc'],
                                                                np.mean(source_x), np.mean(source_y),
                                                                astropy_cosmo, data_class.z_source)
