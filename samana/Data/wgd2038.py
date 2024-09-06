@@ -105,7 +105,7 @@ class _WGD2038(ImagingDataBase):
 
 class WGD2038_HST(_WGD2038):
 
-    def __init__(self):
+    def __init__(self, supersample_factor=1):
         """
 
         :param image_position_uncertainties: list of astrometric uncertainties for each image
@@ -127,5 +127,5 @@ class WGD2038_HST(_WGD2038):
         flux_uncertainties = None
         magnifications = np.array([1.0] * 4)
         super(WGD2038_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
-                                          uncertainty_in_fluxes=False)
+                                          uncertainty_in_fluxes=False, supersample_factor=supersample_factor)
 
