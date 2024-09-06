@@ -69,7 +69,7 @@ class _J0147(ImagingDataBase):
                 likelihood_mask,
                 x_image,
                 y_image,
-                self._image_data.shape
+                self._image_data.shape, radius_arcsec=0.4
             )
             return likelihood_mask, likelihood_mask_imaging_weights
         else:

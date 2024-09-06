@@ -29,7 +29,7 @@ class _PG1115(ImagingDataBase):
                 likelihood_mask,
                 x_image,
                 y_image,
-                self._image_data.shape
+                self._image_data.shape, radius_arcsec=0.3
             )
         else:
             likelihood_mask_imaging_weights = likelihood_mask

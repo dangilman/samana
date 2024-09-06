@@ -47,9 +47,10 @@ class _J0607ModelBase(ModelBase):
     def setup_source_light_model(self):
 
         source_model_list = ['SERSIC_ELLIPSE']
-        kwargs_source_init = [{'amp': 1, 'R_sersic': 6.445332536966378, 'n_sersic': 3.6305228276190764,
-                               'e1': -0.4155480081962428, 'e2': 0.36638779330275034,
-                               'center_x': 0.023093143905461546, 'center_y': -0.054747647240303066}]
+        kwargs_source_init = [{'amp': 2.456433840537286, 'R_sersic': 6.356325531502514,
+                               'n_sersic': 3.4414462189472026,
+                               'e1': -0.20239124069069603, 'e2': 0.07653940829806069,
+                               'center_x': 0.17076553773710246, 'center_y': -0.0016306044823957437}]
         kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]

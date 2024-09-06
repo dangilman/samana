@@ -61,7 +61,7 @@ class _HE0435(ImagingDataBase):
                 x_image,
                 y_image,
                 self._image_data.shape,
-                radius_arcsec=0.25
+                radius_arcsec=0.3
             )
             return likelihood_mask, likelihood_mask_imaging_weights
         else:
@@ -216,4 +216,14 @@ class HE0435_NIRCAM(_HE0435):
         inds = np.where(np.sqrt((_xx - xp) ** 2 + (_yy - yp) ** 2) <= rad)
         likelihood_mask[inds] = 0.0
 
-        return likelihood_mask, likelihood_mask
+        if self._mask_quasar_images_for_logL:
+            likelihood_mask_imaging_weights = self.quasar_image_mask(
+                likelihood_mask,
+                x_image,
+                y_image,
+                self._image_data.shape,
+                radius_arcsec=0.3
+            )
+            return likelihood_mask, likelihood_mask_imaging_weights
+        else:
+            return likelihood_mask, likelihood_mask
