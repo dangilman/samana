@@ -88,6 +88,19 @@ class _J1251ModelBase(ModelBase):
         kwargs_upper_lens_light = [
             {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
         kwargs_lens_light_fixed = [{}]
+
+        add_uniform_light = True
+        if add_uniform_light:
+            kwargs_uniform, kwargs_uniform_sigma, kwargs_uniform_fixed, \
+            kwargs_uniform_lower, kwargs_uniform_upper = self.add_uniform_lens_light(2.0)
+            lens_light_model_list += ['UNIFORM']
+            kwargs_lens_light_init += kwargs_uniform
+            kwargs_lens_light_sigma += kwargs_uniform_sigma
+            kwargs_lens_light_fixed += kwargs_uniform_fixed
+            kwargs_lower_lens_light += kwargs_uniform_lower
+            kwargs_upper_lens_light += kwargs_uniform_upper
+
+
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
 

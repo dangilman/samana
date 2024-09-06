@@ -5,8 +5,10 @@ from samana.Data.ImageData.m1134_f814W import psf_model, psf_error_map, image_da
 class _2M1134(ImagingDataBase):
 
     def __init__(self, x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
-                 uncertainty_in_fluxes, supersample_factor=1):
+                 uncertainty_in_fluxes, supersample_factor=1,
+                 mask_quasar_images_for_logL=True):
 
+        self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
         z_lens = 0.66 # Anguita et al. in prep
         z_source = 2.77
 
@@ -40,8 +42,16 @@ class _2M1134(ImagingDataBase):
         q = 0.7
         inds = np.where(np.sqrt(_xx_rot ** 2 + (_yy_rot / q) ** 2) >= window_size / 1.7)
         likelihood_mask[inds] = 0.0
-
-        return likelihood_mask, likelihood_mask
+        if self._mask_quasar_images_for_logL:
+            likelihood_mask_imaging_weights = self.quasar_image_mask(
+                likelihood_mask,
+                x_image,
+                y_image,
+                self._image_data.shape
+            )
+            return likelihood_mask, likelihood_mask_imaging_weights
+        else:
+            return likelihood_mask, likelihood_mask
 
     @property
     def kwargs_data(self):
@@ -77,9 +87,9 @@ class _2M1134(ImagingDataBase):
                       'psf_error_map': self._psf_error_map_init}
         return kwargs_psf
 
-class M1134_JWST(_2M1134):
+class M1134_HST(_2M1134):
 
-    def __init__(self):
+    def __init__(self, supersample_factor=1):
         """
 
         :param image_position_uncertainties: list of astrometric uncertainties for each image
@@ -98,6 +108,6 @@ class M1134_JWST(_2M1134):
         image_position_uncertainties = [0.005] * 4 # 5 arcsec
         flux_uncertainties = None
         magnifications = np.array([1.0] * 4)
-        super(M1134_JWST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
-                                          uncertainty_in_fluxes=False)
+        super(M1134_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
+                                          uncertainty_in_fluxes=False, supersample_factor=supersample_factor)
 

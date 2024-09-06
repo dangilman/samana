@@ -4,8 +4,10 @@ import numpy as np
 class _MG0414(ImagingDataBase):
 
     def __init__(self, x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
-                 uncertainty_in_fluxes, supersample_factor, image_data_type):
+                 uncertainty_in_fluxes, supersample_factor, image_data_type,
+                 mask_quasar_images_for_logL=True):
 
+        self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
         z_lens = 0.96  # fiducial
         z_source = 2.64
         # we use all three flux ratios to constrain the model
@@ -52,18 +54,25 @@ class _MG0414(ImagingDataBase):
         transform_pix2angle = self._transform_pix2angle
         return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
 
-
     def likelihood_masks(self, x_image, y_image):
 
         deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size = self.coordinate_properties
         _x = np.linspace(-window_size / 2, window_size / 2, self._image_data.shape[0])
-        _y = np.linspace(-window_size / 2, window_size / 2, self._image_data.shape[0])
+        _y = np.linspace(-window_size / 2, window_size / 2, self._image_data.shape[1])
         _xx, _yy = np.meshgrid(_x, _y)
         likelihood_mask = np.ones_like(_xx)
         inds = np.where(np.sqrt(_xx ** 2 + _yy ** 2) >= window_size / 2)
         likelihood_mask[inds] = 0.0
-
-        return likelihood_mask, likelihood_mask
+        if self._mask_quasar_images_for_logL:
+            likelihood_mask_imaging_weights = self.quasar_image_mask(
+                likelihood_mask,
+                x_image,
+                y_image,
+                self._image_data.shape
+            )
+            return likelihood_mask, likelihood_mask_imaging_weights
+        else:
+            return likelihood_mask, likelihood_mask
 
     @property
     def kwargs_data(self):

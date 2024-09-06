@@ -1,17 +1,14 @@
-import matplotlib.pyplot as plt
 from samana.Data.data_base import ImagingDataBase
-from samana.data_util import mask_quasar_images
-from copy import deepcopy
 import numpy as np
 from samana.Data.ImageData.wgdj0405_814w import image_data, psf_error_map, psf_model
-from lenstronomy.Data.coord_transforms import Coordinates
-
 
 class _WGDJ0405(ImagingDataBase):
 
     def __init__(self, x_image, y_image, magnifications, image_position_uncertainties,
-                 flux_uncertainties, uncertainty_in_fluxes, supersample_factor):
+                 flux_uncertainties, uncertainty_in_fluxes, supersample_factor,
+                 mask_quasar_images_for_logL=True):
 
+        self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
         z_lens = 0.3
         z_source = 1.7
 
@@ -35,18 +32,22 @@ class _WGDJ0405(ImagingDataBase):
     def likelihood_masks(self, x_image, y_image):
 
         deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size = self.coordinate_properties
-        _x = np.linspace(-window_size / 2, window_size / 2, image_data.shape[0])
-        _y = np.linspace(-window_size / 2, window_size / 2, image_data.shape[0])
+        _x = np.linspace(-window_size / 2, window_size / 2, self._image_data.shape[0])
+        _y = np.linspace(-window_size / 2, window_size / 2, self._image_data.shape[1])
         _xx, _yy = np.meshgrid(_x, _y)
         likelihood_mask = np.ones_like(_xx)
         inds = np.where(np.sqrt(_xx ** 2 + _yy ** 2) >= window_size / 2)
         likelihood_mask[inds] = 0.0
-        coords = Coordinates(transform_pix2angle, ra_at_xy_0, dec_at_xy_0)
-        ra_grid, dec_grid = coords.coordinate_grid(*_xx.shape)
-        mask_radius_arcsec = 0.25
-        likelihood_mask_imaging_weights = mask_quasar_images(deepcopy(likelihood_mask), x_image, y_image, ra_grid, dec_grid,
-                                                             mask_radius_arcsec)
-        return likelihood_mask, likelihood_mask_imaging_weights
+        if self._mask_quasar_images_for_logL:
+            likelihood_mask_imaging_weights = self.quasar_image_mask(
+                likelihood_mask,
+                x_image,
+                y_image,
+                self._image_data.shape
+            )
+            return likelihood_mask, likelihood_mask_imaging_weights
+        else:
+            return likelihood_mask, likelihood_mask
 
     @property
     def kwargs_data(self):

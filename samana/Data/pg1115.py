@@ -5,8 +5,10 @@ class _PG1115(ImagingDataBase):
 
     def __init__(self, x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
                  uncertainty_in_fluxes, image_data, psf_model, psf_error_map,
-                 image_likelihood_mask, supersample_factor=1.0):
+                 image_likelihood_mask, supersample_factor=1.0,
+                 mask_quasar_images_for_logL=True):
 
+        self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
         z_lens = 0.31
         z_source = 1.72
         # we use all three flux ratios to constrain the model
@@ -19,9 +21,18 @@ class _PG1115(ImagingDataBase):
         multi_band_list = [image_band]
         kwargs_data_joint = {'multi_band_list': multi_band_list, 'multi_band_type': 'multi-linear'}
         if image_likelihood_mask is None:
-            likelihood_mask, likelihood_mask_imaging_weights = self.likelihood_masks(None, None)
+            likelihood_mask, _ = self.likelihood_masks(None, None)
         else:
-            likelihood_mask, likelihood_mask_imaging_weights = image_likelihood_mask, image_likelihood_mask
+            likelihood_mask, _ = image_likelihood_mask, image_likelihood_mask
+        if self._mask_quasar_images_for_logL:
+            likelihood_mask_imaging_weights = self.quasar_image_mask(
+                likelihood_mask,
+                x_image,
+                y_image,
+                self._image_data.shape
+            )
+        else:
+            likelihood_mask_imaging_weights = likelihood_mask
         super(_PG1115, self).__init__(z_lens, z_source,
                                       kwargs_data_joint, x_image, y_image,
                                       magnifications, image_position_uncertainties, flux_uncertainties,
@@ -32,7 +43,7 @@ class _PG1115(ImagingDataBase):
 
         deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size = self.coordinate_properties
         _x = np.linspace(-window_size / 2, window_size / 2, self._image_data.shape[0])
-        _y = np.linspace(-window_size / 2, window_size / 2, self._image_data.shape[0])
+        _y = np.linspace(-window_size / 2, window_size / 2, self._image_data.shape[1])
         _xx, _yy = np.meshgrid(_x, _y)
         likelihood_mask = np.ones_like(_xx)
         inds = np.where(np.sqrt(_xx ** 2 + _yy ** 2) >= window_size / 2)

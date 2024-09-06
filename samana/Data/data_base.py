@@ -1,5 +1,7 @@
 import numpy as np
 from lenstronomy.Data.coord_transforms import Coordinates
+from samana.data_util import mask_quasar_images
+from copy import deepcopy
 
 class ImagingDataBase(object):
 
@@ -47,6 +49,30 @@ class ImagingDataBase(object):
         self._x = self._x_image_init + delta_x_image
         self._y = self._y_image_init + delta_y_image
         return delta_x_image, delta_y_image
+
+    def quasar_image_mask(self, likelihood_mask,
+                          x_image,
+                          y_image,
+                          image_data_shape,
+                          radius_arcsec=0.2):
+        """
+
+        :param likelihood_mask:
+        :param x_image:
+        :param y_image:
+        :param image_data_shape:
+        :param radius_arcsec:
+        :return:
+        """
+        coords = self.coordinate_system
+        ra_grid, dec_grid = coords.coordinate_grid(*image_data_shape)
+        likelihood_mask_imaging_weights = mask_quasar_images(deepcopy(likelihood_mask),
+                                                             x_image,
+                                                             y_image,
+                                                             ra_grid,
+                                                             dec_grid,
+                                                             radius_arcsec)
+        return likelihood_mask_imaging_weights
 
     @property
     def coordinate_system(self):

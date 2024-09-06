@@ -5,8 +5,10 @@ from samana.Data.ImageData.j0259_f814W import psf_model, psf_error_map, image_da
 class _J0259(ImagingDataBase):
 
     def __init__(self, x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
-                 uncertainty_in_fluxes, supersample_factor=1):
+                 uncertainty_in_fluxes, supersample_factor,
+                 mask_quasar_images_for_logL=True):
 
+        self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
         z_lens = 0.90
         z_source = 2.16
         # we use all three flux ratios to constrain the model
@@ -28,13 +30,22 @@ class _J0259(ImagingDataBase):
     def likelihood_masks(self, x_image, y_image):
 
         deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size = self.coordinate_properties
-        _x = np.linspace(-window_size / 2, window_size / 2, image_data.shape[0])
-        _y = np.linspace(-window_size / 2, window_size / 2, image_data.shape[0])
+        _x = np.linspace(-window_size / 2, window_size / 2, self._image_data.shape[0])
+        _y = np.linspace(-window_size / 2, window_size / 2, self._image_data.shape[1])
         _xx, _yy = np.meshgrid(_x, _y)
         likelihood_mask = np.ones_like(_xx)
         inds = np.where(np.sqrt(_xx ** 2 + _yy ** 2) >= window_size / 2)
         likelihood_mask[inds] = 0.0
-        return likelihood_mask, likelihood_mask
+        if self._mask_quasar_images_for_logL:
+            likelihood_mask_imaging_weights = self.quasar_image_mask(
+                likelihood_mask,
+                x_image,
+                y_image,
+                self._image_data.shape
+            )
+            return likelihood_mask, likelihood_mask_imaging_weights
+        else:
+            return likelihood_mask, likelihood_mask
 
     @property
     def kwargs_data(self):
@@ -70,9 +81,9 @@ class _J0259(ImagingDataBase):
                       'psf_error_map': self._psf_error_map_init}
         return kwargs_psf
 
-class J0259_JWST(_J0259):
+class J0259_HST(_J0259):
 
-    def __init__(self):
+    def __init__(self, super_sample_factor=1):
         """
 
         :param image_position_uncertainties: list of astrometric uncertainties for each image
@@ -91,6 +102,7 @@ class J0259_JWST(_J0259):
         image_position_uncertainties = [0.005] * 4 # 5 arcsec
         flux_uncertainties = None
         magnifications = np.array([1.0] * 4)
-        super(J0259_JWST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
-                                          uncertainty_in_fluxes=False)
+        uncertainty_in_fluxes= False
+        super(J0259_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
+                                        uncertainty_in_fluxes, super_sample_factor)
 
