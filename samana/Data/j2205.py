@@ -36,6 +36,14 @@ class _J2205(ImagingDataBase):
         likelihood_mask = np.ones_like(_xx)
         inds = np.where(np.sqrt(_xx ** 2 + _yy ** 2) >= window_size / 2)
         likelihood_mask[inds] = 0.0
+
+        blobx, bloby = -1.122, 0.194
+        likelihood_mask = self.quasar_image_mask(
+            likelihood_mask,
+            [blobx],
+            [bloby],
+            self._image_data.shape, radius_arcsec=0.1
+        )
         if self._mask_quasar_images_for_logL:
             likelihood_mask_imaging_weights = self.quasar_image_mask(
                 likelihood_mask,

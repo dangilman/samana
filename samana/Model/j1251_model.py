@@ -134,10 +134,11 @@ class J1251ModelEPLM3M4Shear(_J1251ModelBase):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
         kwargs_lens_macro = [
-            {'theta_E': 0.8367838424385758, 'gamma': 2.0, 'e1': -0.14963717901216292,
-             'e2': 0.14911718946072536, 'center_x': 0.0007906216492182234, 'center_y': -0.011699990073143547,
-             'a3_a': 0.0, 'delta_phi_m3': -0.3837653661998099, 'a4_a': 0.0, 'delta_phi_m4': 1.940069946088214},
-            {'gamma1': 0.10302034219934438, 'gamma2': -0.05540078618830167, 'ra_0': 0.0, 'dec_0': 0.0}
+            {'theta_E': 0.8357180968567022, 'gamma': 2.0,
+             'e1': -0.09319108391387047, 'e2': 0.11922923361727192,
+             'center_x': -0.002589594536919536, 'center_y': -0.008550326088785604,
+             'a3_a': 0.0, 'delta_phi_m3': -0.5038939533939175, 'a4_a': 0.0, 'delta_phi_m4': 2.1100670457980018},
+            {'gamma1': 0.10339083796275281, 'gamma2': -0.047297504917786955, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]

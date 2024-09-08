@@ -311,10 +311,12 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         print(macromodel_samples_fixed_dict)
 
     kwargs_lens_macro_init = None
+    astropy_cosmo = realization_init.lens_cosmo.cosmo.astropy
     kwargs_model_align, _, _, _ = model_class.setup_kwargs_model(
         decoupled_multiplane=False,
         kwargs_lens_macro_init=kwargs_lens_macro_init,
-        macromodel_samples_fixed=macromodel_samples_fixed_dict)
+        macromodel_samples_fixed=macromodel_samples_fixed_dict,
+        astropy_cosmo=astropy_cosmo)
     kwargs_params = model_class.kwargs_params(kwargs_lens_macro_init=kwargs_lens_macro_init,
                                               delta_x_image=-delta_x_image,
                                               delta_y_image=-delta_y_image,
@@ -335,7 +337,6 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         print('realization has '+str(len(realization.halos))+' halos')
     grid_resolution_image_data = pixel_size * image_data_grid_resolution_rescale
     astropy_cosmo = realization.lens_cosmo.cosmo.astropy
-
     kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split = model_class.setup_kwargs_model(
         decoupled_multiplane=use_decoupled_multiplane_approximation,
         lens_model_list_halos=lens_model_list_halos,
@@ -344,7 +345,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         redshift_list_halos=list(redshift_list_halos),
         kwargs_halos=kwargs_halos,
         verbose=verbose,
-        macromodel_samples_fixed=macromodel_samples_fixed_dict)
+        macromodel_samples_fixed=macromodel_samples_fixed_dict,
+        astropy_cosmo=astropy_cosmo)
     kwargs_constraints = model_class.kwargs_constraints
     kwargs_likelihood = model_class.kwargs_likelihood
     kwargs_params = split_kwargs_params(kwargs_params, index_lens_split)
@@ -426,11 +428,13 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                multi_plane=kwargs_model['multi_plane'],
                                decouple_multi_plane=kwargs_model['decouple_multi_plane'],
                                kwargs_multiplane_model=kwargs_multiplane_model,
-                               z_source=kwargs_model['z_source'])
+                               z_source=kwargs_model['z_source'],
+                               cosmo=astropy_cosmo)
     else:
         lens_model = LensModel(lens_model_list=lens_model_init.lens_model_list,
                                lens_redshift_list=lens_model_init.redshift_list,
                                multi_plane=True,
+                               cosmo=astropy_cosmo,
                                z_source=kwargs_model['z_source'])
 
     if verbose:
@@ -516,6 +520,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             lens_model = LensModel(lens_model_list=kwargs_model['lens_model_list'] ,
                                    lens_redshift_list=kwargs_model['lens_redshift_list'] ,
                                    multi_plane=kwargs_model['multi_plane'],
+                                   cosmo=astropy_cosmo,
                                    decouple_multi_plane=kwargs_model['decouple_multi_plane'],
                                    kwargs_multiplane_model=kwargs_model['kwargs_multiplane_model'],
                                    z_source=kwargs_model['z_source'])
@@ -523,6 +528,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             lens_model = LensModel(lens_model_list=lens_model_init.lens_model_list,
                                    lens_redshift_list=lens_model_init.redshift_list,
                                    multi_plane=True,
+                                   cosmo=astropy_cosmo,
                                    z_source=kwargs_model['z_source'])
 
     stat, flux_ratios, flux_ratios_data = flux_ratio_summary_statistic(data_class.magnifications,

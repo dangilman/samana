@@ -96,7 +96,7 @@ class ModelBase(object):
     def setup_kwargs_model(self, decoupled_multiplane=False, lens_model_list_halos=None,
                            redshift_list_halos=None, kwargs_halos=None, kwargs_lens_macro_init=None,
                            grid_resolution=0.05, verbose=False, macromodel_samples_fixed=None,
-                           observed_convention_index=None):
+                           observed_convention_index=None, astropy_cosmo=None):
 
         lens_model_list_macro, redshift_list_macro, _, lens_model_params = self.setup_lens_model(kwargs_lens_macro_init,
                                                                                  macromodel_samples_fixed)
@@ -117,7 +117,8 @@ class ModelBase(object):
                         'additional_images_list': [False],
                         # check what fixed_magnification list does
                         'fixed_magnification_list': [False] * len(point_source_list),
-                        'observed_convention_index': observed_convention_index}
+                        'observed_convention_index': observed_convention_index,
+                        'cosmo': astropy_cosmo}
 
         if kwargs_halos is not None:
             kwargs_lens_init = [lens_model_params[0]]
@@ -131,6 +132,7 @@ class ModelBase(object):
         index_lens_split = None
         lens_model_init = LensModel(lm_list,
                                     lens_redshift_list=z_list,
+                                    cosmo=astropy_cosmo,
                                     z_source=self._data.z_source,
                                     multi_plane=True)
         if decoupled_multiplane:
@@ -142,7 +144,8 @@ class ModelBase(object):
                 kwargs_halos,
                 kwargs_lens_macro_init,
                 grid_resolution,
-                macromodel_samples_fixed)
+                macromodel_samples_fixed,
+                astropy_cosmo)
             if verbose:
                 print('done.')
             kwargs_model['kwargs_multiplane_model'] = kwargs_decoupled_class_setup['kwargs_multiplane_model']
@@ -189,7 +192,8 @@ class ModelBase(object):
         return kwargs_params
 
     def _setup_decoupled_multiplane_model(self, lens_model_list_halos, redshift_list_halos, kwargs_halos,
-                                         kwargs_macro_init=None, grid_resolution=0.05, macromodel_samples_fixed=None):
+                                         kwargs_macro_init=None, grid_resolution=0.05,
+                                          macromodel_samples_fixed=None, astropy_cosmo=None):
 
         deltaPix, _, _, _, window_size = self._data.coordinate_properties
         x_grid, y_grid, interp_points, npix = setup_grids(window_size, grid_resolution)
@@ -197,6 +201,7 @@ class ModelBase(object):
             self.setup_lens_model(kwargs_macro_init, macromodel_samples_fixed)
         kwargs_lens_macro = lens_model_params[0]
         lens_model_init = LensModel(lens_model_list_macro + lens_model_list_halos,
+                                        cosmo=astropy_cosmo,
                                           lens_redshift_list=list(redshift_list_macro) + list(redshift_list_halos),
                                           z_source=self._data.z_source,
                                           multi_plane=True)

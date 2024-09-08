@@ -30,13 +30,15 @@ class _J1042ModelBase(ModelBase):
     @property
     def kwargs_constraints(self):
         joint_source_with_point_source = [[0, 0]]
-        joint_lens_light_with_lens_light = [[0, 1, ['center_x', 'center_y']]]
+        #joint_lens_light_with_lens_light = [[0, 1, ['center_x', 'center_y']]]
         kwargs_constraints = {
                             'joint_source_with_point_source': joint_source_with_point_source,
-                              'joint_lens_light_with_lens_light': joint_lens_light_with_lens_light,
+                              #'joint_lens_light_with_lens_light': joint_lens_light_with_lens_light,
                               'num_point_source_list': [len(self._data.x_image)],
+                                'joint_lens_with_light': [[1, 2, ['center_x', 'center_y']]],
                               'solver_type': 'PROFILE_SHEAR',
-                              'point_source_offset': True
+                              'point_source_offset': True,
+            'image_plane_source_list': self._image_plane_source_list
                               }
         if self._shapelets_order is not None:
             kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
@@ -48,6 +50,7 @@ class _J1042ModelBase(ModelBase):
 
     def setup_source_light_model(self):
 
+        self._image_plane_source_list = [False]
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
             {'amp': 1, 'R_sersic': 6.185699807429242, 'n_sersic': 3.714144525940761, 'e1': -0.33146582654012263,
@@ -60,6 +63,7 @@ class _J1042ModelBase(ModelBase):
         kwargs_source_fixed = [{}]
 
         if self._shapelets_order is not None:
+            self._image_plane_source_list += [False]
             n_max = int(self._shapelets_order)
             source_model_list += ['SHAPELETS']
             # force beta to be larger than 0.1 because otherwise it messes w/point source component
@@ -70,6 +74,20 @@ class _J1042ModelBase(ModelBase):
             kwargs_upper_source += [{'amp': 10.0, 'beta': 0.5, 'center_x': 0.2, 'center_y': 0.2, 'n_max': n_max+1}]
             kwargs_source_fixed += [{'n_max': n_max}]
 
+        # self._image_plane_source_list += [True]
+        # point_of_interest_x1 = -0.95
+        # point_of_interest_y1 = 0.0
+        # source_model_list_clump, kwargs_source_clump, kwargs_source_sigma_clump, kwargs_source_fixed_clump, \
+        # kwargs_lower_source_clump, kwargs_upper_source_clump = self.gaussian_source_clump(point_of_interest_x1,
+        #                                                                                   point_of_interest_y1,
+        #                                                                                   0.05)
+        # source_model_list += source_model_list_clump
+        # kwargs_source_init += kwargs_source_clump
+        # kwargs_source_sigma += kwargs_source_sigma_clump
+        # kwargs_lower_source += kwargs_lower_source_clump
+        # kwargs_upper_source += kwargs_upper_source_clump
+        # kwargs_source_fixed += kwargs_source_fixed_clump
+
         source_params = [kwargs_source_init, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source,
                          kwargs_upper_source]
 
@@ -77,23 +95,44 @@ class _J1042ModelBase(ModelBase):
 
     def setup_lens_light_model(self):
 
-        lens_light_model_list = ['SERSIC_ELLIPSE', 'SERSIC_ELLIPSE']
+        lens_light_model_list = ['SERSIC_ELLIPSE',
+                                 #'SERSIC_ELLIPSE',
+                                 'SERSIC_ELLIPSE']
         kwargs_lens_light_init = [
             {'amp': 1, 'R_sersic': 0.8751746135510492, 'n_sersic': 4.032484946977566, 'e1': 0.03706113533782985,
              'e2': -0.03907980039597373, 'center_x': 0.05279135524046345, 'center_y': 0.019180403175134753},
-            {'amp': 1, 'R_sersic': 1.5228517698717252, 'n_sersic': 3.9012745982754726, 'e1': -0.09275713906510573,
-             'e2': 0.16998845939896, 'center_x': 0.05279135524046345, 'center_y': 0.019180403175134753}
+            #{'amp': 1, 'R_sersic': 1.5228517698717252, 'n_sersic': 3.9012745982754726, 'e1': -0.09275713906510573,
+            # 'e2': 0.16998845939896, 'center_x': 0.05279135524046345, 'center_y': 0.019180403175134753},
+            {'amp': 1.0, 'R_sersic': 0.11902191994454238,
+             'n_sersic': 4.0, 'e1': 0.1, 'e2': 0.1, 'center_x': self._data.gx, 'center_y': self._data.gy}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1},
-            {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
+            #{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1},
+        {'R_sersic': 0.05, 'n_sersic': 0.25, 'center_x': 0.1, 'center_y': 0.1, 'e1': 0.1, 'e2': 0.1,}]
         kwargs_lower_lens_light = [
             {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10.0, 'center_y': -10.0},
-            {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10.0, 'center_y': -10.0}]
+           # {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10.0, 'center_y': -10.0},
+        {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': self._data.gx - 0.3, 'center_y': self._data.gy - 0.3}]
         kwargs_upper_lens_light = [
             {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10},
-            {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
-        kwargs_lens_light_fixed = [{}, {}]
+           # {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10},
+        {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': self._data.gx + 0.3, 'center_y': self._data.gx + 0.3}]
+        kwargs_lens_light_fixed = [{},
+                                  # {},
+                                   {}]
+
+        add_uniform_light = True
+        if add_uniform_light:
+            kwargs_uniform, kwargs_uniform_sigma, kwargs_uniform_fixed, \
+            kwargs_uniform_lower, kwargs_uniform_upper = self.add_uniform_lens_light(20.0, 2.0)
+            lens_light_model_list += ['UNIFORM']
+            kwargs_lens_light_init += kwargs_uniform
+            kwargs_lens_light_sigma += kwargs_uniform_sigma
+            kwargs_lens_light_fixed += kwargs_uniform_fixed
+            kwargs_lower_lens_light += kwargs_uniform_lower
+            kwargs_upper_lens_light += kwargs_uniform_upper
+
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
 
@@ -122,8 +161,8 @@ class J1042ModelEPLM3M4Shear(_J1042ModelBase):
     @property
     def prior_lens(self):
         return [[0, 'gamma', 2.0, 0.1],
-                [2, 'center_x', 1.65539, 0.05],
-                [2, 'center_y', -0.2967, 0.05],
+                [2, 'center_x', self._data.gx, 0.2],
+                [2, 'center_y', self._data.gx, 0.2],
                 [2, 'theta_E', 0.05, 0.1]]
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
@@ -135,8 +174,9 @@ class J1042ModelEPLM3M4Shear(_J1042ModelBase):
                               'delta_phi_m4': -0.7592985744255293},
                              {'gamma1': -0.08343148556542614, 'gamma2': -0.015054336151458486,
                               'ra_0': 0.0, 'dec_0': 0.0},
-                             {'theta_E': 0.0444647074617518, 'center_x': 1.6675501923983138,
-                              'center_y': -0.4380495604763531}]
+                             {'theta_E': 0.05,
+                              'center_x': self._data.gx,
+                              'center_y': self._data.gy}]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1, 2]
         if kwargs_lens_macro_init is not None:
@@ -154,7 +194,7 @@ class J1042ModelEPLM3M4Shear(_J1042ModelBase):
             {'gamma1': -0.5, 'gamma2': -0.5},
             {'theta_E': 0.0, 'center_x': -10, 'center_y': -10}]
         kwargs_upper_lens = [
-            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 3.5, 'a4_a': 0.1,
+            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.5, 'a4_a': 0.1,
              'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
             {'gamma1': 0.5, 'gamma2': 0.5},
         {'theta_E': 0.2, 'center_x': 10, 'center_y': 10}]

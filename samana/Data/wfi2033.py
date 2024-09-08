@@ -112,6 +112,8 @@ class WFI2033_HST(_WFI2033):
 
 class WFI2033_NIRCAM(_WFI2033):
 
+    gx1, gy1 = 0.28, 2.02
+    gx2, gy2 = -3.9, -0.05
     def __init__(self, supersample_factor=1.0):
         """
 
@@ -123,10 +125,13 @@ class WFI2033_NIRCAM(_WFI2033):
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
 
-        x_image = np.array([-1.21229309, -0.90455656,  1.07524968,  0.09857087])
-        y_image = np.array([-0.08147999,  0.56125997,  1.03543648, -0.88244067])
-
-        from samana.Data.ImageData.wfi2033_nircam_dithered import image_data, psf_error_map, psf_model
+        x_image = np.array([-0.71107849, 0.00229477, 1.48697986, -0.62619614])
+        y_image = np.array([0.91023049, 1.02759605, -0.34851774, -0.6293088])
+        horizontal_shift = 0.0
+        vertical_shift = 0.0
+        x_image += horizontal_shift
+        y_image += vertical_shift
+        from samana.Data.ImageData.wfi2033_f115W import image_data, psf_error_map, psf_model
 
         magnifications = [1.,   0.65, 0.5,  0.53]
         image_position_uncertainties = [0.005] * 4
@@ -149,9 +154,10 @@ class WFI2033_NIRCAM(_WFI2033):
 
     @property
     def coordinate_properties(self):
-        deltaPix = 0.0315
-        window_size = 150 * deltaPix
-        ra_at_xy_0 = -2.457
-        dec_at_xy_0 = -2.457
-        transform_pix2angle = np.array([[ 0.0315,  -0.], [-0., 0.0315]])
+        deltaPix = 0.03122
+        window_size = 160 * deltaPix
+        ra_at_xy_0 = -0.710316
+        dec_at_xy_0 = -3.46049
+        transform_pix2angle = np.array([[-0.01718861,  0.02606757],
+                                                        [ 0.02606757,  0.01718861]])
         return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size

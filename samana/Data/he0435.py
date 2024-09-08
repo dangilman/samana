@@ -27,9 +27,9 @@ class _HE0435(ImagingDataBase):
             self._psf_error_map_init = psf_error_map_f555w
             self._image_data = image_data_f555w
         elif self._filter == 'jwst_nircam':
-            from samana.Data.ImageData.he0435_nircam_dithered import image_data as image_data_nircam
-            from samana.Data.ImageData.he0435_nircam_dithered import psf_model as psf_model_nircam
-            from samana.Data.ImageData.he0435_nircam_dithered import psf_error_map as psf_error_map_nircam
+            from samana.Data.ImageData.he0435_f115W import image_data as image_data_nircam
+            from samana.Data.ImageData.he0435_f115W import psf_model as psf_model_nircam
+            from samana.Data.ImageData.he0435_f115W import psf_error_map as psf_error_map_nircam
             self._psf_estimate_init = psf_model_nircam
             self._psf_error_map_init = psf_error_map_nircam
             self._image_data = image_data_nircam
@@ -119,12 +119,12 @@ class _HE0435(ImagingDataBase):
                                             [-6.75236526e-06,  4.99999710e-02]])
             return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
         elif self._filter == 'jwst_nircam':
-            deltaPix = 0.031
+            deltaPix = 0.031228
             window_size = 160 * deltaPix
-            ra_at_xy_0 = -2.48
-            dec_at_xy_0 = -2.48
-            transform_pix2angle = np.array([[0.031, 0.0],
-                                            [0.0, 0.031]])
+            ra_at_xy_0 = 3.12742
+            dec_at_xy_0 = 1.6438
+            transform_pix2angle = np.array([[-0.00927235, -0.0298204],
+                                            [-0.0298204, 0.00927235]])
             return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
         else:
             raise Exception('filter must be either f814w or f555w')
@@ -148,7 +148,7 @@ class HE0435_HST(_HE0435):
         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
-
+        raise Exception('coordinate system wrong here!')
         # x_image = np.array([-1.272, -0.306,  1.152,  0.384])
         # y_image = np.array([-0.156,  1.092,  0.636, -1.026])
         x_image = np.array([-1.27134834, -0.30946454,  1.15665179,  0.32363394])
@@ -168,7 +168,8 @@ class HE0435_HST(_HE0435):
                                          supersample_factor=supersample_factor, image_data_filter=image_data_filter)
 
 class HE0435_NIRCAM(_HE0435):
-
+    gx = -0.0
+    gy = 4.4
     def __init__(self, supersample_factor=1.0):
         """
 
@@ -181,10 +182,12 @@ class HE0435_NIRCAM(_HE0435):
         """
 
         image_data_filter = 'jwst_nircam'
-
-        x_image = np.array([-0.41975347,  0.97504454,  0.88339521, -0.92230729])
-        y_image = np.array([ 1.21060859,  0.63044535, -0.94073114, -0.53980543])
-
+        x_image = np.array([1.16940412, -0.30657554, -1.29609009, 0.23326151])
+        y_image = np.array([0.6162547, 1.16821031, 0.0140879, -0.9985529])
+        horizontal_shift = 0.02
+        vertical_shift = 0.0
+        x_image += horizontal_shift
+        y_image += vertical_shift
         magnifications = [0.96, 0.976, 1.0, 0.65]
         image_position_uncertainties = [0.005] * 4
         flux_uncertainties = [0.05, 0.049, 0.048, 0.056]
@@ -200,20 +203,6 @@ class HE0435_NIRCAM(_HE0435):
         _xx, _yy = np.meshgrid(_x, _y)
         likelihood_mask = np.ones_like(_xx)
         inds = np.where(np.sqrt(_xx ** 2 + _yy ** 2) >= window_size / 2.1)
-        likelihood_mask[inds] = 0.0
-
-        rad = 1.8
-        s = 1.7
-        xp = 1.7 * s
-        yp = 1.3 * s
-        inds = np.where(np.sqrt((_xx - xp) ** 2 + (_yy - yp) ** 2) <= rad)
-        likelihood_mask[inds] = 0.0
-
-        rad = 2.0
-        s = 1.
-        xp = 3.9 * s
-        yp = 0.0 * s
-        inds = np.where(np.sqrt((_xx - xp) ** 2 + (_yy - yp) ** 2) <= rad)
         likelihood_mask[inds] = 0.0
 
         if self._mask_quasar_images_for_logL:
