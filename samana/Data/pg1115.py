@@ -20,20 +20,20 @@ class _PG1115(ImagingDataBase):
         image_band = [self.kwargs_data, self.kwargs_psf, self.kwargs_numerics]
         multi_band_list = [image_band]
         kwargs_data_joint = {'multi_band_list': multi_band_list, 'multi_band_type': 'multi-linear'}
-        likelihood_mask, _ = image_likelihood_mask, image_likelihood_mask
         if self._mask_quasar_images_for_logL:
             likelihood_mask_imaging_weights = self.quasar_image_mask(
-                likelihood_mask,
+                image_likelihood_mask,
                 x_image,
                 y_image,
                 self._image_data.shape, radius_arcsec=0.3
             )
         else:
-            likelihood_mask_imaging_weights = likelihood_mask
+            likelihood_mask_imaging_weights = image_likelihood_mask
         super(_PG1115, self).__init__(z_lens, z_source,
                                       kwargs_data_joint, x_image, y_image,
                                       magnifications, image_position_uncertainties, flux_uncertainties,
-                                      uncertainty_in_fluxes, keep_flux_ratio_index, likelihood_mask,
+                                      uncertainty_in_fluxes, keep_flux_ratio_index,
+                                      image_likelihood_mask,
                                       likelihood_mask_imaging_weights)
 
     @property
@@ -134,10 +134,12 @@ class PG1115_NIRCAM(_PG1115):
         self._image_data_nircam = image_data
         image_likelihood_mask = self.likelihood_masks(x_image, y_image)[0]
 
+        inds_nan = (np.array([104, 105, 106, 106, 106, 107, 107]), np.array([78, 78, 62, 63, 64, 63, 64]))
+        self._image_data_nircam[inds_nan] = 300.0 # bad pixels at the quasar image positions
         super(PG1115_NIRCAM, self).__init__(x_image, y_image, magnifications, image_position_uncertainties,
                                          flux_uncertainties,
                                          uncertainty_in_fluxes,
-                                         image_data, psf_model, psf_error_map,
+                                         self._image_data_nircam, psf_model, psf_error_map,
                                           image_likelihood_mask,
                                           supersample_factor=supersample_factor)
 
