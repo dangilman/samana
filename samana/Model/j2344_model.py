@@ -38,7 +38,6 @@ class _J2344ModelBase(ModelBase):
                               }
         if self._shapelets_order is not None:
            kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
-        kwargs_constraints['image_plane_source_list'] = self._image_plane_source_list
         return kwargs_constraints
 
     @property
@@ -58,7 +57,6 @@ class _J2344ModelBase(ModelBase):
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
         kwargs_upper_source = [{'R_sersic': 10.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
         kwargs_source_fixed = [{}]
-        self._image_plane_source_list = [False]
 
         if self._shapelets_order is not None:
             n_max = int(self._shapelets_order)
@@ -69,8 +67,7 @@ class _J2344ModelBase(ModelBase):
             kwargs_lower_source += [{'amp': 10.0, 'beta': 0.0, 'center_x': -10.0, 'center_y': -10.0, 'n_max': 0}]
             kwargs_upper_source += [{'amp': 10.0, 'beta': 0.5, 'center_x': 10.0, 'center_y': 10.0, 'n_max': n_max+1}]
             kwargs_source_fixed += [{'n_max': n_max}]
-            self._image_plane_source_list = [False]
-
+            
         source_params = [kwargs_source_init, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source,
                          kwargs_upper_source]
 
