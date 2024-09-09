@@ -84,7 +84,7 @@ class _J1537(ImagingDataBase):
 
 class J1537_HST(_J1537):
 
-    def __init__(self):
+    def __init__(self, super_sample_factor=1):
         """
 
         :param image_position_uncertainties: list of astrometric uncertainties for each image
@@ -104,6 +104,6 @@ class J1537_HST(_J1537):
         flux_uncertainties = [0.02/0.73, 0.02/0.94, 0.02/0.73]
         magnifications = np.array([1.0, 0.73, 0.94, 0.73])
         super(J1537_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
-                                                uncertainty_in_fluxes=False)
+                                                uncertainty_in_fluxes=False, supersample_factor=super_sample_factor)
 
 
