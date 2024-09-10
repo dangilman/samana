@@ -199,7 +199,7 @@ class Output(object):
 
     @classmethod
     def from_raw_output(cls, output_path, job_index_min, job_index_max, fitting_kwargs_list=None,
-                        macromodel_sample_names=None):
+                        macromodel_sample_names=None, print_missing_files=False):
 
         param_names = None
         init = True
@@ -209,17 +209,20 @@ class Output(object):
             try:
                 params = np.loadtxt(folder + 'parameters.txt', skiprows=1)
             except:
-                print('params file '+folder+'parameters.txt not found... ')
+                if print_missing_files:
+                    print('params file '+folder+'parameters.txt not found... ')
                 continue
             try:
                 fluxes = np.loadtxt(folder + 'fluxes.txt')
             except:
-                print('fluxes file ' + folder + 'fluxes.txt not found... ')
+                if print_missing_files:
+                    print('fluxes file ' + folder + 'fluxes.txt not found... ')
                 continue
             try:
                 macrosamples = np.loadtxt(folder + 'macromodel_samples.txt', skiprows=1)
             except:
-                print('macromodel samples file ' + folder + 'macromodel_samples.txt not found... ')
+                if print_missing_files:
+                    print('macromodel samples file ' + folder + 'macromodel_samples.txt not found... ')
                 continue
             # check the arrays are all the same length
             size_params = params.shape[0]
