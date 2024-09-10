@@ -1,31 +1,59 @@
 from samana.Data.data_base import ImagingDataBase
 import numpy as np
-from samana.Data.ImageData.rxj1131_814W import psf_model, psf_error_map, image_data
 
-class _RXJ1131(ImagingDataBase):
+class _J0924(ImagingDataBase):
 
     def __init__(self, x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
-                 uncertainty_in_fluxes, supersample_factor,
+                 uncertainty_in_fluxes, supersample_factor, image_data_type,
                  mask_quasar_images_for_logL=True):
 
         self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
-        z_lens = 0.3
-        z_source = 0.66
+        z_lens = 0.39  # fiducial
+        z_source = 1.52
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
-        self._psf_estimate_init = psf_model
-        self._psf_error_map_init = psf_error_map
-        self._image_data = image_data
+        if image_data_type == 'HST814W':
+            raise Exception('not HST imaging avaialble for this system')
+
+        elif image_data_type == 'MIRI540W':
+            from samana.Data.ImageData.j0924_MIRI540W import psf_model, image_data, noise_map
+            self._psf_estimate_init = psf_model
+            self._psf_error_map_init = None
+            self._image_data = image_data
+            self._psf_supersampling_factor = 3
+            self._deltaPix = 0.11092714826192245
+            self._window_size = 3.771523040905363
+            self._ra_at_xy_0 = 2.481268756798886
+            self._dec_at_xy_0 = 0.9774959768568118
+            self._transform_pix2angle = np.array([[-0.04422861, -0.10172837],
+                                                  [-0.10172837, 0.04422861]])
+            self._background_rms = None
+            self._exposure_time = None
+            self._noise_map = noise_map
+
+        else:
+            raise Exception('image data type must be either HST814W or MIRI540W')
+
         self._supersample_factor = supersample_factor
         image_band = [self.kwargs_data, self.kwargs_psf, self.kwargs_numerics]
         multi_band_list = [image_band]
         kwargs_data_joint = {'multi_band_list': multi_band_list, 'multi_band_type': 'multi-linear'}
         likelihood_mask, likelihood_mask_imaging_weights = self.likelihood_masks(x_image, y_image)
-        super(_RXJ1131, self).__init__(z_lens, z_source,
+        super(_J0924, self).__init__(z_lens, z_source,
                                        kwargs_data_joint, x_image, y_image,
                                        magnifications, image_position_uncertainties, flux_uncertainties,
                                        uncertainty_in_fluxes, keep_flux_ratio_index, likelihood_mask,
                                        likelihood_mask_imaging_weights)
+
+    @property
+    def coordinate_properties(self):
+
+        deltaPix = self._deltaPix
+        window_size = self._window_size
+        ra_at_xy_0 = self._ra_at_xy_0
+        dec_at_xy_0 = self._dec_at_xy_0
+        transform_pix2angle = self._transform_pix2angle
+        return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
 
     def likelihood_masks(self, x_image, y_image):
 
@@ -41,7 +69,7 @@ class _RXJ1131(ImagingDataBase):
                 likelihood_mask,
                 x_image,
                 y_image,
-                self._image_data.shape
+                self._image_data.shape, radius_arcsec=0.3
             )
             return likelihood_mask, likelihood_mask_imaging_weights
         else:
@@ -50,12 +78,13 @@ class _RXJ1131(ImagingDataBase):
     @property
     def kwargs_data(self):
         _, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, _ = self.coordinate_properties
-        kwargs_data = {'background_rms': 0.0075095,
-                       'exposure_time': 1980.0,
+        kwargs_data = {'background_rms': self._background_rms,
+                       'exposure_time': self._exposure_time,
                        'ra_at_xy_0': ra_at_xy_0,
                        'dec_at_xy_0': dec_at_xy_0,
                        'transform_pix2angle': transform_pix2angle,
-                       'image_data': self._image_data}
+                       'image_data': self._image_data,
+                       'noise_map': self._noise_map}
         return kwargs_data
 
     @property
@@ -64,27 +93,17 @@ class _RXJ1131(ImagingDataBase):
                 'supersampling_convolution': False}
 
     @property
-    def coordinate_properties(self):
-
-        deltaPix = 0.04999
-        window_size = 7.3994
-        ra_at_xy_0 = -4.89782313
-        dec_at_xy_0 = -1.840399
-        transform_pix2angle = np.array([[ 0.02065827,  0.04552853],
-       [ 0.04552853, -0.02065827]])
-        return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
-
-    @property
     def kwargs_psf(self):
         kwargs_psf = {'psf_type': 'PIXEL',
-                      'kernel_point_source': self._psf_estimate_init,
-                      'psf_error_map': self._psf_error_map_init}
+                      'kernel_point_source': self._psf_estimate_init / np.sum(self._psf_estimate_init),
+                      'psf_error_map': self._psf_error_map_init,
+                      'point_source_supersampling_factor': self._psf_supersampling_factor
+                      }
         return kwargs_psf
 
-class RXJ1131_HST(_RXJ1131):
-    gx = 0.134158
-    gy = 0.47716
-    def __init__(self, super_sample_factor=1):
+class J0924_MIRI(_J0924):
+
+    def __init__(self, supersample_factor=1):
         """
 
         :param image_position_uncertainties: list of astrometric uncertainties for each image
@@ -94,16 +113,23 @@ class RXJ1131_HST(_RXJ1131):
         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
-        x_image = np.array([ 2.07922968,  2.11652635,  1.48558514, -1.04573197])
-        y_image = np.array([-0.66892606,  0.52040446, -1.77760609,  0.19998343])
-        horizontal_shift = 0.0
-        vertical_shift = 0.0
+
+        x_image = np.array([0.14352242, 0.20590401, -0.82477146, 0.67534503])
+        y_image = np.array([0.88688037, -0.91784729, 0.20692539, 0.46404152])
+        horizontal_shift = -0.0
+        vertical_shift = 0.008
         x_image += horizontal_shift
         y_image += vertical_shift
         image_position_uncertainties = [0.005] * 4 # 5 arcsec
         flux_uncertainties = None
+        uncertainty_in_fluxes = False
         magnifications = np.array([1.0] * 4)
-        uncertainty_in_fluxes= False
-        super(RXJ1131_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
-                                        uncertainty_in_fluxes, super_sample_factor)
-
+        image_data_type = 'MIRI540W'
+        super(J0924_MIRI, self).__init__(x_image,
+                                     y_image,
+                                     magnifications,
+                                     image_position_uncertainties,
+                                     flux_uncertainties,
+                                     uncertainty_in_fluxes,
+                                     supersample_factor,
+                                     image_data_type)

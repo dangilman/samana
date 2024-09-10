@@ -3,11 +3,11 @@ import numpy as np
 import pickle
 
 
-class _PSJ0147ModelBase(ModelBase):
+class _J2145(ModelBase):
 
     def __init__(self, data_class, kde_sampler, shapelets_order):
         self._shapelets_order = shapelets_order
-        super(_PSJ0147ModelBase, self).__init__(data_class, kde_sampler)
+        super(_J2145, self).__init__(data_class, kde_sampler)
 
     def update_kwargs_fixed_macro(self, lens_model_list_macro, kwargs_lens_fixed, kwargs_lens_init, macromodel_samples_fixed=None):
 
@@ -48,8 +48,9 @@ class _PSJ0147ModelBase(ModelBase):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 1, 'R_sersic': 6.846682427942657, 'n_sersic': 3.4013835019863965, 'e1': -0.3081096637893576,
-             'e2': -0.028112427328776703, 'center_x': 0.04292746139041792, 'center_y': -0.04612501883329041}
+            {'amp': 1, 'R_sersic': 6.6596652397851805, 'n_sersic': 9.828978519569892,
+             'e1': 0.18922287881142683, 'e2': -0.49680046029591163,
+             'center_x': -0.1567401919287477, 'center_y': 0.10407013803317702}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
@@ -60,7 +61,7 @@ class _PSJ0147ModelBase(ModelBase):
         if self._shapelets_order is not None:
             n_max = int(self._shapelets_order)
             source_model_list += ['SHAPELETS']
-            kwargs_source_init += [{'amp': 1.0, 'beta': 0.2, 'center_x': 0.018, 'center_y': -0.031,
+            kwargs_source_init += [{'amp': 1.0, 'beta': 0.3, 'center_x': 0.018, 'center_y': -0.031,
                                     'n_max': n_max}]
             kwargs_source_sigma += [{'amp': 10.0, 'beta': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'n_max': 1}]
             kwargs_lower_source += [{'amp': 10.0, 'beta': 0.0, 'center_x': -10.0, 'center_y': -10.0, 'n_max': 0}]
@@ -76,9 +77,9 @@ class _PSJ0147ModelBase(ModelBase):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
         kwargs_lens_light_init = [
-            {'amp': 2.729453864083141, 'R_sersic': 2.0697213054949213, 'n_sersic': 6.7491729375749445,
-             'e1': 0.07359639688056044, 'e2': 0.06109736299830376, 'center_x': 0.01888589667383328,
-             'center_y': -0.6962822236737254}
+            {'amp': 1, 'R_sersic': 2.2924234877372065, 'n_sersic': 9.787033759555838,
+             'e1': 0.40043750929239874, 'e2': -0.45597719396944153,
+             'center_x': -0.007970802304196879, 'center_y': -0.04905834798232061}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
@@ -89,6 +90,17 @@ class _PSJ0147ModelBase(ModelBase):
         kwargs_lens_light_fixed = [{}]
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
+
+        add_uniform_light = True
+        if add_uniform_light:
+            kwargs_uniform, kwargs_uniform_sigma, kwargs_uniform_fixed, \
+                kwargs_uniform_lower, kwargs_uniform_upper = self.add_uniform_lens_light()
+            lens_light_model_list += ['UNIFORM']
+            kwargs_lens_light_init += kwargs_uniform
+            kwargs_lens_light_sigma += kwargs_uniform_sigma
+            kwargs_lens_light_fixed += kwargs_uniform_fixed
+            kwargs_lower_lens_light += kwargs_uniform_lower
+            kwargs_upper_lens_light += kwargs_uniform_upper
 
         return lens_light_model_list, lens_light_params
 
@@ -107,10 +119,10 @@ class _PSJ0147ModelBase(ModelBase):
                              }
         return kwargs_likelihood
 
-class PSJ0147ModelEPLM3M4Shear(_PSJ0147ModelBase):
+class J2145ModelEPLM3M4Shear(_J2145):
 
     def __init__(self, data_class, kde_sampler=None, shapelets_order=None):
-        super(PSJ0147ModelEPLM3M4Shear, self).__init__(data_class, kde_sampler, shapelets_order)
+        super(J2145ModelEPLM3M4Shear, self).__init__(data_class, kde_sampler, shapelets_order)
 
     @property
     def prior_lens(self):
@@ -120,10 +132,11 @@ class PSJ0147ModelEPLM3M4Shear(_PSJ0147ModelBase):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
         kwargs_lens_macro = [
-            {'theta_E': 2.0978030269110666, 'gamma': 2.0767408302237578, 'e1': -0.6437016121405498,
-             'e2': 0.12784191927062086, 'center_x': -0.14737717498587163, 'center_y': -1.7146595113331211, 'a3_a': 0.0,
-             'delta_phi_m3': 0.279966734366489, 'a4_a': 0.0, 'delta_phi_m4': 3.4704256031109186},
-            {'gamma1': -0.06568460343986003, 'gamma2': -0.012944843102629694, 'ra_0': 0.0, 'dec_0': 0.0}
+            {'theta_E': 0.9963716325201858, 'gamma': 2.0764389002435983, 'e1': 0.01655595186589094,
+             'e2': 0.10785608433624412, 'center_x': -0.16563756991476616,
+             'center_y': 0.1908195870939459, 'a3_a': 0.0, 'delta_phi_m3': 0.3829612299408204,
+             'a4_a': 0.0, 'delta_phi_m4': 2.579205125743943},
+            {'gamma1': 0.06917695487891515, 'gamma2': 0.17780387967534877, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]
@@ -137,11 +150,11 @@ class PSJ0147ModelEPLM3M4Shear(_PSJ0147ModelBase):
                              {'gamma1': 0.1, 'gamma2': 0.1}]
         kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}]
         kwargs_lower_lens = [
-            {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.5, 'a4_a': -0.1,
+            {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.6, 'a4_a': -0.1,
              'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
             {'gamma1': -0.5, 'gamma2': -0.5}]
         kwargs_upper_lens = [
-            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 3.5, 'a4_a': 0.1,
+            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.4, 'a4_a': 0.1,
              'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
             {'gamma1': 0.5, 'gamma2': 0.5}]
         kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,

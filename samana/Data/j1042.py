@@ -128,7 +128,7 @@ class _J1042(ImagingDataBase):
                       'psf_error_map': self._psf_error_map_init}
         return kwargs_psf
 
-class J1042_HST(_J1042):
+class J1042_HST_814W(_J1042):
     gx = 1.782
     gy = -0.317
     def __init__(self, supersample_factor=1):
@@ -150,7 +150,7 @@ class J1042_HST(_J1042):
         image_position_uncertainties = [0.005] * 4 # 5 arcsec
         flux_uncertainties = None
         magnifications = np.array([1.0] * 4)
-        super(J1042_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
+        super(J1042_HST_814W, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
                                           uncertainty_in_fluxes=False,
                                         supersample_factor=supersample_factor,
                                         band='814W')

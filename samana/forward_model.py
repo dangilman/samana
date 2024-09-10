@@ -24,7 +24,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   kde_sampler=None, image_data_grid_resolution_rescale=1.0,
                   use_imaging_data=True, fitting_sequence_kwargs=None, test_mode=False,
                   use_decoupled_multiplane_approximation=True, fixed_realization_list=None,
-                  macromodel_readout_function=None):
+                  macromodel_readout_function=None, kappa_scale_subhalos=1.0, log10_bound_mass_cut=None):
     """
 
     :param output_path:
@@ -59,6 +59,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     :param macromodel_readout_function: a function that takes as input the keyword arguments of the optimized
     lens model and the dictionary of fixed macromodel parameters, and returns an array of macromodel parameters to save,
     as well as a list of parameter names
+    :param kappa_scale_subhalos:
+    :param log10_bound_mass_cut:
     :return:
     """
 
@@ -148,7 +150,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                             verbose, random_seed, n_pso_particles, n_pso_iterations, num_threads,
                                             kwargs_model_class, astrometric_uncertainty, kde_sampler,
                                             use_imaging_data, fitting_sequence_kwargs, test_mode,
-                                            use_decoupled_multiplane_approximation, fixed_realization, macromodel_readout_function)
+                                            use_decoupled_multiplane_approximation, fixed_realization,
+                                            macromodel_readout_function, kappa_scale_subhalos, log10_bound_mass_cut)
 
         seed_counter += 1
         acceptance_rate_counter += 1
@@ -277,7 +280,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                    fitting_kwargs_list=None,
                                    test_mode=False,
                                    use_decoupled_multiplane_approximation=True,
-                                   fixed_realization=None, macromodel_readout_function=None):
+                                   fixed_realization=None, macromodel_readout_function=None,
+                                   kappa_scale_subhalos=1.0, log10_bound_mass_cut=None):
 
     # set the random seed for reproducibility
     np.random.seed(seed)
@@ -298,7 +302,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         present_model_function = preset_model_from_name(preset_model_name)
         if 'cone_opening_angle_arcsec' not in realization_dict.keys():
             theta_E = model_class.setup_lens_model()[-1][0][0]['theta_E']
-            realization_dict['cone_opening_angle_arcsec'] = 6.0 * theta_E
+            realization_dict['cone_opening_angle_arcsec'] = max(6.0 * theta_E, 6.0)
         realization_init = present_model_function(data_class.z_lens, data_class.z_source, **realization_dict)
         preset_realization = False
     if verbose:
@@ -322,17 +326,18 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                               delta_y_image=-delta_y_image,
                                               macromodel_samples_fixed=macromodel_samples_fixed_dict)
     pixel_size = data_class.coordinate_properties[0] / data_class.kwargs_numerics['supersampling_factor']
-
     kwargs_lens_align = kwargs_params['lens_model'][0]
     if preset_realization:
         realization = realization_init
     else:
+        if log10_bound_mass_cut is not None:
+            realization_init = realization_init.filter_bound_mass(10 ** log10_bound_mass_cut)
         realization, _, _, lens_model_align, _ = align_realization(realization_init, kwargs_model_align['lens_model_list'],
                                     kwargs_model_align['lens_redshift_list'], kwargs_lens_align,
                                     data_class.x_image,
                                     data_class.y_image)
     lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
-        kwargs_mass_sheet={'log_mlow_sheets': log_mlow_mass_sheets})
+        kwargs_mass_sheet={'log_mlow_sheets': log_mlow_mass_sheets, 'kappa_scale_subhalos': kappa_scale_subhalos})
     if verbose:
         print('realization has '+str(len(realization.halos))+' halos')
     grid_resolution_image_data = pixel_size * image_data_grid_resolution_rescale

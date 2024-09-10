@@ -40,6 +40,9 @@ def quick_setup(lens_ID):
     elif lens_ID == 'J1042':
         from samana.Data.j1042 import J1042_HST_160W as data_class
         from samana.Model.j1042_model import J1042ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'J1042_814W':
+        from samana.Data.j1042 import J1042_HST_814W as data_class
+        from samana.Model.j1042_model import J1042ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J1131':
         from samana.Data.j1131 import J1131_HST as data_class
         from samana.Model.j1131_model import J1131ModelEPLM3M4Shear as model_class
@@ -66,7 +69,7 @@ def quick_setup(lens_ID):
         from samana.Model.pg1115_model import PG1115ModelEPLM3M4Shear as model_class
     elif lens_ID == 'PSJ0147':
         from samana.Data.j0147 import J0147_MIRI as data_class
-        from samana.Model.psj0147_model import PSJ0147ModelEPLM3M4Shear as model_class
+        from samana.Model.j0147_model import J0147ModelEPLM3M4Shear as model_class
     elif lens_ID == 'PSJ1606':
         from samana.Data.psj1606 import PSJ1606_HST as data_class
         from samana.Model.psj1606_model import PSJ1606ModelEPLM3M4Shear as model_class
@@ -90,6 +93,21 @@ def quick_setup(lens_ID):
     elif lens_ID == 'M1134':
         from samana.Data.m1134 import M1134_HST as data_class
         from samana.Model.m1134_model import M1134ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'J0924':
+        from samana.Data.j0924 import J0924_MIRI as data_class
+        from samana.Model.j0924_model import J0924ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'H1413':
+        from samana.Data.h1413 import H1413_MIRI as data_class
+        from samana.Model.h1413_model import H1413ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'J2017':
+        from samana.Data.j2017 import J2017_MIRI as data_class
+        from samana.Model.j2017_model import J2017ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'J0803':
+        from samana.Data.j0803 import J0803_MIRI as data_class
+        from samana.Model.j0803_model import J0803ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'J2145':
+        from samana.Data.j2145 import J2145_MIRI as data_class
+        from samana.Model.j2145_model import J2145ModelEPLM3M4Shear as model_class
     else:
         raise Exception('lens ID '+str(lens_ID)+' not recognized!')
     return data_class, model_class

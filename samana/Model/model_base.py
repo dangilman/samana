@@ -193,10 +193,12 @@ class ModelBase(object):
 
     def _setup_decoupled_multiplane_model(self, lens_model_list_halos, redshift_list_halos, kwargs_halos,
                                          kwargs_macro_init=None, grid_resolution=0.05,
-                                          macromodel_samples_fixed=None, astropy_cosmo=None):
+                                          macromodel_samples_fixed=None, astropy_cosmo=None,
+                                          scale_window_size=1.25):
 
         deltaPix, _, _, _, window_size = self._data.coordinate_properties
-        x_grid, y_grid, interp_points, npix = setup_grids(window_size, grid_resolution)
+        grid_size = window_size * scale_window_size
+        x_grid, y_grid, interp_points, npix = setup_grids(grid_size, grid_resolution)
         lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params = \
             self.setup_lens_model(kwargs_macro_init, macromodel_samples_fixed)
         kwargs_lens_macro = lens_model_params[0]
