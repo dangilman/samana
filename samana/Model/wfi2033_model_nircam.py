@@ -74,15 +74,17 @@ class _WFI2033ModelNircamBase(ModelBase):
         self._image_plane_source_list = [False]
 
         if self._shapelets_order is not None:
-            n_max = int(self._shapelets_order)
-            source_model_list += ['SHAPELETS']
-            kwargs_source_init += [{'amp': 1.0, 'beta': 0.4, 'center_x': 0.018, 'center_y': -0.031,
-                                    'n_max': n_max}]
-            kwargs_source_sigma += [{'amp': 10.0, 'beta': 0.1, 'center_x': 0.1, 'center_y': 0.1, 'n_max': 1}]
-            kwargs_lower_source += [{'amp': 1e-9, 'beta': 0.0, 'center_x': -10.0, 'center_y': -10.0, 'n_max': 0}]
-            kwargs_upper_source += [{'amp': 100.0, 'beta': 1.0, 'center_x': 10.0, 'center_y': 10.0, 'n_max': n_max+1}]
-            kwargs_source_fixed += [{'n_max': n_max}]
             self._image_plane_source_list += [False]
+            n_max = int(self._shapelets_order)
+            shapelets_source_list, kwargs_shapelets_init, kwargs_shapelets_sigma, \
+            kwargs_shapelets_fixed, kwargs_lower_shapelets, kwargs_upper_shapelets = \
+                self.add_shapelets_source(n_max)
+            source_model_list += shapelets_source_list
+            kwargs_source_init += kwargs_shapelets_init
+            kwargs_source_fixed += kwargs_shapelets_fixed
+            kwargs_source_sigma += kwargs_shapelets_sigma
+            kwargs_lower_source += kwargs_lower_shapelets
+            kwargs_upper_source += kwargs_upper_shapelets
 
         if self._include_source_blobs:
 
@@ -247,7 +249,7 @@ class WFI2033NircamModelEPLM3M4ShearObservedConvention(_WFI2033ModelNircamBase):
 
     @property
     def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.1], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005],
+        return self.population_gamma_prior + [[0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005],
                 [2, 'center_x', self._data.gx1, 0.05],
                 [2, 'center_y', self._data.gy1, 0.05],
                 [2, 'theta_E', 0.05, 0.05],

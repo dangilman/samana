@@ -65,14 +65,15 @@ class _J1042ModelBase(ModelBase):
         if self._shapelets_order is not None:
             self._image_plane_source_list += [False]
             n_max = int(self._shapelets_order)
-            source_model_list += ['SHAPELETS']
-            # force beta to be larger than 0.1 because otherwise it messes w/point source component
-            kwargs_source_init += [{'amp': 1.0, 'beta': 0.02, 'center_x': 0.018, 'center_y': -0.031,
-                                    'n_max': n_max}]
-            kwargs_source_sigma += [{'amp': 10.0, 'beta': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'n_max': 1}]
-            kwargs_lower_source += [{'amp': 10.0, 'beta': 0.01, 'center_x': -0.2, 'center_y': -0.2, 'n_max': 0}]
-            kwargs_upper_source += [{'amp': 10.0, 'beta': 0.5, 'center_x': 0.2, 'center_y': 0.2, 'n_max': n_max+1}]
-            kwargs_source_fixed += [{'n_max': n_max}]
+            shapelets_source_list, kwargs_shapelets_init, kwargs_shapelets_sigma, \
+            kwargs_shapelets_fixed, kwargs_lower_shapelets, kwargs_upper_shapelets = \
+                self.add_shapelets_source(n_max)
+            source_model_list += shapelets_source_list
+            kwargs_source_init += kwargs_shapelets_init
+            kwargs_source_fixed += kwargs_shapelets_fixed
+            kwargs_source_sigma += kwargs_shapelets_sigma
+            kwargs_lower_source += kwargs_lower_shapelets
+            kwargs_upper_source += kwargs_upper_shapelets
 
         # self._image_plane_source_list += [True]
         # point_of_interest_x1 = -0.95
@@ -160,7 +161,7 @@ class J1042ModelEPLM3M4Shear(_J1042ModelBase):
 
     @property
     def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.1],
+        return self.population_gamma_prior + [
                 [2, 'center_x', self._data.gx, 0.2],
                 [2, 'center_y', self._data.gx, 0.2],
                 [2, 'theta_E', 0.05, 0.1]]

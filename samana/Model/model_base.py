@@ -14,6 +14,34 @@ class ModelBase(object):
         self._data = data_class
         self.kde_sampler = kde_sampler
 
+    def beta_scale_param(self, n_max):
+
+        pixel_scale = self._data.coordinate_properties[0]
+        return pixel_scale * np.sqrt(n_max+1)
+
+    def add_shapelets_source(self, n_max, beta_init=None):
+
+        n_max = int(n_max)
+        source_model_list = ['SHAPELETS']
+        beta_scale_param = self.beta_scale_param(n_max)
+        beta_lower_bound = beta_scale_param / 2.5
+        beta_upper_bound = 7.0 * beta_lower_bound
+        if beta_init is None:
+            beta_sigma = 2.0 * beta_lower_bound
+            beta_init = 3.0 * beta_lower_bound
+        else:
+            beta_sigma = 0.5 * beta_init
+            assert beta_init > beta_lower_bound * 1.1
+            assert beta_init < beta_upper_bound * 0.9
+        kwargs_source_init = [{'amp': 1.0, 'beta': beta_init, 'center_x': 0.0, 'center_y': 0.0,
+                                'n_max': n_max}]
+        kwargs_source_sigma = [{'amp': 10.0, 'beta': beta_sigma, 'center_x': 0.1, 'center_y': 0.1, 'n_max': 1}]
+        kwargs_lower_source = [{'amp': 10.0, 'beta': beta_lower_bound, 'center_x': -0.2, 'center_y': -0.2, 'n_max': 0}]
+        kwargs_upper_source = [{'amp': 10.0, 'beta': beta_upper_bound, 'center_x': 0.2, 'center_y': 0.2, 'n_max': n_max + 1}]
+        kwargs_source_fixed = [{'n_max': n_max}]
+        return source_model_list, kwargs_source_init, kwargs_source_sigma, \
+               kwargs_source_fixed, kwargs_lower_source, kwargs_upper_source
+
     def add_uniform_lens_light(self, amp_init=0.0, amp_sigma=1.0):
 
         kwargs_light = [{'amp': amp_init}]
@@ -39,6 +67,10 @@ class ModelBase(object):
              'e1': 0.5, 'e2': 0.5}]
         kwargs_source_fixed = [{}]
         return source_model_list, kwargs_source, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source, kwargs_upper_source
+
+    @property
+    def population_gamma_prior(self):
+        return [[0, 'gamma', 2.08, 0.1]]
 
     def generic_axis_ratio_prior(self, kwargs_lens,
                 kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,

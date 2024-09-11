@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from lenstronomy.Plots.model_plot import ModelPlot
 from lenstronomy.Plots import chain_plot
 from lenstronomy.LensModel.lens_model import LensModel
+from lenstronomy.Util.analysis_util import bic_model
 
 __all__ = ['nmax_bic_minimize',
            'cut_on_data',
@@ -118,9 +119,8 @@ def quick_setup(lens_ID):
         raise Exception('lens ID '+str(lens_ID)+' not recognized!')
     return data_class, model_class
 
-def nmax_bic_minimize(data, model_class, fitting_kwargs_list, n_max_list,
-                      verbose=True, make_plots=False, return_magnifications=False,
-                      **kwargs_model_model_class):
+def nmax_bic_minimize(data_class, model_class, fitting_kwargs_list, n_max_list,
+                      verbose=True, make_plots=False, return_magnifications=False, lens_ID=None):
     """
 
     :param data:
@@ -131,61 +131,65 @@ def nmax_bic_minimize(data, model_class, fitting_kwargs_list, n_max_list,
     :return:
     """
     bic_list = []
-    chain_list_list = []
-    magnification = np.empty((len(n_max_list), 4))
-    magnification_sigma = np.empty((len(n_max_list), 4))
+    beta_source_list = []
 
-    if return_magnifications:
-        assert fitting_kwargs_list[-1][0] == 'MCMC', 'When returning magnifications, last step in fitting sequence must ' \
-                                                     'be a MCMC'
+    if data_class is None:
+        data_class, model_class = quick_setup(lens_ID)
+    data_class = data_class()
+
     for idx, n_max in enumerate(n_max_list):
         if n_max == 0:
-            model = model_class(data, shapelets_order=None, **kwargs_model_model_class)
+            model = model_class(data_class, shapelets_order=None)
         else:
-            model = model_class(data, shapelets_order=n_max, **kwargs_model_model_class)
+            model = model_class(data_class, shapelets_order=n_max)
+
         kwargs_params = model.kwargs_params()
         kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split = model.setup_kwargs_model()
         kwargs_constraints = model.kwargs_constraints
         kwargs_likelihood = model.kwargs_likelihood
-        fitting_sequence = FittingSequence(data.kwargs_data_joint,
+        fitting_sequence = FittingSequence(data_class.kwargs_data_joint,
                                            kwargs_model,
                                            kwargs_constraints,
                                            kwargs_likelihood,
                                            kwargs_params,
-                                           mpi=False, verbose=verbose)
+                                           mpi=False,
+                                           verbose=verbose)
         chain_list = fitting_sequence.fit_sequence(fitting_kwargs_list)
-        bic = fitting_sequence.bic
+        kwargs_result = fitting_sequence.best_fit()
+
+        kwargs_likelihood_bic = deepcopy(kwargs_likelihood)
+        kwargs_likelihood_bic['image_likelihood_mask_list'] = [data_class.likelihood_mask_imaging_weights]
+        fitting_sequence_bic = FittingSequence(data_class.kwargs_data_joint,
+                                           kwargs_model,
+                                           kwargs_constraints,
+                                           kwargs_likelihood_bic,
+                                           kwargs_params,
+                                           mpi=False,
+                                           verbose=verbose)
+
+        num_data = fitting_sequence_bic.likelihoodModule.num_data
+        num_param_nonlinear = fitting_sequence_bic.param_class.num_param()[0]
+        num_param_linear = fitting_sequence_bic.param_class.num_param_linear()
+        num_param = num_param_nonlinear + num_param_linear
+        param_class = fitting_sequence.param_class
+        logL = fitting_sequence_bic.likelihoodModule.logL(
+            param_class.kwargs2args(**kwargs_result), verbose=verbose
+        )
+        bic = -2 * logL + (np.log(num_data) * num_param)
         bic_list.append(bic)
-        chain_list_list.append(chain_list)
-
-        if return_magnifications:
-
-            samples_mcmc = chain_list[-1][1]
-            param_class = fitting_sequence.param_class
-            indexes = np.random.randint(0, samples_mcmc.shape[0], size=100)
-            mags = np.empty((len(indexes), 4))
-            lens_model = LensModel(kwargs_model['lens_model_list'],
-                                   lens_redshift_list=kwargs_model['lens_redshift_list'],
-                                   z_source=kwargs_model['z_source'],
-                                   observed_convention_index=kwargs_model['observed_convention_index'],
-                                   multi_plane=True)
-            for i, j in enumerate(indexes):
-                kw = param_class.args2kwargs(samples_mcmc[j])
-                x = kw['kwargs_ps'][0]['ra_image']
-                y = kw['kwargs_ps'][0]['dec_image']
-                m = np.absolute(lens_model.magnification(x, y, kw['kwargs_lens']))
-                mags[i,:] = m
-            magnification[idx,:] = np.median(mags, axis=0)
-            magnification_sigma[idx, :] = np.std(mags, axis=0)
+        
+        if n_max == 0:
+            beta_source_list.append(0.0)
+        else:
+            beta_source_list.append(kwargs_result['kwargs_source'][1]['beta'])
 
         if make_plots:
-            kwargs_result = fitting_sequence.best_fit()
 
-            multi_band_list = data.kwargs_data_joint['multi_band_list']
+            multi_band_list = data_class.kwargs_data_joint['multi_band_list']
             modelPlot = ModelPlot(multi_band_list, kwargs_model, kwargs_result, arrow_size=0.02,
                                   cmap_string="gist_heat",
                                   fast_caustic=True,
-                                  image_likelihood_mask_list=[data.likelihood_mask])
+                                  image_likelihood_mask_list=[data_class.likelihood_mask])
             for i in range(len(chain_list)):
                 chain_plot.plot_chain_list(chain_list, i)
             f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
@@ -219,10 +223,11 @@ def nmax_bic_minimize(data, model_class, fitting_kwargs_list, n_max_list,
             print(kwargs_result)
             print(kwargs_result['kwargs_lens'])
             #a = input('continue')
+        print(kwargs_result['kwargs_lens'])
         print('bic: ', bic)
         print('bic list: ', bic_list)
 
-    return bic_list, chain_list_list, magnification, magnification_sigma
+    return bic_list, beta_source_list
 
 def cut_on_data(output, data,
                 ABC_flux_ratio_likelihood=True,
