@@ -117,7 +117,7 @@ class _J0248(ImagingDataBase):
 
 class J0248_HST(_J0248):
 
-    def __init__(self):
+    def __init__(self, supersample_factor=1):
         """
 
         :param image_position_uncertainties: list of astrometric uncertainties for each image
@@ -143,7 +143,7 @@ class J0248_HST(_J0248):
                                      image_position_uncertainties,
                                      flux_uncertainties,
                                      uncertainty_in_fluxes,
-                                     supersample_factor=1,
+                                     supersample_factor=supersample_factor,
                                      image_data_type='HST814W')
 
 class J0248_MIRI(_J0248):

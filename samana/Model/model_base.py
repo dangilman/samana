@@ -1,5 +1,5 @@
 from lenstronomy.LensModel.Util.decouple_multi_plane_util import *
-from lenstronomy.Workflow.fitting_sequence import FittingSequence
+from lenstronomy.Util.param_util import ellipticity2phi_q
 from copy import deepcopy
 from samana.image_magnification_util import magnification_finite_decoupled
 import numpy as np
@@ -39,6 +39,18 @@ class ModelBase(object):
              'e1': 0.5, 'e2': 0.5}]
         kwargs_source_fixed = [{}]
         return source_model_list, kwargs_source, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source, kwargs_upper_source
+
+    def generic_axis_ratio_prior(self, kwargs_lens,
+                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                kwargs_extinction, kwargs_tracer_source):
+
+        e1, e2 = kwargs_lens[0]['e1'], kwargs_lens[0]['e2']
+        _, q = ellipticity2phi_q(e1, e2)
+        if q < 0.33:
+            return -1e9
+        else:
+            return -0.5 * (q - 0.9) ** 2 / 0.1 ** 2
+
 
     def shapelet_source_clump(self, center_x, center_y, n_max_clump=4, beta_clump=0.05):
 

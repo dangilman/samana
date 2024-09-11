@@ -126,16 +126,16 @@ class J0248ModelEPLM3M4Shear(_J0248ModelBase):
 
     @property
     def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.1]]
+        return [[0, 'gamma', 2.1, 0.1]]
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
         kwargs_lens_macro = [
-            {'theta_E': 0.801582922725, 'gamma': 2.0, 'e1': -0.10172397525980102,
-             'e2': 0.4651569758117118, 'center_x': -0.029784681478575034, 'center_y': 0.11457294728413082, 'a3_a': 0.0,
-             'delta_phi_m3': -0.23784311833533378, 'a4_a': 0.0, 'delta_phi_m4': 2.2249397044054278},
-            {'gamma1': -0.15183100390966583, 'gamma2': 0.02006957516301047, 'ra_0': 0.0, 'dec_0': 0.0}
+            {'theta_E': 0.7695308948261933, 'gamma': 2.3, 'e1': -0.3592585341298164,
+             'e2': 0.1449325184564392, 'center_x': -0.014781638882675564, 'center_y': 0.023851308907624626, 'a3_a': 0.0,
+             'delta_phi_m3': 0.40011273573583567, 'a4_a': 0.0, 'delta_phi_m4': 2.501555000366367},
+            {'gamma1': -0.22464446298305651, 'gamma2': -0.054131074479947555, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]
@@ -153,7 +153,7 @@ class J0248ModelEPLM3M4Shear(_J0248ModelBase):
              'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
             {'gamma1': -0.5, 'gamma2': -0.5}]
         kwargs_upper_lens = [
-            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.4, 'a4_a': 0.1,
+            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.5, 'a4_a': 0.1,
              'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
             {'gamma1': 0.5, 'gamma2': 0.5}]
         kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
