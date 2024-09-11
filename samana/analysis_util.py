@@ -59,7 +59,7 @@ def quick_setup(lens_ID):
         from samana.Data.j2026 import J2026JWST as data_class
         from samana.Model.j2026_model import J2026ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J2205':
-        from samana.Data.j2205 import J2205_JWST as data_class
+        from samana.Data.j2205 import J2205_HST as data_class
         from samana.Model.j2205_model import J2205ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J2344':
         from samana.Data.j2344 import J2344_MIRI as data_class
@@ -69,6 +69,9 @@ def quick_setup(lens_ID):
         from samana.Model.mg0414_model import MG0414ModelEPLM3M4Shear as model_class
     elif lens_ID == 'PG1115':
         from samana.Data.pg1115 import PG1115_HST as data_class
+        from samana.Model.pg1115_model import PG1115ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'PG1115_NIRCAM':
+        from samana.Data.pg1115 import PG1115_NIRCAM as data_class
         from samana.Model.pg1115_model import PG1115ModelEPLM3M4Shear as model_class
     elif lens_ID == 'PSJ0147':
         from samana.Data.j0147 import J0147_MIRI as data_class

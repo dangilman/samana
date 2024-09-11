@@ -1,13 +1,15 @@
 import numpy as np
 import sys
 
-def mask_quasar_images(baseline_mask, x_image, y_image, ra_grid, dec_grid, mask_image_arcsec):
+def mask_quasar_images(baseline_mask, x_image, y_image, ra_grid, dec_grid, mask_size):
 
-    for (xi, yi) in zip(x_image, y_image):
+    if not isinstance(mask_size, list):
+        mask_size = [mask_size] * len(x_image)
+    for (xi, yi, r) in zip(x_image, y_image, mask_size):
         dx = abs(xi - ra_grid)
         dy = abs(yi - dec_grid)
         dr = np.hypot(dx, dy)
-        inds_mask = np.where(dr <= mask_image_arcsec)
+        inds_mask = np.where(dr <= r)
         baseline_mask[inds_mask] = 0.0
     return baseline_mask
 

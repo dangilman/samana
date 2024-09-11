@@ -38,8 +38,9 @@ class ImagingDataBase(object):
         self.flux_uncertainty = flux_uncertainty
         self.uncertainty_in_fluxes = uncertainty_in_fluxes
         self.keep_flux_ratio_index = keep_flux_ratio_index
-        self.likelihood_mask = likelihood_mask
-        self.likelihood_mask_imaging_weights = likelihood_mask_imaging_weights
+        self._likelihood_mask = likelihood_mask
+        self._likelihood_mask_imaging_weights = likelihood_mask_imaging_weights
+        self.mask_quasar_image_for_reconstruction(False)
 
     def perturb_image_positions(self, delta_x_image=None, delta_y_image=None):
         if delta_x_image is None:
@@ -73,6 +74,20 @@ class ImagingDataBase(object):
                                                              dec_grid,
                                                              radius_arcsec)
         return likelihood_mask_imaging_weights
+
+    def mask_quasar_image_for_reconstruction(self, value):
+        self._mask_quasar_images_for_reconstruction = value
+
+    @property
+    def likelihood_mask(self):
+        if self._mask_quasar_images_for_reconstruction is True:
+            return self.likelihood_mask_imaging_weights
+        else:
+            return self._likelihood_mask
+
+    @property
+    def likelihood_mask_imaging_weights(self):
+        return self._likelihood_mask_imaging_weights
 
     @property
     def coordinate_system(self):
