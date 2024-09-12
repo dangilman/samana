@@ -124,19 +124,21 @@ class H1413ModelEPLM3M4Shear(_H1413ModelBase):
 
     @property
     def prior_lens(self):
-        return self.population_gamma_prior
+        return self.population_gamma_prior + [[2, 'center_x', self._data.g2x, 0.05],
+                                              [2, 'center_y', self._data.g2y, 0.05]]
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
-        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
+        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR', 'SIS']
         kwargs_lens_macro = [
             {'theta_E': 0.6250865268178175, 'gamma': 2.0221056702010745, 'e1': -0.11999647713703827,
              'e2': -0.3840803304372808, 'center_x': -0.006529252181127962, 'center_y': 0.05558849065118784, 'a3_a': 0.0,
              'delta_phi_m3': -0.30652322537384935, 'a4_a': 0.0, 'delta_phi_m4': 2.188942901353308},
-            {'gamma1': -0.04066330008321058, 'gamma2': -0.28695559706670026, 'ra_0': 0.0, 'dec_0': 0.0}
+            {'gamma1': -0.04066330008321058, 'gamma2': -0.28695559706670026, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.6, 'center_x': self._data.g2x, 'center_y': self._data.g2y}
         ]
-        redshift_list_macro = [self._data.z_lens, self._data.z_lens]
-        index_lens_split = [0, 1]
+        redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
+        index_lens_split = [0, 1, 2]
         if kwargs_lens_macro_init is not None:
             for i in range(0, len(kwargs_lens_macro_init)):
                 for param_name in kwargs_lens_macro_init[i].keys():
@@ -144,16 +146,19 @@ class H1413ModelEPLM3M4Shear(_H1413ModelBase):
         kwargs_lens_init = kwargs_lens_macro
         kwargs_lens_sigma = [{'theta_E': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'e1': 0.2, 'e2': 0.2, 'gamma': 0.1,
                               'a4_a': 0.01, 'a3_a': 0.005, 'delta_phi_m3': np.pi/12, 'delta_phi_m4': np.pi/16},
-                             {'gamma1': 0.1, 'gamma2': 0.1}]
-        kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}]
+                             {'gamma1': 0.1, 'gamma2': 0.1},
+                             {'theta_E': 0.05, 'center_x': 0.05, 'center_y': 0.05}]
+        kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0},{}]
         kwargs_lower_lens = [
             {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.6, 'a4_a': -0.1,
              'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
-            {'gamma1': -0.5, 'gamma2': -0.5}]
+            {'gamma1': -0.5, 'gamma2': -0.5},
+        {'theta_E': 0.0, 'center_x': self._data.g2x - 0.25, 'center_y': self._data.g2y - 0.25}]
         kwargs_upper_lens = [
             {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.4, 'a4_a': 0.1,
              'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
-            {'gamma1': 0.5, 'gamma2': 0.5}]
+            {'gamma1': 0.5, 'gamma2': 0.5},
+        {'theta_E': 1.2, 'center_x': self._data.g2x + 0.25, 'center_y': self._data.g2y + 0.25}]
         kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
                                                                              kwargs_lens_init, macromodel_samples_fixed)
         lens_model_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_lens_fixed, kwargs_lower_lens,
