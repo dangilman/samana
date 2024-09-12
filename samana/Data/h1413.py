@@ -8,8 +8,8 @@ class _H1413(ImagingDataBase):
                  mask_quasar_images_for_logL=True):
 
         self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
-        z_lens = 1.55  # fiducial
-        z_source = 2.64
+        z_lens = 1.15  # estimated by https://arxiv.org/pdf/astro-ph/9810218
+        z_source = 2.56
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
         if image_data_type == 'HST814W':
@@ -88,8 +88,10 @@ class _H1413(ImagingDataBase):
 
     @property
     def kwargs_numerics(self):
-        return {'supersampling_factor': int(self._supersample_factor),
-                'supersampling_convolution': False}
+        kwargs_numerics = {'supersampling_factor': int(self._supersample_factor * max(1, self._psf_supersampling_factor)),
+                'supersampling_convolution': False,  # try with True
+                'point_source_supersampling_factor': self._psf_supersampling_factor}
+        return kwargs_numerics
 
     @property
     def kwargs_psf(self):
@@ -101,7 +103,9 @@ class _H1413(ImagingDataBase):
         return kwargs_psf
 
 class H1413_MIRI(_H1413):
-
+    g2x = 1.715
+    g2y = 3.650
+    # see MacLeod 2009
     def __init__(self, supersample_factor=1):
         """
 

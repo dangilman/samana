@@ -115,10 +115,6 @@ class ImagingDataBase(object):
     def kwargs_psf(self):
         raise Exception('must define a kwargs_psf property in the data class')
 
-    @property
-    def kwargs_numerics(self):
-        raise Exception('must define a kwargs_numerics property in the data class')
-
 
 class QuadNoImageDataBase(ImagingDataBase):
     """

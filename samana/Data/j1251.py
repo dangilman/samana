@@ -59,11 +59,6 @@ class _J1251(ImagingDataBase):
         return kwargs_data
 
     @property
-    def kwargs_numerics(self):
-        return {'supersampling_factor': int(self._supersample_factor),
-                'supersampling_convolution': False}
-
-    @property
     def coordinate_properties(self):
 
         deltaPix = 0.04
@@ -75,10 +70,20 @@ class _J1251(ImagingDataBase):
         return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
 
     @property
+    def kwargs_numerics(self):
+        kwargs_numerics = {
+            'supersampling_factor': int(self._supersample_factor),
+            'supersampling_convolution': False,  # try with True
+            'point_source_supersampling_factor': 1}
+        return kwargs_numerics
+
+    @property
     def kwargs_psf(self):
         kwargs_psf = {'psf_type': 'PIXEL',
-                      'kernel_point_source': self._psf_estimate_init,
-                      'psf_error_map': self._psf_error_map_init}
+                      'kernel_point_source': self._psf_estimate_init / np.sum(self._psf_estimate_init),
+                      'psf_error_map': self._psf_error_map_init,
+                      'point_source_supersampling_factor': 1
+                      }
         return kwargs_psf
 
 class J1251_HST(_J1251):

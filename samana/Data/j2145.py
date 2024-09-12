@@ -8,7 +8,7 @@ class _J2145(ImagingDataBase):
                  mask_quasar_images_for_logL=True):
 
         self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
-        z_lens = 0.5  # fiducial
+        z_lens = 0.50 # pm 0.1
         z_source = 1.56
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
@@ -110,8 +110,11 @@ class _J2145(ImagingDataBase):
 
     @property
     def kwargs_numerics(self):
-        return {'supersampling_factor': int(self._supersample_factor),
-                'supersampling_convolution': False}
+        kwargs_numerics = {
+            'supersampling_factor': int(self._supersample_factor * max(1, self._psf_supersampling_factor)),
+            'supersampling_convolution': False,  # try with True
+            'point_source_supersampling_factor': self._psf_supersampling_factor}
+        return kwargs_numerics
 
     @property
     def kwargs_psf(self):

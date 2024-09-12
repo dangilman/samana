@@ -49,14 +49,19 @@ class _WFI2033(ImagingDataBase):
 
     @property
     def kwargs_numerics(self):
-        return {'supersampling_factor': int(self._supersample_factor),
-                'supersampling_convolution': False}
+        kwargs_numerics = {
+            'supersampling_factor': int(self._supersample_factor),
+            'supersampling_convolution': False,  # try with True
+            'point_source_supersampling_factor': 1}
+        return kwargs_numerics
 
     @property
     def kwargs_psf(self):
         kwargs_psf = {'psf_type': 'PIXEL',
-                      'kernel_point_source': self._psf_estimate_init,
-                      'psf_error_map': self._psf_error_map_init}
+                      'kernel_point_source': self._psf_estimate_init / np.sum(self._psf_estimate_init),
+                      'psf_error_map': self._psf_error_map_init,
+                      'point_source_supersampling_factor': 1
+                      }
         return kwargs_psf
 
 class WFI2033_HST(_WFI2033):

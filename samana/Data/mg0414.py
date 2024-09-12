@@ -88,8 +88,11 @@ class _MG0414(ImagingDataBase):
 
     @property
     def kwargs_numerics(self):
-        return {'supersampling_factor': int(self._supersample_factor),
-                'supersampling_convolution': False}
+        kwargs_numerics = {
+            'supersampling_factor': int(self._supersample_factor * max(1, self._psf_supersampling_factor)),
+            'supersampling_convolution': False,  # try with True
+            'point_source_supersampling_factor': self._psf_supersampling_factor}
+        return kwargs_numerics
 
     @property
     def kwargs_psf(self):

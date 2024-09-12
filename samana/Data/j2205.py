@@ -9,7 +9,7 @@ class _J2205(ImagingDataBase):
                  mask_quasar_images_for_logL=True):
 
         self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
-        z_lens = 0.5
+        z_lens = 0.51 # photometric
         z_source = 1.85
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
@@ -101,11 +101,6 @@ class _J2205(ImagingDataBase):
         return kwargs_data
 
     @property
-    def kwargs_numerics(self):
-        return {'supersampling_factor': int(self._supersample_factor),
-                'supersampling_convolution': False}
-
-    @property
     def coordinate_properties(self):
 
         deltaPix = self._deltaPix
@@ -116,10 +111,20 @@ class _J2205(ImagingDataBase):
         return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
 
     @property
+    def kwargs_numerics(self):
+        kwargs_numerics = {
+            'supersampling_factor': int(self._supersample_factor),
+            'supersampling_convolution': False,  # try with True
+            'point_source_supersampling_factor': self._psf_supersampling_factor}
+        return kwargs_numerics
+
+    @property
     def kwargs_psf(self):
         kwargs_psf = {'psf_type': 'PIXEL',
-                      'kernel_point_source': self._psf_estimate_init,
-                      'psf_error_map': self._psf_error_map_init}
+                      'kernel_point_source': self._psf_estimate_init / np.sum(self._psf_estimate_init),
+                      'psf_error_map': self._psf_error_map_init,
+                      'point_source_supersampling_factor': self._psf_supersampling_factor
+                      }
         return kwargs_psf
 
 class J2205_MIRI(_J2205):

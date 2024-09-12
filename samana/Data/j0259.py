@@ -9,7 +9,7 @@ class _J0259(ImagingDataBase):
                  mask_quasar_images_for_logL=True):
 
         self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
-        z_lens = 0.90
+        z_lens = 0.95 # fiducial
         z_source = 2.16
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
@@ -60,8 +60,20 @@ class _J0259(ImagingDataBase):
 
     @property
     def kwargs_numerics(self):
-        return {'supersampling_factor': int(self._supersample_factor),
-                'supersampling_convolution': False}
+        kwargs_numerics = {
+            'supersampling_factor': int(self._supersample_factor * max(1, self._psf_supersampling_factor)),
+            'supersampling_convolution': False,  # try with True
+            'point_source_supersampling_factor': self._psf_supersampling_factor}
+        return kwargs_numerics
+
+    @property
+    def kwargs_psf(self):
+        kwargs_psf = {'psf_type': 'PIXEL',
+                      'kernel_point_source': self._psf_estimate_init / np.sum(self._psf_estimate_init),
+                      'psf_error_map': self._psf_error_map_init,
+                      'point_source_supersampling_factor': self._psf_supersampling_factor
+                      }
+        return kwargs_psf
 
     @property
     def coordinate_properties(self):
@@ -73,13 +85,6 @@ class _J0259(ImagingDataBase):
         transform_pix2angle = np.array([[-4.00086717e-02, -6.65875035e-06],
        [-6.64879554e-06,  3.99999805e-02]])
         return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
-
-    @property
-    def kwargs_psf(self):
-        kwargs_psf = {'psf_type': 'PIXEL',
-                      'kernel_point_source': self._psf_estimate_init,
-                      'psf_error_map': self._psf_error_map_init}
-        return kwargs_psf
 
 class J0259_HST(_J0259):
 
