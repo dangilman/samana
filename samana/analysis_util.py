@@ -120,7 +120,7 @@ def quick_setup(lens_ID):
     return data_class, model_class
 
 def nmax_bic_minimize(data_class, model_class, fitting_kwargs_list, n_max_list,
-                      verbose=True, make_plots=False, return_magnifications=False, lens_ID=None):
+                      verbose=True, make_plots=False, lens_ID=None, shapelets_scale_factor=1):
     """
 
     :param data:
@@ -141,7 +141,7 @@ def nmax_bic_minimize(data_class, model_class, fitting_kwargs_list, n_max_list,
         if n_max == 0:
             model = model_class(data_class, shapelets_order=None)
         else:
-            model = model_class(data_class, shapelets_order=n_max)
+            model = model_class(data_class, n_max, shapelets_scale_factor)
 
         kwargs_params = model.kwargs_params()
         kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split = model.setup_kwargs_model()
@@ -177,7 +177,7 @@ def nmax_bic_minimize(data_class, model_class, fitting_kwargs_list, n_max_list,
         )
         bic = -2 * logL + (np.log(num_data) * num_param)
         bic_list.append(bic)
-        
+
         if n_max == 0:
             beta_source_list.append(0.0)
         else:
