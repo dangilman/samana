@@ -38,22 +38,18 @@ class _J0659ModelBase(ModelBase):
            kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
         return kwargs_constraints
 
-    @property
-    def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2]]
-
     def setup_source_light_model(self):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 0.004229672145693155, 'R_sersic': 6.534741563565758, 'n_sersic': 3.5686539728600524,
+            {'amp': 0.004229672145693155, 'R_sersic': 0.5, 'n_sersic': 3.5686539728600524,
              'e1': -0.0570713847800167, 'e2': -0.18864599652652417, 'center_x': -0.3097977563684708,
              'center_y': -0.18641225641777434}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -11, 'center_y': -11.0}]
-        kwargs_upper_source = [{'R_sersic': 10.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 11.0, 'center_y': 11.0}]
+        kwargs_upper_source = [{'R_sersic': 5.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 11.0, 'center_y': 11.0}]
         kwargs_source_fixed = [{}]
 
         if self._shapelets_order is not None:
@@ -123,8 +119,7 @@ class _J0659ModelBase(ModelBase):
                              'source_position_sigma': 0.0001,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
-                             'astrometric_likelihood': True,
-                             'custom_logL_addition': self.q_prior
+                             'astrometric_likelihood': True
                              }
         return kwargs_likelihood
 

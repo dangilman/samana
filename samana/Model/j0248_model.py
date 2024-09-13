@@ -44,14 +44,14 @@ class _J0248ModelBase(ModelBase):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 0.023544785303811558, 'R_sersic': 6.595147609544372, 'n_sersic': 4.47510380669574,
+            {'amp': 0.023544785303811558, 'R_sersic': 0.25, 'n_sersic': 4.47510380669574,
              'e1': -0.08889557036242286, 'e2': -0.0973326893902215, 'center_x': -0.01593746658140588,
              'center_y': -0.019813805275668984}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
-        kwargs_upper_source = [{'R_sersic': 10.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
+        kwargs_upper_source = [{'R_sersic': 5.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
         kwargs_source_fixed = [{}]
 
         if self._shapelets_order is not None:

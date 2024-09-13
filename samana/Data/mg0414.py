@@ -22,9 +22,9 @@ class _MG0414(ImagingDataBase):
             self._image_data = image_data
             self._psf_supersampling_factor = 3
             self._deltaPix = 0.1108406332836522
-            self._window_size = 4.4336253313460885
-            self._ra_at_xy_0 = 2.0114440556287345
-            self._dec_at_xy_0 = 2.4047057247505954
+            self._window_size = 4.655306597913393
+            self._ra_at_xy_0 = 2.1120162551634083
+            self._dec_at_xy_0 = 2.524941007905991
             self._transform_pix2angle = np.array([[0.00983154, -0.11040374],
                                                   [-0.11040374, -0.00983154]])
             self._background_rms = None

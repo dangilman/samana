@@ -22,9 +22,9 @@ class _J2344(ImagingDataBase):
             self._image_data = image_data
             self._psf_supersampling_factor = 3
             self._deltaPix = 0.11092403329629767
-            self._window_size = 2.4403287325185485
-            self._ra_at_xy_0 = 1.0674490324030521
-            self._dec_at_xy_0 = 1.355785649270063
+            self._window_size = 3.105872932296335
+            self._ra_at_xy_0 = 1.3585714934532815
+            self._dec_at_xy_0 = 1.725545371148843
             self._transform_pix2angle = np.array([[0.01310621, -0.11014703],
                                                   [-0.11014703, -0.01310621]])
             self._background_rms = None

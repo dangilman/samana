@@ -22,9 +22,9 @@ class _J0607(ImagingDataBase):
             self._image_data = image_data
             self._psf_supersampling_factor = 3
             self._deltaPix = 0.11090924511658345
-            self._window_size = 3.770914333963838
-            self._ra_at_xy_0 = -1.2997229317634251
-            self._dec_at_xy_0 = -2.3282220151681807
+            self._window_size = 4.658188294896505
+            self._ra_at_xy_0 = -1.605540095364354
+            self._dec_at_xy_0 = -2.8760389587520336
             self._transform_pix2angle = np.array([[-0.03024997, 0.10670426],
                                                   [0.10670426, 0.03024997]])
             self._background_rms = None

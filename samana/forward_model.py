@@ -21,7 +21,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   rescale_grid_size=1.5, rescale_grid_resolution=2.0, readout_macromodel_samples=True,
                   verbose=False, random_seed_init=None, readout_steps=2, write_sampling_rate=True,
                   n_pso_particles=10, n_pso_iterations=50, num_threads=1, astrometric_uncertainty=True,
-                  kde_sampler=None, image_data_grid_resolution_rescale=1.0,
+                  image_data_grid_resolution_rescale=1.0,
                   use_imaging_data=True, fitting_sequence_kwargs=None, test_mode=False,
                   use_decoupled_multiplane_approximation=True, fixed_realization_list=None,
                   macromodel_readout_function=None, kappa_scale_subhalos=1.0, log10_bound_mass_cut=None):
@@ -50,7 +50,6 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     :param n_pso_iterations:
     :param num_threads:
     :param astrometric_uncertainty:
-    :param kde_sampler:
     :param image_data_grid_resolution_rescale:
     :param use_imaging_data:
     :param fitting_sequence_kwargs:
@@ -148,7 +147,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                             kwargs_sample_source, kwargs_sample_fixed_macromodel, log_mlow_mass_sheets,
                                             rescale_grid_size, rescale_grid_resolution, image_data_grid_resolution_rescale,
                                             verbose, random_seed, n_pso_particles, n_pso_iterations, num_threads,
-                                            kwargs_model_class, astrometric_uncertainty, kde_sampler,
+                                            kwargs_model_class, astrometric_uncertainty,
                                             use_imaging_data, fitting_sequence_kwargs, test_mode,
                                             use_decoupled_multiplane_approximation, fixed_realization,
                                             macromodel_readout_function, kappa_scale_subhalos, log10_bound_mass_cut)
@@ -276,7 +275,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                             rescale_grid_resolution=2.0, image_data_grid_resolution_rescale=1.0, verbose=False, seed=None,
                                    n_pso_particles=10, n_pso_iterations=50, num_threads=1,
                                    kwargs_model_class={}, astrometric_uncertainty=True,
-                                   kde_sampler=None, use_imaging_data=True,
+                                   use_imaging_data=True,
                                    fitting_kwargs_list=None,
                                    test_mode=False,
                                    use_decoupled_multiplane_approximation=True,
@@ -289,7 +288,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         delta_x_image, delta_y_image = data_class.perturb_image_positions()
     else:
         delta_x_image, delta_y_image = np.zeros(len(data_class.x_image)), np.zeros(len(data_class.y_image))
-    model_class = model(data_class, kde_sampler, **kwargs_model_class)
+    model_class = model(data_class, **kwargs_model_class)
     realization_dict, realization_samples, realization_param_names = sample_prior(kwargs_sample_realization)
     source_dict, source_samples, source_param_names = sample_prior(kwargs_sample_source)
     macromodel_samples_fixed_dict, samples_macromodel_fixed, param_names_macro_fixed = sample_prior(kwargs_sample_macro_fixed)

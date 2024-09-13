@@ -80,7 +80,7 @@ class _MG0414ModelBase(ModelBase):
         kwargs_lower_lens_light = [
             {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10.0, 'center_y': -10.0}]
         kwargs_upper_lens_light = [
-            {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
+            {'R_sersic': 10, 'n_sersic': 5.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
         kwargs_lens_light_fixed = [{}]
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
@@ -108,15 +108,30 @@ class _MG0414ModelBase(ModelBase):
                              'source_position_sigma': 0.0001,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
-                             'astrometric_likelihood': True
+                             'astrometric_likelihood': True,
+                             'custom_logL_addition': self.custom_logL
                              }
         return kwargs_likelihood
 
 class MG0414ModelEPLM3M4Shear(_MG0414ModelBase):
 
+    def custom_logL(self, kwargs_lens,
+                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                kwargs_extinction, kwargs_tracer_source):
+
+        alignment = self.lens_mass_lens_light_alignment(kwargs_lens,
+                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                kwargs_extinction, kwargs_tracer_source)
+
+        axis_ratio = self.hard_cut_axis_ratio_prior(kwargs_lens,
+                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                kwargs_extinction, kwargs_tracer_source)
+        return alignment + axis_ratio
+
     @property
     def prior_lens(self):
-        return self.population_gamma_prior
+        satellite_prior = [[2, 'center_x', -0.61, 0.05], [2, 'center_y', 1.325, 0.05]]
+        return self.population_gamma_prior + satellite_prior
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
@@ -128,7 +143,7 @@ class MG0414ModelEPLM3M4Shear(_MG0414ModelBase):
              'a4_a': 0.0, 'delta_phi_m4': 0.7196713647524366},
             {'gamma1': -0.00392414187068398, 'gamma2': 0.011640100992355497,
              'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.09239799403296042, 'center_x': -0.3560409053327727, 'center_y': 1.5256668905996928}
+            {'theta_E': 0.09239799403296042, 'center_x': -0.61, 'center_y': 1.325}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1, 2]
@@ -144,11 +159,11 @@ class MG0414ModelEPLM3M4Shear(_MG0414ModelBase):
         kwargs_lower_lens = [
             {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.5, 'a4_a': -0.1,
              'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
-            {'gamma1': -0.5, 'gamma2': -0.5}, {'theta_E': 0.0, 'center_x': -0.61 - 0.3, 'center_y': 1.325 - 0.3}]
+            {'gamma1': -0.5, 'gamma2': -0.5}, {'theta_E': 0.0, 'center_x': -0.61 - 0.2, 'center_y': 1.325 - 0.2}]
         kwargs_upper_lens = [
             {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 3.5, 'a4_a': 0.1,
              'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
-            {'gamma1': 0.5, 'gamma2': 0.5}, {'theta_E': 0.4, 'center_x': -0.61 + 0.3, 'center_y': 1.325 + 0.3}]
+            {'gamma1': 0.5, 'gamma2': 0.5}, {'theta_E': 0.4, 'center_x': -0.61 + 0.2, 'center_y': 1.325 + 0.2}]
         kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
                                                                              kwargs_lens_init, macromodel_samples_fixed)
         lens_model_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_lens_fixed, kwargs_lower_lens,

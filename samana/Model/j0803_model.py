@@ -36,22 +36,18 @@ class _J0803ModelBase(ModelBase):
            kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
         return kwargs_constraints
 
-    @property
-    def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2]]
-
     def setup_source_light_model(self):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 0.0869812623952541, 'R_sersic': 6.717338417065746, 'n_sersic': 6.842571237354881,
-             'e1': -0.05999429415385746, 'e2': 0.18907699127962785, 'center_x': -0.05535391104791487,
-             'center_y': -0.010119128102736017}
+            {'amp': 137.50222234340472, 'R_sersic': 0.12966808650334166, 'n_sersic': 2.984761439665173,
+             'e1': 0.14407938280779842, 'e2': -0.05257293935385959,
+             'center_x': -0.05216756825167878, 'center_y': -0.006622588850159944}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
-        kwargs_upper_source = [{'R_sersic': 10.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
+        kwargs_upper_source = [{'R_sersic': 1.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
         kwargs_source_fixed = [{}]
 
         if self._shapelets_order is not None:

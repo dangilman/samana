@@ -22,9 +22,9 @@ class _H1413(ImagingDataBase):
             self._image_data = image_data
             self._psf_supersampling_factor = 3
             self._deltaPix = 0.1108203255020448
-            self._window_size = 3.1029691140572546
-            self._ra_at_xy_0 = -2.1297777671493536
-            self._dec_at_xy_0 = -0.5274991172629477
+            self._window_size = 3.7678910670695234
+            self._ra_at_xy_0 = -2.5861587183718053
+            self._dec_at_xy_0 = -0.6405346450840399
             self._transform_pix2angle = np.array([[0.05722424, 0.09490275],
                                                   [0.09490275, -0.05722424]])
             self._background_rms = None
@@ -89,7 +89,7 @@ class _H1413(ImagingDataBase):
     @property
     def kwargs_numerics(self):
         kwargs_numerics = {'supersampling_factor': int(self._supersample_factor * max(1, self._psf_supersampling_factor)),
-                'supersampling_convolution': True,  # try with True
+                'supersampling_convolution': False,  # try with True
                 'point_source_supersampling_factor': self._psf_supersampling_factor}
         return kwargs_numerics
 

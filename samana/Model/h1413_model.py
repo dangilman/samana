@@ -40,14 +40,14 @@ class _H1413ModelBase(ModelBase):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 1, 'R_sersic': 6.617096170746527, 'n_sersic': 7.539132686355848,
-             'e1': -0.04852432406669548, 'e2': 0.4328077509202448,
-             'center_x': -0.0037819495146030335, 'center_y': 0.034991704681745124}
+            {'amp': 139.448639424857, 'R_sersic': 0.1776154138165587, 'n_sersic': 4.009392466425343,
+             'e1': -0.08908031573592885, 'e2': 0.4053069612395695,
+             'center_x': 0.12821742707049832, 'center_y': 0.28650227091640906}
         ]
-        kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
+        kwargs_source_sigma = [{'R_sersic': 0.1, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
-        kwargs_upper_source = [{'R_sersic': 10.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
+        kwargs_upper_source = [{'R_sersic': 1.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
         kwargs_source_fixed = [{}]
 
         if self._shapelets_order is not None:
@@ -71,7 +71,7 @@ class _H1413ModelBase(ModelBase):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
         kwargs_lens_light_init = [
-            {'amp': 1, 'R_sersic': 2.017921546825418, 'n_sersic': 9.2421961832126, 'e1': 0.27815856871416295,
+            {'amp': 1, 'R_sersic': 0.25, 'n_sersic': 9.2421961832126, 'e1': 0.27815856871416295,
              'e2': -0.07087848013913227, 'center_x': -0.08923230118346438,
              'center_y': -0.0017010104470842468}
         ]
@@ -80,7 +80,7 @@ class _H1413ModelBase(ModelBase):
         kwargs_lower_lens_light = [
             {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10.0, 'center_y': -10.0}]
         kwargs_upper_lens_light = [
-            {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
+            {'R_sersic': 5, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
         kwargs_lens_light_fixed = [{}]
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
@@ -109,7 +109,8 @@ class _H1413ModelBase(ModelBase):
                              'source_position_sigma': 0.0001,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
-                             'astrometric_likelihood': True
+                             'astrometric_likelihood': True,
+                             'custom_logL_addition': self.lens_mass_lens_light_alignment
                              }
         return kwargs_likelihood
 

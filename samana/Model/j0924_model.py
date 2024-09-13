@@ -36,22 +36,18 @@ class _J0924ModelBase(ModelBase):
            kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
         return kwargs_constraints
 
-    @property
-    def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2]]
-
     def setup_source_light_model(self):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 0.2294339581116382, 'R_sersic': 6.647744456010531, 'n_sersic': 8.547880786594273,
-             'e1': 0.028588218764937248, 'e2': 0.32642601062591675, 'center_x': -0.012886376734783087,
-             'center_y': -0.0017544470670861937}
+            {'amp': 29.562589141816453, 'R_sersic': 0.28863953388281044, 'n_sersic': 8.54733301005502,
+             'e1': -0.021620107408397742, 'e2': 0.3482839016229852, 'center_x': -0.007249329906117978,
+             'center_y': -0.010397463142520462}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
-        kwargs_upper_source = [{'R_sersic': 10.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
+        kwargs_upper_source = [{'R_sersic': 1.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
         kwargs_source_fixed = [{}]
 
         if self._shapelets_order is not None:
@@ -75,16 +71,16 @@ class _J0924ModelBase(ModelBase):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
         kwargs_lens_light_init = [
-            {'amp': 3.7123743789393426, 'R_sersic': 2.0427732143883315, 'n_sersic': 9.492442890928647,
-             'e1': -0.17328205763721088, 'e2': -0.03834869271321928, 'center_x': -0.021968036535987247,
-             'center_y': 0.03289853152231486}
+            {'amp': 145.3836202987781, 'R_sersic': 0.2158852097901422, 'n_sersic': 7.1238305846193315,
+             'e1': -0.18223818072469727, 'e2': 0.015340901344440666, 'center_x': -0.03674726530434721,
+             'center_y': 0.04832035308488868}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
         kwargs_lower_lens_light = [
             {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10.0, 'center_y': -10.0}]
         kwargs_upper_lens_light = [
-            {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
+            {'R_sersic': 2.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
         kwargs_lens_light_fixed = [{}]
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
@@ -127,10 +123,10 @@ class J0924ModelEPLM3M4Shear(_J0924ModelBase):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
         kwargs_lens_macro = [
-            {'theta_E': 0.8797004464398133, 'gamma': 1.9545987153393853, 'e1': 0.1232140490448485,
-             'e2': -0.02592907301086019, 'center_x': -0.051579962007960986, 'center_y': 0.05420956758104294,
-             'a3_a': 0.0, 'delta_phi_m3': -0.21874126838140381, 'a4_a': 0.0, 'delta_phi_m4': 1.9140199266805422},
-            {'gamma1': -0.009137884793096568, 'gamma2': -0.03545367527098961, 'ra_0': 0.0, 'dec_0': 0.0}
+            {'theta_E': 0.8772672782659735, 'gamma': 2.1161604234447657, 'e1': 0.11409116539729838,
+             'e2': -0.03297623248778399, 'center_x': -0.048115728035074336, 'center_y': 0.0507358738668198, 'a3_a': 0.0,
+             'delta_phi_m3': 0.2860323179041286, 'a4_a': 0.0, 'delta_phi_m4': 1.595301198826728},
+            {'gamma1': -0.031582914978882215, 'gamma2': -0.03918995912549924, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]

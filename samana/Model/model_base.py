@@ -74,6 +74,30 @@ class ModelBase(object):
     def population_gamma_prior(self):
         return [[0, 'gamma', 2.08, 0.1]]
 
+    def lens_mass_lens_light_alignment(self, kwargs_lens,
+                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                kwargs_extinction, kwargs_tracer_source):
+
+        e1, e2 = kwargs_lens[0]['e1'], kwargs_lens[0]['e2']
+        phi_lens, _ = ellipticity2phi_q(e1, e2)
+        e1, e2 = kwargs_lens_light[0]['e1'], kwargs_lens_light[0]['e2']
+        phi_light, _ = ellipticity2phi_q(e1, e2)
+        angle_radian = phi_light - phi_lens
+        angle_degree = angle_radian * 180 / np.pi
+        return -0.5 * angle_degree ** 2 / 10 ** 2
+
+    def hard_cut_axis_ratio_prior(self, kwargs_lens,
+                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                kwargs_extinction, kwargs_tracer_source):
+
+        q_cut = 1/3
+        e1, e2 = kwargs_lens[0]['e1'], kwargs_lens[0]['e2']
+        _, q = ellipticity2phi_q(e1, e2)
+        if q < q_cut:
+            return -1e9
+        else:
+            return 0.0
+
     def generic_axis_ratio_prior(self, kwargs_lens,
                 kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
                 kwargs_extinction, kwargs_tracer_source):

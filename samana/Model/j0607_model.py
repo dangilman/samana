@@ -43,14 +43,14 @@ class _J0607ModelBase(ModelBase):
     def setup_source_light_model(self):
 
         source_model_list = ['SERSIC_ELLIPSE']
-        kwargs_source_init = [{'amp': 2.456433840537286, 'R_sersic': 6.356325531502514,
+        kwargs_source_init = [{'amp': 2.456433840537286, 'R_sersic': 0.25,
                                'n_sersic': 3.4414462189472026,
                                'e1': -0.20239124069069603, 'e2': 0.07653940829806069,
                                'center_x': 0.17076553773710246, 'center_y': -0.0016306044823957437}]
-        kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
+        kwargs_source_sigma = [{'R_sersic': 0.1, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
-        kwargs_upper_source = [{'R_sersic': 10.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
+        kwargs_upper_source = [{'R_sersic': 5.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
         kwargs_source_fixed = [{}]
 
         if self._shapelets_order is not None:
@@ -132,15 +132,13 @@ class J0607ModelEPLM3M4Shear(_J0607ModelBase):
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR', 'SIS']
-        kwargs_lens_macro = [{'theta_E': 0.791515011162517, 'gamma': 1.9821803966641167, 'e1': -0.06692756476344443,
-                              'e2': -0.05332877408017625, 'center_x': -0.02533875375095861,
-                              'center_y': -0.014251544969518255, 'a3_a': 0.0,
-                              'delta_phi_m3': -0.3314448626065093,
-                              'a4_a': 0.0, 'delta_phi_m4': -0.22264863250155187},
-                             {'gamma1': -0.045775048126166965, 'gamma2': -0.05085384488080829,
-                              'ra_0': 0.0, 'dec_0': 0.0},
-                             {'theta_E': 0.03, 'center_x': 1.237101162798167,
-                              'center_y': 0.2462967175810261}]
+        kwargs_lens_macro = [
+            {'theta_E': 0.7914023987900118, 'gamma': 1.9532184280418983, 'e1': -0.060903054119497625,
+             'e2': -0.06867996861203478, 'center_x': -0.0203358657823683, 'center_y': -0.00853927145055995, 'a3_a': 0.0,
+             'delta_phi_m3': 0.03299588779381648, 'a4_a': 0.0, 'delta_phi_m4': -0.01178890904656773},
+            {'gamma1': -0.042973564814613, 'gamma2': -0.06280032937532329, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.06519438212608547, 'center_x': 1.2309214216458084, 'center_y': 0.21179942361751686}
+        ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1, 2]
         if kwargs_lens_macro_init is not None:

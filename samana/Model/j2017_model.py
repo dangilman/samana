@@ -44,14 +44,14 @@ class _J2017ModelBase(ModelBase):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 0.34970563086902257, 'R_sersic': 6.614549103389894, 'n_sersic': 7.586142939643326,
+            {'amp': 0.34970563086902257, 'R_sersic': 0.25, 'n_sersic': 7.586142939643326,
              'e1': 0.1780533554385116, 'e2': 0.0518918240143525, 'center_x': 0.04898324630081803,
              'center_y': -0.09525498965552015}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
-        kwargs_upper_source = [{'R_sersic': 10.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
+        kwargs_upper_source = [{'R_sersic': 1.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
         kwargs_source_fixed = [{}]
 
         if self._shapelets_order is not None:
@@ -73,18 +73,18 @@ class _J2017ModelBase(ModelBase):
 
     def setup_lens_light_model(self):
 
-        lens_light_model_list = ['SERSIC_ELLIPSE']
+        lens_light_model_list = ['SERSIC']
         kwargs_lens_light_init = [
             {'amp': 3.5000581351428544, 'R_sersic': 2.0082568068234194, 'n_sersic': 8.948685324334217,
-             'e1': -0.1364889948037391, 'e2': -0.10627501215617906, 'center_x': 0.014662245470902266,
+             'center_x': 0.014662245470902266,
              'center_y': -0.036608848713971034}
         ]
         kwargs_lens_light_sigma = [
-            {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.05, 'center_y': 0.05}]
+            {'R_sersic': 0.05, 'n_sersic': 0.25, 'center_x': 0.05, 'center_y': 0.05}]
         kwargs_lower_lens_light = [
-            {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -0.2, 'center_y': -0.2}]
+            {'R_sersic': 0.001, 'n_sersic': 0.5, 'center_x': -0.2, 'center_y': -0.2}]
         kwargs_upper_lens_light = [
-            {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 0.2, 'center_y': 0.2}]
+            {'R_sersic': 10, 'n_sersic': 10.0, 'center_x': 0.2, 'center_y': 0.2}]
         kwargs_lens_light_fixed = [{}]
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
@@ -113,7 +113,8 @@ class _J2017ModelBase(ModelBase):
                              'source_position_sigma': 0.0001,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
-                             'astrometric_likelihood': True
+                             'astrometric_likelihood': True,
+                             'custom_logL_addition': self.hard_cut_axis_ratio_prior
                              }
         return kwargs_likelihood
 

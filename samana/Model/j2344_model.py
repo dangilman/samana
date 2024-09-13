@@ -44,14 +44,14 @@ class _J2344ModelBase(ModelBase):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 0.8921707344537865, 'R_sersic': 6.973228764573325, 'n_sersic': 3.83897557910403,
-             'e1': -0.006035362309378849, 'e2': -0.23171682525353335, 'center_x': 0.03722291590649773,
-             'center_y': -0.034204091049480204}
+            {'amp': 33.034792031855176, 'R_sersic': 0.1707293298409309, 'n_sersic': 3.887263359784056,
+             'e1': 0.036130900638789, 'e2': -0.1504028978196993, 'center_x': 0.03205628465924631,
+             'center_y': -0.03408594223845815}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
-        kwargs_upper_source = [{'R_sersic': 10.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
+        kwargs_upper_source = [{'R_sersic': 5.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
         kwargs_source_fixed = [{}]
 
         if self._shapelets_order is not None:
@@ -125,10 +125,10 @@ class J2344ModelEPLM3M4Shear(_J2344ModelBase):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
         kwargs_lens_macro = [
-            {'theta_E': 0.5041533930022769, 'gamma': 2.1580810010904954, 'e1': -0.14036807629821524,
-             'e2': 0.12356389649570605, 'center_x': 0.03171191861205254, 'center_y': -0.03485422259012721, 'a3_a': 0.0,
-             'delta_phi_m3': -0.2419525334571311, 'a4_a': 0.0, 'delta_phi_m4': 2.1133464477475252},
-            {'gamma1': -0.09145390101961005, 'gamma2': 0.08020633200117362, 'ra_0': 0.0, 'dec_0': 0.0}
+            {'theta_E': 0.5052234115014408, 'gamma': 2.181990136085437, 'e1': 0.10009741165698262,
+             'e2': -0.11981628329569301, 'center_x': 0.03699465159430553, 'center_y': -0.03698050284821613, 'a3_a': 0.0,
+             'delta_phi_m3': -0.28289756235396263, 'a4_a': 0.0, 'delta_phi_m4': 2.1120735138648565},
+            {'gamma1': -0.04208003006871955, 'gamma2': 0.011690303440721566, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]
