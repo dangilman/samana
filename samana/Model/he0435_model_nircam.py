@@ -5,13 +5,6 @@ import pickle
 
 class _HE0435NircamModelBase(ModelBase):
 
-    def __init__(self, data_class, kde_sampler, shapelets_order, include_source_blobs, n_max_blobs):
-        self._shapelets_order = shapelets_order
-        self._include_souce_blobs = include_source_blobs
-        self._n_max_blobs = n_max_blobs
-        self._image_plane_source_list = None
-        super(_HE0435NircamModelBase, self).__init__(data_class, kde_sampler)
-
     def update_kwargs_fixed_macro(self, lens_model_list_macro, kwargs_lens_fixed, kwargs_lens_init, macromodel_samples_fixed=None):
 
         if macromodel_samples_fixed is not None:
@@ -70,52 +63,6 @@ class _HE0435NircamModelBase(ModelBase):
             kwargs_lower_source += kwargs_lower_shapelets
             kwargs_upper_source += kwargs_upper_shapelets
 
-        if self._include_souce_blobs:
-            self._image_plane_source_list += [True]
-            point_of_interest_x1 = -1.025
-            point_of_interest_y1 = 0.22
-            source_model_list_clump, kwargs_source_clump, kwargs_source_sigma_clump, kwargs_source_fixed_clump, \
-            kwargs_lower_source_clump, kwargs_upper_source_clump = self.shapelet_source_clump(point_of_interest_x1,
-                                                                                              point_of_interest_y1,
-                                                                                              n_max_clump=self._n_max_blobs,
-                                                                                              beta_clump=0.05)
-            source_model_list += source_model_list_clump
-            kwargs_source_init += kwargs_source_clump
-            kwargs_source_sigma += kwargs_source_sigma_clump
-            kwargs_lower_source += kwargs_lower_source_clump
-            kwargs_upper_source += kwargs_upper_source_clump
-            kwargs_source_fixed += kwargs_source_fixed_clump
-            #
-            # self._image_plane_source_list += [True]
-            # point_of_interest_x2 = 0.475
-            # point_of_interest_y2 = -1.2
-            # source_model_list_clump, kwargs_source_clump, kwargs_source_sigma_clump, kwargs_source_fixed_clump, \
-            # kwargs_lower_source_clump, kwargs_upper_source_clump = self.shapelet_source_clump(point_of_interest_x2,
-            #                                                                                   point_of_interest_y2,
-            #                                                                                   beta_clump=0.05,
-            #                                                                                   n_max_clump=5)
-            # source_model_list += source_model_list_clump
-            # kwargs_source_init += kwargs_source_clump
-            # kwargs_source_sigma += kwargs_source_sigma_clump
-            # kwargs_lower_source += kwargs_lower_source_clump
-            # kwargs_upper_source += kwargs_upper_source_clump
-            # kwargs_source_fixed += kwargs_source_fixed_clump
-            #
-            # self._image_plane_source_list += [True]
-            # point_of_interest_x3 = -0.04
-            # point_of_interest_y3 = 1.44
-            # source_model_list_clump, kwargs_source_clump, kwargs_source_sigma_clump, kwargs_source_fixed_clump, \
-            # kwargs_lower_source_clump, kwargs_upper_source_clump = self.shapelet_source_clump(point_of_interest_x3,
-            #                                                                                   point_of_interest_y3,
-            #                                                                                   n_max_clump=5,
-            #                                                                                   beta_clump=0.05)
-            # source_model_list += source_model_list_clump
-            # kwargs_source_init += kwargs_source_clump
-            # kwargs_source_sigma += kwargs_source_sigma_clump
-            # kwargs_lower_source += kwargs_lower_source_clump
-            # kwargs_upper_source += kwargs_upper_source_clump
-            # kwargs_source_fixed += kwargs_source_fixed_clump
-
         source_params = [kwargs_source_init, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source,
                          kwargs_upper_source]
 
@@ -136,15 +83,6 @@ class _HE0435NircamModelBase(ModelBase):
         kwargs_upper_lens_light = [
             {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
         kwargs_lens_light_fixed = [{}]
-        #
-        # kwargs_uniform, kwargs_uniform_sigma, kwargs_uniform_fixed, \
-        # kwargs_uniform_lower, kwargs_uniform_upper = self.add_uniform_lens_light()
-        # lens_light_model_list += ['UNIFORM']
-        # kwargs_lens_light_init += kwargs_uniform
-        # kwargs_lens_light_sigma += kwargs_uniform_sigma
-        # kwargs_lens_light_fixed += kwargs_uniform_fixed
-        # kwargs_lower_lens_light += kwargs_uniform_lower
-        # kwargs_upper_lens_light += kwargs_uniform_upper
 
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
@@ -170,13 +108,6 @@ class HE0435ModelNircamEPLM3M4Shear(_HE0435NircamModelBase):
 
     gx_phys = -0.0830
     gy_phys = 3.8549
-    def __init__(self, data_class, kde_sampler=None, shapelets_order=None, include_source_blobs=False,
-                 n_max_blobs=8):
-        super(HE0435ModelNircamEPLM3M4Shear, self).__init__(data_class,
-                                                                              kde_sampler,
-                                                                              shapelets_order,
-                                                                              include_source_blobs,
-                                                                              n_max_blobs)
 
     @property
     def prior_lens(self):

@@ -89,7 +89,7 @@ class _H1413(ImagingDataBase):
     @property
     def kwargs_numerics(self):
         kwargs_numerics = {'supersampling_factor': int(self._supersample_factor * max(1, self._psf_supersampling_factor)),
-                'supersampling_convolution': False,  # try with True
+                'supersampling_convolution': True,  # try with True
                 'point_source_supersampling_factor': self._psf_supersampling_factor}
         return kwargs_numerics
 

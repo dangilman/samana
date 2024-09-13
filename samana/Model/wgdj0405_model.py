@@ -4,22 +4,6 @@ import pickle
 
 class _WGDJ0405ModelBase(ModelBase):
 
-    # bic weights
-    # no shapelets: 4821
-    # shapelets 1: 4450
-    # shapelets 2: 4373
-    # shapelets 3: 4349
-    # shapelets 4: 4267 (winner)
-    # shapelets 5: 4404
-    # shapelets 6: 4413
-
-    # bic weights ONLY shapelets
-    # shapelets 4: 4328
-
-    def __init__(self, data_class, kde_sampler, shapelets_order):
-        self._shapelets_order = shapelets_order
-        super(_WGDJ0405ModelBase, self).__init__(data_class, kde_sampler)
-
     @property
     def kwargs_constraints(self):
         joint_source_with_point_source = [[0, 0]]
@@ -113,9 +97,6 @@ class _WGDJ0405ModelBase(ModelBase):
         return kwargs_likelihood
 
 class WGDJ0405ModelEPLM3M4Shear(_WGDJ0405ModelBase):
-
-    def __init__(self, data_class, kde_sampler=None, shapelets_order=None):
-        super(WGDJ0405ModelEPLM3M4Shear, self).__init__(data_class, kde_sampler, shapelets_order)
 
     @property
     def prior_lens(self):

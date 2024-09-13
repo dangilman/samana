@@ -4,11 +4,6 @@ import pickle
 
 class _J1537ModelBase(ModelBase):
 
-
-    def __init__(self, data_class, kde_sampler, shapelets_order):
-        self._shapelets_order = shapelets_order
-        super(_J1537ModelBase, self).__init__(data_class, kde_sampler)
-
     @property
     def kwargs_constraints(self):
         joint_source_with_point_source = [[0, 0]]
@@ -90,9 +85,6 @@ class _J1537ModelBase(ModelBase):
         return kwargs_likelihood
 
 class J1537ModelEPLM3M4Shear(_J1537ModelBase):
-
-    def __init__(self, data_class, kde_sampler=None, shapelets_order=None):
-        super(J1537ModelEPLM3M4Shear, self).__init__(data_class, kde_sampler, shapelets_order)
 
     @property
     def prior_lens(self):

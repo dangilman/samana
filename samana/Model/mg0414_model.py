@@ -4,10 +4,6 @@ import pickle
 
 class _MG0414ModelBase(ModelBase):
 
-    def __init__(self, data_class, kde_sampler, shapelets_order):
-        self._shapelets_order = shapelets_order
-        super(_MG0414ModelBase, self).__init__(data_class, kde_sampler)
-
     def update_kwargs_fixed_macro(self, lens_model_list_macro, kwargs_lens_fixed, kwargs_lens_init, macromodel_samples_fixed=None):
 
         if macromodel_samples_fixed is not None:
@@ -117,9 +113,6 @@ class _MG0414ModelBase(ModelBase):
         return kwargs_likelihood
 
 class MG0414ModelEPLM3M4Shear(_MG0414ModelBase):
-
-    def __init__(self, data_class, kde_sampler=None, shapelets_order=None):
-        super(MG0414ModelEPLM3M4Shear, self).__init__(data_class, kde_sampler, shapelets_order)
 
     @property
     def prior_lens(self):

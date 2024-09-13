@@ -9,10 +9,11 @@ class ModelBase(object):
 
     _spherical_multipole = False
 
-    def __init__(self, data_class, kde_sampler=None, *args, **kwargs):
+    def __init__(self, data_class, shapelets_order=None, shapelets_scale_factor=1):
 
+        self._shapelets_order = shapelets_order
         self._data = data_class
-        self.kde_sampler = kde_sampler
+        self._shapelets_scale_factor = shapelets_scale_factor
 
     def beta_scale_param(self, n_max):
 
@@ -24,15 +25,16 @@ class ModelBase(object):
         n_max = int(n_max)
         source_model_list = ['SHAPELETS']
         beta_scale_param = self.beta_scale_param(n_max)
-        beta_lower_bound = beta_scale_param / 2.5
+        beta_lower_bound = self._shapelets_scale_factor * beta_scale_param / 2.5
         beta_upper_bound = 7.0 * beta_lower_bound
         if beta_init is None:
             beta_sigma = 2.0 * beta_lower_bound
             beta_init = 3.0 * beta_lower_bound
         else:
-            beta_sigma = 0.5 * beta_init
             assert beta_init > beta_lower_bound * 1.1
             assert beta_init < beta_upper_bound * 0.9
+            beta_sigma = 0.5 * beta_init
+
         kwargs_source_init = [{'amp': 1.0, 'beta': beta_init, 'center_x': 0.0, 'center_y': 0.0,
                                 'n_max': n_max}]
         kwargs_source_sigma = [{'amp': 10.0, 'beta': beta_sigma, 'center_x': 0.1, 'center_y': 0.1, 'n_max': 1}]

@@ -5,10 +5,6 @@ from lenstronomy.Util.param_util import ellipticity2phi_q
 
 class _J0659ModelBase(ModelBase):
 
-    def __init__(self, data_class, kde_sampler, shapelets_order):
-        self._shapelets_order = shapelets_order
-        super(_J0659ModelBase, self).__init__(data_class, kde_sampler)
-
     def update_kwargs_fixed_macro(self, lens_model_list_macro, kwargs_lens_fixed, kwargs_lens_init, macromodel_samples_fixed=None):
 
         if macromodel_samples_fixed is not None:
@@ -193,9 +189,6 @@ class J0659ModelEPLM3M4Shear_AssumeStar(_J0659ModelBase):
 
 
 class J0659ModelEPLM3M4Shear(_J0659ModelBase):
-
-    def __init__(self, data_class, kde_sampler=None, shapelets_order=None):
-        super(J0659ModelEPLM3M4Shear, self).__init__(data_class, kde_sampler, shapelets_order)
 
     def q_prior(self, kwargs_lens,
                 kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,

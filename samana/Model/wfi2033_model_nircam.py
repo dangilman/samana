@@ -5,12 +5,6 @@ import pickle
 
 class _WFI2033ModelNircamBase(ModelBase):
 
-    def __init__(self, data_class, kde_sampler, shapelets_order, include_source_blobs, n_max_blobs):
-        self._shapelets_order = shapelets_order
-        self._include_source_blobs = include_source_blobs
-        self._nmax_blobs = n_max_blobs
-        super(_WFI2033ModelNircamBase, self).__init__(data_class, kde_sampler)
-
     def update_kwargs_fixed_macro(self, lens_model_list_macro, kwargs_lens_fixed, kwargs_lens_init, macromodel_samples_fixed=None):
 
         if macromodel_samples_fixed is not None:
@@ -85,37 +79,6 @@ class _WFI2033ModelNircamBase(ModelBase):
             kwargs_source_sigma += kwargs_shapelets_sigma
             kwargs_lower_source += kwargs_lower_shapelets
             kwargs_upper_source += kwargs_upper_shapelets
-
-        if self._include_source_blobs:
-
-            self._image_plane_source_list += [True]
-            point_of_interest_x2 = 0.85
-            point_of_interest_y2 = -0.65
-            source_model_list_clump, kwargs_source_clump, kwargs_source_sigma_clump, kwargs_source_fixed_clump, \
-            kwargs_lower_source_clump, kwargs_upper_source_clump = self.shapelet_source_clump(point_of_interest_x2,
-                                                                                              point_of_interest_y2,
-                                                                                              n_max_clump=self._nmax_blobs,
-                                                                                              beta_clump=0.05)
-            source_model_list += source_model_list_clump
-            kwargs_source_init += kwargs_source_clump
-            kwargs_source_sigma += kwargs_source_sigma_clump
-            kwargs_lower_source += kwargs_lower_source_clump
-            kwargs_upper_source += kwargs_upper_source_clump
-            kwargs_source_fixed += kwargs_source_fixed_clump
-
-        # self._image_plane_source_list += [True]
-        # point_of_interest_x1 = -0.45
-        # point_of_interest_y1 = -1.25
-        # source_model_list_clump, kwargs_source_clump, kwargs_source_sigma_clump, kwargs_source_fixed_clump, \
-        #      kwargs_lower_source_clump, kwargs_upper_source_clump = self.gaussian_source_clump(point_of_interest_x1,
-        #                                                                                    point_of_interest_y1,
-        #                                                                                    sigma=0.007)
-        # source_model_list += source_model_list_clump
-        # kwargs_source_init += kwargs_source_clump
-        # kwargs_source_sigma += kwargs_source_sigma_clump
-        # kwargs_lower_source += kwargs_lower_source_clump
-        # kwargs_upper_source += kwargs_upper_source_clump
-        # kwargs_source_fixed += kwargs_source_fixed_clump
 
         source_params = [kwargs_source_init, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source,
                          kwargs_upper_source]
@@ -240,12 +203,6 @@ class WFI2033NircamModelEPLM3M4Shear(_WFI2033ModelNircamBase):
 
 
 class WFI2033NircamModelEPLM3M4ShearObservedConvention(_WFI2033ModelNircamBase):
-
-    def __init__(self, data_class, kde_sampler=None, shapelets_order=None,
-                 include_source_blobs=False,
-                 n_max_blobs=8):
-        super(WFI2033NircamModelEPLM3M4ShearObservedConvention, self).__init__(data_class, kde_sampler, shapelets_order,
-                                                                               include_source_blobs, n_max_blobs)
 
     @property
     def prior_lens(self):

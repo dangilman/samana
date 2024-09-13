@@ -4,10 +4,6 @@ from lenstronomy.Util.param_util import ellipticity2phi_q
 
 class _J0147ModelBase(ModelBase):
 
-    def __init__(self, data_class, kde_sampler, shapelets_order):
-        self._shapelets_order = shapelets_order
-        super(_J0147ModelBase, self).__init__(data_class, kde_sampler)
-
     @property
     def kwargs_constraints(self):
         joint_source_with_point_source = [[0, 0]]
@@ -155,9 +151,6 @@ class J0147ModelEPLM3M4Shear(_J0147ModelBase):
         return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
 
 class J0147ModelEPLM3M4ShearHST(_J0147ModelBase):
-
-    def __init__(self, data_class, kde_sampler=None, shapelets_order=None):
-        super(J0147ModelEPLM3M4ShearHST, self).__init__(data_class, kde_sampler, shapelets_order)
 
     @property
     def kwargs_constraints(self):
