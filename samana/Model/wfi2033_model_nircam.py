@@ -137,11 +137,6 @@ class WFI2033NircamModelEPLM3M4Shear(_WFI2033ModelNircamBase):
 
     gx2_phys = -3.7016
     gy2_phys = 0.0414
-    def __init__(self, data_class, kde_sampler=None, shapelets_order=None,
-                 include_source_blobs=False,
-                 n_max_blobs=8):
-        super(WFI2033NircamModelEPLM3M4Shear, self).__init__(data_class, kde_sampler, shapelets_order,
-                                                                               include_source_blobs, n_max_blobs)
 
     @property
     def prior_lens(self):

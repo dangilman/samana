@@ -156,14 +156,6 @@ class HE0435ModelNircamEPLM3M4Shear(_HE0435NircamModelBase):
 
 class HE0435ModelNircamEPLM3M4ShearObservedConvention(_HE0435NircamModelBase):
 
-    def __init__(self, data_class, kde_sampler=None, shapelets_order=None, include_source_blobs=False,
-                 n_max_blobs=8):
-        super(HE0435ModelNircamEPLM3M4ShearObservedConvention, self).__init__(data_class,
-                                                                              kde_sampler,
-                                                                              shapelets_order,
-                                                                              include_source_blobs,
-                                                                              n_max_blobs)
-
     @property
     def prior_lens(self):
         return [[0, 'gamma', 2.0, 0.1], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005],
