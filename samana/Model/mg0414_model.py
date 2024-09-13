@@ -41,14 +41,14 @@ class _MG0414ModelBase(ModelBase):
     def setup_source_light_model(self):
 
         source_model_list = ['SERSIC_ELLIPSE']
-        kwargs_source_init = [{'amp': 15.2492488280051, 'R_sersic': 0.7248277235181109,
+        kwargs_source_init = [{'amp': 15.2492488280051, 'R_sersic': 0.5,
                                'n_sersic': 4.696991393601237, 'e1': 0.35970136649517676,
                                'e2': -0.49946241601253555,
                                'center_x': -0.05327912372729286, 'center_y': 0.04197414384938051}]
         kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
-        kwargs_upper_source = [{'R_sersic': 10.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
+        kwargs_upper_source = [{'R_sersic': 1.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
         kwargs_source_fixed = [{}]
 
         if self._shapelets_order is not None:
@@ -80,14 +80,14 @@ class _MG0414ModelBase(ModelBase):
         kwargs_lower_lens_light = [
             {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10.0, 'center_y': -10.0}]
         kwargs_upper_lens_light = [
-            {'R_sersic': 10, 'n_sersic': 5.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
+            {'R_sersic': 5.0, 'n_sersic': 5.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
         kwargs_lens_light_fixed = [{}]
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
         add_uniform_light = True
         if add_uniform_light:
             kwargs_uniform, kwargs_uniform_sigma, kwargs_uniform_fixed, \
-            kwargs_uniform_lower, kwargs_uniform_upper = self.add_uniform_lens_light(44.0, 4.0)
+            kwargs_uniform_lower, kwargs_uniform_upper = self.add_uniform_lens_light(0.0, 2.0)
             lens_light_model_list += ['UNIFORM']
             kwargs_lens_light_init += kwargs_uniform
             kwargs_lens_light_sigma += kwargs_uniform_sigma
