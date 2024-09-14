@@ -90,7 +90,7 @@ class ModelBase(object):
                 kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
                 kwargs_extinction, kwargs_tracer_source):
 
-        q_cut = 1/3
+        q_cut = 1/5
         e1, e2 = kwargs_lens[0]['e1'], kwargs_lens[0]['e2']
         _, q = ellipticity2phi_q(e1, e2)
         if q < q_cut:

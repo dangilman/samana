@@ -20,6 +20,9 @@ def quick_setup(lens_ID):
     if lens_ID == 'B1422':
         from samana.Data.b1422 import B1422_HST as data_class
         from samana.Model.b1422_model import B1422ModelEPLM3M4Shear as model_class
+    if lens_ID == 'B2045':
+        from samana.Data.b2045 import B2045_MIRI as data_class
+        from samana.Model.b2045_model import B2045ModelEPLM3M4Shear as model_class
     elif lens_ID == 'HE0435':
         from samana.Data.he0435 import HE0435_NIRCAM as data_class
         from samana.Model.he0435_model_nircam import HE0435ModelNircamEPLM3M4Shear as model_class
