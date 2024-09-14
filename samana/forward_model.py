@@ -9,6 +9,7 @@ from lenstronomy.LensModel.QuadOptimizer.optimizer import Optimizer
 from samana.image_magnification_util import setup_gaussian_source
 from samana.param_managers import auto_param_class
 from copy import deepcopy
+from multiprocessing.pool import Pool
 import os
 import subprocess
 import numpy as np
@@ -24,7 +25,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   image_data_grid_resolution_rescale=1.0,
                   use_imaging_data=True, fitting_sequence_kwargs=None, test_mode=False,
                   use_decoupled_multiplane_approximation=True, fixed_realization_list=None,
-                  macromodel_readout_function=None, kappa_scale_subhalos=1.0, log10_bound_mass_cut=None):
+                  macromodel_readout_function=None, kappa_scale_subhalos=1.0, log10_bound_mass_cut=None,
+                  parallelize=False):
     """
 
     :param output_path:
@@ -60,6 +62,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     as well as a list of parameter names
     :param kappa_scale_subhalos:
     :param log10_bound_mass_cut:
+    :param parallelize:
     :return:
     """
 
@@ -141,72 +144,146 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
             fixed_realization = fixed_realization_list[acceptance_rate_counter]
         else:
             fixed_realization = None
-        magnifications, images, realization_samples, source_samples, macromodel_samples, macromodel_samples_fixed, \
-        logL_imaging_data, fitting_sequence, stat, log_flux_ratio_likelihood, bic, param_names_realization, param_names_source, param_names_macro, \
-        param_names_macro_fixed, _, _, _ = forward_model_single_iteration(data_class, model, preset_model_name, kwargs_sample_realization,
-                                            kwargs_sample_source, kwargs_sample_fixed_macromodel, log_mlow_mass_sheets,
-                                            rescale_grid_size, rescale_grid_resolution, image_data_grid_resolution_rescale,
-                                            verbose, random_seed, n_pso_particles, n_pso_iterations, num_threads,
-                                            kwargs_model_class, astrometric_uncertainty,
-                                            use_imaging_data, fitting_sequence_kwargs, test_mode,
-                                            use_decoupled_multiplane_approximation, fixed_realization,
-                                            macromodel_readout_function, kappa_scale_subhalos, log10_bound_mass_cut)
 
-        seed_counter += 1
-        acceptance_rate_counter += 1
-        # Once we have computed a couple realizations, keep a log of the time it takes to run per realization
-        if acceptance_rate_counter == readout_sampling_rate_index:
-            time_elapsed = time() - t0
-            time_elapsed_minutes = time_elapsed / 60
-            sampling_rate = time_elapsed_minutes / acceptance_rate_counter
-            readout_sampling_rate = True
+        if parallelize:
+            args = []
+            for cpu_index in range(0, num_threads):
+                args.append((data_class, model, preset_model_name,
+                             kwargs_sample_realization,
+                             kwargs_sample_source,
+                             kwargs_sample_fixed_macromodel,
+                             log_mlow_mass_sheets,
+                             rescale_grid_size, rescale_grid_resolution,
+                             image_data_grid_resolution_rescale,
+                             verbose, random_seed + cpu_index, n_pso_particles,
+                             n_pso_iterations, 1,
+                             kwargs_model_class, astrometric_uncertainty,
+                             use_imaging_data, fitting_sequence_kwargs,
+                             test_mode,
+                             use_decoupled_multiplane_approximation,
+                             fixed_realization,
+                             macromodel_readout_function,
+                             kappa_scale_subhalos, log10_bound_mass_cut))
+
+            pool = Pool(num_threads)
+            output = pool.starmap(forward_model_single_iteration, args)
+            pool.close()
+            for seed_counter, result in enumerate(output):
+                (magnifications, images, realization_samples, source_samples, macromodel_samples,
+                macromodel_samples_fixed, \
+                logL_imaging_data, fitting_sequence, stat, log_flux_ratio_likelihood, bic, param_names_realization,
+                param_names_source, param_names_macro, \
+                param_names_macro_fixed, _, _, _) = result
+                acceptance_rate_counter += 1
+                # Once we have computed a couple realizations, keep a log of the time it takes to run per realization
+                if acceptance_rate_counter == readout_sampling_rate_index:
+                    time_elapsed = time() - t0
+                    time_elapsed_minutes = time_elapsed / 60
+                    sampling_rate = time_elapsed_minutes / acceptance_rate_counter
+                    readout_sampling_rate = True
+                else:
+                    readout_sampling_rate = False
+                # this keeps track of how many realizations were analyzed, and resets after each readout (set by readout_steps)
+                # The purpose of this counter is to keep track of the acceptance rate
+                iteration_counter += 1
+                if stat < tolerance:
+                    # If the statistic is less than the tolerance threshold, we keep the parameters
+                    accepted_realizations_counter += 1
+                    n_kept += 1
+                    params = np.append(realization_samples, source_samples)
+                    params = np.append(params, bic)
+                    params = np.append(params, stat)
+                    params = np.append(params, log_flux_ratio_likelihood)
+                    params = np.append(params, logL_imaging_data)
+                    params = np.append(params, random_seed + seed_counter)
+                    param_names = param_names_realization + param_names_source + ['bic', 'summary_statistic',
+                                                                                  'flux_ratio_log_likelihood',
+                                                                                  'logL_image_data', 'seed']
+                    acceptance_ratio = accepted_realizations_counter / iteration_counter
+
+                    if parameter_array is None:
+                        parameter_array = params
+                    else:
+                        parameter_array = np.vstack((parameter_array, params))
+                    if mags_out is None:
+                        mags_out = magnifications
+                    else:
+                        mags_out = np.vstack((mags_out, magnifications))
+                    if macromodel_samples_array is None:
+                        macromodel_samples_array = np.array(macromodel_samples)
+                    else:
+                        macromodel_samples_array = np.vstack((macromodel_samples_array, macromodel_samples))
+                    if verbose:
+                        print('N_kept: ', n_kept)
+                        print('N remaining: ', n_keep - n_kept)
+
         else:
-            readout_sampling_rate = False
+            magnifications, images, realization_samples, source_samples, macromodel_samples, macromodel_samples_fixed, \
+            logL_imaging_data, fitting_sequence, stat, log_flux_ratio_likelihood, bic, param_names_realization, param_names_source, param_names_macro, \
+            param_names_macro_fixed, _, _, _ = forward_model_single_iteration(data_class, model, preset_model_name, kwargs_sample_realization,
+                                                kwargs_sample_source, kwargs_sample_fixed_macromodel, log_mlow_mass_sheets,
+                                                rescale_grid_size, rescale_grid_resolution, image_data_grid_resolution_rescale,
+                                                verbose, random_seed, n_pso_particles, n_pso_iterations, num_threads,
+                                                kwargs_model_class, astrometric_uncertainty,
+                                                use_imaging_data, fitting_sequence_kwargs, test_mode,
+                                                use_decoupled_multiplane_approximation, fixed_realization,
+                                                macromodel_readout_function, kappa_scale_subhalos, log10_bound_mass_cut)
 
-        # this keeps track of how many realizations were analyzed, and resets after each readout (set by readout_steps)
-        # The purpose of this counter is to keep track of the acceptance rate
-        iteration_counter += 1
-        if stat < tolerance:
-            # If the statistic is less than the tolerance threshold, we keep the parameters
-            accepted_realizations_counter += 1
-            n_kept += 1
-            params = np.append(realization_samples, source_samples)
-            params = np.append(params, bic)
-            params = np.append(params, stat)
-            params = np.append(params, log_flux_ratio_likelihood)
-            params = np.append(params, logL_imaging_data)
-            params = np.append(params, random_seed)
-            param_names = param_names_realization + param_names_source + ['bic', 'summary_statistic', 'flux_ratio_log_likelihood',
-                                                                          'logL_image_data', 'seed']
-            acceptance_ratio = accepted_realizations_counter / iteration_counter
+            seed_counter += 1
+            acceptance_rate_counter += 1
+            # Once we have computed a couple realizations, keep a log of the time it takes to run per realization
+            if acceptance_rate_counter == readout_sampling_rate_index:
+                time_elapsed = time() - t0
+                time_elapsed_minutes = time_elapsed / 60
+                sampling_rate = time_elapsed_minutes / acceptance_rate_counter
+                readout_sampling_rate = True
+            else:
+                readout_sampling_rate = False
 
-            if parameter_array is None:
-                parameter_array = params
-            else:
-                parameter_array = np.vstack((parameter_array, params))
-            if mags_out is None:
-                mags_out = magnifications
-            else:
-                mags_out = np.vstack((mags_out, magnifications))
-            if macromodel_samples_array is None:
-                macromodel_samples_array = np.array(macromodel_samples)
-            else:
-                macromodel_samples_array = np.vstack((macromodel_samples_array, macromodel_samples))
-            if verbose:
-                print('N_kept: ', n_kept)
-                print('N remaining: ', n_keep - n_kept)
+            # this keeps track of how many realizations were analyzed, and resets after each readout (set by readout_steps)
+            # The purpose of this counter is to keep track of the acceptance rate
+            iteration_counter += 1
+            if stat < tolerance:
+                # If the statistic is less than the tolerance threshold, we keep the parameters
+                accepted_realizations_counter += 1
+                n_kept += 1
+                params = np.append(realization_samples, source_samples)
+                params = np.append(params, bic)
+                params = np.append(params, stat)
+                params = np.append(params, log_flux_ratio_likelihood)
+                params = np.append(params, logL_imaging_data)
+                params = np.append(params, random_seed)
+                param_names = param_names_realization + param_names_source + ['bic', 'summary_statistic', 'flux_ratio_log_likelihood',
+                                                                              'logL_image_data', 'seed']
+                acceptance_ratio = accepted_realizations_counter / iteration_counter
+
+                if parameter_array is None:
+                    parameter_array = params
+                else:
+                    parameter_array = np.vstack((parameter_array, params))
+                if mags_out is None:
+                    mags_out = magnifications
+                else:
+                    mags_out = np.vstack((mags_out, magnifications))
+                if macromodel_samples_array is None:
+                    macromodel_samples_array = np.array(macromodel_samples)
+                else:
+                    macromodel_samples_array = np.vstack((macromodel_samples_array, macromodel_samples))
+                if verbose:
+                    print('N_kept: ', n_kept)
+                    print('N remaining: ', n_keep - n_kept)
 
         if verbose:
             print('accepted realizations counter: ', acceptance_rate_counter)
         # readout if either of these conditions are met
-        if accepted_realizations_counter == readout_steps:
+        if accepted_realizations_counter >= readout_steps:
             readout = True
             if verbose:
                 print('reading out data on this iteration.')
             accepted_realizations_counter = 0
             iteration_counter = 0
         # break loop if we have collected n_keep samples
-        if n_kept == n_keep:
+        if n_kept >= n_keep:
             readout = True
             break_loop = True
             if verbose:
