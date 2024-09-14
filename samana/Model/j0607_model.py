@@ -43,10 +43,11 @@ class _J0607ModelBase(ModelBase):
     def setup_source_light_model(self):
 
         source_model_list = ['SERSIC_ELLIPSE']
-        kwargs_source_init = [{'amp': 2.456433840537286, 'R_sersic': 0.25,
-                               'n_sersic': 3.4414462189472026,
-                               'e1': -0.20239124069069603, 'e2': 0.07653940829806069,
-                               'center_x': 0.17076553773710246, 'center_y': -0.0016306044823957437}]
+        kwargs_source_init = [
+            {'amp': 55.87261280431018, 'R_sersic': 0.10949481017007116, 'n_sersic': 3.217817338202921,
+             'e1': -0.41196382505934187, 'e2': 0.3554377492709047, 'center_x': 0.1312246765545628,
+             'center_y': -0.030922789515471172}
+        ]
         kwargs_source_sigma = [{'R_sersic': 0.1, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
@@ -124,6 +125,10 @@ class _J0607ModelBase(ModelBase):
         return kwargs_likelihood
 
 class J0607ModelEPLM3M4Shear(_J0607ModelBase):
+
+    def __init__(self, data_class, shapelets_order=None, shapelets_scale_factor=2.5/2):
+
+        super(J0607ModelEPLM3M4Shear, self).__init__(data_class, shapelets_order, shapelets_scale_factor)
 
     @property
     def prior_lens(self):

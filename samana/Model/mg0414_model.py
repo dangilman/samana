@@ -34,10 +34,6 @@ class _MG0414ModelBase(ModelBase):
            kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
         return kwargs_constraints
 
-    @property
-    def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2]]
-
     def setup_source_light_model(self):
 
         source_model_list = ['SERSIC_ELLIPSE']
@@ -71,10 +67,11 @@ class _MG0414ModelBase(ModelBase):
     def setup_lens_light_model(self):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
-        kwargs_lens_light_init = [{'amp': 74.0216808732579, 'R_sersic': 0.447395300608567, 'n_sersic': 4.448913835274796,
-                                   'e1': 0.2832718419129832, 'e2': -0.05773669907109801,
-                                   'center_x': -0.18496473982416825,
-                                   'center_y': -0.07853126344061523}]
+        kwargs_lens_light_init = [
+            {'amp': 50.31157698167003, 'R_sersic': 0.5430090380783945, 'n_sersic': 4.454406498821454,
+             'e1': 0.431559840100101, 'e2': 0.019567918398772914, 'center_x': -0.21317276556740572,
+             'center_y': -0.07272719585273069}
+        ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
         kwargs_lower_lens_light = [
@@ -84,6 +81,7 @@ class _MG0414ModelBase(ModelBase):
         kwargs_lens_light_fixed = [{}]
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
+
         add_uniform_light = True
         if add_uniform_light:
             kwargs_uniform, kwargs_uniform_sigma, kwargs_uniform_fixed, \
@@ -115,6 +113,9 @@ class _MG0414ModelBase(ModelBase):
 
 class MG0414ModelEPLM3M4Shear(_MG0414ModelBase):
 
+    def __init__(self, data_class, shapelets_order=None, shapelets_scale_factor=2.5 / 2):
+        super(MG0414ModelEPLM3M4Shear, self).__init__(data_class, shapelets_order, shapelets_scale_factor)
+
     def custom_logL(self, kwargs_lens,
                 kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
                 kwargs_extinction, kwargs_tracer_source):
@@ -126,6 +127,7 @@ class MG0414ModelEPLM3M4Shear(_MG0414ModelBase):
         axis_ratio = self.hard_cut_axis_ratio_prior(kwargs_lens,
                 kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
                 kwargs_extinction, kwargs_tracer_source)
+
         return alignment + axis_ratio
 
     @property

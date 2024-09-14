@@ -44,9 +44,9 @@ class _J2145(ModelBase):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 1, 'R_sersic': 0.5, 'n_sersic': 9.828978519569892,
-             'e1': 0.18922287881142683, 'e2': -0.49680046029591163,
-             'center_x': -0.1567401919287477, 'center_y': 0.10407013803317702}
+            {'amp': 38.66894438005693, 'R_sersic': 0.42564909776328186, 'n_sersic': 9.516118370642479,
+             'e1': 0.4999972930169189, 'e2': -0.2857266536463178, 'center_x': -0.1676034477343039,
+             'center_y': 0.10228595373813372}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
@@ -75,9 +75,9 @@ class _J2145(ModelBase):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
         kwargs_lens_light_init = [
-            {'amp': 1, 'R_sersic': 2.2924234877372065, 'n_sersic': 9.787033759555838,
-             'e1': 0.40043750929239874, 'e2': -0.45597719396944153,
-             'center_x': -0.007970802304196879, 'center_y': -0.04905834798232061}
+            {'amp': 1.7454240902431188, 'R_sersic': 2.2299147056839135, 'n_sersic': 9.691821700173003,
+             'e1': 0.43094608922350774, 'e2': -0.49862279956210925, 'center_x': 0.06986366167838882,
+             'center_y': -0.04378657647763289}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
@@ -119,6 +119,10 @@ class _J2145(ModelBase):
 
 class J2145ModelEPLM3M4Shear(_J2145):
 
+    def __init__(self, data_class, shapelets_order=None, shapelets_scale_factor=2.5 / 2):
+
+        super(J2145ModelEPLM3M4Shear, self).__init__(data_class, shapelets_order, shapelets_scale_factor)
+
     @property
     def prior_lens(self):
         return self.population_gamma_prior
@@ -127,11 +131,10 @@ class J2145ModelEPLM3M4Shear(_J2145):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
         kwargs_lens_macro = [
-            {'theta_E': 0.9963716325201858, 'gamma': 2.0764389002435983, 'e1': 0.01655595186589094,
-             'e2': 0.10785608433624412, 'center_x': -0.16563756991476616,
-             'center_y': 0.1908195870939459, 'a3_a': 0.0, 'delta_phi_m3': 0.3829612299408204,
-             'a4_a': 0.0, 'delta_phi_m4': 2.579205125743943},
-            {'gamma1': 0.06917695487891515, 'gamma2': 0.17780387967534877, 'ra_0': 0.0, 'dec_0': 0.0}
+            {'theta_E': 0.998769587003212, 'gamma': 1.9744110382168731, 'e1': -0.017941674550855997,
+             'e2': 0.043047979752150065, 'center_x': -0.18228132405929476, 'center_y': 0.20599853383689018, 'a3_a': 0.0,
+             'delta_phi_m3': 0.47412736802809846, 'a4_a': 0.0, 'delta_phi_m4': 2.939320541612013},
+            {'gamma1': 0.052049597314606864, 'gamma2': 0.14840243517340163, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]

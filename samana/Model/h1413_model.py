@@ -40,14 +40,14 @@ class _H1413ModelBase(ModelBase):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 139.448639424857, 'R_sersic': 0.1776154138165587, 'n_sersic': 4.009392466425343,
-             'e1': -0.08908031573592885, 'e2': 0.4053069612395695,
-             'center_x': 0.12821742707049832, 'center_y': 0.28650227091640906}
+            {'amp': 1408.6999809726424, 'R_sersic': 0.3, 'n_sersic': 4.25249122441134,
+             'e1': 0.0781355034209951, 'e2': 0.0772879512485523, 'center_x': 0.2635020951733739,
+             'center_y': 0.5658870396124935}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.1, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
-        kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
-        kwargs_upper_source = [{'R_sersic': 1.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
+        kwargs_lower_source = [{'R_sersic': 0.01, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
+        kwargs_upper_source = [{'R_sersic': 2.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
         kwargs_source_fixed = [{}]
 
         if self._shapelets_order is not None:
@@ -71,9 +71,9 @@ class _H1413ModelBase(ModelBase):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
         kwargs_lens_light_init = [
-            {'amp': 1, 'R_sersic': 0.25, 'n_sersic': 9.2421961832126, 'e1': 0.27815856871416295,
-             'e2': -0.07087848013913227, 'center_x': -0.08923230118346438,
-             'center_y': -0.0017010104470842468}
+            {'amp': 38.21138306528365, 'R_sersic': 0.3549693339502174, 'n_sersic': 7.791765804977027,
+             'e1': 0.30715860758736624, 'e2': 0.16962874966573957, 'center_x': -0.06815214859594589,
+             'center_y': -0.03601755167613599}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
@@ -116,6 +116,10 @@ class _H1413ModelBase(ModelBase):
 
 class H1413ModelEPLM3M4Shear(_H1413ModelBase):
 
+    def __init__(self, data_class, shapelets_order=None, shapelets_scale_factor=2.5/2):
+
+        super(H1413ModelEPLM3M4Shear, self).__init__(data_class, shapelets_order, shapelets_scale_factor)
+
     @property
     def prior_lens(self):
         return self.population_gamma_prior + [[2, 'center_x', self._data.g2x, 0.05],
@@ -125,10 +129,10 @@ class H1413ModelEPLM3M4Shear(_H1413ModelBase):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR', 'SIS']
         kwargs_lens_macro = [
-            {'theta_E': 0.5725250544407413, 'gamma': 2.013117284603192, 'e1': -0.16033276322679899,
-             'e2': 0.02207275975637985, 'center_x': 0.020378920630914753, 'center_y': 0.06737978288892339,
-             'a3_a': 0.0, 'delta_phi_m3': -0.08063963864549543, 'a4_a': 0.0, 'delta_phi_m4': 1.4163482584819476},
-            {'gamma1': -0.0398278330114032, 'gamma2': -0.030827142862160883, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.603471349129896, 'gamma': 1.9617882452965811, 'e1': -0.33201152685472796,
+             'e2': 0.1988642574707003, 'center_x': 0.03038486442334634, 'center_y': 0.08697609241490468, 'a3_a': 0.0,
+             'delta_phi_m3': 0.01267703416927234, 'a4_a': 0.0, 'delta_phi_m4': 1.9206790710391726},
+            {'gamma1': -0.10232858301599297, 'gamma2': 0.038535490873264494, 'ra_0': 0.0, 'dec_0': 0.0},
             {'theta_E': 0.6, 'center_x': self._data.g2x, 'center_y': self._data.g2y}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]

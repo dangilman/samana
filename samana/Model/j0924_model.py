@@ -40,11 +40,11 @@ class _J0924ModelBase(ModelBase):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 29.562589141816453, 'R_sersic': 0.28863953388281044, 'n_sersic': 8.54733301005502,
-             'e1': -0.021620107408397742, 'e2': 0.3482839016229852, 'center_x': -0.007249329906117978,
-             'center_y': -0.010397463142520462}
+            {'amp': 22.253166153940576, 'R_sersic': 0.30820868568276105, 'n_sersic': 8.555258972870702,
+             'e1': -0.0691802174174294, 'e2': -0.4030507334734364, 'center_x': -0.005788496474286688,
+             'center_y': -0.012481658559531818}
         ]
-        kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
+        kwargs_source_sigma = [{'R_sersic': 0.1, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
         kwargs_upper_source = [{'R_sersic': 1.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
@@ -71,9 +71,9 @@ class _J0924ModelBase(ModelBase):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
         kwargs_lens_light_init = [
-            {'amp': 145.3836202987781, 'R_sersic': 0.2158852097901422, 'n_sersic': 7.1238305846193315,
-             'e1': -0.18223818072469727, 'e2': 0.015340901344440666, 'center_x': -0.03674726530434721,
-             'center_y': 0.04832035308488868}
+            {'amp': 87.05598046738899, 'R_sersic': 0.28982903933284865, 'n_sersic': 7.180083163598757,
+             'e1': -0.14177619547359366, 'e2': -0.04062693949016464, 'center_x': -0.03444593475413884,
+             'center_y': 0.05006835798969524}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
@@ -115,6 +115,10 @@ class _J0924ModelBase(ModelBase):
 
 class J0924ModelEPLM3M4Shear(_J0924ModelBase):
 
+    def __init__(self, data_class, shapelets_order=None, shapelets_scale_factor=2.5/2):
+
+        super(J0924ModelEPLM3M4Shear, self).__init__(data_class, shapelets_order, shapelets_scale_factor)
+
     @property
     def prior_lens(self):
         return self.population_gamma_prior
@@ -123,10 +127,10 @@ class J0924ModelEPLM3M4Shear(_J0924ModelBase):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
         kwargs_lens_macro = [
-            {'theta_E': 0.8772672782659735, 'gamma': 2.1161604234447657, 'e1': 0.11409116539729838,
-             'e2': -0.03297623248778399, 'center_x': -0.048115728035074336, 'center_y': 0.0507358738668198, 'a3_a': 0.0,
-             'delta_phi_m3': 0.2860323179041286, 'a4_a': 0.0, 'delta_phi_m4': 1.595301198826728},
-            {'gamma1': -0.031582914978882215, 'gamma2': -0.03918995912549924, 'ra_0': 0.0, 'dec_0': 0.0}
+            {'theta_E': 0.8762991184266715, 'gamma': 2.1648292579611756, 'e1': 0.10487377719751985,
+             'e2': -0.03718310291978024, 'center_x': -0.0463003391175611, 'center_y': 0.04849830487468873, 'a3_a': 0.0,
+             'delta_phi_m3': 0.29024602547651307, 'a4_a': 0.0, 'delta_phi_m4': 1.6475777931629454},
+            {'gamma1': -0.03939561968540132, 'gamma2': -0.04071833552068792, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]

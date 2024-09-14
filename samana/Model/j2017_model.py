@@ -118,7 +118,12 @@ class _J2017ModelBase(ModelBase):
                              }
         return kwargs_likelihood
 
+
 class J2017ModelEPLM3M4Shear(_J2017ModelBase):
+
+    def __init__(self, data_class, shapelets_order=None, shapelets_scale_factor=2.5 / 2):
+
+        super(J2017ModelEPLM3M4Shear, self).__init__(data_class, shapelets_order, shapelets_scale_factor)
 
     @property
     def prior_lens(self):
