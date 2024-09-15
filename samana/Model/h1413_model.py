@@ -72,15 +72,22 @@ class _H1413ModelBase(ModelBase):
         lens_light_model_list = ['SERSIC_ELLIPSE']
         kwargs_lens_light_init = [
             {'amp': 38.21138306528365, 'R_sersic': 0.3549693339502174, 'n_sersic': 7.791765804977027,
-             'e1': 0.30715860758736624, 'e2': 0.16962874966573957, 'center_x': -0.06815214859594589,
+             'e1': 0.30715860758736624, 'e2': 0.16962874966573957,
+             'center_x': -0.06815214859594589,
              'center_y': -0.03601755167613599}
         ]
         kwargs_lens_light_sigma = [
-            {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
+            {'R_sersic': 0.05, 'n_sersic': 0.25,
+             'e1': 0.1, 'e2': 0.1,
+             'center_x': 0.1, 'center_y': 0.1}]
         kwargs_lower_lens_light = [
-            {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10.0, 'center_y': -10.0}]
+            {'R_sersic': 0.001, 'n_sersic': 0.5,
+             'e1': -0.5, 'e2': -0.5,
+             'center_x': -10.0, 'center_y': -10.0}]
         kwargs_upper_lens_light = [
-            {'R_sersic': 5, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
+            {'R_sersic': 5, 'n_sersic': 10.0,
+             'e1': 0.5, 'e2': 0.5,
+             'center_x': 10, 'center_y': 10}]
         kwargs_lens_light_fixed = [{}]
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
@@ -110,7 +117,7 @@ class _H1413ModelBase(ModelBase):
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True,
-                             'custom_logL_addition': self.lens_mass_lens_light_alignment
+                             'custom_logL_addition': None
                              }
         return kwargs_likelihood
 
