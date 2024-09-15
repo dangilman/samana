@@ -82,17 +82,6 @@ class _J0147ModelBase(ModelBase):
 
         return lens_light_model_list, lens_light_params
 
-    def q_prior(self, kwargs_lens,
-                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
-                kwargs_extinction, kwargs_tracer_source):
-
-        e1, e2 = kwargs_lens[0]['e1'], kwargs_lens[0]['e2']
-        _, q = ellipticity2phi_q(e1, e2)
-        if q < 0.4:
-            return -1e9
-        else:
-            return -0.5 * (q - 0.9) ** 2 / 0.1 ** 2
-
     @property
     def kwargs_likelihood(self):
         kwargs_likelihood = {'check_bounds': True,
@@ -105,7 +94,7 @@ class _J0147ModelBase(ModelBase):
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True,
-                             'custom_logL_addition': self.q_prior,
+                             'custom_logL_addition': self.joint_lens_with_light_prior,
                              }
         return kwargs_likelihood
 

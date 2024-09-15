@@ -86,6 +86,16 @@ class ModelBase(object):
         angle_degree = angle_radian * 180 / np.pi
         return -0.5 * angle_degree ** 2 / 10 ** 2
 
+    def joint_lens_with_light_prior(self, kwargs_lens,
+                                  kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                                  kwargs_extinction, kwargs_tracer_source):
+
+        center_x_lens, center_y_lens = kwargs_lens[0]['center_x'], kwargs_lens[0]['center_y']
+        center_x_light, center_y_light = kwargs_lens_light[0]['center_x'], kwargs_lens_light[0]['center_y']
+        sigma = 0.02
+        return -0.5 * ((center_x_lens - center_x_light)**2 / sigma ** 2 + (center_y_lens - center_y_light)**2 / sigma**2)
+
+
     def hard_cut_axis_ratio_prior(self, kwargs_lens,
                 kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
                 kwargs_extinction, kwargs_tracer_source):

@@ -8,7 +8,6 @@ class _B2045ModelBase(ModelBase):
     def kwargs_constraints(self):
         joint_source_with_point_source = [[0, 0]]
         kwargs_constraints = {
-                                'joint_lens_with_light': [[0, 0, ['center_x', 'center_y']]],
                                 'joint_source_with_point_source': joint_source_with_point_source,
                               'num_point_source_list': [len(self._data.x_image)],
                               'solver_type': 'PROFILE_SHEAR',
@@ -17,10 +16,6 @@ class _B2045ModelBase(ModelBase):
         if self._shapelets_order is not None:
            kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
         return kwargs_constraints
-
-    @property
-    def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2]]
 
     def setup_source_light_model(self):
 
@@ -104,7 +99,7 @@ class _B2045ModelBase(ModelBase):
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True,
-                             'custom_logL_addition': self.hard_cut_axis_ratio_prior
+                             'custom_logL_addition': self.joint_lens_with_light_prior
                              }
         return kwargs_likelihood
 

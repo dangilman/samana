@@ -73,18 +73,17 @@ class _J2145(ModelBase):
 
     def setup_lens_light_model(self):
 
-        lens_light_model_list = ['SERSIC_ELLIPSE']
+        lens_light_model_list = ['SERSIC']
         kwargs_lens_light_init = [
             {'amp': 1.7454240902431188, 'R_sersic': 2.2299147056839135, 'n_sersic': 9.691821700173003,
-             'e1': 0.43094608922350774, 'e2': -0.49862279956210925, 'center_x': 0.06986366167838882,
-             'center_y': -0.04378657647763289}
+             'center_x': 0.06986366167838882, 'center_y': -0.04378657647763289}
         ]
         kwargs_lens_light_sigma = [
-            {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
+            {'R_sersic': 0.05, 'n_sersic': 0.25, 'center_x': 0.1, 'center_y': 0.1}]
         kwargs_lower_lens_light = [
-            {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10.0, 'center_y': -10.0}]
+            {'R_sersic': 0.001, 'n_sersic': 0.5, 'center_x': -10.0, 'center_y': -10.0}]
         kwargs_upper_lens_light = [
-            {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
+            {'R_sersic': 10, 'n_sersic': 10.0, 'center_x': 10, 'center_y': 10}]
         kwargs_lens_light_fixed = [{}]
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
@@ -113,7 +112,8 @@ class _J2145(ModelBase):
                              'source_position_sigma': 0.0001,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
-                             'astrometric_likelihood': True
+                             'astrometric_likelihood': True,
+                             'custom_logL_addition': self.joint_lens_with_light_prior
                              }
         return kwargs_likelihood
 

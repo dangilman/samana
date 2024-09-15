@@ -14,7 +14,6 @@ class _2045(ImagingDataBase):
         keep_flux_ratio_index = [0, 1, 2]
         if image_data_type == 'HST814W':
             raise Exception('not HST imaging avaialble for this system')
-
         elif image_data_type == 'MIRI540W':
             from samana.Data.ImageData.b2045_MIRI540W import psf_model, image_data, noise_map
             self._psf_estimate_init = psf_model
@@ -27,9 +26,12 @@ class _2045(ImagingDataBase):
             self._dec_at_xy_0 = 4.214757595693417
             self._transform_pix2angle = np.array([[0.05318528, -0.09734178],
                                                   [-0.09734178, -0.05318528]])
+            #self._background_rms = 0.10266
+            #self._exposure_time = 58.275000
             self._background_rms = None
             self._exposure_time = None
             self._noise_map = noise_map
+            #self._noise_map = None
         else:
             raise Exception('image data type must be either HST814W or MIRI540W')
 
@@ -120,8 +122,8 @@ class B2045_MIRI(_2045):
 
         x_image = np.array([-1.29126358, -1.42206754, -1.57912082, 1.60866239])
         y_image = np.array([0.9390161, 0.69706924, 0.14757678, -0.61022942])
-        horizontal_shift = -0.00
-        vertical_shift = -0.0
+        horizontal_shift = 0.01
+        vertical_shift = 0.00
         x_image += horizontal_shift
         y_image += vertical_shift
         image_position_uncertainties = [0.005] * 4 # 5 arcsec

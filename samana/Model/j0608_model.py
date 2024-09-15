@@ -92,7 +92,8 @@ class _J0608ModelBase(ModelBase):
                              'source_position_sigma': 0.0001,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
-                             'astrometric_likelihood': True
+                             'astrometric_likelihood': True,
+                             #'custom_logL_addition': self.joint_lens_with_light_prior
                              }
         return kwargs_likelihood
 
