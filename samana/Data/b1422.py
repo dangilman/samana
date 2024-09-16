@@ -9,7 +9,6 @@ class _B1422(QuadNoImageDataBase):
 
         z_lens = 0.34
         z_source = 3.62
-
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1]
         super(_B1422, self).__init__(z_lens, z_source, x_image, y_image, magnifications, image_position_uncertainties,
@@ -30,7 +29,8 @@ class B1422_HST(_B1422):
         x_image = [-0.347, -0.734, -1.096, 0.207]
         y_image = [0.964, 0.649, -0.079, -0.148]
         magnifications = [0.88, 1., 0.474, 0.025]
-        flux_uncertainties = [0.01 / 0.88, 0.01, 0.006 / 0.47, 0.01]
+        #flux_uncertainties = [0.01 / 0.88, 0.01, 0.006 / 0.47, 0.01]
+        flux_uncertainties = None
         image_position_uncertainties = [0.005] * 4
         super(B1422_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
                                           uncertainty_in_fluxes=True)

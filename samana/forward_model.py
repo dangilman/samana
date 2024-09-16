@@ -168,13 +168,14 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
             pool = Pool(num_threads)
             output = pool.starmap(forward_model_single_iteration, args)
             pool.close()
-            for seed_counter, result in enumerate(output):
+            for _, result in enumerate(output):
                 (magnifications, images, realization_samples, source_samples, macromodel_samples,
                 macromodel_samples_fixed, \
                 logL_imaging_data, fitting_sequence, stat, log_flux_ratio_likelihood, bic, param_names_realization,
                 param_names_source, param_names_macro, \
                 param_names_macro_fixed, _, _, _) = result
                 acceptance_rate_counter += 1
+                seed_counter += 1
                 # Once we have computed a couple realizations, keep a log of the time it takes to run per realization
                 if acceptance_rate_counter == readout_sampling_rate_index:
                     time_elapsed = time() - t0
@@ -361,6 +362,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
 
     # set the random seed for reproducibility
     np.random.seed(seed)
+
     if astrometric_uncertainty:
         delta_x_image, delta_y_image = data_class.perturb_image_positions()
     else:
@@ -631,25 +633,25 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         print('log flux_ratio likelihood: ', log_flux_ratio_likelihood)
         if use_imaging_data:
             print('BIC: ', bic)
+
     if use_imaging_data:
         kwargs_model_plot = {'multi_band_list': data_class.kwargs_data_joint['multi_band_list'],
                          'kwargs_model': kwargs_model,
                          'kwargs_params': kwargs_result}
     else:
-        kwargs_model_plot = {}
-        fitting_sequence = None
+        fitting_sequence = FittingSequence(data_class.kwargs_data_joint,
+                                           kwargs_model,
+                                           kwargs_constraints,
+                                           kwargs_likelihood,
+                                           kwargs_params,
+                                           mpi=False, verbose=verbose)
+        kwargs_result = fitting_sequence.best_fit()
+        kwargs_result['kwargs_lens'] = kwargs_solution
+        kwargs_model_plot = {'multi_band_list': data_class.kwargs_data_joint['multi_band_list'],
+                             'kwargs_model': kwargs_model,
+                             'kwargs_params': kwargs_result}
 
     if test_mode:
-
-        if use_imaging_data is False:
-            fitting_sequence = FittingSequence(data_class.kwargs_data_joint,
-                                               kwargs_model,
-                                               kwargs_constraints,
-                                               kwargs_likelihood,
-                                               kwargs_params,
-                                               mpi=False, verbose=verbose)
-            kwargs_result = fitting_sequence.best_fit()
-            kwargs_result['kwargs_lens'] = kwargs_solution
 
         from lenstronomy.Plots.model_plot import ModelPlot
         from lenstronomy.Plots import chain_plot

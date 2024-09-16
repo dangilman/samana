@@ -9,13 +9,13 @@ class _J2205(ImagingDataBase):
                  mask_quasar_images_for_logL=True):
 
         self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
-        z_lens = 0.51 # photometric
+        z_lens = 0.63 # measured by Ken Wong unpublished
         z_source = 1.85
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
         self._image_data_band = image_data_band
-        if image_data_band == 'HST814W':
-            from samana.Data.ImageData.j0248_f814W import psf_model, psf_error_map, image_data
+        if image_data_band == '814W':
+            from samana.Data.ImageData.j2205_f814W import psf_model, psf_error_map, image_data
             self._psf_estimate_init = psf_model
             self._psf_error_map_init = psf_error_map
             self._image_data = image_data
@@ -37,14 +37,15 @@ class _J2205(ImagingDataBase):
             self._image_data = image_data
             self._psf_supersampling_factor = 3
             self._deltaPix = 0.11092269738466404
-            self._window_size = 3.7713717110785776
-            self._ra_at_xy_0 = 2.1012954806936994
-            self._dec_at_xy_0 = 1.642004748534654
+            self._window_size = 3.549526316309249
+            self._ra_at_xy_0 = 1.977689863103727
+            self._dec_at_xy_0 = 1.545416233428675
             self._transform_pix2angle = np.array([[-0.01350855, -0.11009707],
                                                   [-0.11009707, 0.01350855]])
             self._background_rms = None
             self._exposure_time = None
             self._noise_map = noise_map
+
         else:
             raise Exception('image data type must be either HST814W or MIRI540W')
 
@@ -113,7 +114,7 @@ class _J2205(ImagingDataBase):
     @property
     def kwargs_numerics(self):
         kwargs_numerics = {
-            'supersampling_factor': int(self._supersample_factor),
+            'supersampling_factor': int(self._supersample_factor * max(1, self._psf_supersampling_factor)),
             'supersampling_convolution': False,  # try with True
             'point_source_supersampling_factor': self._psf_supersampling_factor}
         return kwargs_numerics
@@ -128,7 +129,7 @@ class _J2205(ImagingDataBase):
         return kwargs_psf
 
 class J2205_MIRI(_J2205):
-
+    band = 'MIRI'
     def __init__(self, supersample_factor=1):
         """
 
@@ -141,8 +142,8 @@ class J2205_MIRI(_J2205):
         """
         x_image = np.array([0.98748892, -0.21109039, -0.65488568, -0.36151285])
         y_image = np.array([0.14718422, -0.57865477, 0.02586794, 0.58560261])
-        horizontal_shift = 0.0
-        vertical_shift = 0.0
+        horizontal_shift = -0.005
+        vertical_shift = 0.012
         x_image += horizontal_shift
         y_image += vertical_shift
         image_position_uncertainties = [0.005] * 4 # 5 arcsec
@@ -156,7 +157,7 @@ class J2205_MIRI(_J2205):
 
 
 class J2205_HST(_J2205):
-
+    band = 'HST'
     def __init__(self, supersample_factor=1):
         """
 
@@ -167,16 +168,16 @@ class J2205_HST(_J2205):
         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
-        x_image = np.array([-0.45039279, -0.74654281, -0.305584  ,  0.90481785])
-        y_image = np.array([ 0.53608867, -0.01870007, -0.61616673,  0.10758113])
-        horizontal_shift = 0.0
-        vertical_shift = 0.0
+        x_image = np.array([0.97748892, -0.22109039, -0.66488568, -0.37151285])
+        y_image = np.array([0.15218422, -0.57365477, 0.03086794, 0.59060261])
+        horizontal_shift = -0.066
+        vertical_shift = -0.036
         x_image += horizontal_shift
         y_image += vertical_shift
         image_position_uncertainties = [0.005] * 4 # 5 arcsec
         flux_uncertainties = None
         magnifications = np.array([1.0] * 4)
         super(J2205_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties,
-                                        flux_uncertainties, image_data_band='HST814W',
+                                        flux_uncertainties, image_data_band='814W',
                                         uncertainty_in_fluxes=False, supersample_factor=supersample_factor)
 

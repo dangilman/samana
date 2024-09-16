@@ -130,7 +130,8 @@ class _J2205ModelBase(ModelBase):
                              'source_position_sigma': 0.0001,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
-                             'astrometric_likelihood': True
+                             'astrometric_likelihood': True,
+                             'custom_logL_addition': self.joint_lens_with_light_prior
                              }
         return kwargs_likelihood
 
@@ -148,14 +149,12 @@ class J2205ModelEPLM3M4Shear(_J2205ModelBase):
                                  #'SIS'
                                  ]
         kwargs_lens_macro = [
-            {'theta_E': 0.7565025832986526, 'gamma': 2.067171862904866, 'e1': -0.02628738394280838,
-             'e2': 0.010309735437349511, 'center_x': 0.00294258728356529,
-             'center_y': 0.003458909721253912, 'a3_a': 0.0, 'delta_phi_m3': -0.3139572526104714,
-             'a4_a': 0.0, 'delta_phi_m4': 1.8154962399165802},
-            {'gamma1': 0.0830198688490999, 'gamma2': 0.02321987501579647,
-             'ra_0': 0.0, 'dec_0': 0.0},
-            #{'theta_E': 0.0058908649559920164, 'center_x': -1.1201501675379746, 'center_y': 0.19552617530411562}
-        ]
+                {'theta_E': 0.7730230170044669, 'gamma': 2.147359102535725, 'e1': -0.23567956628857506,
+                 'e2': -0.06287521979067849, 'center_x': -0.03144469295868643, 'center_y': 0.006302096466668356,
+                 'a3_a': 0.0, 'delta_phi_m3': 0.1854133418529986, 'a4_a': 0.0, 'delta_phi_m4': 1.6209400356133206},
+            {'gamma1': 0.028751121688242592, 'gamma2': -0.002500086891443659, 'ra_0': 0.0, 'dec_0': 0.0}
+            ]
+
         redshift_list_macro = [self._data.z_lens, self._data.z_lens,
                                #self._data.z_lens
                                ]

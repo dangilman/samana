@@ -9,8 +9,8 @@ class _WGDJ0405(ImagingDataBase):
                  mask_quasar_images_for_logL=True):
 
         self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
-        z_lens = 0.3
-        z_source = 1.7
+        z_lens = 0.85 #photo-z
+        z_source = 1.70
 
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
