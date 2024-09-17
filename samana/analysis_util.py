@@ -32,7 +32,7 @@ def quick_setup(lens_ID):
     elif lens_ID == 'J0248_HST':
         from samana.Data.j0248 import J0248_HST as data_class
         from samana.Model.j0248_model import J0248ModelEPLM3M4Shear as model_class
-    elif lens_ID == 'J0259_HST':
+    elif lens_ID == 'J0259':
         from samana.Data.j0259 import J0259_HST_F814W as data_class
         from samana.Model.j0259_model import J0259ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J0259_HST_475X':
