@@ -4,9 +4,9 @@ import numpy as np
 
 class MockModelBase(ModelBase):
 
-    def __init__(self, data_class, kde_sampler=None, shapelets_order=None):
+    def __init__(self, data_class, shapelets_order=None):
         self._shapelets_order = shapelets_order
-        super(MockModelBase, self).__init__(data_class, kde_sampler)
+        super(MockModelBase, self).__init__(data_class, shapelets_order)
 
     def _setup_true_source_light_model(self, ra_source, dec_source):
 

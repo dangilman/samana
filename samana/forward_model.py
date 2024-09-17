@@ -367,6 +367,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         delta_x_image, delta_y_image = data_class.perturb_image_positions()
     else:
         delta_x_image, delta_y_image = np.zeros(len(data_class.x_image)), np.zeros(len(data_class.y_image))
+
     model_class = model(data_class, **kwargs_model_class)
     realization_dict, realization_samples, realization_param_names = sample_prior(kwargs_sample_realization)
     source_dict, source_samples, source_param_names = sample_prior(kwargs_sample_source)

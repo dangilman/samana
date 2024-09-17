@@ -26,6 +26,29 @@ class BaselineSmoothMock(MockBase):
                                     magnifications, astrometric_uncertainties, flux_ratio_uncertainties, image_data,
                                         super_sample_factor)
 
+class BaselineSmoothMock2(MockBase):
+
+    def __init__(self, super_sample_factor=1.0):
+
+        z_lens = 0.5
+        z_source = 2.0
+        x_image = np.array([-0.93397162,  0.63066603, -0.17847365,  0.75174637])
+        y_image = np.array([-0.68333845,  0.75152732,  0.93651728, -0.45780557])
+        magnifications_true = np.array([3.30166934, 8.02113972, 5.6683906 , 3.86032489])
+        magnification_measurement_errors = 0.0
+        magnifications = np.array(magnifications_true) + np.array(magnification_measurement_errors)
+        astrometric_uncertainties = [0.003] * 4
+        flux_ratio_uncertainties = None
+
+        self.a3a_true = 0.007
+        self.a4a_true = -0.012
+        self.delta_phi_m3_true = -np.pi/6/3
+        self.delta_phi_m4_true = np.pi/8/3
+
+        super(BaselineSmoothMock2, self).__init__(z_lens, z_source, x_image, y_image,
+                                    magnifications, astrometric_uncertainties, flux_ratio_uncertainties, image_data,
+                                        super_sample_factor)
+
 class BaselineSmoothMockModel(MockModelBase):
 
     def setup_source_light_model(self):
@@ -41,6 +64,7 @@ class BaselineSmoothMockModel(MockModelBase):
         kwargs_source_fixed = [{}]
         source_params = [kwargs_source_init, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source,
                          kwargs_upper_source]
+
         if self._shapelets_order is not None:
             source_model_list, source_params = \
                 self._add_source_shapelets(self._shapelets_order, source_model_list, source_params)

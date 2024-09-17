@@ -1,28 +1,9 @@
 from samana.Model.model_base import ModelBase
 import numpy as np
 import pickle
+from lenstronomy.Util.param_util import ellipticity2phi_q
 
-
-class _J0259ModelBase(ModelBase):
-
-    def update_kwargs_fixed_macro(self, lens_model_list_macro, kwargs_lens_fixed, kwargs_lens_init, macromodel_samples_fixed=None):
-
-        if macromodel_samples_fixed is not None:
-            for param_fixed in macromodel_samples_fixed:
-                if param_fixed == 'satellite_1_theta_E':
-                    kwargs_lens_fixed[2]['theta_E'] = macromodel_samples_fixed[param_fixed]
-                    kwargs_lens_init[2]['theta_E'] = macromodel_samples_fixed[param_fixed]
-                elif param_fixed == 'satellite_1_x':
-                    kwargs_lens_fixed[2]['center_x'] = macromodel_samples_fixed[param_fixed]
-                    kwargs_lens_init[2]['center_x'] = macromodel_samples_fixed[param_fixed]
-                elif param_fixed == 'satellite_1_y':
-                    kwargs_lens_fixed[2]['center_y'] = macromodel_samples_fixed[param_fixed]
-                    kwargs_lens_init[2]['center_y'] = macromodel_samples_fixed[param_fixed]
-                else:
-                    kwargs_lens_fixed[0][param_fixed] = macromodel_samples_fixed[param_fixed]
-                    kwargs_lens_init[0][param_fixed] = macromodel_samples_fixed[param_fixed]
-        return kwargs_lens_fixed, kwargs_lens_init
-
+class _HE1113(ModelBase):
 
     @property
     def kwargs_constraints(self):
@@ -36,13 +17,17 @@ class _J0259ModelBase(ModelBase):
            kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
         return kwargs_constraints
 
+    @property
+    def prior_lens(self):
+        return [[0, 'gamma', 2.0, 0.2]]
+
     def setup_source_light_model(self):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 0.05491642729478453, 'R_sersic': 0.25, 'n_sersic': 9.844143197166268,
-             'e1': -0.14484172331047837, 'e2': -0.32012494521000967, 'center_x': -0.05179906391880345,
-             'center_y': 0.012618365822868734}
+            {'amp': 130.69647908292973, 'R_sersic': 0.20642549995946133, 'n_sersic': 6.7061875334997545,
+             'e1': -0.3195751342552877, 'e2': -0.07275627531709833, 'center_x': -0.07024920320165151,
+             'center_y': -0.06335753077104779}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
@@ -69,31 +54,46 @@ class _J0259ModelBase(ModelBase):
 
     def setup_lens_light_model(self):
 
-        if self._data.band == 'F814W':
-            lens_light_model_list = ['SERSIC_ELLIPSE']
-            kwargs_lens_light_init = [
-                {'amp': 0.19300108583314002, 'R_sersic': 2.119520261644067, 'n_sersic': 9.892297335539526,
-                 'e1': -0.2830191256671343, 'e2': 0.2641521332834827, 'center_x': -0.008639688970935245,
-                 'center_y': 7.069954644379518e-05}
-            ]
-            kwargs_lens_light_sigma = [
-                {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
-            kwargs_lower_lens_light = [
-                {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10.0, 'center_y': -10.0}]
-            kwargs_upper_lens_light = [
-                {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
-            kwargs_lens_light_fixed = [{}]
-        else:
-            lens_light_model_list = []
-            kwargs_lens_light_init = []
-            kwargs_lens_light_sigma = []
-            kwargs_lower_lens_light = []
-            kwargs_upper_lens_light = []
-            kwargs_lens_light_fixed = []
+        lens_light_model_list = ['SERSIC']
+        kwargs_lens_light_init = [
+            {'amp': 19.345277702072867, 'R_sersic': 0.8491740518771395, 'n_sersic': 4.2622267147848545,
+             #'e1': 0.4053141855213741, 'e2': -0.4095417323775894,
+             'center_x': 0,
+             'center_y': 0}
+        ]
+        kwargs_lens_light_sigma = [
+            {'R_sersic': 0.05, 'n_sersic': 0.25,
+            # 'e1': 0.1, 'e2': 0.1,
+             'center_x': 0.05, 'center_y': 0.05}]
+        kwargs_lower_lens_light = [
+            {'R_sersic': 0.001, 'n_sersic': 0.5,
+             #'e1': -0.5, 'e2': -0.5,
+             'center_x': -0.2, 'center_y': -0.2}]
+        kwargs_upper_lens_light = [
+            {'R_sersic': 10, 'n_sersic': 10.0,
+             #'e1': 0.5, 'e2': 0.5,
+             'center_x': 0.2, 'center_y': 0.2}]
+        kwargs_lens_light_fixed = [{}]
+        add_uniform_light = True
+        if add_uniform_light:
+            kwargs_uniform, kwargs_uniform_sigma, kwargs_uniform_fixed, \
+            kwargs_uniform_lower, kwargs_uniform_upper = self.add_uniform_lens_light(20.0, 2.0)
+            lens_light_model_list += ['UNIFORM']
+            kwargs_lens_light_init += kwargs_uniform
+            kwargs_lens_light_sigma += kwargs_uniform_sigma
+            kwargs_lens_light_fixed += kwargs_uniform_fixed
+            kwargs_lower_lens_light += kwargs_uniform_lower
+            kwargs_upper_lens_light += kwargs_uniform_upper
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
-                                 kwargs_upper_lens_light]
+                             kwargs_upper_lens_light]
 
         return lens_light_model_list, lens_light_params
+
+class HE1113ModelEPLM3M4Shear(_HE1113):
+
+    def __init__(self, data_class, shapelets_order=None, shapelets_scale_factor=2.5/2):
+
+        super(HE1113ModelEPLM3M4Shear, self).__init__(data_class, shapelets_order, shapelets_scale_factor)
 
     @property
     def kwargs_likelihood(self):
@@ -102,15 +102,32 @@ class _J0259ModelBase(ModelBase):
                              'source_marg': False,
                              'image_position_uncertainty': 5e-3,
                              'source_position_likelihood': False,
-                             #'check_matched_source_position': False,
+                             # 'check_matched_source_position': False,
                              'source_position_sigma': 0.0001,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
-                             'astrometric_likelihood': True
+                             'astrometric_likelihood': True,
+                             'custom_logL_addition': self.joint_lens_with_light_prior
                              }
         return kwargs_likelihood
 
-class J0259ModelEPLM3M4Shear(_J0259ModelBase):
+    def joint_lens_with_light_prior(self, kwargs_lens,
+                                  kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                                  kwargs_extinction, kwargs_tracer_source):
+
+        center_x_lens, center_y_lens = kwargs_lens[0]['center_x'], kwargs_lens[0]['center_y']
+        center_x_light, center_y_light = kwargs_lens_light[0]['center_x'], kwargs_lens_light[0]['center_y']
+        sigma = 0.005
+
+        # penalize high ellipticity
+        e1, e2 = kwargs_lens[0]['e1'], kwargs_lens[0]['e2']
+        _, q = ellipticity2phi_q(e1, e2)
+        if q < 0.2:
+            return -1e9
+        q_prior = -0.5 * (q - 0.9) ** 2 / 0.1**2
+        return q_prior + \
+               -0.5 * ((center_x_lens - center_x_light)**2 / sigma ** 2 + (center_y_lens - center_y_light)**2 / sigma**2)
+
 
     @property
     def prior_lens(self):
@@ -120,10 +137,10 @@ class J0259ModelEPLM3M4Shear(_J0259ModelBase):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
         kwargs_lens_macro = [
-            {'theta_E': 0.7388976491475181, 'gamma': 2.0207714179139913, 'e1': -0.09341613499931459,
-             'e2': 0.02675840192710889, 'center_x': -0.009954860813042005, 'center_y': 0.007651162466162202,
-             'a3_a': 0.0, 'delta_phi_m3': 0.38268377239528223, 'a4_a': 0.0, 'delta_phi_m4': 1.6597784052207643},
-            {'gamma1': 0.015958642535888357, 'gamma2': -0.043547721967914246, 'ra_0': 0.0, 'dec_0': 0.0}
+            {'theta_E': 0.4996287175105153, 'gamma': 2.0, 'e1': -0.1,
+             'e2': 0.3, 'center_x': -0.07889078629463256, 'center_y': -0.04340801668649531, 'a3_a': 0.0,
+             'delta_phi_m3': -0.4791469952155035, 'a4_a': 0.0, 'delta_phi_m4': -0.34958810974263865},
+            {'gamma1': -0.133566681846644, 'gamma2': 0.4068824293999763, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]
@@ -134,14 +151,14 @@ class J0259ModelEPLM3M4Shear(_J0259ModelBase):
         kwargs_lens_init = kwargs_lens_macro
         kwargs_lens_sigma = [{'theta_E': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'e1': 0.2, 'e2': 0.2, 'gamma': 0.1,
                               'a4_a': 0.01, 'a3_a': 0.005, 'delta_phi_m3': np.pi/12, 'delta_phi_m4': np.pi/16},
-                             {'gamma1': 0.1, 'gamma2': 0.1}]
+                             {'gamma1': 0.05, 'gamma2': 0.05}]
         kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}]
         kwargs_lower_lens = [
-            {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.6, 'a4_a': -0.1,
+            {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.4, 'e2': -0.4, 'gamma': 1.6, 'a4_a': -0.1,
              'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
             {'gamma1': -0.5, 'gamma2': -0.5}]
         kwargs_upper_lens = [
-            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.4, 'a4_a': 0.1,
+            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.4, 'e2': 0.4, 'gamma': 2.6, 'a4_a': 0.1,
              'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
             {'gamma1': 0.5, 'gamma2': 0.5}]
         kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
