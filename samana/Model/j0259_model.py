@@ -104,6 +104,8 @@ class _J0259ModelBase(ModelBase):
                 # 'e1': 0.5, 'e2': 0.5,
                  'center_x': 0.15, 'center_y': 0.15}]
             kwargs_lens_light_fixed = [{}]
+        else:
+            raise Exception('image data band must be F814W or F475X')
         
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                                      kwargs_upper_lens_light]
