@@ -69,22 +69,45 @@ class _J0259ModelBase(ModelBase):
 
     def setup_lens_light_model(self):
 
-        lens_light_model_list = ['SERSIC_ELLIPSE']
-        kwargs_lens_light_init = [
-            {'amp': 0.19300108583314002, 'R_sersic': 2.119520261644067, 'n_sersic': 4.,
-             'e1': -0.2830191256671343, 'e2': 0.2641521332834827, 'center_x': -0.008639688970935245,
-             'center_y': 7.069954644379518e-05}
-        ]
-        kwargs_lens_light_sigma = [
-            {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.025, 'center_y': 0.025}]
-        kwargs_lower_lens_light = [
-            {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -0.15, 'center_y': -0.15}]
-        kwargs_upper_lens_light = [
-            {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 0.15, 'center_y': 0.15}]
-        kwargs_lens_light_fixed = [{}]
-
+        if self._data.band == 'F814W':
+            lens_light_model_list = ['SERSIC_ELLIPSE']
+            kwargs_lens_light_init = [
+                {'amp': 0.19300108583314002, 'R_sersic': 2.119520261644067, 'n_sersic': 4.,
+                 'e1': -0.2830191256671343, 'e2': 0.2641521332834827, 'center_x': -0.008639688970935245,
+                 'center_y': 7.069954644379518e-05}
+            ]
+            kwargs_lens_light_sigma = [
+                {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.025, 'center_y': 0.025}]
+            kwargs_lower_lens_light = [
+                {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -0.15, 'center_y': -0.15}]
+            kwargs_upper_lens_light = [
+                {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 0.15, 'center_y': 0.15}]
+            kwargs_lens_light_fixed = [{}]
+        elif self._data.band == 'F475X':
+            lens_light_model_list = ['SERSIC']
+            kwargs_lens_light_init = [
+                {'amp': 0.19300108583314002, 'R_sersic': 2.119520261644067, 'n_sersic': 4.,
+                 #'e1': -0.2830191256671343, 'e2': 0.2641521332834827,
+                 'center_x': -0.008639688970935245,
+                 'center_y': 7.069954644379518e-05}
+            ]
+            kwargs_lens_light_sigma = [
+                {'R_sersic': 0.05, 'n_sersic': 0.25,
+                 #'e1': 0.1, 'e2': 0.1,
+                 'center_x': 0.025, 'center_y': 0.025}]
+            kwargs_lower_lens_light = [
+                {'R_sersic': 0.001, 'n_sersic': 0.5,
+                 #'e1': -0.5, 'e2': -0.5,
+                 'center_x': -0.15, 'center_y': -0.15}]
+            kwargs_upper_lens_light = [
+                {'R_sersic': 10, 'n_sersic': 10.0,
+                # 'e1': 0.5, 'e2': 0.5,
+                 'center_x': 0.15, 'center_y': 0.15}]
+            kwargs_lens_light_fixed = [{}]
+        
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
-                                 kwargs_upper_lens_light]
+                                     kwargs_upper_lens_light]
+
 
         return lens_light_model_list, lens_light_params
 
