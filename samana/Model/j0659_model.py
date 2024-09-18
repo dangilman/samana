@@ -42,9 +42,8 @@ class _J0659ModelBase(ModelBase):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 20.215500840896514, 'R_sersic': 0.535828105755751, 'n_sersic': 3.5031445732306996,
-             'e1': -0.06075127345425873, 'e2': -0.12197554996051976, 'center_x': -0.4352570132330683,
-             'center_y': -0.1651730931686073}
+            {'amp': 1, 'R_sersic': 0.5331752790914783, 'n_sersic': 4.532654633814931, 'e1': -0.04550846486298198,
+             'e2': -0.058821437755717534, 'center_x': -0.48514946880547394, 'center_y': -0.1408439960705049}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
@@ -74,11 +73,10 @@ class _J0659ModelBase(ModelBase):
         star_x, star_y = self._data.satellite_or_star_coords
         lens_light_model_list = ['SERSIC_ELLIPSE', 'SERSIC']
         kwargs_lens_light_init = [
-            {'amp': 13.516912534037878, 'R_sersic': 1.712298878612369, 'n_sersic': 5.123003443985907,
-             'e1': -0.032855515305943876, 'e2': 0.03825195714362419,
-             'center_x': -0.04563960680503889, 'center_y': -0.06770412876385598},
-            {'amp': 185.9911238011588, 'R_sersic': 0.0647064660040841, 'n_sersic': 2.117934331728986,
-             'center_x': star_x, 'center_y': star_y}
+            {'amp': 1, 'R_sersic': 1.7332945516937548, 'n_sersic': 7.462004413953694, 'e1': -0.017669802784214886,
+             'e2': 0.01671647962957627, 'center_x': -0.05528819042555275, 'center_y': -0.051185485411311835},
+            {'amp': 1, 'R_sersic': 0.05057338818931155, 'n_sersic': 0.2236662426180082,
+             'center_x': 0.34739428972240965, 'center_y': 1.5488179539833586}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1},
@@ -134,11 +132,11 @@ class J0659ModelEPLM3M4Shear(_J0659ModelBase):
         star_x, star_y = self._data.satellite_or_star_coords
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR', 'SIS']
         kwargs_lens_macro = [
-            {'theta_E': 2.0660465177687146, 'gamma': 2.079549399581213, 'e1': -0.07946352634794089,
-             'e2': -0.012733177059530844, 'center_x': 0.03615136202117883, 'center_y': -0.3051609096102663,
-             'a3_a': 0.0, 'delta_phi_m3': -0.514425464585209, 'a4_a': 0.0, 'delta_phi_m4': 2.206146012186553},
-            {'gamma1': 0.03989929747294372, 'gamma2': 0.10530382643975887, 'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.35, 'center_x': 0.3232445684962102, 'center_y': 1.5607906855285532}
+            {'theta_E': 2.0560946477202506, 'gamma': 2.195359768326245, 'e1': -0.06723241831767837,
+             'e2': -0.07828322080286804, 'center_x': 0.04304460904762777, 'center_y': -0.2662114594268754, 'a3_a': 0.0,
+             'delta_phi_m3': 0.46158799357466707, 'a4_a': 0.0, 'delta_phi_m4': 2.249405428020844},
+            {'gamma1': 0.0591525470668722, 'gamma2': 0.09640933007569322, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.41722530247551476, 'center_x': 0.34739428972240965, 'center_y': 1.5488179539833586}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1, 2]

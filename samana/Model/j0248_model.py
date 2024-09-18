@@ -44,9 +44,8 @@ class _J0248ModelBase(ModelBase):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 23.35984915838074, 'R_sersic': 0.22511701842879356, 'n_sersic': 5.397013375751805,
-             'e1': -0.07801161753154146, 'e2': -0.2996357417729264, 'center_x': -0.019131838034802,
-             'center_y': -0.030241629048872905}
+            {'amp': 1, 'R_sersic': 0.26219910257627055, 'n_sersic': 5.399976003581934, 'e1': -0.0329394246562758,
+             'e2': -0.2857287451621411, 'center_x': -0.021935677881362792, 'center_y': -0.02821781963990118}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
@@ -75,9 +74,8 @@ class _J0248ModelBase(ModelBase):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
         kwargs_lens_light_init = [
-            {'amp': 1.8784406803320632, 'R_sersic': 1.9547792005808309, 'n_sersic': 8.899817057938693,
-             'e1': -0.49691318783408106, 'e2': 0.09090826659460105, 'center_x': -0.013819178774481182,
-             'center_y': 0.02166412019827017}
+            {'amp': 1, 'R_sersic': 1.951611778756676, 'n_sersic': 8.430429252970972, 'e1': -0.45025384692884124,
+             'e2': 0.0232362216123425, 'center_x': -0.009169388285897678, 'center_y': 0.018467575267426005}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
@@ -131,10 +129,10 @@ class J0248ModelEPLM3M4Shear(_J0248ModelBase):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
         kwargs_lens_macro = [
-            {'theta_E': 0.7686204093365641, 'gamma': 2.1, 'e1': -0.33182317204051687,
-             'e2': 0.139707054706287, 'center_x': -0.015419130434651691, 'center_y': 0.02512272512863281, 'a3_a': 0.0,
-             'delta_phi_m3': 0.37031501325175353, 'a4_a': 0.0, 'delta_phi_m4': 2.5116949743342243},
-            {'gamma1': -0.22178050994931756, 'gamma2': -0.04712930456479351, 'ra_0': 0.0, 'dec_0': 0.0}
+            {'theta_E': 0.7687960612550767, 'gamma': 2.2410325205444295, 'e1': -0.34495762037959515,
+             'e2': 0.11301488060563106, 'center_x': -0.017098729440660182, 'center_y': 0.019981601854230337,
+             'a3_a': 0.0, 'delta_phi_m3': 0.3340318259923854, 'a4_a': 0.0, 'delta_phi_m4': 2.3397916137369346},
+            {'gamma1': -0.23111843838242324, 'gamma2': -0.045479894843781316, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]

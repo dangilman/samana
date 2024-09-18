@@ -39,10 +39,10 @@ class _HE0435NircamModelBase(ModelBase):
     def setup_source_light_model(self):
 
         source_model_list = ['SERSIC_ELLIPSE']
-        kwargs_source_init = [{'amp': 12.762614394305798, 'R_sersic': 0.39590114178693536,
-                               'n_sersic': 4.863336193864723, 'e1': 0.46607695086747697,
-                               'e2': -0.08944166486586004, 'center_x': -0.0038489712649072867,
-                               'center_y': 0.4293321095266837}]
+        kwargs_source_init = [
+            {'amp': 1, 'R_sersic': 0.3892257693980378, 'n_sersic': 4.915919454978656, 'e1': 0.46046081501195335,
+             'e2': -0.049815847984719, 'center_x': -0.01680259927818816, 'center_y': 0.45620002662567777}
+        ]
         kwargs_source_sigma = [{'R_sersic': 0.1, 'n_sersic': 0.5, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.05,
                                 'center_y': 0.05}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
@@ -72,9 +72,8 @@ class _HE0435NircamModelBase(ModelBase):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
         kwargs_lens_light_init = [
-            {'amp': 240.39705836443383, 'R_sersic': 1.142505751021887, 'n_sersic': 5.032553298757182,
-             'e1': -0.09853898574784263, 'e2': -0.030818041666594232, 'center_x': 0.02670406547709474,
-             'center_y': 0.04278417580821746}
+            {'amp': 1, 'R_sersic': 1.1265598099394096, 'n_sersic': 5.008379817149501, 'e1': -0.09623570702210597,
+             'e2': -0.03129380001724382, 'center_x': 0.02652869188286569, 'center_y': 0.04276423429425168}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
@@ -117,12 +116,11 @@ class HE0435ModelNircamEPLM3M4Shear(_HE0435NircamModelBase):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR', 'SIS']
         kwargs_lens_macro = [
-            {'theta_E': 1.1826081417961722, 'gamma': 2.118618947592548, 'e1': -0.08072956888029029,
-             'e2': -0.034967049528181644, 'center_x': 0.013609412056721684,
-             'center_y': 0.04363667548815146, 'a3_a': 0.0,
-             'delta_phi_m3': -0.34686333286833254, 'a4_a': 0.0, 'delta_phi_m4': -0.03780246745368501},
-            {'gamma1': 0.030183980671845585, 'gamma2': 0.03001601588630484, 'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.36940399665014434, 'center_x': self.gx_phys, 'center_y': self.gy_phys}
+            {'theta_E': 1.180943352708307, 'gamma': 2.135741300072584, 'e1': -0.08019714584843007,
+             'e2': -0.0349862277275131, 'center_x': 0.013680938966111337, 'center_y': 0.044582561975761555, 'a3_a': 0.0,
+             'delta_phi_m3': -0.3400141112155623, 'a4_a': 0.0, 'delta_phi_m4': -0.13902096266160333},
+            {'gamma1': 0.03054215641227033, 'gamma2': 0.029168118917460642, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.35703001841356063, 'center_x': -0.2153620089164569, 'center_y': 3.8582546199894088}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens,
                                0.78]
@@ -134,18 +132,19 @@ class HE0435ModelNircamEPLM3M4Shear(_HE0435NircamModelBase):
         kwargs_lens_init = kwargs_lens_macro
         kwargs_lens_sigma = [{'theta_E': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'e1': 0.2, 'e2': 0.2, 'gamma': 0.1,
                               'a4_a': 0.01, 'a3_a': 0.005, 'delta_phi_m3': np.pi/12, 'delta_phi_m4': np.pi/16},
-                             {'gamma1': 0.05, 'gamma2': 0.05}, {'theta_E': 0.05, 'center_x': 0.05, 'center_y': 0.05}]
+                             {'gamma1': 0.05, 'gamma2': 0.05},
+                             {'theta_E': 0.05, 'center_x': 0.05, 'center_y': 0.05}]
         kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}, {}]
         kwargs_lower_lens = [
             {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.5, 'a4_a': -0.1,
              'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
             {'gamma1': -0.5, 'gamma2': -0.5},
-            {'theta_E': 0.001, 'center_x': -10, 'center_y': -10}]
+            {'theta_E': 0.001, 'center_x': self.gx_phys-0.3, 'center_y': self.gy_phys-0.3}]
         kwargs_upper_lens = [
             {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.5, 'a4_a': 0.1,
              'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
             {'gamma1': 0.5, 'gamma2': 0.5},
-        {'theta_E': 0.5, 'center_x': 10, 'center_y': 10}]
+        {'theta_E': 0.5, 'center_x': self.gx_phys+0.3, 'center_y': self.gy_phys+0.3}]
         kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
                                                                              kwargs_lens_init, macromodel_samples_fixed)
         lens_model_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_lens_fixed, kwargs_lower_lens,

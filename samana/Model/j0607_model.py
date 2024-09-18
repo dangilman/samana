@@ -44,9 +44,7 @@ class _J0607ModelBase(ModelBase):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 55.87261280431018, 'R_sersic': 0.10949481017007116, 'n_sersic': 3.217817338202921,
-             'e1': -0.41196382505934187, 'e2': 0.3554377492709047, 'center_x': 0.1312246765545628,
-             'center_y': -0.030922789515471172}
+            
         ]
         kwargs_source_sigma = [{'R_sersic': 0.1, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
@@ -138,11 +136,11 @@ class J0607ModelEPLM3M4Shear(_J0607ModelBase):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR', 'SIS']
         kwargs_lens_macro = [
-            {'theta_E': 0.7914023987900118, 'gamma': 1.9532184280418983, 'e1': -0.060903054119497625,
-             'e2': -0.06867996861203478, 'center_x': -0.0203358657823683, 'center_y': -0.00853927145055995, 'a3_a': 0.0,
-             'delta_phi_m3': 0.03299588779381648, 'a4_a': 0.0, 'delta_phi_m4': -0.01178890904656773},
-            {'gamma1': -0.042973564814613, 'gamma2': -0.06280032937532329, 'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.06519438212608547, 'center_x': 1.2309214216458084, 'center_y': 0.21179942361751686}
+            {'theta_E': 0.7665380341970411, 'gamma': 2.258385703655036, 'e1': -0.13009344455005006,
+             'e2': 0.12672103625203257, 'center_x': -0.035669817732942886, 'center_y': -0.031124438659745474,
+             'a3_a': 0.0, 'delta_phi_m3': -0.47250958816529176, 'a4_a': 0.0, 'delta_phi_m4': -0.023940879105198373},
+            {'gamma1': -0.03714968702936837, 'gamma2': 0.03306856418097416, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.17733887903691697, 'center_x': 1.1680706701938912, 'center_y': 0.21718034582828402}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1, 2]
@@ -153,7 +151,8 @@ class J0607ModelEPLM3M4Shear(_J0607ModelBase):
         kwargs_lens_init = kwargs_lens_macro
         kwargs_lens_sigma = [{'theta_E': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'e1': 0.2, 'e2': 0.2, 'gamma': 0.1,
                               'a4_a': 0.01, 'a3_a': 0.005, 'delta_phi_m3': np.pi/12, 'delta_phi_m4': np.pi/16},
-                             {'gamma1': 0.05, 'gamma2': 0.05}, {'theta_E': 0.1, 'center_x': 0.02, 'center_y': 0.02}]
+                             {'gamma1': 0.05, 'gamma2': 0.05},
+                             {'theta_E': 0.1, 'center_x': 0.02, 'center_y': 0.02}]
         kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}, {}]
         kwargs_lower_lens = [
             {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.5, 'a4_a': -0.1,
@@ -163,7 +162,7 @@ class J0607ModelEPLM3M4Shear(_J0607ModelBase):
             {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 3.5, 'a4_a': 0.1,
              'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
             {'gamma1': 0.5, 'gamma2': 0.5},
-            {'theta_E': 0.4, 'center_x': 10, 'center_y': 10}]
+            {'theta_E': 0.5, 'center_x': 10, 'center_y': 10}]
         kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
                                                                              kwargs_lens_init, macromodel_samples_fixed)
         lens_model_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_lens_fixed, kwargs_lower_lens,
