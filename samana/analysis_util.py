@@ -230,8 +230,8 @@ def quick_setup(lens_ID):
         from samana.Data.wgd2038 import WGD2038_HST as data_class
         from samana.Model.wgd2038_model import WGD2038ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J0405':
-        from samana.Data.wgdj0405 import WGDJ0405_HST as data_class
-        from samana.Model.wgdj0405_model import WGDJ0405ModelEPLM3M4Shear as model_class
+        from samana.Data.j0405 import J0405_HST as data_class
+        from samana.Model.j0405_model import J0405ModelEPLM3M4Shear as model_class
     elif lens_ID == 'MG0414':
         from samana.Data.mg0414 import MG014_MIRI as data_class
         from samana.Model.mg0414_model import MG0414ModelEPLM3M4Shear as model_class

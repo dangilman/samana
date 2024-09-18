@@ -1,8 +1,8 @@
 from samana.Data.data_base import ImagingDataBase
 import numpy as np
-from samana.Data.ImageData.wgdj0405_814w import image_data, psf_error_map, psf_model
+from samana.Data.ImageData.j0405_814w import image_data, psf_error_map, psf_model
 
-class _WGDJ0405(ImagingDataBase):
+class _DESJ0405(ImagingDataBase):
 
     def __init__(self, x_image, y_image, magnifications, image_position_uncertainties,
                  flux_uncertainties, uncertainty_in_fluxes, supersample_factor,
@@ -23,7 +23,7 @@ class _WGDJ0405(ImagingDataBase):
         multi_band_list = [image_band]
         kwargs_data_joint = {'multi_band_list': multi_band_list, 'multi_band_type': 'multi-linear'}
         likelihood_mask, likelihood_mask_imaging_weights = self.likelihood_masks(x_image, y_image)
-        super(_WGDJ0405, self).__init__(z_lens, z_source,
+        super(_DESJ0405, self).__init__(z_lens, z_source,
                                         kwargs_data_joint, x_image, y_image,
                                         magnifications, image_position_uncertainties, flux_uncertainties,
                                         uncertainty_in_fluxes, keep_flux_ratio_index, likelihood_mask,
@@ -65,10 +65,10 @@ class _WGDJ0405(ImagingDataBase):
 
         deltaPix = 0.04
         window_size = 72 * deltaPix
-        ra_at_xy_0 = 1.441213
-        dec_at_xy_0 = -1.4394622
-        transform_pix2angle = np.array([[-4.00187502e-02, -1.48942746e-05],
-                                        [-1.48908009e-05, 3.99999777e-02]])
+        ra_at_xy_0 = 1.441213025
+        dec_at_xy_0 = -1.43946221
+        transform_pix2angle = np.array([[-4.00187709e-02, -1.49197263e-05],
+       [-1.49162211e-05,  3.99999777e-02]])
         return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
 
     @property
@@ -88,46 +88,19 @@ class _WGDJ0405(ImagingDataBase):
                       }
         return kwargs_psf
 
-# class WGDJ0405_HST(_WGDJ0405):
-#
-#     def __init__(self, supersample_factor=1):
-#
-#         image_position_uncertainty = [0.005] * 4 # m.a.s.
-#         normalized_magnifications = np.array([0.8, 0.52, 1.0, 0.94])
-#         flux_uncertainties = np.array([0.04, 0.04/0.65, 0.03/1.25, 0.04/1.17])
-#         uncertainty_in_fluxes = True
-#         super(WGDJ0405_HST, self).__init__(image_position_uncertainty, flux_uncertainties, normalized_magnifications,
-#                                                        uncertainty_in_fluxes, supersample_factor)
-
-class WGDJ0405_HST(_WGDJ0405):
+class J0405_HST(_DESJ0405):
 
     def __init__(self, supersample_factor=1):
 
-        x_image = np.array([0.693, -0.372, 0.349, -0.53])
-        y_image = np.array([-0.28, -0.605, 0.556, 0.417])
-        horizontal_shift = 0.0
-        vertical_shift = 0.0
+        x_image = np.array([ 0.693, -0.372,  0.349, -0.53 ])
+        y_image = np.array([-0.29 , -0.615,  0.546,  0.407])
+        horizontal_shift = 0.00
+        vertical_shift = 0.007
         x_image += horizontal_shift
         y_image += vertical_shift
         image_position_uncertainties = [0.005] * 4  # m.a.s.
         magnifications = np.array([1.00, 0.70, 1.07, 1.28])
         flux_uncertainties = np.array([0.03] * 3)
         uncertainty_in_fluxes = False
-        super(WGDJ0405_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties,
+        super(J0405_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties,
                                         flux_uncertainties, uncertainty_in_fluxes, supersample_factor)
-
-# xc = np.array([1.0656, 0.0026, 0.7222, -0.1562]) - 0.35
-# yc = np.array([0.3204, -0.0017, 1.1589, 1.0206]) - 0.6
-# fc = np.array([1.0, 0.508, 0.920, 0.658])
-#
-# lens = WGDJ0405_HST()
-# flux_ratios = np.round(lens.magnifications/lens.magnifications[0],2)
-#
-# colors = ['k', 'r','g','m']
-# for i in range(0, 4):
-#     plt.scatter(lens.x_image[i], lens.y_image[i],color=colors[i])
-#     plt.scatter(xc[i], yc[i], color=colors[i],marker='+')
-#     plt.annotate(str(flux_ratios[i]),
-#                  xy=(lens.x_image[i], lens.y_image[i]),color=colors[i])
-#
-# plt.show()

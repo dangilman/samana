@@ -59,6 +59,64 @@ class Output(object):
                 self._macromodel_samples_dict = None
 
     @classmethod
+    def from_raw_output(cls, output_path, job_index_min, job_index_max, fitting_kwargs_list=None,
+                        macromodel_sample_names=None, print_missing_files=False):
+
+        param_names = None
+        init = True
+        for i in range(job_index_min, job_index_max + 1):
+
+            folder = output_path + '/job_' + str(i) + '/'
+            try:
+                params = np.loadtxt(folder + 'parameters.txt', skiprows=1)
+            except:
+                if print_missing_files:
+                    print('params file ' + folder + 'parameters.txt not found... ')
+                continue
+            try:
+                fluxes = np.loadtxt(folder + 'fluxes.txt')
+            except:
+                if print_missing_files:
+                    print('fluxes file ' + folder + 'fluxes.txt not found... ')
+                continue
+            try:
+                macrosamples = np.loadtxt(folder + 'macromodel_samples.txt', skiprows=1)
+            except:
+                if print_missing_files:
+                    print('macromodel samples file ' + folder + 'macromodel_samples.txt not found... ')
+                continue
+            # check the arrays are all the same length
+            size_params = params.shape[0]
+            size_fluxes = fluxes.shape[0]
+            size_macro = macrosamples.shape[0]
+            if size_params != size_fluxes:
+                print('parameters and fluxes have different shape for ' + folder)
+                continue
+            if size_params != size_macro:
+                print('parameters and macromodel samples have different shape for ' + folder)
+                continue
+            if param_names is None:
+                with open(folder + 'parameters.txt', 'r') as f:
+                    param_names = f.readlines(1)[0].split()
+                f.close()
+            if macromodel_sample_names is None:
+                with open(folder + 'macromodel_samples.txt', 'r') as f:
+                    macromodel_sample_names = f.readlines(1)[0].split()
+                f.close()
+            if init:
+                parameters = params
+                magnifications = fluxes
+                macromodel_samples = macrosamples
+                init = False
+            else:
+                parameters = np.vstack((parameters, params))
+                magnifications = np.vstack((magnifications, fluxes))
+                macromodel_samples = np.vstack((macromodel_samples, macrosamples))
+        print('compiled ' + str(parameters.shape[0]) + ' realizations.')
+        return Output(parameters, magnifications, macromodel_samples, fitting_kwargs_list,
+                      param_names, macromodel_sample_names)
+
+    @classmethod
     def join(self, output1, output2):
 
         params = np.vstack((output1.parameters, output2.parameters))
@@ -69,7 +127,7 @@ class Output(object):
         flux_ratio_summary_statistic = np.append(output1.flux_ratio_summary_statistic,
                                                  output2.flux_ratio_summary_statistic)
         flux_ratio_likelihood = np.append(output1.flux_ratio_likelihood,
-                                                 output2.flux_ratio_likelihood)
+                                          output2.flux_ratio_likelihood)
         return Output(params, mags, macro_samples, None, param_names, macromodel_sample_names,
                       flux_ratio_summary_statistic, flux_ratio_likelihood)
 
@@ -196,64 +254,6 @@ class Output(object):
                 samples[:, i] = self.macromodel_samples_dict[param_name]
 
         return samples
-
-    @classmethod
-    def from_raw_output(cls, output_path, job_index_min, job_index_max, fitting_kwargs_list=None,
-                        macromodel_sample_names=None, print_missing_files=False):
-
-        param_names = None
-        init = True
-        for i in range(job_index_min, job_index_max+1):
-
-            folder = output_path + '/job_'+str(i)+'/'
-            try:
-                params = np.loadtxt(folder + 'parameters.txt', skiprows=1)
-            except:
-                if print_missing_files:
-                    print('params file '+folder+'parameters.txt not found... ')
-                continue
-            try:
-                fluxes = np.loadtxt(folder + 'fluxes.txt')
-            except:
-                if print_missing_files:
-                    print('fluxes file ' + folder + 'fluxes.txt not found... ')
-                continue
-            try:
-                macrosamples = np.loadtxt(folder + 'macromodel_samples.txt', skiprows=1)
-            except:
-                if print_missing_files:
-                    print('macromodel samples file ' + folder + 'macromodel_samples.txt not found... ')
-                continue
-            # check the arrays are all the same length
-            size_params = params.shape[0]
-            size_fluxes = fluxes.shape[0]
-            size_macro = macrosamples.shape[0]
-            if size_params != size_fluxes:
-                print('parameters and fluxes have different shape for '+folder)
-                continue
-            if size_params != size_macro:
-                print('parameters and macromodel samples have different shape for '+folder)
-                continue
-            if param_names is None:
-                with open(folder + 'parameters.txt', 'r') as f:
-                    param_names = f.readlines(1)[0].split()
-                f.close()
-            if macromodel_sample_names is None:
-                with open(folder + 'macromodel_samples.txt', 'r') as f:
-                    macromodel_sample_names = f.readlines(1)[0].split()
-                f.close()
-            if init:
-                parameters = params
-                magnifications = fluxes
-                macromodel_samples = macrosamples
-                init = False
-            else:
-                parameters = np.vstack((parameters, params))
-                magnifications = np.vstack((magnifications, fluxes))
-                macromodel_samples = np.vstack((macromodel_samples, macrosamples))
-        print('compiled '+str(parameters.shape[0])+' realizations.')
-        return Output(parameters, magnifications, macromodel_samples, fitting_kwargs_list,
-                 param_names, macromodel_sample_names)
 
     @property
     def param_dict(self):

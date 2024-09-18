@@ -123,8 +123,9 @@ class _H1413ModelBase(ModelBase):
 
 class H1413ModelEPLM3M4Shear(_H1413ModelBase):
 
-    def __init__(self, data_class, shapelets_order=None, shapelets_scale_factor=2.5/2):
-
+    def __init__(self, data_class, shapelets_order=None, shapelets_scale_factor=2.0):
+        # shapelets scale factor set to 2; lens model changes with increasing nmax suggesting
+        # shapelets are fitting psf noise
         super(H1413ModelEPLM3M4Shear, self).__init__(data_class, shapelets_order, shapelets_scale_factor)
 
     @property
