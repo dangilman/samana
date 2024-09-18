@@ -72,7 +72,7 @@ class ModelBase(object):
 
     @property
     def population_gamma_prior(self):
-        return [[0, 'gamma', 2.08, 0.1]]
+        return [[0, 'gamma', 2.08, 0.2]]
 
     def lens_mass_lens_light_alignment(self, kwargs_lens,
                 kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
