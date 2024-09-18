@@ -111,7 +111,7 @@ class HE0435ModelNircamEPLM3M4Shear(_HE0435NircamModelBase):
 
     @property
     def prior_lens(self):
-        return self.population_gamma_prior + [[0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005]]
+        return self.population_gamma_prior
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
@@ -122,7 +122,7 @@ class HE0435ModelNircamEPLM3M4Shear(_HE0435NircamModelBase):
              'center_y': 0.04363667548815146, 'a3_a': 0.0,
              'delta_phi_m3': -0.34686333286833254, 'a4_a': 0.0, 'delta_phi_m4': -0.03780246745368501},
             {'gamma1': 0.030183980671845585, 'gamma2': 0.03001601588630484, 'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.36940399665014434, 'center_x': self._data.gx, 'center_y': self._data.gy}
+            {'theta_E': 0.36940399665014434, 'center_x': self.gx_phys, 'center_y': self.gy_phys}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens,
                                0.78]

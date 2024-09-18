@@ -12,8 +12,137 @@ from lenstronomy.Util.analysis_util import bic_model
 __all__ = ['nmax_bic_minimize',
            'cut_on_data',
            'simulation_output_to_density',
-           'likelihood_function_change',
-           'quick_setup']
+           'quick_setup',
+           'numerics_setup']
+
+def default_rendering_area(lens_ID=None,
+                           data_class=None,
+                           model_class=None,
+                           opening_angle_factor=6.0):
+    """
+
+    :param lens_ID:
+    :param data_class:
+    :param model_class:
+    :param opening_angle_factor:
+    :return:
+    """
+    if data_class is None or model_class is None:
+        _data_class, _model_class = quick_setup(lens_ID)
+        model = _model_class(_data_class())
+    else:
+        # note that data class must be instantiated when passed in
+        model = model_class(data_class)
+    thetaE = model.setup_lens_model()[-1][0][0]['theta_E']
+    return opening_angle_factor * thetaE
+
+def numerics_setup(lens_ID):
+    """
+    Return the recommended factors by which to rescale ray tracing grids for magnification
+    calculations
+    :param lens_ID: a string that identifies a lens
+    :return:
+    """
+    if lens_ID == 'B1422':
+        rescale_grid_size = 1.25
+        rescale_grid_res = 1.25
+    elif lens_ID == 'B2045':
+        raise Exception('not yet implemented')
+    elif lens_ID == 'HE0435':
+        rescale_grid_size = 1.
+        rescale_grid_res = 1.4
+    elif lens_ID == 'J0248':
+        rescale_grid_size = 1.0
+        rescale_grid_res = 1.4
+    elif lens_ID == 'J0248_HST':
+        rescale_grid_size = 1.0
+        rescale_grid_res = 1.4
+    elif lens_ID in ['J0259', 'J0259_HST_475X']:
+        rescale_grid_size = 1.4
+        rescale_grid_res = 1.4
+    elif lens_ID == 'J0607':
+        rescale_grid_res = 1.4
+        rescale_grid_size = 4.0
+    elif lens_ID == 'J0608':
+        rescale_grid_size = 4.0
+        rescale_grid_res = 1.4
+    elif lens_ID == 'J0659':
+        rescale_grid_size = 2.5
+        rescale_grid_res = 1.25
+    elif lens_ID == 'J0803':
+        rescale_grid_size = 2.5
+        rescale_grid_res = 1.4
+    elif lens_ID == 'J0924':
+        rescale_grid_size = 1.5
+        rescale_grid_res = 1.4
+    elif lens_ID in ['J1042', 'J1042_814W']:
+        rescale_grid_size = 4.0
+        rescale_grid_res = 1.4
+    elif lens_ID == 'J1131':
+        rescale_grid_res = 1.4
+        rescale_grid_size = 2.5
+    elif lens_ID == 'J1251':
+        rescale_grid_res = 1.4
+        rescale_grid_size = 2.0
+    elif lens_ID == 'J1537':
+        rescale_grid_res = 1.5
+        rescale_grid_size = 1.0
+    elif lens_ID == 'J2026':
+        rescale_grid_res = 1.4
+        rescale_grid_size = 1.2
+    elif lens_ID == 'J2205_MIRI':
+        rescale_grid_res = 1.4
+        rescale_grid_size = 1.5
+    elif lens_ID == 'J2205':
+        rescale_grid_res = 1.4
+        rescale_grid_size = 1.5
+    elif lens_ID == 'J2344':
+        rescale_grid_res = 1.4
+        rescale_grid_size = 4.0
+    elif lens_ID == 'MG0414':
+        rescale_grid_res = 1.5
+        rescale_grid_size = 2.0
+    elif lens_ID in ['PG1115', 'PG1115_NIRCAM']:
+        rescale_grid_res = 1.4
+        rescale_grid_size = 2.0
+    elif lens_ID == 'PSJ0147':
+        rescale_grid_res = 1.4
+        rescale_grid_size = 2.0
+    elif lens_ID == 'PSJ1606':
+        rescale_grid_res = 1.4
+        rescale_grid_size = 1.0
+    elif lens_ID == 'RXJ0911':
+        rescale_grid_res = 1.4
+        rescale_grid_size = 1.0
+    elif lens_ID == 'RXJ1131':
+        raise Exception('not yet implemented')
+    elif lens_ID == 'WFI2033':
+        rescale_grid_res = 1.4
+        rescale_grid_size = 1.0
+    elif lens_ID == 'WGD2038':
+        rescale_grid_res = 1.4
+        rescale_grid_size = 1.
+    elif lens_ID == 'J0405':
+        rescale_grid_res = 1.4
+        rescale_grid_size = 2.0
+    elif lens_ID == 'MG0414':
+        rescale_grid_res = 1.5
+        rescale_grid_size = 2.0
+    elif lens_ID == 'M1134':
+        rescale_grid_res = 0.5
+        rescale_grid_size = 0.4
+    elif lens_ID == 'H1413':
+        rescale_grid_res = 1.4
+        rescale_grid_size = 1.0
+    elif lens_ID == 'J2017':
+        rescale_grid_res = 1.4
+        rescale_grid_size = 2.0
+    elif lens_ID == 'J2145':
+        rescale_grid_res = 1.4
+        rescale_grid_size = 1.
+    else:
+        raise Exception('lens ID '+str(lens_ID)+' not recognized!')
+    return rescale_grid_size, rescale_grid_res
 
 def quick_setup(lens_ID):
 
@@ -424,23 +553,3 @@ def simulation_output_to_density(output, data, param_names_plot, kwargs_cut_on_d
     from trikde.pdfs import DensitySamples
     density = DensitySamples(samples, param_names, weights, **kwargs_density)
     return density, out, weights
-
-def likelihood_function_change(like1, like2, param_ranges, n_draw=50000, nbins=5):
-
-    from trikde.pdfs import InterpolatedLikelihood
-    param_names = ['p1', 'p2']
-    interp1 = InterpolatedLikelihood(like1, param_names, param_ranges)
-    interp2 = InterpolatedLikelihood(like2, param_names, param_ranges)
-    s1 = interp1.sample(n_draw, print_progress=False)
-    s2 = interp2.sample(n_draw, print_progress=False)
-    h1, _, _ = np.histogram2d(s1[:,0], s1[:,1], bins=nbins, range=(param_ranges[0], param_ranges[1]), density=True)
-    h2, _, _ = np.histogram2d(s2[:,0], s2[:,1], bins=nbins, range=(param_ranges[0], param_ranges[1]), density=True)
-    # h1 /= np.max(h1)
-    # h2 /= np.max(h2)
-    delta_h = h2 / h1 - 1
-    total_diff = np.sum(np.absolute(delta_h)) / nbins ** 2
-    return delta_h.T, h1.T, h2.T, total_diff
-
-# def likelihood_function_change(pdf1, pdf2):
-#
-#     from trikde.

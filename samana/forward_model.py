@@ -25,7 +25,9 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   image_data_grid_resolution_rescale=1.0,
                   use_imaging_data=True, fitting_sequence_kwargs=None, test_mode=False,
                   use_decoupled_multiplane_approximation=True, fixed_realization_list=None,
-                  macromodel_readout_function=None, kappa_scale_subhalos=1.0, log10_bound_mass_cut=None,
+                  macromodel_readout_function=None,
+                  kappa_scale_subhalos=1.0,
+                  log10_bound_mass_cut=None,
                   parallelize=False):
     """
 
@@ -57,9 +59,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     :param fitting_sequence_kwargs:
     :param test_mode:
     :param fixed_realization_list:
-    :param macromodel_readout_function: a function that takes as input the keyword arguments of the optimized
-    lens model and the dictionary of fixed macromodel parameters, and returns an array of macromodel parameters to save,
-    as well as a list of parameter names
+    :param macromodel_readout_function:
     :param kappa_scale_subhalos:
     :param log10_bound_mass_cut:
     :param parallelize:
@@ -163,7 +163,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              use_decoupled_multiplane_approximation,
                              fixed_realization,
                              macromodel_readout_function,
-                             kappa_scale_subhalos, log10_bound_mass_cut))
+                             kappa_scale_subhalos,
+                             log10_bound_mass_cut))
 
             pool = Pool(num_threads)
             output = pool.starmap(forward_model_single_iteration, args)
@@ -228,7 +229,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 kwargs_model_class, astrometric_uncertainty,
                                                 use_imaging_data, fitting_sequence_kwargs, test_mode,
                                                 use_decoupled_multiplane_approximation, fixed_realization,
-                                                macromodel_readout_function, kappa_scale_subhalos, log10_bound_mass_cut)
+                                                macromodel_readout_function,
+                                                kappa_scale_subhalos, log10_bound_mass_cut)
 
             seed_counter += 1
             acceptance_rate_counter += 1
@@ -357,8 +359,10 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                    fitting_kwargs_list=None,
                                    test_mode=False,
                                    use_decoupled_multiplane_approximation=True,
-                                   fixed_realization=None, macromodel_readout_function=None,
-                                   kappa_scale_subhalos=1.0, log10_bound_mass_cut=None):
+                                   fixed_realization=None,
+                                   macromodel_readout_function=None,
+                                   kappa_scale_subhalos=1.0,
+                                   log10_bound_mass_cut=None):
 
     # set the random seed for reproducibility
     np.random.seed(seed)
@@ -409,16 +413,19 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     if preset_realization:
         realization = realization_init
     else:
+        if verbose:
+            print('realization has ' + str(len(realization_init.halos)) + ' halos')
         if log10_bound_mass_cut is not None:
             realization_init = realization_init.filter_bound_mass(10 ** log10_bound_mass_cut)
+            if verbose:
+                print('realization has ' + str(len(realization_init.halos)) + ' halos after cut on '
+                             'bound mass above 10^'+str(log10_bound_mass_cut))
         realization, _, _, lens_model_align, _ = align_realization(realization_init, kwargs_model_align['lens_model_list'],
                                     kwargs_model_align['lens_redshift_list'], kwargs_lens_align,
                                     data_class.x_image,
                                     data_class.y_image)
     lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
         kwargs_mass_sheet={'log_mlow_sheets': log_mlow_mass_sheets, 'kappa_scale_subhalos': kappa_scale_subhalos})
-    if verbose:
-        print('realization has '+str(len(realization.halos))+' halos')
     grid_resolution_image_data = pixel_size * image_data_grid_resolution_rescale
     astropy_cosmo = realization.lens_cosmo.cosmo.astropy
     kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split = model_class.setup_kwargs_model(
@@ -547,9 +554,12 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     if verbose:
         print('computed magnifications in '+str(np.round(tend - t0, 1))+' seconds')
         print('magnifications: ', magnifications)
-
+    print(kwargs_solution)
+    print('\n')
+    print(macromodel_samples_fixed_dict)
     if macromodel_readout_function is not None:
-        samples_macromodel, param_names_macro = macromodel_readout_function(kwargs_solution, macromodel_samples_fixed_dict)
+        samples_macromodel, param_names_macro = macromodel_readout_function(kwargs_solution,
+                                                                            macromodel_samples_fixed_dict)
     else:
         param_names_macro = []
         samples_macromodel = []
