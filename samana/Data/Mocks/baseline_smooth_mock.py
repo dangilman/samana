@@ -32,16 +32,16 @@ class BaselineSmoothMock2(MockBase):
 
         z_lens = 0.5
         z_source = 2.0
-        x_image = np.array([-0.84326519,  0.8030123 ,  0.71362723, -0.37730769])
-        y_image = np.array([-0.74292258,  0.60814782, -0.58130108,  0.84726822])
-        magnifications_true = np.array([3.64153496, 5.87713019, 4.15475819, 3.71503428])
+        x_image = np.array([-0.82048683,  0.85373953,  0.76768133, -0.33714435])
+        y_image = np.array([-0.79143733,  0.50150954, -0.52368755,  0.84802597])
+        magnifications_true = np.array([3.50971414, 6.43019764, 5.01844287, 3.56347228])
         magnification_measurement_errors = 0.0
         magnifications = np.array(magnifications_true) + np.array(magnification_measurement_errors)
         astrometric_uncertainties = [0.003] * 4
         flux_ratio_uncertainties = None
 
-        self.a3a_true = 0.007
-        self.a4a_true = -0.012
+        self.a3a_true = 0.01
+        self.a4a_true = -0.015
         self.delta_phi_m3_true = -np.pi/6/3
         self.delta_phi_m4_true = np.pi/8/3
 
