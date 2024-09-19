@@ -56,9 +56,9 @@ class _WFI2033ModelNircamBase(ModelBase):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 40.57362839802861, 'R_sersic': 1.6936969326523754, 'n_sersic': 2.820570918339504,
-             'e1': -0.017979285490389536, 'e2': 0.12396425472340569,
-             'center_x': -0.803771357783285, 'center_y': 0.09455264015883025}
+            {'amp': -4.2172017403304665, 'R_sersic': 1.4072048028204784, 'n_sersic': 1.9472450764190539,
+             'e1': 0.008038756473571228, 'e2': 0.0706953392676213, 'center_x': -0.7440302190692125,
+             'center_y': 0.11167600073774643}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.1, 'n_sersic': 0.5, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.05,
                                 'center_y': 0.05}]
@@ -91,14 +91,14 @@ class _WFI2033ModelNircamBase(ModelBase):
                                  'SERSIC',
                                  'SERSIC_ELLIPSE']
         kwargs_lens_light_init = [
-            {'amp': 49.51310100756443, 'R_sersic': 2.293677859010436, 'n_sersic': 5.069048710732732,
-             'e1': -0.07940714254149718, 'e2': -0.07215991606503612,
-             'center_x': 0.006600066794036362, 'center_y': 0.006736630164022189},
-            {'amp': 5447.427444616187, 'R_sersic': 0.03347337490673392, 'n_sersic': 3.400480858467691,
-             'center_x': self._data.gx1, 'center_y': self._data.gy1},
-            {'amp': 49.51310100756443, 'R_sersic': 2.293677859010436, 'n_sersic': 5.069048710732732,
-             'e1': -0.07940714254149718, 'e2': -0.07215991606503612,
-             'center_x': 0.006600066794036362, 'center_y': 0.006736630164022189}
+            {'amp': -0.9109199773152901, 'R_sersic': 2.267929030468463, 'n_sersic': 4.527214657123246,
+             'e1': -0.329886025950307, 'e2': 0.05232357447738071, 'center_x': 0.3837970795906828,
+             'center_y': -0.10588018026389344},
+            {'amp': 9295.352803369131, 'R_sersic': 0.027114349427617816, 'n_sersic': 2.9632338353717778,
+             'center_x': 0.2732173973136928, 'center_y': 2.0044491965512194},
+            {'amp': 47.80297973362198, 'R_sersic': 2.3173100018030532, 'n_sersic': 5.3255548535305035,
+             'e1': -0.06316829190379669, 'e2': 0.095078858184226, 'center_x': 0.02669387346426591,
+             'center_y': -0.032771162997085004}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1},
@@ -143,7 +143,7 @@ class WFI2033NircamModelEPLM3M4Shear(_WFI2033ModelNircamBase):
         return [[0, 'gamma', 2.0, 0.1], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005],
                 [2, 'center_x', self._data.gx1, 0.05],
                 [2, 'center_y', self._data.gy1, 0.05],
-                [2, 'theta_E', 0.05, 0.05],
+                [2, 'theta_E', 0.05, 0.1],
                 #[3, 'center_x', self.gx2_phys, 0.1],
                 #[3, 'center_y', self.gy2_phys, 0.1],
                 #[3, 'theta_E', 0.9, 0.1]
@@ -153,14 +153,12 @@ class WFI2033NircamModelEPLM3M4Shear(_WFI2033ModelNircamBase):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR', 'SIS', 'SIS']
         kwargs_lens_macro = [
-            {'theta_E': 1.0110239486954742, 'gamma': 2.1125290679347235, 'e1': -0.029328753233607605,
-             'e2': 0.10359533142456581,
-             'center_x': 0.02933523196297733, 'center_y': -0.018796865225972778,
-             'a3_a': 0.0, 'delta_phi_m3': 0.14639552295858974, 'a4_a': 0.0,
-             'delta_phi_m4': 1.4586544438223308},
-            {'gamma1': 0.17293132011488435, 'gamma2': -0.07984153404118256, 'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.07669619849915402, 'center_x': self._data.gx1, 'center_y': self._data.gy1},
-            {'theta_E': 0.9, 'center_x': self.gx2_phys, 'center_y': self.gy2_phys}
+            {'theta_E': 1.00073793658843, 'gamma': 2.117963495872616, 'e1': -0.0431186975201338,
+             'e2': 0.10661592549492657, 'center_x': 0.02864739269529095, 'center_y': -0.01591947145914082, 'a3_a': 0.0,
+             'delta_phi_m3': 0.3650468716845697, 'a4_a': 0.0, 'delta_phi_m4': 0.8765892899103462},
+            {'gamma1': 0.18179565065440584, 'gamma2': -0.08206855255720198, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.07397118742374756, 'center_x': 0.2732173973136928, 'center_y': 2.0044491965512194},
+            {'theta_E': 0.9620899082928352, 'center_x': -3.6842267732585654, 'center_y': 0.12452244355145467}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens,
                                self._data.z_lens, 0.745]

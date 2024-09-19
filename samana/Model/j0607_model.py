@@ -44,7 +44,9 @@ class _J0607ModelBase(ModelBase):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            
+            {'amp': 84.8180577186615, 'R_sersic': 0.07243432884286893, 'n_sersic': 3.532247375770279,
+             'e1': -0.4138452008662636, 'e2': 0.47357432454894705, 'center_x': 0.15337834947843565,
+             'center_y': -0.030516429748098886}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.1, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
