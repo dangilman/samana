@@ -65,7 +65,7 @@ class ModelBase(object):
             {'amp': 0.00001, 'sigma': 0.0, 'center_x': center_x - 10, 'center_y': center_y - 10,
              'e1': -0.5, 'e2': -0.5}]
         kwargs_upper_source = [
-            {'amp': 100, 'sigma': 0.5, 'center_x': center_x + 10, 'center_y': center_y + 10,
+            {'amp': 100, 'sigma': 0.2, 'center_x': center_x + 10, 'center_y': center_y + 10,
              'e1': 0.5, 'e2': 0.5}]
         kwargs_source_fixed = [{}]
         return source_model_list, kwargs_source, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source, kwargs_upper_source

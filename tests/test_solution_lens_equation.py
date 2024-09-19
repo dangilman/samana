@@ -11,7 +11,7 @@ class TestSolutionLensEquation(object):
     def setup_method(self):
         pass
 
-    def _test_solution(self, lens_ID):
+    def _test_solution(self, lens_ID, num_decimal=5):
         print(lens_ID)
         data, model = quick_setup(lens_ID)
         data_class = data()
@@ -34,27 +34,27 @@ class TestSolutionLensEquation(object):
                     (source_y[1] - source_y[3]) ** 2 + \
                     (source_y[2] - source_y[3]) ** 2)
         dr = np.sqrt(dx + dy)
-        npt.assert_almost_equal(dr, 0.0, 5)
+        npt.assert_almost_equal(dr, 0.0, num_decimal)
+
+    # def test_b1422(self):
+    #
+    #     lens_ID = 'B1422'
+    #     self._test_solution(lens_ID)
 
     def test_h1413(self):
 
         lens_ID = 'H1413'
         self._test_solution(lens_ID)
 
-    def test_0607(self):
-
-        lens_ID = 'J0607'
-        self._test_solution(lens_ID)
-
-    def test_0659(self):
-
-        lens_ID = 'J0659'
-        self._test_solution(lens_ID)
-
     def test_he0435(self):
 
         lens_ID = 'HE0435'
         self._test_solution(lens_ID)
+
+    # def test_0147(self):
+    #
+    #     lens_ID = 'J0147'
+    #     self._test_solution(lens_ID)
 
     def test_j0248(self):
 
@@ -71,11 +71,107 @@ class TestSolutionLensEquation(object):
         lens_ID = 'J0405'
         self._test_solution(lens_ID)
 
-    def test_0405(self):
+    def test_0607(self):
+
+        lens_ID = 'J0607'
+        self._test_solution(lens_ID)
+
+    def test_0608(self):
+
+        lens_ID = 'J0608'
+        self._test_solution(lens_ID)
+
+    def test_0659(self):
+
+        lens_ID = 'J0659'
+        self._test_solution(lens_ID)
+
+    def test_0803(self):
+
+        lens_ID = 'J0803'
+        self._test_solution(lens_ID)
+
+    def test_0924(self):
+
+        lens_ID = 'J0924'
+        self._test_solution(lens_ID)
+
+    def test_1042(self):
+
+        lens_ID = 'J1042'
+        self._test_solution(lens_ID, num_decimal=4)
+
+    def test_1131(self):
+
+        lens_ID = 'J1131'
+        self._test_solution(lens_ID)
+
+    def test_1251(self):
+
+        lens_ID = 'J1251'
+        self._test_solution(lens_ID)
+
+    def test_1537(self):
+
+        lens_ID = 'J1537'
+        self._test_solution(lens_ID)
+
+    def test_2017(self):
+
+        lens_ID = 'J2017'
+        self._test_solution(lens_ID)
+
+    def test_2145(self):
+
+        lens_ID = 'J2145'
+        self._test_solution(lens_ID)
+
+    def test_2205(self):
+
+        lens_ID = 'J2205'
+        self._test_solution(lens_ID)
+
+    def test_2344(self):
+
+        lens_ID = 'J2344'
+        self._test_solution(lens_ID)
+
+    # def test_m1134(self):
+    #
+    #     lens_ID = 'M1134'
+    #     self._test_solution(lens_ID)
+
+    # def test_mg0414(self):
+    #
+    #     lens_ID = 'MG0414'
+    #     self._test_solution(lens_ID)
+
+    def test_PG1115(self):
+
+        lens_ID = 'PG1115'
+        self._test_solution(lens_ID)
+
+    def test_1606(self):
+
+        lens_ID = 'PSJ1606'
+        self._test_solution(lens_ID)
+
+    # def test_rxj0911(self):
+    #
+    #     lens_ID = 'RXJ0911'
+    #     self._test_solution(lens_ID)
+
+    def test_wfi2033(self):
+
+        lens_ID = 'WFI2033'
+        self._test_solution(lens_ID)
+
+    def test_2038(self):
 
         lens_ID = 'WGD2038'
         self._test_solution(lens_ID)
-#
+
+# #
 # t = TestSolutionLensEquation()
 # t.setup_method()
 # t.test_0607()
@@ -84,6 +180,7 @@ class TestSolutionLensEquation(object):
 # t.test_he0435()
 # t.test_j0248()
 # t.test_j0259()
+# t.test_2038()
 
 if __name__ == "__main__":
     pytest.main()

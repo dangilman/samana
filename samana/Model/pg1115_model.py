@@ -23,9 +23,11 @@ class _PG1115ModelBase(ModelBase):
     def setup_source_light_model(self):
 
         source_model_list = ['SERSIC_ELLIPSE']
-        kwargs_source_init = [{'amp': -20.407274893240064, 'R_sersic': 0.052540130125684065, 'n_sersic': 4.331968391160492,
-                               'e1': 0.2782730826254883, 'e2': 0.16533044121050533,
-                               'center_x': -0.02279524982395882, 'center_y': 0.10913994190859941}]
+        kwargs_source_init = [
+            {'amp': 26.508023671135287, 'R_sersic': 0.07782968089342661, 'n_sersic': 4.403179084267738,
+             'e1': 0.20890919096969454, 'e2': 0.1916880202287354, 'center_x': -0.022522942468825483,
+             'center_y': 0.12563466846140517}
+        ]
         kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
@@ -52,10 +54,11 @@ class _PG1115ModelBase(ModelBase):
     def setup_lens_light_model(self):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
-        kwargs_lens_light_init = [{'amp': 19.955157255029476, 'R_sersic': 0.5858534784778057,
-                                   'n_sersic': 4.5124234985501275, 'e1': -0.0026156936554636713,
-                                   'e2': -0.003054592678386649, 'center_x': -0.040095823814030936,
-                                   'center_y': -0.017461414443662115}]
+        kwargs_lens_light_init = [
+            {'amp': 17.79328660409551, 'R_sersic': 0.6246009314839133, 'n_sersic': 4.77641982343332,
+             'e1': -0.01152404571524898, 'e2': -0.02358775359542008, 'center_x': -0.039368012822374406,
+             'center_y': -0.017595760001515248}
+        ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
         kwargs_lower_lens_light = [
@@ -93,10 +96,10 @@ class PG1115ModelEPLM3M4Shear(_PG1115ModelBase):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
         kwargs_lens_macro = [
-            {'theta_E': 1.1461341424419702, 'gamma': 1.980070468859567, 'e1': 0.05700939271959815,
-             'e2': -0.03742794555646753, 'center_x': -0.0510201756957317, 'center_y': -0.0007169141231261475,
-             'a4_a': 0.0, 'a3_a': 0.0, 'delta_phi_m3': 0.0, 'delta_phi_m4': 0.0},
-            {'gamma1': -0.033686413266210254, 'gamma2': -0.10739086480786286, 'ra_0': 0, 'dec_0': 0}
+            {'theta_E': 1.1466296178228925, 'gamma': 2.0014133180207025, 'e1': 0.07143218306427672,
+             'e2': -0.03166973868176683, 'center_x': -0.05379887696364931, 'center_y': 0.008165180380356397,
+             'a3_a': 0.0, 'delta_phi_m3': -0.005969269433780858, 'a4_a': 0.0, 'delta_phi_m4': 0.20840045113672415},
+            {'gamma1': -0.028738087587014873, 'gamma2': -0.10888032218076507, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]
