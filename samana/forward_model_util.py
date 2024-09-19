@@ -141,23 +141,13 @@ def ray_angles(alpha_x, alpha_y, lens_model, kwargs_lens, zsource):
     zstart = 0.
     for zi in full_redshift_list_sorted:
         assert len(lens_model.lens_model_list) == len(kwargs_lens)
-        x0, y0, alpha_x, alpha_y = lens_model.lens_model.ray_shooting_partial(x0, y0, alpha_x, alpha_y, zstart, zi,
+        x0, y0, alpha_x, alpha_y = lens_model.lens_model.ray_shooting_partial_comoving(x0, y0, alpha_x, alpha_y, zstart, zi,
                                                                               kwargs_lens)
         d = cosmo_calc(0., zi)
         x_angle_list.append(x0 / d)
         y_angle_list.append(y0 / d)
         tz.append(d)
         zstart = zi
-        # if hasattr(lens_model, 'lens_model'):
-        #     x0, y0, alpha_x, alpha_y = lens_model.lens_model.ray_shooting_partial(x0, y0, alpha_x, alpha_y, zstart, zi,
-        #                                                                           kwargs_lens)
-        #     d = cosmo_calc(0., zi)
-        # elif hasattr(lens_model, 'ray_shooting_partial'):
-        #     x0, y0, alpha_x, alpha_y = lens_model.ray_shooting_partial(x0, y0, alpha_x, alpha_y, zstart, zi,
-        #                                                                kwargs_lens)
-        #     d = cosmo_calc(zi).value
-        # else:
-        #     raise Exception('the supplied lens model class does not have a ray shooting partial method')
     return x_angle_list, y_angle_list, tz
 
 def interpolate_ray_paths(x_image, y_image, lens_model, kwargs_lens, zsource,
@@ -180,9 +170,7 @@ def interpolate_ray_paths(x_image, y_image, lens_model, kwargs_lens, zsource,
 
     # print('coordinate: ', (x_image, y_image))
     for (xi, yi) in zip(x_image, y_image):
-
         angle_x, angle_y, tz = ray_angles(xi, yi, lens_model, kwargs_lens, zsource)
-
         if terminate_at_source:
             angle_x[-1] = source_x
             angle_y[-1] = source_y
@@ -192,7 +180,8 @@ def interpolate_ray_paths(x_image, y_image, lens_model, kwargs_lens, zsource,
 
     return ray_angles_x, ray_angles_y
 
-def align_realization(realization, lens_model_list_macro, redshift_list_macro, kwargs_lens_init, x_image, y_image):
+def align_realization(realization, lens_model_list_macro, redshift_list_macro,
+                      kwargs_lens_init, x_image, y_image, astropy_cosmo):
     """
 
     :param realization:
@@ -201,18 +190,17 @@ def align_realization(realization, lens_model_list_macro, redshift_list_macro, k
     :param kwargs_lens_init:
     :param x_image:
     :param y_image:
+    :param astropy_cosmo:
     :return:
     """
     z_source = realization.lens_cosmo.z_source
-    cosmo = realization.lens_cosmo.cosmo.astropy
     lens_model = LensModel(lens_model_list_macro, lens_redshift_list=redshift_list_macro,
-                           z_source=z_source, multi_plane=True, cosmo=cosmo)
-
-    solver = Solver4Point(lens_model, solver_type='PROFILE_SHEAR')
-    kwargs_lens, _ = solver.constraint_lensmodel(x_image, y_image, kwargs_lens_init)
-    source_x, source_y = lens_model.ray_shooting(x_image[0], y_image[0], kwargs_lens)
-    ray_interp_x, ray_interp_y = interpolate_ray_paths(
-        x_image, y_image, lens_model, kwargs_lens, z_source, terminate_at_source=True,
+                           z_source=z_source, multi_plane=True, cosmo=astropy_cosmo)
+    #solver = Solver4Point(lens_model, solver_type='PROFILE_SHEAR')
+    #kwargs_lens, _ = solver.constraint_lensmodel(x_image, y_image, kwargs_lens_init)
+    source_x, source_y = lens_model.ray_shooting(x_image[0], y_image[0], kwargs_lens_init)
+    ray_interp_x_image, ray_interp_y_image = interpolate_ray_paths(
+        x_image, y_image, lens_model, kwargs_lens_init, z_source, terminate_at_source=True,
         source_x=source_x, source_y=source_y)
     ### Now compute the centroid of the light cone as the coordinate centroid of the individual images
     z_range = np.linspace(0, z_source, 100)
@@ -220,8 +208,8 @@ def align_realization(realization, lens_model_list_macro, redshift_list_macro, k
     angular_coordinates_x = []
     angular_coordinates_y = []
     for di in distances:
-        x_coords = [ray_x(di) for i, ray_x in enumerate(ray_interp_x)]
-        y_coords = [ray_y(di) for i, ray_y in enumerate(ray_interp_y)]
+        x_coords = [ray_x(di) for i, ray_x in enumerate(ray_interp_x_image)]
+        y_coords = [ray_y(di) for i, ray_y in enumerate(ray_interp_y_image)]
         x_center = np.mean(x_coords)
         y_center = np.mean(y_coords)
         angular_coordinates_x.append(x_center)
@@ -229,7 +217,7 @@ def align_realization(realization, lens_model_list_macro, redshift_list_macro, k
     ray_interp_x = [interp1d(distances, angular_coordinates_x)]
     ray_interp_y = [interp1d(distances, angular_coordinates_y)]
     realization = realization.shift_background_to_source(ray_interp_x[0], ray_interp_y[0])
-    return realization, ray_interp_x, ray_interp_y, lens_model, kwargs_lens
+    return realization, ray_interp_x, ray_interp_y, lens_model, kwargs_lens_init
 
 def flux_ratio_summary_statistic(normalized_magnifcations_measured, model_magnifications,
                           measurement_uncertainties, keep_flux_ratio_index, uncertainty_in_fluxes):

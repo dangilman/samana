@@ -421,9 +421,11 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                 print('realization has ' + str(len(realization_init.halos)) + ' halos after cut on '
                              'bound mass above 10^'+str(log10_bound_mass_cut))
         realization, _, _, lens_model_align, _ = align_realization(realization_init, kwargs_model_align['lens_model_list'],
-                                    kwargs_model_align['lens_redshift_list'], kwargs_lens_align,
+                                    kwargs_model_align['lens_redshift_list'],
+                                    kwargs_lens_align,
                                     data_class.x_image,
-                                    data_class.y_image)
+                                    data_class.y_image,
+                                    astropy_cosmo)
     lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
         kwargs_mass_sheet={'log_mlow_sheets': log_mlow_mass_sheets, 'kappa_scale_subhalos': kappa_scale_subhalos})
     grid_resolution_image_data = pixel_size * image_data_grid_resolution_rescale

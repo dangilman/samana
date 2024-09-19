@@ -36,10 +36,10 @@ class TestSolutionLensEquation(object):
         dr = np.sqrt(dx + dy)
         npt.assert_almost_equal(dr, 0.0, num_decimal)
 
-    # def test_b1422(self):
-    #
-    #     lens_ID = 'B1422'
-    #     self._test_solution(lens_ID)
+    def test_b1422(self):
+
+        lens_ID = 'B1422'
+        self._test_solution(lens_ID)
 
     def test_h1413(self):
 
@@ -170,17 +170,6 @@ class TestSolutionLensEquation(object):
 
         lens_ID = 'WGD2038'
         self._test_solution(lens_ID)
-
-# #
-# t = TestSolutionLensEquation()
-# t.setup_method()
-# t.test_0607()
-# t.test_0659()
-# t.test_h1413()
-# t.test_he0435()
-# t.test_j0248()
-# t.test_j0259()
-# t.test_2038()
 
 if __name__ == "__main__":
     pytest.main()
