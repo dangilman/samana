@@ -51,10 +51,10 @@ class TestSolutionLensEquation(object):
         lens_ID = 'HE0435'
         self._test_solution(lens_ID)
 
-    # def test_0147(self):
-    #
-    #     lens_ID = 'J0147'
-    #     self._test_solution(lens_ID)
+    def test_0147(self):
+
+        lens_ID = 'PSJ0147'
+        self._test_solution(lens_ID)
 
     def test_j0248(self):
 

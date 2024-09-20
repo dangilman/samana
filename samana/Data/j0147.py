@@ -33,7 +33,8 @@ class _J0147(ImagingDataBase):
 
         elif image_data_type == 'MIRI540W':
             from samana.Data.ImageData.j0147_MIRI540W import psf_model, image_data, noise_map
-            self._custom_mask = np.ones_like(image_data)
+            from samana.Data.ImageData.j0147_mirimask import _custom_mask_0147
+            self._custom_mask = _custom_mask_0147
             self._psf_estimate_init = psf_model
             self._psf_error_map_init = None
             self._image_data = image_data
@@ -86,7 +87,7 @@ class _J0147(ImagingDataBase):
                 likelihood_mask,
                 x_image,
                 y_image,
-                self._image_data.shape, radius_arcsec=0.5
+                self._image_data.shape, radius_arcsec=0.3
             )
             return likelihood_mask, likelihood_mask_imaging_weights
         else:
