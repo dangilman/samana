@@ -51,7 +51,7 @@ class _M1134ModelBase(ModelBase):
         kwargs_source_sigma = [{'R_sersic': 0.1, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
-        kwargs_upper_source = [{'R_sersic': 2.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
+        kwargs_upper_source = [{'R_sersic': 5.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
         kwargs_source_fixed = [{}]
 
         if self._shapelets_order is not None:
@@ -115,7 +115,7 @@ class _M1134ModelBase(ModelBase):
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True,
-                             #'custom_logL_addition': self.joint_lens_with_light_prior
+                             'custom_logL_addition': self.joint_lens_with_light_prior
                              }
         return kwargs_likelihood
 
