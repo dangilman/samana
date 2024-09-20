@@ -34,10 +34,21 @@ class PowerLawParamManager(object):
         """
         lam = theta_E / np.sqrt(q)
         a_m_phys = a_m_measured * lam
+        # note that the multipole classes in lenstronomy do not apply this scaling, but the multipole
+        # terms in EPL_MULTIPOLE_M3M4, EPL_BOXY_DISKY, and EPL_MULTIPOLE_M3M4_ELL do automatically
+        # apply the scaling (so this method isn't used for those classes)
         return a_m_phys
 
-    def param_chi_square_penalty(self, args):
-        return 0.
+    def param_chi_square_penalty(self, args, q_min=0.19):
+        e1 = args[3]
+        e2 = args[4]
+        c = np.sqrt(e1 ** 2 + e2 ** 2)
+        c = np.minimum(c, 0.9999)
+        q = (1 - c) / (1 + c)
+        if q < q_min:
+            return 1e9
+        else:
+            return 0.
 
     @property
     def to_vary_index(self):
@@ -69,7 +80,6 @@ class PowerLawParamManager(object):
         """
 
         args = self.kwargs_to_args(self.kwargs_lens)
-
         if re_optimize:
             thetaE_shift = 0.005
             center_shift = 0.01

@@ -1,32 +1,8 @@
 import numpy as np
 from samana.Data.Mocks.base import MockBase
-from samana.Data.ImageData.baseline_smooth_mock import image_data
 from samana.Model.Mocks.model_mock_lens_simple import MockModelBase
 
-class BaselineSmoothMock(MockBase):
-
-    def __init__(self, super_sample_factor=1.0):
-
-        z_lens = 0.5
-        z_source = 2.0
-        x_image = [-0.92770948,  0.61449948, -0.21134454,  0.75025513]
-        y_image = [-0.69051723,  0.76790815,  0.9271273 , -0.45817762]
-        magnifications_true = [3.48573513, 7.48256353, 5.05235091, 3.6984534 ]
-        magnification_measurement_errors = 0.0
-        magnifications = np.array(magnifications_true) + np.array(magnification_measurement_errors)
-        astrometric_uncertainties = [0.003] * 4
-        flux_ratio_uncertainties = None
-
-        self.a3a_true =0.0
-        self.a4a_true = 0.0
-        self.delta_phi_m3_true = 0.0
-        self.delta_phi_m4_true = 0.0
-
-        super(BaselineSmoothMock, self).__init__(z_lens, z_source, x_image, y_image,
-                                    magnifications, astrometric_uncertainties, flux_ratio_uncertainties, image_data,
-                                        super_sample_factor)
-
-class BaselineSmoothMock2(MockBase):
+class BaselineSmoothMockMultipole1(MockBase):
 
     def __init__(self, super_sample_factor=1.0):
 
@@ -35,19 +11,43 @@ class BaselineSmoothMock2(MockBase):
         x_image = np.array([-0.91217529, 0.7063176, -0.08999974, 0.81378602])
         y_image = np.array([-0.75935938, 0.63169673, 0.92588999, -0.33868768])
         magnifications_true = np.array([3.14983536, 9.25295622, 5.92590197, 4.64533735])
+        from samana.Data.ImageData.baseline_smooth_mock_multipole1 import image_data
         magnification_measurement_errors = 0.0
         magnifications = np.array(magnifications_true) + np.array(magnification_measurement_errors)
         astrometric_uncertainties = [0.003] * 4
         flux_ratio_uncertainties = None
-
         self.a3a_true = 0.008
         self.a4a_true = -0.01
         self.delta_phi_m3_true = 0.0
         self.delta_phi_m4_true = 0.0
 
-        super(BaselineSmoothMock2, self).__init__(z_lens, z_source, x_image, y_image,
+        super(BaselineSmoothMockMultipole1, self).__init__(z_lens, z_source, x_image, y_image,
                                     magnifications, astrometric_uncertainties, flux_ratio_uncertainties, image_data,
                                         super_sample_factor)
+
+class BaselineSmoothMockMultipole2(MockBase):
+
+    def __init__(self, super_sample_factor=1.0):
+
+        z_lens = 0.5
+        z_source = 2.0
+        x_image = np.array([1.02461803, -0.33993018, 0.3224046, -0.56761925])
+        y_image = np.array([0.31456194, -1.00188299, -0.97542732, 0.66453182])
+        magnifications_true = np.array([6.38659953, 9.89147693, 10.74388314, 3.28538862])
+        from samana.Data.ImageData.baseline_smooth_mock_multipole2 import image_data
+        magnification_measurement_errors = 0.0
+        magnifications = np.array(magnifications_true) + np.array(magnification_measurement_errors)
+        astrometric_uncertainties = [0.003] * 4
+        flux_ratio_uncertainties = None
+        self.a3a_true = -0.009
+        self.a4a_true = 0.015
+        self.delta_phi_m3_true = -np.pi/6/3
+        self.delta_phi_m4_true = np.pi/8/3
+
+        super(BaselineSmoothMockMultipole2, self).__init__(z_lens, z_source, x_image, y_image,
+                                    magnifications, astrometric_uncertainties, flux_ratio_uncertainties, image_data,
+                                        super_sample_factor)
+
 
 class BaselineSmoothMockModel(MockModelBase):
 
@@ -73,7 +73,7 @@ class BaselineSmoothMockModel(MockModelBase):
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
         kwargs_lens_macro = [{'theta_E': 1.0, 'center_x': 0.0, 'center_y': 0.0, 'e1': -0.1, 'e2': -0.1,
-                              'gamma': 1.8894064923991685, 'a4_a': 0.0,
+                              'gamma': 2.0, 'a4_a': 0.0,
                               'a3_a': 0.0, 'delta_phi_m3': 0.0,
                               'delta_phi_m4': 0.0}, {'gamma1': -0.04, 'gamma2': 0.04}]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]

@@ -36,10 +36,6 @@ class _J0607ModelBase(ModelBase):
             kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
         return kwargs_constraints
 
-    @property
-    def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2]]
-
     def setup_source_light_model(self):
 
         source_model_list = ['SERSIC_ELLIPSE']
@@ -132,17 +128,18 @@ class J0607ModelEPLM3M4Shear(_J0607ModelBase):
 
     @property
     def prior_lens(self):
-        return self.population_gamma_prior
+        satellite_prior = [[2, 'theta_E', 0.15, 0.15]]
+        return self.population_gamma_prior + satellite_prior
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR', 'SIS']
         kwargs_lens_macro = [
-            {'theta_E': 0.7665380341970411, 'gamma': 2.258385703655036, 'e1': -0.13009344455005006,
-             'e2': 0.12672103625203257, 'center_x': -0.035669817732942886, 'center_y': -0.031124438659745474,
-             'a3_a': 0.0, 'delta_phi_m3': -0.47250958816529176, 'a4_a': 0.0, 'delta_phi_m4': -0.023940879105198373},
-            {'gamma1': -0.03714968702936837, 'gamma2': 0.03306856418097416, 'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.17733887903691697, 'center_x': 1.1680706701938912, 'center_y': 0.21718034582828402}
+            {'theta_E': 0.7729722983314623, 'gamma': 1.7899332143918347, 'e1': -0.11646235325155463,
+             'e2': 0.04605966879603824, 'center_x': -0.026864357169245495, 'center_y': -0.026069263620277037,
+             'a3_a': 0.0, 'delta_phi_m3': -0.27848363887530125, 'a4_a': 0.0, 'delta_phi_m4': 0.261527364566968},
+            {'gamma1': -0.065078597842484, 'gamma2': 0.014659128492419904, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.09630688652541469, 'center_x': 1.177869077403505, 'center_y': 0.17723829970809515}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1, 2]
@@ -159,7 +156,8 @@ class J0607ModelEPLM3M4Shear(_J0607ModelBase):
         kwargs_lower_lens = [
             {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.5, 'a4_a': -0.1,
              'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
-            {'gamma1': -0.5, 'gamma2': -0.5}, {'theta_E': 0.0, 'center_x': -10, 'center_y': -10}]
+            {'gamma1': -0.5, 'gamma2': -0.5},
+            {'theta_E': 0.0, 'center_x': -10, 'center_y': -10}]
         kwargs_upper_lens = [
             {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 3.5, 'a4_a': 0.1,
              'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
