@@ -2,6 +2,9 @@ from lenstronomy.LensModel.Util.decouple_multi_plane_util import setup_grids, co
 import numpy as np
 from lenstronomy.LightModel.light_model import LightModel
 from copy import deepcopy
+from lenstronomy.LensModel.lens_model_extensions import LensModelExtensions
+from lenstronomy.Util import util
+
 
 def perturbed_flux_ratios_from_flux_ratios(flux_ratios, flux_ratio_measurement_uncertainties_percentage):
     """
@@ -61,7 +64,7 @@ def perturbed_fluxes_from_fluxes(fluxes, flux_measurement_uncertainties_percenta
 
 def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image,
                                    lens_model_init, kwargs_lens_init, kwargs_lens, index_lens_split,
-                                   grid_size, grid_resolution, r_step_factor=10.0):
+                                   grid_size, grid_resolution, lens_model_full, r_step_factor=15.0):
     """
     """
     lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free, z_source, z_split, cosmo_bkg = \
@@ -69,14 +72,28 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
     grid_x_large, grid_y_large, interp_points_large, npix_large = setup_grids(grid_size,
                                                                               grid_resolution,
                                                                               0.0, 0.0)
-    grid_r = np.sqrt(grid_x_large**2 + grid_y_large**2)
-    grid_r = grid_r.ravel()
     grid_x_large = grid_x_large.ravel()
     grid_y_large = grid_y_large.ravel()
     r_step = grid_size / r_step_factor
     magnifications = []
     flux_arrays = []
+    ext = LensModelExtensions(lens_model_full)
     for (x_img, y_img) in zip(x_image, y_image):
+
+        w1, w2, v11, v12, v21, v22 = ext.hessian_eigenvectors(
+            x_img, y_img, kwargs_lens
+        )
+        _v = [np.array([v11, v12]), np.array([v21, v22])]
+        _w = [abs(w1), abs(w2)]
+        idx = int(np.argmax(_w))
+        v = _v[idx]
+        rotation_angle = np.arctan(v[1] / v[0]) - np.pi/2
+        grid_x, grid_y = util.rotate(grid_x_large, grid_y_large,
+                                     rotation_angle)
+        sort = np.argsort(_w)
+        q_eigenvalue = _w[sort[0]] / _w[sort[1]]
+        q = max(0.1, q_eigenvalue)
+        grid_r = np.hypot(grid_x, grid_y / q).ravel()
         mag, flux_array = mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
                             kwargs_lens_free, kwargs_lens, z_split, z_source,
                             cosmo_bkg, x_img, y_img, grid_x_large, grid_y_large,
@@ -109,6 +126,7 @@ def mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_
     Ts = cosmo_bkg.T_xy(0, zsource)
     Tds = cosmo_bkg.T_xy(zlens, zsource)
     reduced_to_phys = cosmo_bkg.d_xy(0, zsource) / cosmo_bkg.d_xy(zlens, zsource)
+    flux_array_test = np.zeros(len(grid_x_large))
     while True:
         # select new coordinates to ray-trace through
         inds_compute, inds_outside_r, inds_computed = _inds_compute_grid(grid_r, r_min, r_max, inds_compute)
@@ -152,6 +170,10 @@ def mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_
         sb = source_model.surface_brightness(beta_x, beta_y, kwargs_source)
         flux_array[inds_computed] = sb
         flux_array[inds_outside_r] = 0.0
+
+        flux_array_test[inds_computed] = 1.0
+        flux_array_test[inds_outside_r] = 0.0
+
         magnification_temp = np.sum(flux_array) * grid_resolution ** 2
         diff = (
             abs(magnification_temp - magnification_last) / magnification_temp

@@ -154,7 +154,7 @@ class TestMagnificationGridRes(object):
 
         lens_ID = 'J0607'
         source_size_list = [2.0, 8.0]
-        self._run_test(lens_ID, source_size_list)
+        self._run_test(lens_ID, source_size_list, tol_ratio=0.005)
 
     def test_0608(self):
 

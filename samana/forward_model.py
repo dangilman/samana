@@ -551,7 +551,9 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                                       lens_model_init,
                                                                       kwargs_lens_init,
                                                                       kwargs_solution,
-                                                                      grid_size, grid_resolution)
+                                                                      grid_size,
+                                                                      grid_resolution,
+                                                                      lens_model)
     tend = time()
     if verbose:
         print('computed magnifications in '+str(np.round(tend - t0, 1))+' seconds')

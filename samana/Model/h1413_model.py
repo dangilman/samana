@@ -40,9 +40,8 @@ class _H1413ModelBase(ModelBase):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 39.41610266348147, 'R_sersic': 0.3783137419156091, 'n_sersic': 7.910625151165032,
-             'e1': 0.4821410087473546, 'e2': 0.09032354893207806, 'center_x': -0.0670697263992593,
-             'center_y': -0.05753689652059006}, {'amp': 29.880912407436234}
+            {'amp': 1, 'R_sersic': 0.02796380070166966, 'n_sersic': 3.9367467127355806, 'e1': 0.10746901603615666,
+             'e2': 0.31715572162154915, 'center_x': 0.22411118522966256, 'center_y': 0.49605189911239933}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.1, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
@@ -71,9 +70,8 @@ class _H1413ModelBase(ModelBase):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
         kwargs_lens_light_init = [
-            {'amp': 1, 'R_sersic': 0.3670692894431653, 'n_sersic': 3.801827939708633, 'e1': 0.059495653068456174,
-             'e2': 0.11437965808655316, 'center_x': -0.04715073448272608, 'center_y': 0.0062644244083327055},
-            {'amp': 29.880912407436234}
+            {'amp': 1, 'R_sersic': 0.3783137419156091, 'n_sersic': 7.910625151165032, 'e1': 0.4821410087473546,
+             'e2': 0.09032354893207806, 'center_x': -0.0670697263992593, 'center_y': -0.05753689652059006}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25,

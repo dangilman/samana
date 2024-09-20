@@ -164,13 +164,14 @@ class ModelBase(object):
         return kwargs_lens_fixed, kwargs_lens_init
 
     def image_magnification_gaussian(self, source_model_quasar, kwargs_source, lens_model_init, kwargs_lens_init,
-                            kwargs_lens, grid_size, grid_resolution):
+                            kwargs_lens, grid_size, grid_resolution, lens_model):
 
         _, _, index_lens_split, _ = self.setup_lens_model()
         mags = magnification_finite_decoupled(source_model_quasar, kwargs_source,
                                               self._data.x_image, self._data.y_image,
                                               lens_model_init, kwargs_lens_init,
-                                              kwargs_lens, index_lens_split, grid_size, grid_resolution)
+                                              kwargs_lens, index_lens_split,
+                                              grid_size, grid_resolution, lens_model)
         return mags
 
     def setup_kwargs_model(self, decoupled_multiplane=False, lens_model_list_halos=None,
