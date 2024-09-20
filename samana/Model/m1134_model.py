@@ -43,14 +43,15 @@ class _M1134ModelBase(ModelBase):
     def setup_source_light_model(self):
 
         source_model_list = ['SERSIC_ELLIPSE']
-        kwargs_source_init = [{'amp': 0.5704134911818463, 'R_sersic': 6.593287802653294,
-                               'n_sersic': 1.6820823340653501, 'e1': -0.16902702308500506,
-                               'e2': -0.23207635706757912, 'center_x': 0.12638682393039816,
-                               'center_y': -0.21141875925490275}]
-        kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
+        kwargs_source_init = [
+            {'amp': 1.535695726464625, 'R_sersic': 0.45323595317577603, 'n_sersic': 4.013684761827811,
+             'e1': -0.26796698003545755, 'e2': -0.3419052258998108, 'center_x': 0.11804250639975081,
+             'center_y': -0.18217189052120064}
+        ]
+        kwargs_source_sigma = [{'R_sersic': 0.1, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
-        kwargs_upper_source = [{'R_sersic': 10.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
+        kwargs_upper_source = [{'R_sersic': 2.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
         kwargs_source_fixed = [{}]
 
         if self._shapelets_order is not None:
@@ -73,10 +74,11 @@ class _M1134ModelBase(ModelBase):
     def setup_lens_light_model(self):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
-        kwargs_lens_light_init = [{'amp': 2.471704098166105, 'R_sersic': 1.3342410243654819,
-                                   'n_sersic': 6.7499217719470375, 'e1': -0.09685289787731619,
-                                   'e2': -0.012333493009491742, 'center_x': 0.010953788758054533,
-                                   'center_y': 0.01056765085608956}]
+        kwargs_lens_light_init = [
+            {'amp': 2.3535572185039233, 'R_sersic': 1.2817245917138322, 'n_sersic': 7.549747480617088,
+             'e1': -0.12087242157040426, 'e2': -0.025701183586615328, 'center_x': 0.007928216881987159,
+             'center_y': 0.014243940326979527}
+        ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
         kwargs_lower_lens_light = [
@@ -85,7 +87,7 @@ class _M1134ModelBase(ModelBase):
             {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
         kwargs_lens_light_fixed = [{}]
 
-        add_uniform_light = True
+        add_uniform_light = False
         if add_uniform_light:
             kwargs_uniform, kwargs_uniform_sigma, kwargs_uniform_fixed, \
             kwargs_uniform_lower, kwargs_uniform_upper = self.add_uniform_lens_light(0.0, 2.0)
@@ -112,7 +114,8 @@ class _M1134ModelBase(ModelBase):
                              'source_position_sigma': 0.0001,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
-                             'astrometric_likelihood': True
+                             'astrometric_likelihood': True,
+                             'custom_logL_addition': self.joint_lens_with_light_prior
                              }
         return kwargs_likelihood
 
@@ -125,12 +128,12 @@ class M1134ModelEPLM3M4Shear(_M1134ModelBase):
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
-        kwargs_lens_macro = [{'theta_E': 1.2841498211571845, 'gamma': 2.0298739609541117, 'e1': -0.06385887058499685,
-                              'e2': -0.21505434288569872,
-                              'center_x': -0.03220791761086604, 'center_y': 0.018787679101787424,
-                              'a3_a': 0.0, 'delta_phi_m3': 0.03925717418140915,
-                              'a4_a': 0.0, 'delta_phi_m4': 1.1365477114054872},
-                             {'gamma1': -0.0072982499421284696, 'gamma2': 0.28317784333401524, 'ra_0': 0.0, 'dec_0': 0.0}]
+        kwargs_lens_macro = [
+            {'theta_E': 1.3599147658396191, 'gamma': 1.7246414123342453, 'e1': -0.06711664457301221,
+             'e2': -0.24019605360641944, 'center_x': -0.09158895453475067, 'center_y': 0.08544626774466714, 'a3_a': 0.0,
+             'delta_phi_m3': 0.37866811309889464, 'a4_a': 0.0, 'delta_phi_m4': -0.6241992435332446},
+            {'gamma1': -0.025507805137965123, 'gamma2': 0.1283220237777115, 'ra_0': 0.0, 'dec_0': 0.0}
+        ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]
         if kwargs_lens_macro_init is not None:
@@ -143,11 +146,11 @@ class M1134ModelEPLM3M4Shear(_M1134ModelBase):
                              {'gamma1': 0.1, 'gamma2': 0.1}]
         kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}]
         kwargs_lower_lens = [
-            {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.5, 'a4_a': -0.1,
+            {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.7, 'a4_a': -0.1,
              'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
             {'gamma1': -0.5, 'gamma2': -0.5}]
         kwargs_upper_lens = [
-            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 3.5, 'a4_a': 0.1,
+            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.6, 'a4_a': 0.1,
              'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
             {'gamma1': 0.5, 'gamma2': 0.5}]
         kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
