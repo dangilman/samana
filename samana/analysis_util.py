@@ -115,7 +115,8 @@ def numerics_setup(lens_ID):
         rescale_grid_res = 1.3
         rescale_grid_size = 1.0
     elif lens_ID == 'RXJ1131':
-        raise Exception('not yet implemented')
+        rescale_grid_res = 1.3
+        rescale_grid_size = 1.0
     elif lens_ID == 'WFI2033':
         rescale_grid_res = 1.3
         rescale_grid_size = 1.0
@@ -222,7 +223,8 @@ def quick_setup(lens_ID):
         from samana.Data.rxj0911 import RXJ0911_HST as data_class
         from samana.Model.rxj0911_model import RXJ0911ModelEPLM3M4Shear as model_class
     elif lens_ID == 'RXJ1131':
-        raise Exception('not yet implemented')
+        from samana.Data.rxj1131 import RXJ1131_HST as data_class
+        from samana.Model.rxj1131_model import RXJ1131ModelEPLM3M4Shear as model_class
     elif lens_ID == 'WFI2033':
         from samana.Data.wfi2033 import WFI2033_NIRCAM as data_class
         from samana.Model.wfi2033_model_nircam import WFI2033NircamModelEPLM3M4Shear as model_class
