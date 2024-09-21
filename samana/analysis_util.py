@@ -240,6 +240,9 @@ def quick_setup(lens_ID):
     elif lens_ID == 'M1134':
         from samana.Data.m1134 import M1134_HST as data_class
         from samana.Model.m1134_model import M1134ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'M1134_MIRI':
+        from samana.Data.m1134 import M1134_MIRI as data_class
+        from samana.Model.m1134_model import M1134ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J0924':
         from samana.Data.j0924 import J0924_MIRI as data_class
         from samana.Model.j0924_model import J0924ModelEPLM3M4Shear as model_class

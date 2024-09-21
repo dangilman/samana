@@ -43,11 +43,19 @@ class _M1134ModelBase(ModelBase):
     def setup_source_light_model(self):
 
         source_model_list = ['SERSIC_ELLIPSE']
-        kwargs_source_init = [
-            {'amp': 1.535695726464625, 'R_sersic': 0.45323595317577603, 'n_sersic': 4.013684761827811,
-             'e1': -0.26796698003545755, 'e2': -0.3419052258998108, 'center_x': 0.11804250639975081,
-             'center_y': -0.18217189052120064}
-        ]
+        if self._data.band == 'HST814W':
+            kwargs_source_init = [
+                {'amp': 2.1185751163399558, 'R_sersic': 1.4776136937531457, 'n_sersic': 3.9437525404186053,
+                 'e1': -0.09472006972243252, 'e2': -0.23604200716782295, 'center_x': 0.10381092761860801,
+                 'center_y': -0.18719810606822243}
+            ]
+        else:
+            kwargs_source_init = [
+                {'amp': 2.1185751163399558, 'R_sersic': 1.4776136937531457, 'n_sersic': 3.9437525404186053,
+                 'e1': -0.09472006972243252, 'e2': -0.23604200716782295, 'center_x': 0.10381092761860801,
+                 'center_y': -0.18719810606822243}
+            ]
+
         kwargs_source_sigma = [{'R_sersic': 0.1, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
@@ -74,11 +82,17 @@ class _M1134ModelBase(ModelBase):
     def setup_lens_light_model(self):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
-        kwargs_lens_light_init = [
-            {'amp': 2.3535572185039233, 'R_sersic': 1.2817245917138322, 'n_sersic': 7.549747480617088,
-             'e1': -0.12087242157040426, 'e2': -0.025701183586615328, 'center_x': 0.007928216881987159,
-             'center_y': 0.014243940326979527}
-        ]
+        if self._data.band == 'HST814W':
+            kwargs_lens_light_init = [
+                {'amp': 2.3757548657801983, 'R_sersic': 1.2905859494604435, 'n_sersic': 7.605471337428463,
+                 'e1': -0.1202898797182632, 'e2': 0.0067593098640644994, 'center_x': 0.009134769676769624,
+                 'center_y': 0.015374389413448142}
+            ]
+        else:
+            kwargs_lens_light_init = [
+                {'amp': 1, 'R_sersic': 1.2942967883289467, 'n_sersic': 7.697747494985299, 'e1': -0.36132931126429374,
+                 'e2': -0.1062427449413843, 'center_x': -0.06085505726650964, 'center_y': 0.12707496720879105}
+            ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
         kwargs_lower_lens_light = [
@@ -87,7 +101,10 @@ class _M1134ModelBase(ModelBase):
             {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
         kwargs_lens_light_fixed = [{}]
 
-        add_uniform_light = False
+        if self._data.band == 'HST814W':
+            add_uniform_light = False
+        else:
+            add_uniform_light = True
         if add_uniform_light:
             kwargs_uniform, kwargs_uniform_sigma, kwargs_uniform_fixed, \
             kwargs_uniform_lower, kwargs_uniform_upper = self.add_uniform_lens_light(0.0, 2.0)
@@ -128,12 +145,20 @@ class M1134ModelEPLM3M4Shear(_M1134ModelBase):
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
-        kwargs_lens_macro = [
-            {'theta_E': 1.3599147658396191, 'gamma': 1.7246414123342453, 'e1': -0.06711664457301221,
-             'e2': -0.24019605360641944, 'center_x': -0.09158895453475067, 'center_y': 0.08544626774466714, 'a3_a': 0.0,
-             'delta_phi_m3': 0.37866811309889464, 'a4_a': 0.0, 'delta_phi_m4': -0.6241992435332446},
-            {'gamma1': -0.025507805137965123, 'gamma2': 0.1283220237777115, 'ra_0': 0.0, 'dec_0': 0.0}
-        ]
+        if self._data.band == 'HST814W':
+            kwargs_lens_macro = [
+                {'theta_E': 1.283032623422934, 'gamma': 2.05, 'e1': -0.06431918562342388, 'e2': -0.22266700501673445,
+                 'center_x': -0.030343221396879526, 'center_y': 0.01725715155706942, 'a3_a': 0.0,
+                 'delta_phi_m3': 0.3940933597129781, 'a4_a': 0.0, 'delta_phi_m4': -0.5117665156047929},
+                {'gamma1': -0.0063864752880707755, 'gamma2': 0.28968467265898323, 'ra_0': 0.0, 'dec_0': 0.0}
+            ]
+        elif self._data.band == 'MIRI560W':
+            kwargs_lens_macro = [
+                {'theta_E': 1.335722505246035, 'gamma': 2.148742326879017, 'e1': -0.08123556666142936,
+                 'e2': -0.4147587700680795, 'center_x': -0.0844460288393731, 'center_y': 0.13613806409008145,
+                 'a3_a': 0.0, 'delta_phi_m3': -0.2691227318384277, 'a4_a': 0.0, 'delta_phi_m4': 0.9584806141789889},
+                {'gamma1': -0.00623347805533386, 'gamma2': 0.28379033790726677, 'ra_0': 0.0, 'dec_0': 0.0}
+            ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]
         if kwargs_lens_macro_init is not None:

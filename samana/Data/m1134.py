@@ -10,11 +10,14 @@ class _2M1134(ImagingDataBase):
         self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
         z_lens = 0.66 # Anguita et al. in prep
         z_source = 2.77
-
+        self.band = band
         if band == 'HST814W':
             from samana.Data.ImageData.m1134_f814W import psf_model, psf_error_map, image_data
+            from samana.Data.ImageData.m1134_hstmask import _custom_mask_2m1134
+            self._custom_mask = _custom_mask_2m1134
             self._psf_estimate_init = psf_model
             self._psf_error_map_init = psf_error_map
+            self._mask_rotation = 0.25
             self._image_data = image_data
             self._psf_supersampling_factor = 1
             self._background_rms = 0.00609
@@ -29,14 +32,16 @@ class _2M1134(ImagingDataBase):
 
         elif band == 'MIRI560W':
             from samana.Data.ImageData.m1134_MIRI540W import psf_model, image_data, noise_map
+            self._custom_mask = 1.0
+            self._mask_rotation = -0.15
             self._psf_estimate_init = psf_model
             self._psf_error_map_init = None
             self._image_data = image_data
             self._psf_supersampling_factor = 3
             self._deltaPix = 0.11082108303617688
-            self._window_size = 6.316801733062082
-            self._ra_at_xy_0 = -4.021202189788431
-            self._dec_at_xy_0 = -1.9444600740468694
+            self._window_size = 6.981728231279143
+            self._ra_at_xy_0 = -4.444486634504042
+            self._dec_at_xy_0 = -2.14914008270461
             self._transform_pix2angle = np.array([[0.03643407, 0.10466074],
                                                   [0.10466074, -0.03643407]])
             self._background_rms = None
@@ -67,17 +72,18 @@ class _2M1134(ImagingDataBase):
         _x = np.linspace(-window_size / 2, window_size / 2, self._image_data.shape[0])
         _y = np.linspace(-window_size / 2, window_size / 2, self._image_data.shape[0])
         _xx, _yy = np.meshgrid(_x, _y)
-        likelihood_mask = np.ones_like(_xx)
-        _xx_rot, _yy_rot = self.rotate(_xx, _yy, 0.25 * np.pi)
+        likelihood_mask = np.ones_like(_xx) * self._custom_mask
+        _xx_rot, _yy_rot = self.rotate(_xx, _yy, self._mask_rotation * np.pi)
         q = 0.7
-        inds = np.where(np.sqrt(_xx_rot ** 2 + (_yy_rot / q) ** 2) >= window_size / 1.7)
+        inds = np.where(np.sqrt(_xx_rot ** 2 + (_yy_rot / q) ** 2) >= window_size / 1.9)
         likelihood_mask[inds] = 0.0
+
         if self._mask_quasar_images_for_logL:
             likelihood_mask_imaging_weights = self.quasar_image_mask(
                 likelihood_mask,
                 x_image,
                 y_image,
-                self._image_data.shape, radius_arcsec=0.3
+                self._image_data.shape, radius_arcsec=0.4
             )
             return likelihood_mask, likelihood_mask_imaging_weights
         else:
@@ -100,10 +106,9 @@ class _2M1134(ImagingDataBase):
 
         deltaPix = self._deltaPix
         window_size = self._window_size
-        ra_at_xy_0 = 3.12089
-        dec_at_xy_0 = -3.1194472
-        transform_pix2angle = np.array([[-4.00043735e-02, -7.07884311e-06],
-       [-7.07227957e-06,  3.99999860e-02]])
+        ra_at_xy_0 = self._ra_at_xy_0
+        dec_at_xy_0 = self._dec_at_xy_0
+        transform_pix2angle = self._transform_pix2angle
         return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
 
     @property
@@ -163,14 +168,16 @@ class M1134_MIRI(_2M1134):
         """
         x_image = np.array([-1.24171241, -0.54108785, 1.43621075, 0.70658951])
         y_image = np.array([-1.45103786, 0.6893056, 1.07930078, -0.67756853])
-        horizontal_shift = 0.0
-        vertical_shift = 0.0
+        horizontal_shift = -0.012
+        vertical_shift = 0.015
         x_image += horizontal_shift
         y_image += vertical_shift
         image_position_uncertainties = [0.005] * 4 # 5 arcsec
         flux_uncertainties = None
         magnifications = np.array([1.0] * 4)
-        super(M1134_MIRI, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
+        super(M1134_MIRI, self).__init__(x_image, y_image, magnifications,
+                                         image_position_uncertainties,
+                                         flux_uncertainties,
                                           uncertainty_in_fluxes=False,
                                          supersample_factor=supersample_factor,
                                          band='MIRI560W')
