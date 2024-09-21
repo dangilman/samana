@@ -92,7 +92,7 @@ class ModelBase(object):
 
         center_x_lens, center_y_lens = kwargs_lens[0]['center_x'], kwargs_lens[0]['center_y']
         center_x_light, center_y_light = kwargs_lens_light[0]['center_x'], kwargs_lens_light[0]['center_y']
-        sigma = 0.05
+        sigma = 0.025
         dr_squared = (center_x_lens - center_x_light)**2 + (center_y_lens - center_y_light)**2
         if np.sqrt(dr_squared) > max_offset:
             return -1e9
