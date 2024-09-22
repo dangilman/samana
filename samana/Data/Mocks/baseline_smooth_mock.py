@@ -8,18 +8,21 @@ class BaselineSmoothMockMultipole1(MockBase):
 
         z_lens = 0.5
         z_source = 2.0
-        x_image = np.array([-0.91217529, 0.7063176, -0.08999974, 0.81378602])
-        y_image = np.array([-0.75935938, 0.63169673, 0.92588999, -0.33868768])
-        magnifications_true = np.array([3.14983536, 9.25295622, 5.92590197, 4.64533735])
+        x_image = np.array([-0.84851962, 0.78573513, 0.8437814, -0.12939091])
+        y_image = np.array([-0.78981987, 0.53701446, -0.33383263, 0.92493653])
+        magnifications_true = np.array([3.44107373, 10.39161257, 6.31704447, 4.98009342])
         from samana.Data.ImageData.baseline_smooth_mock_multipole1 import image_data
         magnification_measurement_errors = 0.0
         magnifications = np.array(magnifications_true) + np.array(magnification_measurement_errors)
-        astrometric_uncertainties = [0.003] * 4
+        astrometric_uncertainties = [0.00001] * 4
         flux_ratio_uncertainties = None
-        self.a3a_true = 0.008
-        self.a4a_true = -0.01
-        self.delta_phi_m3_true = 0.0
+        self.a3a_true = 0.012
+        self.a4a_true = 0.005
+        self.delta_phi_m3_true = np.pi/6/2
         self.delta_phi_m4_true = 0.0
+        self.phi_q_true = -1.178097
+        self.q_true = 0.75220
+        self.gamma_true = 2.1
 
         super(BaselineSmoothMockMultipole1, self).__init__(z_lens, z_source, x_image, y_image,
                                     magnifications, astrometric_uncertainties, flux_ratio_uncertainties, image_data,
@@ -31,19 +34,21 @@ class BaselineSmoothMockMultipole2(MockBase):
 
         z_lens = 0.5
         z_source = 2.0
-        x_image = np.array([1.02461803, -0.33993018, 0.3224046, -0.56761925])
-        y_image = np.array([0.31456194, -1.00188299, -0.97542732, 0.66453182])
-        magnifications_true = np.array([6.38659953, 9.89147693, 10.74388314, 3.28538862])
+        x_image = np.array([-0.4327144, 0.70777419, 0.86936835, -0.71396417])
+        y_image = np.array([-1.00037051, 0.7840919, -0.41093106, 0.55510127])
+        magnifications_true = np.array([5.52916694, 5.59837077, 6.27614134, 3.87864352])
         from samana.Data.ImageData.baseline_smooth_mock_multipole2 import image_data
         magnification_measurement_errors = 0.0
         magnifications = np.array(magnifications_true) + np.array(magnification_measurement_errors)
-        astrometric_uncertainties = [0.003] * 4
+        astrometric_uncertainties = [0.00001] * 4
         flux_ratio_uncertainties = None
         self.a3a_true = -0.009
-        self.a4a_true = 0.015
+        self.a4a_true = -0.01
         self.delta_phi_m3_true = -np.pi/6/3
-        self.delta_phi_m4_true = np.pi/8/3
-
+        self.delta_phi_m4_true = np.pi/8/6
+        self.phi_q_true = -0.78539
+        self.q_true = 0.8691
+        self.gamma_true = 2.05
         super(BaselineSmoothMockMultipole2, self).__init__(z_lens, z_source, x_image, y_image,
                                     magnifications, astrometric_uncertainties, flux_ratio_uncertainties, image_data,
                                         super_sample_factor)
