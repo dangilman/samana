@@ -34,9 +34,9 @@ class BaselineSmoothMockMultipole2(MockBase):
 
         z_lens = 0.5
         z_source = 2.0
-        x_image = np.array([-0.4327144, 0.70777419, 0.86936835, -0.71396417])
-        y_image = np.array([-1.00037051, 0.7840919, -0.41093106, 0.55510127])
-        magnifications_true = np.array([5.52916694, 5.59837077, 6.27614134, 3.87864352])
+        x_image = np.array([-0.43278781, 0.7020786, 0.8702122, -0.71639362])
+        y_image = np.array([-1.00066423, 0.78917751, -0.40830315, 0.55200377])
+        magnifications_true = np.array([5.4828351, 5.61039413, 6.0839831, 3.89908285])
         from samana.Data.ImageData.baseline_smooth_mock_multipole2 import image_data
         magnification_measurement_errors = 0.0
         magnifications = np.array(magnifications_true) + np.array(magnification_measurement_errors)
@@ -76,7 +76,7 @@ class BaselineSmoothMockModel(MockModelBase):
         return source_model_list, source_params
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
-        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
+        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR']
         kwargs_lens_macro = [{'theta_E': 1.0, 'center_x': 0.0, 'center_y': 0.0, 'e1': -0.1, 'e2': -0.1,
                               'gamma': 2.0, 'a4_a': 0.0,
                               'a3_a': 0.0, 'delta_phi_m3': 0.0,
