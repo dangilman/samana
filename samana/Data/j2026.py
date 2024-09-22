@@ -13,7 +13,7 @@ class _J2026(QuadNoImageDataBase):
         super(_J2026, self).__init__(z_lens, z_source, x_image, y_image, magnifications, image_position_uncertainties,
                                        flux_uncertainties, uncertainty_in_fluxes, keep_flux_ratio_index)
 
-class J2026JWST(_J2026):
+class J2026(_J2026):
 
     def __init__(self, z_lens=0.5):
         """
@@ -28,39 +28,21 @@ class J2026JWST(_J2026):
         x_image = np.array([ 0.10035525,  0.51610375,  0.26439393, -0.46879818])
         y_image = np.array([ 0.89672252, -0.31479607, -0.53410103, -0.14806814])
 
+        # mags HST: check image ordering
+        # m = [1.0, 0.75, 0.31, 0.28]
+        # flux_uncertainties = [0.02, 0.02/0.75, 0.02/0.31, 0.01/0.28]
+
         image_position_uncertainties = [0.005] * 4 # 5 marcsec
         flux_uncertainties = None
         magnifications = np.array([1.0] * 4)
-        super(J2026JWST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
+        super(J2026, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
                                           uncertainty_in_fluxes=False, z_lens=z_lens)
 
-class WFI2026_HST(_J2026):
+    def redshift_sampling(self):
+        return True
 
-    def __init__(self, z_lens=0.5):
-        x = [0.187, 0.44, 0.023, -0.548]
-        y = [-0.563, -0.348, 0.865, -0.179]
-        m = [1.0, 0.75, 0.31, 0.28]
-        image_position_uncertainties = [0.005] * 4  # 5 marcsec
-        flux_uncertainties = [0.02, 0.02/0.75, 0.02/0.31, 0.01/0.28]
-        super(WFI2026_HST, self).__init__(x, y, m, image_position_uncertainties, flux_uncertainties,
-                                          uncertainty_in_fluxes=True, z_lens=z_lens)
-
-#
-# xc = np.array([-0.4985, 0.2364, 0.4897, 0.0725])
-# yc = np.array([-0.2207, -0.6048, -0.3895, 0.8233])
-# fc = np.array([0.288, 1.0, 0.893, 0.299])
-# fc_ratios = fc
-# lens = WFI2026_HST()
-# flux_ratios = np.round(lens.magnifications/lens.magnifications[0],2)
-# print(fc_ratios)
-# colors = ['k', 'r','g','m']
-# labels = ['A1', 'A2', 'B', 'C']
-# for i in range(0, 4):
-#
-#     plt.scatter(xc[i], yc[i], color=colors[i],marker='+')
-#     #plt.annotate(str(flux_ratios[i]),
-#     #             xy=(lens.x_image[i], lens.y_image[i]+0.05),color=colors[i])
-#     plt.annotate(str(fc_ratios[i]),
-#                  xy=(xc[i], yc[i] - 0.05), color=colors[i])
-#
-# plt.show()
+    def sample_z_lens(self):
+        z_lens = np.random.normal(0.5, 0.2)
+        z_lens = max(z_lens, 0.2)
+        z_lens = min(z_lens, 2.2)
+        return np.round(z_lens, 2)

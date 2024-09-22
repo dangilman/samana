@@ -53,6 +53,56 @@ class BaselineSmoothMockMultipole2(MockBase):
                                     magnifications, astrometric_uncertainties, flux_ratio_uncertainties, image_data,
                                         super_sample_factor)
 
+class BaselineSmoothMockMultipole3(MockBase):
+
+    def __init__(self, super_sample_factor=1.0):
+
+        z_lens = 0.5
+        z_source = 2.0
+        x_image = np.array([0.96814425, 0.09098276, 0.57690954, -0.71767754])
+        y_image = np.array([0.56960341, -1.06182703, -0.85925099, 0.39019487])
+        magnifications_true = np.array([4.99642229, 9.47296505, 9.64000799, 2.28187071])
+        from samana.Data.ImageData.baseline_smooth_mock_multipole3 import image_data
+        magnification_measurement_errors = 0.0
+        magnifications = np.array(magnifications_true) + np.array(magnification_measurement_errors)
+        astrometric_uncertainties = [0.00001] * 4
+        flux_ratio_uncertainties = None
+        self.a3a_true = 0.004
+        self.a4a_true = 0.015
+        self.delta_phi_m3_true = 0.1 * np.pi/6
+        self.delta_phi_m4_true = -0.2 * np.pi/8
+        self.phi_q_true = -0.7853
+        self.q_true = 0.8181
+        self.gamma_true = 2.05
+        super(BaselineSmoothMockMultipole3, self).__init__(z_lens, z_source, x_image, y_image,
+                                    magnifications, astrometric_uncertainties, flux_ratio_uncertainties, image_data,
+                                        super_sample_factor)
+
+class BaselineSmoothMockMultipole4(MockBase):
+
+    def __init__(self, super_sample_factor=1.0):
+
+        z_lens = 0.5
+        z_source = 2.0
+        x_image = np.array([-0.38584609, 1.04142898, 0.65914844, -0.48699737])
+        y_image = np.array([-1.03634905, 0.0660994, -0.80284886, 0.68684917])
+        magnifications_true = np.array([5.81689864, 9.54536663, 10.33470303, 2.1830171])
+        from samana.Data.ImageData.baseline_smooth_mock_multipole4 import image_data
+        magnification_measurement_errors = 0.0
+        magnifications = np.array(magnifications_true) + np.array(magnification_measurement_errors)
+        astrometric_uncertainties = [0.00001] * 4
+        flux_ratio_uncertainties = None
+        self.a3a_true = -0.01
+        self.a4a_true = 0.01
+        self.delta_phi_m3_true = np.pi/6/2
+        self.delta_phi_m4_true = -np.pi/8/2
+        self.phi_q_true = -1.1780972
+        self.q_true = 0.7522
+        self.gamma_true = 2.05
+        super(BaselineSmoothMockMultipole4, self).__init__(z_lens, z_source, x_image, y_image,
+                                    magnifications, astrometric_uncertainties, flux_ratio_uncertainties, image_data,
+                                        super_sample_factor)
+
 
 class BaselineSmoothMockModel(MockModelBase):
 

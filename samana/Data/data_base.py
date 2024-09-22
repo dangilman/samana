@@ -24,7 +24,7 @@ class ImagingDataBase(object):
         :param likelihood_mask_imaging_weights: mask used to compute the log-likelihood of the imaging data after lens
         modeling
         """
-        self.z_lens = zlens
+        self._z_lens = zlens
         self.z_source = zsource
         self._kwargs_data_joint = kwargs_data_joint
         self._x_image_init = np.array(x_image)
@@ -41,6 +41,14 @@ class ImagingDataBase(object):
         self._likelihood_mask = likelihood_mask
         self._likelihood_mask_imaging_weights = likelihood_mask_imaging_weights
         self.mask_quasar_image_for_reconstruction(False)
+
+    @property
+    def redshift_sampling(self):
+        return False
+
+    @property
+    def z_lens(self):
+        return self._z_lens
 
     def perturb_image_positions(self, delta_x_image=None, delta_y_image=None):
         if delta_x_image is None:
