@@ -136,10 +136,13 @@ class TestSolutionLensEquation(object):
         lens_ID = 'J2344'
         self._test_solution(lens_ID)
 
-    # def test_m1134(self):
-    #
-    #     lens_ID = 'M1134'
-    #     self._test_solution(lens_ID)
+    def test_m1134(self):
+
+        lens_ID = 'M1134'
+        self._test_solution(lens_ID)
+
+        lens_ID = 'M1134_MIRI'
+        self._test_solution(lens_ID)
 
     def test_mg0414(self):
 

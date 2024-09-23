@@ -82,7 +82,8 @@ class TestMagnificationGridRes(object):
                                                                               kwargs_lens_init + kwargs_halo,
                                                                               kwargs_lens_init + kwargs_halo,
                                                                               grid_size,
-                                                                              grid_resolution)
+                                                                              grid_resolution,
+                                                                                 lens_model)
             flux_ratios_default = magnifications_default[1:]/magnifications_default[0]
 
             magnifications_high_res, _ = model_class.image_magnification_gaussian(source_model_quasar,
@@ -91,7 +92,8 @@ class TestMagnificationGridRes(object):
                                                                                   kwargs_lens_init + kwargs_halo,
                                                                                   kwargs_lens_init + kwargs_halo,
                                                                                  grid_size,
-                                                                                 grid_resolution/high_res_factor)
+                                                                                 grid_resolution/high_res_factor,
+                                                                                  lens_model)
             flux_ratios_high_res = magnifications_high_res[1:] / magnifications_high_res[0]
             diff = [magnifications_high_res[i] / magnifications_default[i] - 1 for i in range(0,index_max+1)]
             npt.assert_array_less(np.absolute(diff), tol_mag)
@@ -124,7 +126,7 @@ class TestMagnificationGridRes(object):
 
     def test_0147(self):
 
-        lens_ID = 'J0147'
+        lens_ID = 'PSJ0147'
         source_size_list = [2.0, 8.0]
         self._run_test(lens_ID, source_size_list)
 
@@ -228,10 +230,13 @@ class TestMagnificationGridRes(object):
         source_size_list = [2.0, 8.0]
         self._run_test(lens_ID, source_size_list)
 
-    # def test_m1134(self):
-    #
-    #     lens_ID = 'M1134'
-    #     self._test_solution(lens_ID)
+    def test_m1134(self):
+
+        lens_ID = 'M1134'
+        source_size_list = [2.0, 8.0]
+        self._run_test(lens_ID, source_size_list)
+        lens_ID = 'M1134_MIRI'
+        self._run_test(lens_ID, source_size_list)
 
     def test_mg0414(self):
 
