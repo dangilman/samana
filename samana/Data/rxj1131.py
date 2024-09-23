@@ -1,6 +1,6 @@
 from samana.Data.data_base import ImagingDataBase
 import numpy as np
-from samana.Data.ImageData.rxj1131_814W import psf_model, psf_error_map, image_data
+from samana.Data.ImageData.rxj1131_f814W import psf_model, psf_error_map, image_data
 
 class _RXJ1131(ImagingDataBase):
 
@@ -62,8 +62,8 @@ class _RXJ1131(ImagingDataBase):
     def coordinate_properties(self):
 
         deltaPix = 0.04999
-        window_size = 7.3994
-        ra_at_xy_0 = -4.89782313
+        window_size = 8.399346
+        ra_at_xy_0 = -4.89782
         dec_at_xy_0 = -1.840399
         transform_pix2angle = np.array([[ 0.02065827,  0.04552853],
        [ 0.04552853, -0.02065827]])
@@ -87,8 +87,8 @@ class _RXJ1131(ImagingDataBase):
         return kwargs_psf
 
 class RXJ1131_HST(_RXJ1131):
-    gx = 0.134158
-    gy = 0.47716
+    g2x = -0.328
+    g2y = 0.700
     def __init__(self, super_sample_factor=1):
         """
 
@@ -99,9 +99,9 @@ class RXJ1131_HST(_RXJ1131):
         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
-        x_image = np.array([ 2.07922968,  2.11652635,  1.48558514, -1.04573197])
-        y_image = np.array([-0.66892606,  0.52040446, -1.77760609,  0.19998343])
-        horizontal_shift = 0.0
+        x_image = np.array([1.622, 1.6567, 1.03, -1.4934])
+        y_image = np.array([-0.45, 0.737, -1.5646, 0.4301])
+        horizontal_shift = -0.02
         vertical_shift = 0.0
         x_image += horizontal_shift
         y_image += vertical_shift
