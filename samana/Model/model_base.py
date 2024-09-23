@@ -18,18 +18,25 @@ class ModelBase(object):
     def param_class_4pointsolver(self, *args, **kwargs):
         return None
 
+    @property
+    def beta_min(self):
+        return self._shapelets_scale_factor * self.beta_scale_param(self._shapelets_order) / 2.0
+
+    @property
+    def beta_max(self):
+        return self.beta_min * 10
+
     def beta_scale_param(self, n_max):
 
         pixel_scale = self._data.coordinate_properties[0]
-        return pixel_scale * np.sqrt(n_max+1)
+        return pixel_scale / np.sqrt(n_max+1)
 
     def add_shapelets_source(self, n_max, beta_init=None):
 
         n_max = int(n_max)
         source_model_list = ['SHAPELETS']
-        beta_scale_param = self.beta_scale_param(n_max)
-        beta_lower_bound = self._shapelets_scale_factor * beta_scale_param / 2.5
-        beta_upper_bound = 7.0 * beta_lower_bound
+        beta_lower_bound = self.beta_min
+        beta_upper_bound = self.beta_max
         if beta_init is None:
             beta_sigma = 2.0 * beta_lower_bound
             beta_init = 3.0 * beta_lower_bound
@@ -65,10 +72,10 @@ class ModelBase(object):
         kwargs_source_sigma = [
             {'amp': 10.0, 'sigma': 0.25 * kwargs_source[0]['sigma'], 'center_x': 0.05, 'center_y': 0.05, 'e1': 0.1, 'e2': 0.1}]
         kwargs_lower_source = [
-            {'amp': 0.00001, 'sigma': 0.0, 'center_x': center_x - 10, 'center_y': center_y - 10,
+            {'amp': 0.00001, 'sigma': 0.0, 'center_x': center_x - 0.2, 'center_y': center_y - 0.2,
              'e1': -0.5, 'e2': -0.5}]
         kwargs_upper_source = [
-            {'amp': 100, 'sigma': 0.2, 'center_x': center_x + 10, 'center_y': center_y + 10,
+            {'amp': 100, 'sigma': 0.2, 'center_x': center_x + 0.2, 'center_y': center_y + 0.2,
              'e1': 0.5, 'e2': 0.5}]
         kwargs_source_fixed = [{}]
         return source_model_list, kwargs_source, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source, kwargs_upper_source
