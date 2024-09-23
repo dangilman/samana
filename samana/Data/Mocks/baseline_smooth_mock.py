@@ -8,21 +8,21 @@ class BaselineSmoothMockMultipole1(MockBase):
 
         z_lens = 0.5
         z_source = 2.0
-        x_image = np.array([-0.84851962, 0.78573513, 0.8437814, -0.12939091])
-        y_image = np.array([-0.78981987, 0.53701446, -0.33383263, 0.92493653])
-        magnifications_true = np.array([3.44107373, 10.39161257, 6.31704447, 4.98009342])
+        x_image = np.array([-1.01159572, 0.84355372, 0.07235513, 0.28625318])
+        y_image = np.array([-0.1983683, -0.52683597, -1.00561368, 0.92097415])
+        magnifications_true = np.array([8.94131167, 13.59273174, 12.90176102, 8.02753885])
         from samana.Data.ImageData.baseline_smooth_mock_multipole1 import image_data
         magnification_measurement_errors = 0.0
         magnifications = np.array(magnifications_true) + np.array(magnification_measurement_errors)
         astrometric_uncertainties = [0.00001] * 4
         flux_ratio_uncertainties = None
-        self.a3a_true = 0.012
-        self.a4a_true = 0.005
-        self.delta_phi_m3_true = np.pi/6/2
-        self.delta_phi_m4_true = 0.0
-        self.phi_q_true = -1.178097
-        self.q_true = 0.75220
-        self.gamma_true = 2.1
+        self.a3a_true = -0.012
+        self.a4a_true = -0.002
+        self.delta_phi_m3_true = np.pi/6/3
+        self.delta_phi_m4_true = np.pi/8/2
+        self.phi_q_true = 1.33897
+        self.q_true = 0.798879
+        self.gamma_true = 2.07
 
         super(BaselineSmoothMockMultipole1, self).__init__(z_lens, z_source, x_image, y_image,
                                     magnifications, astrometric_uncertainties, flux_ratio_uncertainties, image_data,
