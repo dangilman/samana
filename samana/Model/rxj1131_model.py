@@ -36,10 +36,6 @@ class _RXJ1131ModelBase(ModelBase):
             kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
         return kwargs_constraints
 
-    @property
-    def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2]]
-
     def setup_source_light_model(self):
 
         source_model_list = ['SERSIC_ELLIPSE']
@@ -76,20 +72,19 @@ class _RXJ1131ModelBase(ModelBase):
                                    'e1': -0.16427768880824237, 'e2': -0.13750403237174702,
                                    'center_x': 0.027285815352598032, 'center_y': -0.08085840409754444},
                                   {'amp': 10.662270851598919, 'R_sersic': 0.11902191994454238,
-                                   'n_sersic': 0.05, 'center_x': self._data.gx,
-                                   'center_y': self._data.gy}]
+                                   'n_sersic': 0.05, 'center_x': self._data.g2x, 'center_y': self._data.g2y}]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1},
-            {'R_sersic': 0.05, 'n_sersic': 0.25, 'center_x': 0.1, 'center_y': 0.1}]
+            {'R_sersic': 0.05, 'n_sersic': 0.25, 'center_x': 0.025, 'center_y': 0.025}]
         kwargs_lower_lens_light = [
             {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10.0, 'center_y': -10.0},
-            {'R_sersic': 0.001, 'n_sersic': 0.5, 'center_x': -10.0, 'center_y': -10.0}]
+            {'R_sersic': 0.001, 'n_sersic': 0.5, 'center_x': self._data.g2x - 0.15, 'center_y': self._data.g2y - 0.15}]
         kwargs_upper_lens_light = [
             {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10},
-            {'R_sersic': 10, 'n_sersic': 10.0, 'center_x': 10.0, 'center_y': 10.0}]
+            {'R_sersic': 10, 'n_sersic': 10.0, 'center_x': self._data.g2x + 0.15, 'center_y': self._data.g2y + 0.15}]
         kwargs_lens_light_fixed = [{}, {}]
 
-        add_uniform_light = True
+        add_uniform_light = False
         if add_uniform_light:
             kwargs_uniform, kwargs_uniform_sigma, kwargs_uniform_fixed, \
             kwargs_uniform_lower, kwargs_uniform_upper = self.add_uniform_lens_light(-12.6447)
@@ -134,7 +129,7 @@ class RXJ1131ModelEPLM3M4Shear(_RXJ1131ModelBase):
           'center_x': 0.053527710995482466, 'center_y': -0.03609935287371285,
           'a3_a': 0.0, 'delta_phi_m3': 0.48799225675778923, 'a4_a': 0.0, 'delta_phi_m4': 0.0},
          {'gamma1': 0.19783396082255958, 'gamma2': 0.14989552788034424, 'ra_0': 0.0, 'dec_0': 0.0},
-         {'theta_E': 0.08861649180514239, 'center_x': self._data.gx, 'center_y': self._data.gy}]
+         {'theta_E': 0.08861649180514239, 'center_x': self._data.g2x, 'center_y': self._data.g2y}]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1, 2]
         if kwargs_lens_macro_init is not None:
