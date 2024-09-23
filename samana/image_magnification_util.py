@@ -79,21 +79,24 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
     flux_arrays = []
     ext = LensModelExtensions(lens_model_full)
     for (x_img, y_img) in zip(x_image, y_image):
-
-        w1, w2, v11, v12, v21, v22 = ext.hessian_eigenvectors(
-            x_img, y_img, kwargs_lens
-        )
-        _v = [np.array([v11, v12]), np.array([v21, v22])]
-        _w = [abs(w1), abs(w2)]
-        idx = int(np.argmax(_w))
-        v = _v[idx]
-        rotation_angle = np.arctan(v[1] / v[0]) - np.pi/2
-        grid_x, grid_y = util.rotate(grid_x_large, grid_y_large,
-                                     rotation_angle)
-        sort = np.argsort(_w)
-        q_eigenvalue = _w[sort[0]] / _w[sort[1]]
-        q = max(0.1, q_eigenvalue)
-        grid_r = np.hypot(grid_x, grid_y / q).ravel()
+        try:
+            w1, w2, v11, v12, v21, v22 = ext.hessian_eigenvectors(
+                x_img, y_img, kwargs_lens
+            )
+            _v = [np.array([v11, v12]), np.array([v21, v22])]
+            _w = [abs(w1), abs(w2)]
+            idx = int(np.argmax(_w))
+            v = _v[idx]
+            rotation_angle = np.arctan(v[1] / v[0]) - np.pi / 2
+            grid_x, grid_y = util.rotate(grid_x_large, grid_y_large,
+                                         rotation_angle)
+            sort = np.argsort(_w)
+            q_eigenvalue = _w[sort[0]] / _w[sort[1]]
+            q = max(0.1, q_eigenvalue)
+            grid_r = np.hypot(grid_x, grid_y / q).ravel()
+        except:
+            print('q eigenvalue not defined; computing image magifications on a circular grid.')
+            grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
         mag, flux_array = mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
                             kwargs_lens_free, kwargs_lens, z_split, z_source,
                             cosmo_bkg, x_img, y_img, grid_x_large, grid_y_large,

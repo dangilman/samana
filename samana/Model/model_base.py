@@ -20,16 +20,16 @@ class ModelBase(object):
 
     @property
     def beta_min(self):
-        return self._shapelets_scale_factor * self.beta_scale_param(self._shapelets_order) / 2.0
+        return self._shapelets_scale_factor * self.beta_scale_param(self._shapelets_order) / 2.5
 
     @property
     def beta_max(self):
-        return self.beta_min * 10
+        return self.beta_min * 7.0
 
     def beta_scale_param(self, n_max):
 
         pixel_scale = self._data.coordinate_properties[0]
-        return pixel_scale / np.sqrt(n_max+1)
+        return pixel_scale * np.sqrt(n_max+1)
 
     def add_shapelets_source(self, n_max, beta_init=None):
 
