@@ -63,31 +63,31 @@ class _RXJ1131ModelBase(ModelBase):
             kwargs_lower_source += kwargs_lower_shapelets
             kwargs_upper_source += kwargs_upper_shapelets
 
-        self._image_plane_source_list += [True]
-        x1 = -0.2
-        y1 = 2.2
-        source_model_list_gaussian, kwargs_source_gaussian, kwargs_source_sigma_gaussian, \
-        kwargs_source_fixed_gaussian, kwargs_lower_source_gaussian, kwargs_upper_source_gaussian = \
-            self.gaussian_source_clump(x1, y1, 0.1)
-        source_model_list += source_model_list_gaussian
-        kwargs_source_init += kwargs_source_gaussian
-        kwargs_source_fixed += kwargs_source_fixed_gaussian
-        kwargs_source_sigma += kwargs_source_sigma_gaussian
-        kwargs_lower_source += kwargs_lower_source_gaussian
-        kwargs_upper_source += kwargs_upper_source_gaussian
-
-        self._image_plane_source_list += [True]
-        x2 = 0.75
-        y2 = -1.1
-        source_model_list_gaussian, kwargs_source_gaussian, kwargs_source_sigma_gaussian, \
-        kwargs_source_fixed_gaussian, kwargs_lower_source_gaussian, kwargs_upper_source_gaussian = \
-            self.gaussian_source_clump(x2, y2, 0.1)
-        source_model_list += source_model_list_gaussian
-        kwargs_source_init += kwargs_source_gaussian
-        kwargs_source_fixed += kwargs_source_fixed_gaussian
-        kwargs_source_sigma += kwargs_source_sigma_gaussian
-        kwargs_lower_source += kwargs_lower_source_gaussian
-        kwargs_upper_source += kwargs_upper_source_gaussian
+        # self._image_plane_source_list += [True]
+        # x1 = -0.2
+        # y1 = 2.2
+        # source_model_list_gaussian, kwargs_source_gaussian, kwargs_source_sigma_gaussian, \
+        # kwargs_source_fixed_gaussian, kwargs_lower_source_gaussian, kwargs_upper_source_gaussian = \
+        #     self.gaussian_source_clump(x1, y1, 0.1)
+        # source_model_list += source_model_list_gaussian
+        # kwargs_source_init += kwargs_source_gaussian
+        # kwargs_source_fixed += kwargs_source_fixed_gaussian
+        # kwargs_source_sigma += kwargs_source_sigma_gaussian
+        # kwargs_lower_source += kwargs_lower_source_gaussian
+        # kwargs_upper_source += kwargs_upper_source_gaussian
+        #
+        # self._image_plane_source_list += [True]
+        # x2 = 0.75
+        # y2 = -1.1
+        # source_model_list_gaussian, kwargs_source_gaussian, kwargs_source_sigma_gaussian, \
+        # kwargs_source_fixed_gaussian, kwargs_lower_source_gaussian, kwargs_upper_source_gaussian = \
+        #     self.gaussian_source_clump(x2, y2, 0.1)
+        # source_model_list += source_model_list_gaussian
+        # kwargs_source_init += kwargs_source_gaussian
+        # kwargs_source_fixed += kwargs_source_fixed_gaussian
+        # kwargs_source_sigma += kwargs_source_sigma_gaussian
+        # kwargs_lower_source += kwargs_lower_source_gaussian
+        # kwargs_upper_source += kwargs_upper_source_gaussian
 
         source_params = [kwargs_source_init, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source,
                          kwargs_upper_source]
