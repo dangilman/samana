@@ -58,6 +58,12 @@ class Output(object):
             else:
                 self._macromodel_samples_dict = None
 
+    def clean_nans(self):
+
+        flux_ratios_summed = np.sum(self.flux_ratios, axis=1)
+        inds_keep = np.where(np.isfinite(flux_ratios_summed))[0]
+        return self._subsample(inds_keep)
+
     @classmethod
     def from_raw_output(cls, output_path, job_index_min, job_index_max, fitting_kwargs_list=None,
                         macromodel_sample_names=None, print_missing_files=False):
@@ -225,6 +231,7 @@ class Output(object):
         phi_gamma, gamma_ext = shear_cartesian2polar(self.macromodel_samples_dict['gamma1'],
                                                          self.macromodel_samples_dict['gamma2'])
         samples = np.empty((self.macromodel_samples.shape[0], len(param_names)))
+
         for i, param_name in enumerate(param_names):
             if param_name == 'q':
                 samples[:, i] = q
@@ -238,12 +245,42 @@ class Output(object):
                 samples[:, i] = gamma_ext * np.cos(2*phi_gamma)
             elif param_name == 'q_cos_phi':
                 samples[:, i] = q * np.cos(phi_q)
+            elif param_name == 'a3_a_phys':
+                rescale = self.macromodel_samples_dict['theta_E'] / np.sqrt(q)
+                samples[:, i] = self.macromodel_samples_dict['a3_a'] * rescale
+            elif param_name == 'a4_a_phys':
+                rescale = self.macromodel_samples_dict['theta_E'] / np.sqrt(q)
+                samples[:, i] = self.macromodel_samples_dict['a4_a'] * rescale
             elif param_name == 'a3_a_cos':
                 samples[:, i] = self.macromodel_samples_dict['a3_a'] * \
                                 np.cos(3 * (phi_q + self.macromodel_samples_dict['delta_phi_m3']))
             elif param_name == 'a4_a_cos':
                 samples[:, i] = self.macromodel_samples_dict['a4_a'] * \
                                 np.cos(4 * (phi_q + self.macromodel_samples_dict['delta_phi_m4']))
+            elif param_name == 'a4':
+                #rescale = self.macromodel_samples_dict['theta_E'] / np.sqrt(q)
+                a4a = self.macromodel_samples_dict['a4_a']
+                theta = self.macromodel_samples_dict['delta_phi_m4'] + phi_q
+                samples[:,i] = a4a * np.cos(theta)
+            elif param_name == 'b4':
+                #rescale = self.macromodel_samples_dict['theta_E'] / np.sqrt(q)
+                a4a = self.macromodel_samples_dict['a4_a']
+                theta = self.macromodel_samples_dict['delta_phi_m4'] + phi_q
+                samples[:,i] = a4a * np.sin(theta)
+            elif param_name == 'a3':
+                #rescale = self.macromodel_samples_dict['theta_E'] / np.sqrt(q)
+                a3a = self.macromodel_samples_dict['a3_a']
+                theta = self.macromodel_samples_dict['delta_phi_m3'] + phi_q
+                samples[:,i] = a3a * np.cos(theta)
+            elif param_name == 'b3':
+                #rescale = self.macromodel_samples_dict['theta_E'] / np.sqrt(q)
+                a3a = self.macromodel_samples_dict['a3_a']
+                theta = self.macromodel_samples_dict['delta_phi_m3'] + phi_q
+                samples[:,i] = a3a * np.sin(theta)
+            elif param_name == 'phi_m3':
+                samples[:, i] = self.macromodel_samples_dict['delta_phi_m3'] + phi_q
+            elif param_name == 'phi_m4':
+                samples[:, i] = self.macromodel_samples_dict['delta_phi_m4'] + phi_q
             elif param_name == 'f2/f1':
                 samples[:, i] = self.flux_ratios[:, 0]
             elif param_name == 'f3/f1':

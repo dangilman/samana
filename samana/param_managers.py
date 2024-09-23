@@ -39,7 +39,7 @@ class PowerLawParamManager(object):
         # apply the scaling (so this method isn't used for those classes)
         return a_m_phys
 
-    def param_chi_square_penalty(self, args, q_min=0.19):
+    def param_chi_square_penalty(self, args, q_min=0.1):
         e1 = args[3]
         e2 = args[4]
         c = np.sqrt(e1 ** 2 + e2 ** 2)
@@ -515,6 +515,51 @@ class EPLMultipole34FreeShear(PowerLawParamManager):
         self.kwargs_lens[1] = kwargs_shear
         return self.kwargs_lens
 
+class EPLMultipole34FreeShearLensMassPrior(PowerLawParamManager):
+
+    def __init__(self, kwargs_lens_init, a4a_init, a3a_init,
+                 delta_phi_m3, delta_phi_m4, center_x, center_y, sigma_xy):
+        """
+
+        :param kwargs_lens_init: the initial kwargs_lens before optimizing
+        :param shear_strength: the strenght of the external shear to be kept fixed
+        :param delta_phi_m3: the orientation of the m=3 multipole relative to the EPL position angle
+        """
+
+        self._a4a_init = a4a_init
+        self._a3a_init = a3a_init
+        self._delta_phi_m3 = delta_phi_m3
+        self._delta_phi_m4 = delta_phi_m4
+        self._idx_m4 = 0
+        self._idx_m3 = 0
+        self._center_x = center_x
+        self._center_y = center_y
+        self._sigmaxy = sigma_xy
+        super(EPLMultipole34FreeShearLensMassPrior, self).__init__(kwargs_lens_init)
+
+    def param_chi_square_penalty(self, args):
+        center_x = args[1] - self._center_x
+        center_y = args[2] - self._center_y
+        dr = np.hypot(center_x, center_y)
+        if dr > 5 * self._sigmaxy:
+            return 1e9
+        else:
+            return np.exp(-0.5 * dr ** 2 / self._sigmaxy ** 2)
+
+    def args_to_kwargs(self, args):
+        (thetaE, center_x, center_y, e1, e2, g1, g2) = args
+        gamma = self.kwargs_lens[0]['gamma']
+        kwargs_epl = {'theta_E': thetaE, 'center_x': center_x, 'center_y': center_y,
+                      'e1': e1, 'e2': e2, 'gamma': gamma}
+        self.kwargs_lens[0] = kwargs_epl
+        self.kwargs_lens[0]['a4_a'] = self._a4a_init
+        self.kwargs_lens[0]['a3_a'] = self._a3a_init
+        self.kwargs_lens[0]['delta_phi_m3'] = self._delta_phi_m3
+        self.kwargs_lens[0]['delta_phi_m4'] = self._delta_phi_m4
+        kwargs_shear = {'gamma1': g1, 'gamma2': g2}
+        self.kwargs_lens[1] = kwargs_shear
+        return self.kwargs_lens
+
 
 def auto_param_class(lens_model_list_macro, kwargs_lens_init, macromodel_samples_fixed_dict):
 
@@ -551,7 +596,6 @@ def auto_param_class(lens_model_list_macro, kwargs_lens_init, macromodel_samples
                                                   macromodel_samples_fixed_dict['a3_a'],
                                                   macromodel_samples_fixed_dict['delta_phi_m3'],
                                                   macromodel_samples_fixed_dict['delta_phi_m4'])
-
     else:
         raise Exception('this functionality only implemented for EPL_MULTIPOLE_M3M4 plus shear model')
 

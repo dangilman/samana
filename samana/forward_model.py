@@ -372,6 +372,11 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     else:
         delta_x_image, delta_y_image = np.zeros(len(data_class.x_image)), np.zeros(len(data_class.y_image))
 
+    if data_class.redshift_sampling:
+        z_lens = data_class.sample_z_lens()
+    else:
+        z_lens = data_class.z_lens
+
     model_class = model(data_class, **kwargs_model_class)
     realization_dict, realization_samples, realization_param_names = sample_prior(kwargs_sample_realization)
     source_dict, source_samples, source_param_names = sample_prior(kwargs_sample_source)
@@ -386,7 +391,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         if 'cone_opening_angle_arcsec' not in realization_dict.keys():
             theta_E = model_class.setup_lens_model()[-1][0][0]['theta_E']
             realization_dict['cone_opening_angle_arcsec'] = max(6.0 * theta_E, 6.0)
-        realization_init = present_model_function(data_class.z_lens, data_class.z_source, **realization_dict)
+        realization_init = present_model_function(z_lens, data_class.z_source, **realization_dict)
         preset_realization = False
     if verbose:
         print('random seed: ', seed)
@@ -479,11 +484,16 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         kwargs_multiplane_model = kwargs_model['kwargs_multiplane_model']
 
     else:
-
+        param_class_4pointsolver = model_class.param_class_4pointsolver(lens_model_init.lens_model_list,
+                                                                        kwargs_lens_init,
+                                                                        macromodel_samples_fixed_dict)
         if use_decoupled_multiplane_approximation:
-            param_class = auto_param_class(lens_model_init.lens_model_list,
+            if param_class_4pointsolver is None:
+                param_class = auto_param_class(lens_model_init.lens_model_list,
                                            kwargs_lens_align,
                                            macromodel_samples_fixed_dict)
+            else:
+                param_class = param_class_4pointsolver
             kwargs_lens_init = kwargs_lens_align + kwargs_lens_init[len(kwargs_lens_align):]
             opt = Optimizer.decoupled_multiplane(data_class.x_image,
                                                  data_class.y_image,
@@ -494,25 +504,28 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                  tol_simplex_func=1e-5,
                                                  simplex_n_iterations=500
                                                  )
-            kwargs_solution, _ = opt.optimize(20, 50, verbose=verbose, seed=seed)
+            kwargs_solution, _ = opt.optimize(50, 50, verbose=verbose, seed=seed)
             kwargs_multiplane_model = opt.kwargs_multiplane_model
         else:
 
             kwargs_lens_init = kwargs_lens_align + kwargs_halos
-            param_class = auto_param_class(lens_model_init.lens_model_list,
-                                           kwargs_lens_init,
-                                           macromodel_samples_fixed_dict)
+            if param_class_4pointsolver is None:
+                param_class = auto_param_class(lens_model_init.lens_model_list,
+                                               kwargs_lens_align,
+                                               macromodel_samples_fixed_dict)
+            else:
+                param_class = param_class_4pointsolver
             opt = Optimizer.full_raytracing(data_class.x_image,
                                             data_class.y_image,
                                             lens_model_init.lens_model_list,
                                             lens_model_init.redshift_list,
-                                            data_class.z_lens,
+                                            z_lens,
                                             data_class.z_source,
                                             param_class,
                                             tol_simplex_func=1e-5,
                                             simplex_n_iterations=500,
                                             particle_swarm=True)
-            kwargs_solution, _ = opt.optimize(20, 50, verbose=verbose, seed=seed)
+            kwargs_solution, _ = opt.optimize(50, 50, verbose=verbose, seed=seed)
             kwargs_multiplane_model = opt.kwargs_multiplane_model
 
     if use_decoupled_multiplane_approximation:

@@ -15,6 +15,10 @@ class ModelBase(object):
         self._data = data_class
         self._shapelets_scale_factor = shapelets_scale_factor
 
+    @property
+    def param_class_4pointsolver(self, *args, **kwargs):
+        return None
+
     def beta_scale_param(self, n_max):
 
         pixel_scale = self._data.coordinate_properties[0]

@@ -1,5 +1,6 @@
 from samana.Model.model_base import ModelBase
 import numpy as np
+from samana.param_managers import EPLMultipole34FreeShearLensMassPrior
 import pickle
 
 class _RXJ0911ModelBase(ModelBase):
@@ -103,6 +104,20 @@ class _RXJ0911ModelBase(ModelBase):
 
 class RXJ0911ModelEPLM3M4Shear(_RXJ0911ModelBase):
 
+    def param_class_4pointsolver(self, lens_model_list_macro,
+                                 kwargs_lens_init,
+                                 macromodel_samples_fixed_dict):
+        center_x = 0.0
+        center_y = 0.0
+        sigma_xy = 0.025
+        param_class = EPLMultipole34FreeShearLensMassPrior(kwargs_lens_init,
+                                                  macromodel_samples_fixed_dict['a4_a'],
+                                                  macromodel_samples_fixed_dict['a3_a'],
+                                                  macromodel_samples_fixed_dict['delta_phi_m3'],
+                                                  macromodel_samples_fixed_dict['delta_phi_m4'],
+                                                  center_x, center_y, sigma_xy)
+        return param_class
+
     @property
     def prior_lens(self):
         return self.population_gamma_prior
@@ -115,7 +130,7 @@ class RXJ0911ModelEPLM3M4Shear(_RXJ0911ModelBase):
              'e2': -0.03742794555646753, 'center_x': -0.0510201756957317, 'center_y': -0.0007169141231261475,
              'a4_a': 0.0, 'a3_a': 0.0, 'delta_phi_m3': 0.0, 'delta_phi_m4': 0.0},
             {'gamma1': -0.033686413266210254, 'gamma2': -0.10739086480786286, 'ra_0': 0, 'dec_0': 0},
-            {'theta_E': 0.25, 'center_x': -0.767,'center_y': 0.657}
+            {'theta_E': 0.25, 'center_x': self._data.g2x,'center_y': self._data.g2y}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1, 2]

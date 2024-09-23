@@ -9,14 +9,23 @@ class _RXJ0911(QuadNoImageDataBase):
 
         z_lens = 0.77
         z_source = 2.76
-
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
         super(_RXJ0911, self).__init__(z_lens, z_source, x_image, y_image, magnifications, image_position_uncertainties,
                                        flux_uncertainties, uncertainty_in_fluxes, keep_flux_ratio_index)
 
-class RXJ0911_HST(_RXJ0911):
+    @property
+    def coordinate_properties(self):
+        window_size = 6
+        deltaPix = 0.05
+        ra_at_xy_0 = -3
+        dec_at_xy_0 = -3
+        transform_pix2angle = np.array([[0.05, 0.], [0., 0.05]])
+        return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
 
+class RXJ0911_HST(_RXJ0911):
+    g2x = -0.767
+    g2y = 0.657
     def __init__(self):
         """
 

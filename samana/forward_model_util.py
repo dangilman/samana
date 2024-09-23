@@ -85,8 +85,6 @@ def sample_prior(kwargs_prior):
             sample_names += ['a3_a', 'a4_a', 'delta_phi_m3', 'delta_phi_m4']
             joint_multipole_prior_used = True
 
-        elif param_name == 'BAYESIAN_HIERARCHICAL_MULTIPOLES':
-            raise Exception('not yet implemented')
         else:
             prior_type = kwargs_prior[param_name][0]
             if prior_type == 'FIXED':
@@ -104,6 +102,11 @@ def sample_prior(kwargs_prior):
             if joint_multipole_prior_used and param_name in ['a3_a', 'a4_a', 'delta_phi_m3', 'delta_phi_m3']:
                 raise Exception('you have specified a prior on multipole moments separately '
                                  'from JOINT_MULTIPOLE_PRIOR, which is not currently allowed!')
+            positive_definite_param_names = ['satellite_1_theta_E',
+                                             'satellite_2_theta_E',
+                                             'satellite_3_theta_E']
+            if param_name in positive_definite_param_names:
+                sample = abs(sample)
             prior_samples_dict[param_name] = sample
             sample_list.append(sample)
             sample_names.append(param_name)
