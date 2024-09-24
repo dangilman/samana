@@ -104,7 +104,8 @@ class _J0607(ImagingDataBase):
         return kwargs_psf
 
 class J0607_MIRI(_J0607):
-
+    satx = 1.22
+    saty = 0.24
     def __init__(self, supersample_factor=1):
         """
 

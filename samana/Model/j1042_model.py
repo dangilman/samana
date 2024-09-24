@@ -25,15 +25,13 @@ class _J1042ModelBase(ModelBase):
     @property
     def kwargs_constraints(self):
         joint_source_with_point_source = [[0, 0]]
-        #joint_lens_light_with_lens_light = [[0, 1, ['center_x', 'center_y']]]
         kwargs_constraints = {
                             'joint_source_with_point_source': joint_source_with_point_source,
-                              #'joint_lens_light_with_lens_light': joint_lens_light_with_lens_light,
                               'num_point_source_list': [len(self._data.x_image)],
                                 'joint_lens_with_light': [[1, 2, ['center_x', 'center_y']]],
                               'solver_type': 'PROFILE_SHEAR',
                               'point_source_offset': True,
-            'image_plane_source_list': self._image_plane_source_list
+                                'image_plane_source_list': self._image_plane_source_list
                               }
         if self._shapelets_order is not None:
             kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
@@ -96,21 +94,21 @@ class _J1042ModelBase(ModelBase):
              'e1': -0.1900170413877109, 'e2': 0.13709164288916312, 'center_x': 0.04939959340021617,
              'center_y': 0.010484697289207538},
             {'amp': 4.913981821321209, 'R_sersic': 0.18737736861280985, 'n_sersic': 3.8362876729343975,
-             'e1': 0.1858321164784092, 'e2': -0.2753944179112829, 'center_x': 1.8699636079097566,
-             'center_y': -0.4847974949545327}
+             'e1': 0.1858321164784092, 'e2': -0.2753944179112829, 'center_x': self._data.gx,
+             'center_y': self._data.gy}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1},
             #{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1},
-        {'R_sersic': 0.05, 'n_sersic': 0.25, 'center_x': 0.1, 'center_y': 0.1, 'e1': 0.1, 'e2': 0.1,}]
+        {'R_sersic': 0.05, 'n_sersic': 0.25, 'center_x': 0.05, 'center_y': 0.05, 'e1': 0.1, 'e2': 0.1,}]
         kwargs_lower_lens_light = [
             {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10.0, 'center_y': -10.0},
            # {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10.0, 'center_y': -10.0},
-        {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': self._data.gx - 0.2, 'center_y': self._data.gy - 0.2}]
+        {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': self._data.gx - 0.1, 'center_y': self._data.gy - 0.1}]
         kwargs_upper_lens_light = [
             {'R_sersic': 4.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10},
            # {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10},
-        {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': self._data.gx + 0.2, 'center_y': self._data.gy + 0.2}]
+        {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': self._data.gx + 0.1, 'center_y': self._data.gy + 0.1}]
         kwargs_lens_light_fixed = [{},
                                   # {},
                                    {}]
@@ -167,20 +165,11 @@ class J1042ModelEPLM3M4Shear(_J1042ModelBase):
         beta_x_counter, beta_y_counter = lens_model.ray_shooting(counter_x, counter_y, kwargs_lens)
         dx, dy = beta_x - beta_x_counter, beta_y - beta_y_counter
         return -0.5 * (dx ** 2 + dy ** 2) / 0.001 ** 2
-        # solution_x, solution_y = leq.image_position_from_source(beta_x, beta_y, kwargs_lens)
-        # counter_image_x = 0.8
-        # counter_image_y = 0.8
-        # dx = counter_image_x - solution_x
-        # dy = counter_image_y - solution_y
-        # dr = np.sqrt(dx ** 2 + dy ** 2)
-        # if len(dr) > 1:
-        #     idx_min = np.argsort(dr)[0]
-        #     return -0.5 * dr[idx_min] ** 2 / 0.01 ** 2
-        # else:
-        #     return float(-0.5 * dr ** 2 / 0.01 ** 2)
+
 
     @property
     def prior_lens(self):
+        # note the prior on the lens position is implicitely also a prior on the light position
         return self.population_gamma_prior + [
                 [2, 'center_x', self._data.gx, 0.05],
                 [2, 'center_y', self._data.gy, 0.05],

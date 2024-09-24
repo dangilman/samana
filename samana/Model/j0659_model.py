@@ -145,7 +145,7 @@ class J0659ModelEPLM3M4Shear(_J0659ModelBase):
                 for param_name in kwargs_lens_macro_init[i].keys():
                     kwargs_lens_macro[i][param_name] = kwargs_lens_macro_init[i][param_name]
         kwargs_lens_init = kwargs_lens_macro
-        kwargs_lens_sigma = [{'theta_E': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'e1': 0.2, 'e2': 0.2, 'gamma': 0.1,
+        kwargs_lens_sigma = [{'theta_E': 0.2, 'center_x': 0.1, 'center_y': 0.1, 'e1': 0.2, 'e2': 0.2, 'gamma': 0.1,
                               'a4_a': 0.01, 'a3_a': 0.005, 'delta_phi_m3': np.pi / 12, 'delta_phi_m4': np.pi / 16},
                              {'gamma1': 0.1, 'gamma2': 0.1},
                              {'theta_E': 0.2, 'center_x': 0.05, 'center_y': 0.05}]
