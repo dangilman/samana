@@ -40,14 +40,14 @@ class _J0259ModelBase(ModelBase):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 4.2956619560417995, 'R_sersic': 0.1, 'n_sersic': 9.905756616633887,
-             'e1': -0.18181879996262018, 'e2': 0.12717880943556928, 'center_x': -0.0678032498640852,
-             'center_y': 0.01778226635359924}
+            {'amp': 2.5366893078821025, 'R_sersic': 0.4166095652205182, 'n_sersic': 3.563437423048624,
+             'e1': -0.06601957042669272, 'e2': -0.00226484917443781,
+             'center_x': -0.048041075911909224, 'center_y': 0.014409420481205734}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
-        kwargs_upper_source = [{'R_sersic': 5.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
+        kwargs_upper_source = [{'R_sersic': 5.0, 'n_sersic': 8.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
         kwargs_source_fixed = [{}]
 
         if self._shapelets_order is not None:
@@ -137,12 +137,22 @@ class J0259ModelEPLM3M4Shear(_J0259ModelBase):
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
-        kwargs_lens_macro = [
-            {'theta_E': 0.7382258421954411, 'gamma': 2.35, 'e1': -0.13105140752805516, 'e2': 0.04455987103216314,
-             'center_x': -0.017820524219193588, 'center_y': 0.011265293010530029, 'a3_a': 0.0,
-             'delta_phi_m3': -0.01083904670239869, 'a4_a': 0.0, 'delta_phi_m4': 0.5569476538609068},
-            {'gamma1': 0.040701326831851015, 'gamma2': -0.06090917010819073, 'ra_0': 0.0, 'dec_0': 0.0}
-        ]
+        if self._data.band == 'F814W':
+            kwargs_lens_macro = [
+                {'theta_E': 0.7414035561215695, 'gamma': 2.0221867187111067, 'e1': -0.12416891142507401,
+                 'e2': 0.05220093206376522, 'center_x': -0.004921626192296812, 'center_y': 0.008559895185872239,
+                 'a3_a': 0.0, 'delta_phi_m3': -0.10157639936931348, 'a4_a': 0.0, 'delta_phi_m4': 0.911096138562145},
+                {'gamma1': 0.00643783384552091, 'gamma2': -0.03510346169910469, 'ra_0': 0.0, 'dec_0': 0.0}
+            ]
+        elif self._data.band == 'F475X':
+            kwargs_lens_macro = [
+                {'theta_E': 0.7373590543163482, 'gamma': 2.2765451155672305, 'e1': -0.10130446214725602,
+                 'e2': 0.023262328547683935, 'center_x': -0.020987216615909077, 'center_y': 0.012317620381194251,
+                 'a3_a': 0.0, 'delta_phi_m3': 0.10127688417675478, 'a4_a': 0.0, 'delta_phi_m4': 0.4911663020271606},
+                {'gamma1': 0.03831713538022406, 'gamma2': -0.06042265400072665, 'ra_0': 0.0, 'dec_0': 0.0}
+            ]
+        else:
+            raise Exception('imaging data band must be either F814W or F475X')
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]
         if kwargs_lens_macro_init is not None:
