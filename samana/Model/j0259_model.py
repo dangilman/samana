@@ -40,7 +40,7 @@ class _J0259ModelBase(ModelBase):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 4.2956619560417995, 'R_sersic': 0.49107770830258624, 'n_sersic': 9.905756616633887,
+            {'amp': 4.2956619560417995, 'R_sersic': 0.1, 'n_sersic': 9.905756616633887,
              'e1': -0.18181879996262018, 'e2': 0.12717880943556928, 'center_x': -0.0678032498640852,
              'center_y': 0.01778226635359924}
         ]
@@ -159,7 +159,7 @@ class J0259ModelEPLM3M4Shear(_J0259ModelBase):
              'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
             {'gamma1': -0.5, 'gamma2': -0.5}]
         kwargs_upper_lens = [
-            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.6, 'a4_a': 0.1,
+            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.8, 'a4_a': 0.1,
              'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
             {'gamma1': 0.5, 'gamma2': 0.5}]
         kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,

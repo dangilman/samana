@@ -4,49 +4,6 @@ import pickle
 
 class _J0405ModelBase(ModelBase):
 
-    @property
-    def kwargs_constraints(self):
-        joint_source_with_point_source = [[0, 0]]
-        kwargs_constraints = {'joint_source_with_point_source': joint_source_with_point_source,
-                              'num_point_source_list': [len(self._data.x_image)],
-                              'solver_type': 'PROFILE_SHEAR',
-                              'point_source_offset': True
-                              }
-        #if self._shapelets_order is not None:
-        #    kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
-        return kwargs_constraints
-
-    def setup_source_light_model(self):
-
-        source_model_list = ['SERSIC_ELLIPSE']
-        kwargs_source_init = [
-            {'amp': 0.35165751036193305, 'R_sersic': 0.37128687269403093, 'n_sersic': 2.9886490388481515,
-             'e1': -0.47667494172092645, 'e2': 0.3818926500110475, 'center_x': 0.015214122229428428,
-             'center_y': -0.04383957108598613}
-        ]
-        kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
-                                'center_y': 0.1}]
-        kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
-        kwargs_upper_source = [{'R_sersic': 1.0, 'n_sersic': 8.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
-        kwargs_source_fixed = [{}]
-
-        if self._shapelets_order is not None:
-            n_max = int(self._shapelets_order)
-            shapelets_source_list, kwargs_shapelets_init, kwargs_shapelets_sigma, \
-            kwargs_shapelets_fixed, kwargs_lower_shapelets, kwargs_upper_shapelets = \
-                self.add_shapelets_source(n_max)
-            source_model_list += shapelets_source_list
-            kwargs_source_init += kwargs_shapelets_init
-            kwargs_source_fixed += kwargs_shapelets_fixed
-            kwargs_source_sigma += kwargs_shapelets_sigma
-            kwargs_lower_source += kwargs_lower_shapelets
-            kwargs_upper_source += kwargs_upper_shapelets
-
-        source_params = [kwargs_source_init, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source,
-                         kwargs_upper_source]
-
-        return source_model_list, source_params
-
     def setup_lens_light_model(self):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
@@ -95,6 +52,68 @@ class _J0405ModelBase(ModelBase):
         return kwargs_likelihood
 
 class J0405ModelEPLM3M4Shear(_J0405ModelBase):
+
+    def __init__(self, data_class, shapelets_order=None, shapelets_scale_factor=1, shapelets_only=False):
+
+        self._shapelets_only = shapelets_only
+        super(J0405ModelEPLM3M4Shear, self).__init__(data_class, shapelets_order,
+                                                     shapelets_scale_factor)
+
+    @property
+    def kwargs_constraints(self):
+        joint_source_with_point_source = [[0, 0]]
+        kwargs_constraints = {'joint_source_with_point_source': joint_source_with_point_source,
+                              'num_point_source_list': [len(self._data.x_image)],
+                              'solver_type': 'PROFILE_SHEAR',
+                              'point_source_offset': True
+                              }
+        if self._shapelets_order is not None:
+            if self._shapelets_only:
+                pass
+            else:
+                kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
+        return kwargs_constraints
+
+    def setup_source_light_model(self):
+
+        source_model_list = ['SERSIC_ELLIPSE']
+        kwargs_source_init = [
+            {'amp': 0.35165751036193305, 'R_sersic': 0.37128687269403093, 'n_sersic': 2.9886490388481515,
+             'e1': -0.47667494172092645, 'e2': 0.3818926500110475, 'center_x': 0.015214122229428428,
+             'center_y': -0.04383957108598613}
+        ]
+        kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
+                                'center_y': 0.1}]
+        kwargs_lower_source = [
+            {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
+        kwargs_upper_source = [
+            {'R_sersic': 1.0, 'n_sersic': 8.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
+        kwargs_source_fixed = [{}]
+
+        if self._shapelets_order is not None:
+            n_max = int(self._shapelets_order)
+            shapelets_source_list, kwargs_shapelets_init, kwargs_shapelets_sigma, \
+            kwargs_shapelets_fixed, kwargs_lower_shapelets, kwargs_upper_shapelets = \
+                self.add_shapelets_source(n_max)
+            if self._shapelets_only:
+                source_model_list = shapelets_source_list
+                kwargs_source_init = kwargs_shapelets_init
+                kwargs_source_fixed = kwargs_shapelets_fixed
+                kwargs_source_sigma = kwargs_shapelets_sigma
+                kwargs_lower_source = kwargs_lower_shapelets
+                kwargs_upper_source = kwargs_upper_shapelets
+            else:
+                source_model_list += shapelets_source_list
+                kwargs_source_init += kwargs_shapelets_init
+                kwargs_source_fixed += kwargs_shapelets_fixed
+                kwargs_source_sigma += kwargs_shapelets_sigma
+                kwargs_lower_source += kwargs_lower_shapelets
+                kwargs_upper_source += kwargs_upper_shapelets
+
+        source_params = [kwargs_source_init, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source,
+                         kwargs_upper_source]
+
+        return source_model_list, source_params
 
     @property
     def prior_lens(self):
