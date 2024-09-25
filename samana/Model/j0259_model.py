@@ -72,8 +72,10 @@ class _J0259ModelBase(ModelBase):
         if self._data.band == 'F814W':
             lens_light_model_list = ['SERSIC_ELLIPSE']
             kwargs_lens_light_init = [
-                {'amp': 1, 'R_sersic': 2.2467253226957458, 'n_sersic': 3.3911670131456577,
-                 'center_x': 0.0025886976171241058, 'center_y': 0.0226415303675161}
+                {'amp': 0.20074624938399432, 'R_sersic': 2.097226414051843,
+                 'n_sersic': 4.0, 'e1': -0.2769940052424607,
+                 'e2': 0.2530155023529464, 'center_x': -0.008330245657409108,
+                 'center_y': 0.002286411273696616}
             ]
             kwargs_lens_light_sigma = [
                 {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.025, 'center_y': 0.025}]
