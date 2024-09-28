@@ -41,9 +41,11 @@ class _RXJ1131ModelBase(ModelBase):
 
         self._image_plane_source_list = [False]
         source_model_list = ['SERSIC_ELLIPSE']
-        kwargs_source_init = [{'amp': 1, 'R_sersic': 0.4, 'n_sersic': 3.6305228276190764,
-                               'e1': -0.4155480081962428, 'e2': 0.36638779330275034,
-                               'center_x': 0.023093143905461546, 'center_y': -0.054747647240303066}]
+        kwargs_source_init = [
+            {'amp': 37.84232574657596, 'R_sersic': 0.3698572919076755, 'n_sersic': 3.7617972953749863,
+             'e1': 0.031165960173117565, 'e2': 0.41419937730384127, 'center_x': 0.1300199654460757,
+             'center_y': 0.00894567472215557}
+        ]
         kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
@@ -68,7 +70,7 @@ class _RXJ1131ModelBase(ModelBase):
         # y1 = 2.2
         # source_model_list_gaussian, kwargs_source_gaussian, kwargs_source_sigma_gaussian, \
         # kwargs_source_fixed_gaussian, kwargs_lower_source_gaussian, kwargs_upper_source_gaussian = \
-        #     self.gaussian_source_clump(x1, y1, 0.1)
+        #     self.shapelet_source_clump(x1, y1, 4, 0.1)
         # source_model_list += source_model_list_gaussian
         # kwargs_source_init += kwargs_source_gaussian
         # kwargs_source_fixed += kwargs_source_fixed_gaussian
@@ -77,11 +79,24 @@ class _RXJ1131ModelBase(ModelBase):
         # kwargs_upper_source += kwargs_upper_source_gaussian
         #
         # self._image_plane_source_list += [True]
-        # x2 = 0.75
-        # y2 = -1.1
+        # x2 = 0.25
+        # y2 = 2.4
         # source_model_list_gaussian, kwargs_source_gaussian, kwargs_source_sigma_gaussian, \
         # kwargs_source_fixed_gaussian, kwargs_lower_source_gaussian, kwargs_upper_source_gaussian = \
-        #     self.gaussian_source_clump(x2, y2, 0.1)
+        #     self.shapelet_source_clump(x2, y2, 4, 0.1)
+        # source_model_list += source_model_list_gaussian
+        # kwargs_source_init += kwargs_source_gaussian
+        # kwargs_source_fixed += kwargs_source_fixed_gaussian
+        # kwargs_source_sigma += kwargs_source_sigma_gaussian
+        # kwargs_lower_source += kwargs_lower_source_gaussian
+        # kwargs_upper_source += kwargs_upper_source_gaussian
+        #
+        # self._image_plane_source_list += [True]
+        # x3 = 1.4
+        # y3 = 1.95
+        # source_model_list_gaussian, kwargs_source_gaussian, kwargs_source_sigma_gaussian, \
+        # kwargs_source_fixed_gaussian, kwargs_lower_source_gaussian, kwargs_upper_source_gaussian = \
+        #     self.shapelet_source_clump(x3, y3, 4, 0.1)
         # source_model_list += source_model_list_gaussian
         # kwargs_source_init += kwargs_source_gaussian
         # kwargs_source_fixed += kwargs_source_fixed_gaussian
@@ -97,11 +112,13 @@ class _RXJ1131ModelBase(ModelBase):
     def setup_lens_light_model(self):
 
         lens_light_model_list = ['SERSIC_ELLIPSE', 'SERSIC']
-        kwargs_lens_light_init = [{'amp': 77.2602020556442, 'R_sersic': 1.0197908350340736, 'n_sersic': 3.5080639542743763,
-                                   'e1': 0.043358856899519, 'e2': -0.0662840248053499,
-                                   'center_x': -0.4355745497996096, 'center_y': 0.14811622119294027},
-                                  {'amp': 10.662270851598919, 'R_sersic': 0.16596142410274145,
-                                   'n_sersic': 2.8272635856294444, 'center_x': self._data.g2x, 'center_y': self._data.g2y}]
+        kwargs_lens_light_init = [
+            {'amp': 62.36710261156405, 'R_sersic': 1.1844711774610077, 'n_sersic': 3.769270717843491,
+             'e1': 0.03636972680087215, 'e2': -0.04611601158547492, 'center_x': -0.43657989585448514,
+             'center_y': 0.1344524555733173},
+            {'amp': 29.11652334765286, 'R_sersic': 0.10649631588821883, 'n_sersic': 1.1906176282594878,
+             'center_x': -0.29581713909339646, 'center_y': 0.5501448601891118}
+        ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1},
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'center_x': 0.025, 'center_y': 0.025}]
@@ -155,11 +172,11 @@ class RXJ1131ModelEPLM3M4Shear(_RXJ1131ModelBase):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR', 'SIS']
         kwargs_lens_macro = [
-            {'theta_E': 1.7005661031895332, 'gamma': 2.071818708755484, 'e1': 0.04300761736401614,
-             'e2': -0.07569151161786833, 'center_x': -0.42470137402323505, 'center_y': 0.08002729868899228, 'a3_a': 0.0,
-             'delta_phi_m3': -0.28902318391424725, 'a4_a': 0.0, 'delta_phi_m4': 0.01211474447797431},
-            {'gamma1': -0.11937859693963865, 'gamma2': 0.037870882896687996, 'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.157687111655668, 'center_x': -0.32627954237699586, 'center_y': 0.6940511356189162}
+            {'theta_E': 1.477157571763176, 'gamma': 2.1957003973362847, 'e1': 0.061215895321337525,
+             'e2': -0.1146635085009388, 'center_x': -0.4268989865545886, 'center_y': 0.04152677365715801, 'a3_a': 0.0,
+             'delta_phi_m3': -0.29527050533980004, 'a4_a': 0.0, 'delta_phi_m4': -0.6210803143805403},
+            {'gamma1': -0.132352186696442, 'gamma2': 0.03510715565395326, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.4319041914345371, 'center_x': -0.29581713909339646, 'center_y': 0.5501448601891118}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1, 2]

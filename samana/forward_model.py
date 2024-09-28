@@ -374,6 +374,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
 
     if data_class.redshift_sampling:
         z_lens = data_class.sample_z_lens()
+        if verbose: print('deflector redshift: ', z_lens)
     else:
         z_lens = data_class.z_lens
 
@@ -570,9 +571,9 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     if verbose:
         print('computed magnifications in '+str(np.round(tend - t0, 1))+' seconds')
         print('magnifications: ', magnifications)
-    print(kwargs_solution)
-    print('\n')
-    print(macromodel_samples_fixed_dict)
+        print(kwargs_solution)
+        print('\n')
+        print(macromodel_samples_fixed_dict)
     if macromodel_readout_function is not None:
         samples_macromodel, param_names_macro = macromodel_readout_function(kwargs_solution,
                                                                             macromodel_samples_fixed_dict)
@@ -735,6 +736,10 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         modelPlot.substructure_plot(band_index=0, **kwargs_plot)
         plt.show()
         a=input('continue?')
+
+    if data_class.redshift_sampling:
+        realization_samples = np.append(realization_samples, z_lens)
+        realization_param_names += ['z_lens']
 
     return magnifications, images, realization_samples, source_samples, samples_macromodel, samples_macromodel_fixed, \
            logL_imaging_data, fitting_sequence, \

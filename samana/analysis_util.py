@@ -46,6 +46,9 @@ def numerics_setup(lens_ID):
     if lens_ID == 'B1422':
         rescale_grid_size = 1.4
         rescale_grid_res = 1.4
+    elif lens_ID == 'WFI2026':
+        rescale_grid_size = 1.2
+        rescale_grid_res = 1.2
     elif lens_ID == 'B2045':
         raise Exception('not yet implemented')
     elif lens_ID == 'HE0435':
@@ -150,6 +153,9 @@ def quick_setup(lens_ID):
     if lens_ID == 'B1422':
         from samana.Data.b1422 import B1422_HST as data_class
         from samana.Model.b1422_model import B1422ModelEPLM3M4Shear as model_class
+    elif lens_ID == 'WFI2026':
+        from samana.Data.j2026 import J2026 as data_class
+        from samana.Model.j2026_model import J2026ModelEPLM3M4Shear as model_class
     elif lens_ID == 'B2045':
         from samana.Data.b2045 import B2045_MIRI as data_class
         from samana.Model.b2045_model import B2045ModelEPLM3M4Shear as model_class
