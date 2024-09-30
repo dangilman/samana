@@ -132,7 +132,7 @@ def numerics_setup(lens_ID):
     elif lens_ID == 'MG0414':
         rescale_grid_res = 1.3
         rescale_grid_size = 2.0
-    elif lens_ID == 'M1134':
+    elif lens_ID in ['M1134', 'M1134_MIRI']:
         rescale_grid_res = 1.0
         rescale_grid_size = 1.0
     elif lens_ID == 'H1413':

@@ -141,10 +141,10 @@ class TestMagnificationGridRes(object):
         lens_ID = 'J0259_HST_475X'
         source_size_list = [2.0, 8.0]
         self._run_test(lens_ID, source_size_list, tol_mag=0.01)
-        #
-        # lens_ID = 'J0259'
-        # source_size_list = [2.0, 8.0]
-        # self._run_test(lens_ID, source_size_list, tol_mag=0.012)
+
+        lens_ID = 'J0259'
+        source_size_list = [2.0, 8.0]
+        self._run_test(lens_ID, source_size_list, tol_mag=0.012)
     #
     def test_0405(self):
 
@@ -232,9 +232,9 @@ class TestMagnificationGridRes(object):
 
     def test_m1134(self):
 
-        lens_ID = 'M1134'
+        #lens_ID = 'M1134'
         source_size_list = [2.0, 8.0]
-        self._run_test(lens_ID, source_size_list)
+        #self._run_test(lens_ID, source_size_list)
         lens_ID = 'M1134_MIRI'
         self._run_test(lens_ID, source_size_list)
 
@@ -256,10 +256,16 @@ class TestMagnificationGridRes(object):
         source_size_list = [2.0, 8.0]
         self._run_test(lens_ID, source_size_list)
 
+    def test_rxj1131(self):
+
+        lens_ID = 'RXJ1131'
+        source_size_list = [2.0, 8.0]
+        self._run_test(lens_ID)
+
     # def test_rxj0911(self):
     #
     #     lens_ID = 'RXJ0911'
-    #     self._test_solution(lens_ID)
+    #     self._run_test(lens_ID)
 
     def test_wfi2033(self):
 

@@ -63,7 +63,7 @@ class TestSolutionLensEquation(object):
 
     def test_j0259(self):
 
-        lens_ID = 'J0259_HST_475X'
+        lens_ID = 'J0259'
         self._test_solution(lens_ID)
 
     def test_0405(self):
@@ -163,6 +163,11 @@ class TestSolutionLensEquation(object):
     #
     #     lens_ID = 'RXJ0911'
     #     self._test_solution(lens_ID)
+
+    def test_rxj1131(self):
+
+        lens_ID = 'RXJ1131'
+        self._test_solution(lens_ID)
 
     def test_wfi2033(self):
 

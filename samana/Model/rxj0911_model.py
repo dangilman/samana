@@ -126,11 +126,11 @@ class RXJ0911ModelEPLM3M4Shear(_RXJ0911ModelBase):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR', 'SIS']
         kwargs_lens_macro = [
-            {'theta_E': 1.1461341424419702, 'gamma': 1.980070468859567, 'e1': 0.05700939271959815,
-             'e2': -0.03742794555646753, 'center_x': -0.0510201756957317, 'center_y': -0.0007169141231261475,
-             'a4_a': 0.0, 'a3_a': 0.0, 'delta_phi_m3': 0.0, 'delta_phi_m4': 0.0},
-            {'gamma1': -0.033686413266210254, 'gamma2': -0.10739086480786286, 'ra_0': 0, 'dec_0': 0},
-            {'theta_E': 0.25, 'center_x': self._data.g2x,'center_y': self._data.g2y}
+            {'theta_E': 0.934665138191743, 'center_x': 0.09217229688856182, 'center_y': -0.018939401025148003,
+             'e1': -0.14177163912017746, 'e2': -0.04115433060155392, 'gamma': 2.0678889042835302,
+             'a4_a': -0.01947989859185041, 'a3_a': -0.005869635902847609, 'delta_phi_m3': 0.1438930897875378,
+             'delta_phi_m4': 0.08976356608101888}, {'gamma1': 0.2625362481294369, 'gamma2': -0.09490716163413986},
+            {'theta_E': 0.24790976069832207, 'center_x': -0.7631502073820158, 'center_y': 0.6518217772699125}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1, 2]
