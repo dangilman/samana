@@ -207,7 +207,7 @@ class J1042_HST_125W(_J1042):
         vertical_shift = -0.045
         x_image += horizontal_shift
         y_image += vertical_shift
-        image_position_uncertainties = [0.005] * 4 # 5 arcsec
+        image_position_uncertainties = [0.01] * 4 # 5 arcsec
         flux_uncertainties = None
         magnifications = np.array([1.0] * 4)
         super(J1042_HST_125W, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
