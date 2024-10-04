@@ -159,6 +159,10 @@ class TestSolutionLensEquation(object):
         lens_ID = 'PSJ1606'
         self._test_solution(lens_ID)
 
+    def test_2017(self):
+        lens_ID = 'J2017'
+        self._test_solution(lens_ID)
+
     # def test_rxj0911(self):
     #
     #     lens_ID = 'RXJ0911'

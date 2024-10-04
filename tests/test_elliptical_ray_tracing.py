@@ -237,6 +237,11 @@ class TestMagnificationGridRes(object):
         lens_ID = 'WGD2038'
         self._run_test(lens_ID)
 
+    def test_2017(self):
+
+        lens_ID = 'J2017'
+        self._run_test(lens_ID)
+
 
 if __name__ == "__main__":
     pytest.main()
