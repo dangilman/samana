@@ -64,7 +64,9 @@ def perturbed_fluxes_from_fluxes(fluxes, flux_measurement_uncertainties_percenta
 
 def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image,
                                    lens_model_init, kwargs_lens_init, kwargs_lens, index_lens_split,
-                                   grid_size, grid_resolution, lens_model_full, r_step_factor=15.0):
+                                   grid_size, grid_resolution, lens_model_full,
+                                   elliptical_ray_tracing_grid,
+                                   grid_increment_factor=15.0):
     """
     """
     lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free, z_source, z_split, cosmo_bkg = \
@@ -74,28 +76,31 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                                                                               0.0, 0.0)
     grid_x_large = grid_x_large.ravel()
     grid_y_large = grid_y_large.ravel()
-    r_step = grid_size / r_step_factor
+    r_step = grid_size / grid_increment_factor
     magnifications = []
     flux_arrays = []
     ext = LensModelExtensions(lens_model_full)
     for (x_img, y_img) in zip(x_image, y_image):
-        try:
-            w1, w2, v11, v12, v21, v22 = ext.hessian_eigenvectors(
-                x_img, y_img, kwargs_lens
-            )
-            _v = [np.array([v11, v12]), np.array([v21, v22])]
-            _w = [abs(w1), abs(w2)]
-            idx = int(np.argmax(_w))
-            v = _v[idx]
-            rotation_angle = np.arctan(v[1] / v[0]) - np.pi / 2
-            grid_x, grid_y = util.rotate(grid_x_large, grid_y_large,
-                                         rotation_angle)
-            sort = np.argsort(_w)
-            q_eigenvalue = _w[sort[0]] / _w[sort[1]]
-            q = max(0.1, q_eigenvalue)
-            grid_r = np.hypot(grid_x, grid_y / q).ravel()
-        except:
-            print('q eigenvalue not defined; computing image magifications on a circular grid.')
+        if elliptical_ray_tracing_grid:
+            try:
+                w1, w2, v11, v12, v21, v22 = ext.hessian_eigenvectors(
+                    x_img, y_img, kwargs_lens
+                )
+                _v = [np.array([v11, v12]), np.array([v21, v22])]
+                _w = [abs(w1), abs(w2)]
+                idx = int(np.argmax(_w))
+                v = _v[idx]
+                rotation_angle = np.arctan(v[1] / v[0]) - np.pi / 2
+                grid_x, grid_y = util.rotate(grid_x_large, grid_y_large,
+                                             rotation_angle)
+                sort = np.argsort(_w)
+                q_eigenvalue = _w[sort[0]] / _w[sort[1]]
+                q = max(0.1, q_eigenvalue)
+                grid_r = np.hypot(grid_x, grid_y / q).ravel()
+            except:
+                print('q eigenvalue not defined; computing image magifications on a circular grid.')
+                grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
+        else:
             grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
         mag, flux_array = mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
                             kwargs_lens_free, kwargs_lens, z_split, z_source,

@@ -28,7 +28,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   macromodel_readout_function=None,
                   kappa_scale_subhalos=1.0,
                   log10_bound_mass_cut=None,
-                  parallelize=False):
+                  parallelize=False,
+                  elliptical_ray_tracing_grid=True):
     """
 
     :param output_path:
@@ -63,6 +64,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     :param kappa_scale_subhalos:
     :param log10_bound_mass_cut:
     :param parallelize:
+    :param elliptical_ray_tracing_grid:
     :return:
     """
 
@@ -230,7 +232,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 use_imaging_data, fitting_sequence_kwargs, test_mode,
                                                 use_decoupled_multiplane_approximation, fixed_realization,
                                                 macromodel_readout_function,
-                                                kappa_scale_subhalos, log10_bound_mass_cut)
+                                                kappa_scale_subhalos, log10_bound_mass_cut,
+                                                elliptical_ray_tracing_grid)
 
             seed_counter += 1
             acceptance_rate_counter += 1
@@ -362,7 +365,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                    fixed_realization=None,
                                    macromodel_readout_function=None,
                                    kappa_scale_subhalos=1.0,
-                                   log10_bound_mass_cut=None):
+                                   log10_bound_mass_cut=None,
+                                   elliptical_ray_tracing_grid=True):
 
     # set the random seed for reproducibility
     np.random.seed(seed)
@@ -566,7 +570,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                                       kwargs_solution,
                                                                       grid_size,
                                                                       grid_resolution,
-                                                                      lens_model)
+                                                                      lens_model,
+                                                                      elliptical_ray_tracing_grid)
     tend = time()
     if verbose:
         print('computed magnifications in '+str(np.round(tend - t0, 1))+' seconds')
