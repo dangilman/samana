@@ -72,14 +72,14 @@ class _J2145(ModelBase):
         lens_light_model_list = ['SERSIC']
         kwargs_lens_light_init = [
             {'amp': 1.7454240902431188, 'R_sersic': 2.2299147056839135, 'n_sersic': 9.691821700173003,
-             'center_x': 0.06986366167838882, 'center_y': -0.04378657647763289}
+             'center_x': -0.2, 'center_y': 0.25}
         ]
         kwargs_lens_light_sigma = [
-            {'R_sersic': 0.05, 'n_sersic': 0.25, 'center_x': 0.1, 'center_y': 0.1}]
+            {'R_sersic': 0.05, 'n_sersic': 0.25, 'center_x': 0.025, 'center_y': 0.025}]
         kwargs_lower_lens_light = [
-            {'R_sersic': 0.001, 'n_sersic': 0.5, 'center_x': -10.0, 'center_y': -10.0}]
+            {'R_sersic': 0.001, 'n_sersic': 0.5, 'center_x': -0.3, 'center_y': 0.0}]
         kwargs_upper_lens_light = [
-            {'R_sersic': 10, 'n_sersic': 10.0, 'center_x': 10, 'center_y': 10}]
+            {'R_sersic': 10, 'n_sersic': 10.0, 'center_x': 0.0, 'center_y': 0.5}]
         kwargs_lens_light_fixed = [{}]
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]

@@ -166,7 +166,6 @@ class J1042ModelEPLM3M4Shear(_J1042ModelBase):
         dx, dy = beta_x - beta_x_counter, beta_y - beta_y_counter
         return -0.5 * (dx ** 2 + dy ** 2) / 0.001 ** 2
 
-
     @property
     def prior_lens(self):
         # note the prior on the lens position is implicitely also a prior on the light position

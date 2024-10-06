@@ -22,7 +22,6 @@ class _J0607ModelBase(ModelBase):
                     kwargs_lens_init[0][param_fixed] = macromodel_samples_fixed[param_fixed]
         return kwargs_lens_fixed, kwargs_lens_init
 
-
     @property
     def kwargs_constraints(self):
         joint_source_with_point_source = [[0, 0]]

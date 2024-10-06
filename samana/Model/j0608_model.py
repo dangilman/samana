@@ -55,16 +55,16 @@ class _J0608ModelBase(ModelBase):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
         kwargs_lens_light_init = [
-            {'amp': 19.345277702072867, 'R_sersic': 0.8491740518771395, 'n_sersic': 4.2622267147848545,
-             'e1': 0.4053141855213741, 'e2': -0.4095417323775894, 'center_x': -0.24960396927990308,
-             'center_y': -0.0026392625066509845}
+            {'amp': 15.706133065583586, 'R_sersic': 0.8871638406380125, 'n_sersic': 4.728275206827924,
+             'e1': 0.22911316499975554, 'e2': -0.32146556786876257, 'center_x': -0.19921336974353324,
+             'center_y': -0.12110002900287818}
         ]
         kwargs_lens_light_sigma = [
-            {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.05, 'center_y': 0.05}]
+            {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.025, 'center_y': 0.025}]
         kwargs_lower_lens_light = [
-            {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -0.25, 'center_y': -0.25}]
+            {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -0.2, 'center_y': -0.2}]
         kwargs_upper_lens_light = [
-            {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 0.25, 'center_y': 0.25}]
+            {'R_sersic': 10, 'n_sersic': 8.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 0.2, 'center_y': 0.2}]
         kwargs_lens_light_fixed = [{}]
         add_uniform_light = True
         if add_uniform_light:
@@ -93,7 +93,7 @@ class _J0608ModelBase(ModelBase):
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True,
-                             #'custom_logL_addition': self.joint_lens_with_light_prior
+                             'custom_logL_addition': self.joint_lens_with_light_prior
                              }
         return kwargs_likelihood
 

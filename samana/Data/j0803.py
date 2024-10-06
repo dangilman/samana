@@ -71,6 +71,8 @@ class _J0803(ImagingDataBase):
                 y_image,
                 self._image_data.shape, radius_arcsec=0.3
             )
+            inds = np.where(np.sqrt(_xx ** 2 + _yy ** 2) >= window_size / 2.5)
+            likelihood_mask_imaging_weights[inds] = 0.0
             return likelihood_mask, likelihood_mask_imaging_weights
         else:
             return likelihood_mask, likelihood_mask
