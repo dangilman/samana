@@ -159,7 +159,7 @@ class J0659ModelEPLM3M4Shear(_J0659ModelBase):
             {'gamma1': -0.5, 'gamma2': -0.5},
             {'theta_E': 0.0, 'center_x': star_x - 0.4, 'center_y': star_y - 0.4}]
         kwargs_upper_lens = [
-            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.2, 'a4_a': 0.1,
+            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.5, 'a4_a': 0.1,
              'a3_a': 0.1, 'delta_phi_m3': np.pi / 6, 'delta_phi_m4': 10.0},
             {'gamma1': 0.5, 'gamma2': 0.5},
             {'theta_E': 1.0, 'center_x': star_x + 0.4, 'center_y': star_y + 0.4}]
