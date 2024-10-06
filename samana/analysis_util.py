@@ -70,7 +70,7 @@ def numerics_setup(lens_ID):
         rescale_grid_size = 4.0
         rescale_grid_res = 1.3
     elif lens_ID == 'J0659':
-        rescale_grid_size = 3.0
+        rescale_grid_size = 2.0
         rescale_grid_res = 1.2
     elif lens_ID == 'J0803':
         rescale_grid_size = 2.5
