@@ -8,23 +8,23 @@ class _J0607(ImagingDataBase):
                  mask_quasar_images_for_logL=True):
 
         self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
-        z_lens = 0.56 # thanks Pritom (in prep)
+        z_lens = 0.56
         z_source = 1.3
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
         if image_data_type == 'HST814W':
             raise Exception('not HST imaging avaialble for this system')
 
-        elif image_data_type == 'MIRI540W':
-            from samana.Data.ImageData.j0607_MIRI540W import psf_model, image_data, noise_map
+        elif image_data_type == 'MIRI560W':
+            from samana.Data.ImageData.j0607_MIRI560W import psf_model, image_data, noise_map
             self._psf_estimate_init = psf_model
             self._psf_error_map_init = None
             self._image_data = image_data
             self._psf_supersampling_factor = 3
             self._deltaPix = 0.11090924511658345
             self._window_size = 4.658188294896505
-            self._ra_at_xy_0 = -1.605540095364354
-            self._dec_at_xy_0 = -2.8760389587520336
+            self._ra_at_xy_0 = -1.3761772259088505
+            self._dec_at_xy_0 = -2.4651762507314614
             self._transform_pix2angle = np.array([[-0.03024997, 0.10670426],
                                                   [0.10670426, 0.03024997]])
             self._background_rms = None
@@ -128,7 +128,7 @@ class J0607_MIRI(_J0607):
         flux_uncertainties = None
         uncertainty_in_fluxes = False
         magnifications = np.array([1.0] * 4)
-        image_data_type = 'MIRI540W'
+        image_data_type = 'MIRI560W'
         super(J0607_MIRI, self).__init__(x_image,
                                      y_image,
                                      magnifications,

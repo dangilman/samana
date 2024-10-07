@@ -61,8 +61,9 @@ def downselect_fluxratio_summary_stats(params, flux_ratios, measured_flux_ratios
         params_out = np.vstack((params_out, deepcopy(params)))
         normalized_weights = np.append(normalized_weights, _normalized_weights)
     normalized_weights /= np.max(normalized_weights)
+    flux_ratio_norm = np.max(np.median(flux_ratios, axis=0))
     print('median/worst summary statistic value: ',
-          np.median(fluxratio_summary_statistic[best_inds]), fluxratio_summary_statistic[best_inds[-1]])
+          np.median(fluxratio_summary_statistic[best_inds])/flux_ratio_norm, fluxratio_summary_statistic[best_inds[-1]]/flux_ratio_norm)
     return params_out, normalized_weights
 
 def compute_likelihoods(output_class,
