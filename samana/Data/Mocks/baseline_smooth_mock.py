@@ -2,6 +2,28 @@ import numpy as np
 from samana.Data.Mocks.base import MockBase
 from samana.Model.Mocks.model_mock_lens_simple import MockModelBase
 
+class BaselineSmoothMock(MockBase):
+
+    def __init__(self, super_sample_factor=1.0):
+        z_lens = 0.5
+        z_source = 2.0
+        x_image = np.array([-0.92770948,  0.61449948, -0.21134454,  0.75025513])
+        y_image = np.array([-0.69051723,  0.76790815,  0.9271273 , -0.45817762])
+        magnifications_true = np.array([3.48573513, 7.48256353, 5.05235091, 3.6984534 ])
+        from samana.Data.ImageData.baseline_smooth_mock import image_data
+        magnification_measurement_errors = 0.0
+        magnifications = np.array(magnifications_true) + np.array(magnification_measurement_errors)
+        astrometric_uncertainties = [0.00001] * 4
+        flux_ratio_uncertainties = None
+        self.a3a_true = -0.0
+        self.a4a_true = 0.00
+        self.delta_phi_m3_true = 0.0
+        self.delta_phi_m4_true = 0.0
+        super(BaselineSmoothMock, self).__init__(z_lens, z_source, x_image, y_image,
+                                                           magnifications, astrometric_uncertainties,
+                                                           flux_ratio_uncertainties, image_data,
+                                                           super_sample_factor)
+
 class BaselineSmoothMockMultipole1(MockBase):
 
     def __init__(self, super_sample_factor=1.0):
