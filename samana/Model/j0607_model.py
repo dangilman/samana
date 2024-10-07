@@ -39,9 +39,9 @@ class _J0607ModelBase(ModelBase):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 84.8180577186615, 'R_sersic': 0.07243432884286893, 'n_sersic': 3.532247375770279,
-             'e1': -0.4138452008662636, 'e2': 0.47357432454894705, 'center_x': 0.15337834947843565,
-             'center_y': -0.030516429748098886}
+            {'amp': 340.0770424927995, 'R_sersic': 0.022662093047741184, 'n_sersic': 4.055992442569855,
+             'e1': -0.23652905605200927, 'e2': 0.478289001771819, 'center_x': 0.06824658669524805,
+             'center_y': -0.043314803712915316}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.1, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
@@ -69,13 +69,12 @@ class _J0607ModelBase(ModelBase):
     def setup_lens_light_model(self):
 
         lens_light_model_list = ['SERSIC_ELLIPSE', 'SERSIC']
-        kwargs_lens_light_init = [{'amp': 71.18151618731589, 'R_sersic': 0.09090982334576826,
-                                   'n_sersic': 3.88133058622457, 'e1': 0.0025277975718236007,
-                                   'e2': -0.026236936611721367, 'center_x': -0.01499392886046569,
-                                   'center_y': -0.05259220870716977},
-                                  {'amp': 1.0, 'R_sersic': 0.05,
-                                   'n_sersic': 4.0,
-                                   'center_x': self._data.satx, 'center_y': self._data.saty}
+        kwargs_lens_light_init = [
+            {'amp': 72.38831418346508, 'R_sersic': 0.431468072922593, 'n_sersic': 3.988559350395727,
+             'e1': 0.022362607319732115, 'e2': 0.14809595425656677, 'center_x': -0.04225891489303301,
+             'center_y': 0.004411480515192301},
+            {'amp': 112.00116068701905, 'R_sersic': 0.10423276429142135, 'n_sersic': 4.129005118423329,
+             'center_x': 1.1962411752993318, 'center_y': 0.22937968643690998}
                                   ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1},
@@ -127,18 +126,18 @@ class J0607ModelEPLM3M4Shear(_J0607ModelBase):
 
     @property
     def prior_lens(self):
-        satellite_prior = [[2, 'theta_E', 0.15, 0.15]]
-        return self.population_gamma_prior + satellite_prior
+        #satellite_prior = [[2, 'theta_E', 0.10, 0.15]]
+        return self.population_gamma_prior
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR', 'SIS']
         kwargs_lens_macro = [
-            {'theta_E': 0.7729722983314623, 'gamma': 1.7899332143918347, 'e1': -0.11646235325155463,
-             'e2': 0.04605966879603824, 'center_x': -0.026864357169245495, 'center_y': -0.026069263620277037,
-             'a3_a': 0.0, 'delta_phi_m3': -0.27848363887530125, 'a4_a': 0.0, 'delta_phi_m4': 0.261527364566968},
-            {'gamma1': -0.065078597842484, 'gamma2': 0.014659128492419904, 'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.09630688652541469, 'center_x': 1.177869077403505, 'center_y': 0.17723829970809515}
+            {'theta_E': 0.7994927065191947, 'gamma': 2.1862351238116307, 'e1': -0.1966653095750537,
+             'e2': 0.041776021660986914, 'center_x': -0.018646557366911974, 'center_y': -0.048681204734772325,
+             'a3_a': 0.0, 'delta_phi_m3': -0.26112879049351506, 'a4_a': 0.0, 'delta_phi_m4': 0.19005519045196465},
+            {'gamma1': -0.0918551427515339, 'gamma2': 0.008336901501339776, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.08665345973597675, 'center_x': 1.1962411752993318, 'center_y': 0.22937968643690998}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1, 2]
@@ -161,7 +160,7 @@ class J0607ModelEPLM3M4Shear(_J0607ModelBase):
             {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 3.5, 'a4_a': 0.1,
              'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
             {'gamma1': 0.5, 'gamma2': 0.5},
-            {'theta_E': 0.5, 'center_x': self._data.satx+0.1, 'center_y': self._data.saty+0.1}]
+            {'theta_E': 0.4, 'center_x': self._data.satx+0.1, 'center_y': self._data.saty+0.1}]
         kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
                                                                              kwargs_lens_init, macromodel_samples_fixed)
         lens_model_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_lens_fixed, kwargs_lower_lens,
