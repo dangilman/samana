@@ -68,9 +68,8 @@ class _PG1115ModelBase(ModelBase):
         if self._data.band == 'NIRCAM115W':
             lens_light_model_list += ['SERSIC_ELLIPSE']
             kwargs_lens_light_init += [
-            {'amp': 17.79328660409551, 'R_sersic': 0.6246009314839133, 'n_sersic': 4.77641982343332,
-             'e1': -0.01152404571524898, 'e2': -0.02358775359542008, 'center_x': -0.039368012822374406,
-             'center_y': -0.017595760001515248}
+                {'amp': 1, 'R_sersic': 0.6215124213763222, 'n_sersic': 5.011070108265602, 'e1': -0.005298113309021342,
+                 'e2': -0.1214291478292091, 'center_x': -0.01867512537698528, 'center_y': 0.004351764856603417}
             ]
             kwargs_lens_light_sigma += [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
@@ -108,12 +107,20 @@ class PG1115ModelEPLM3M4Shear(_PG1115ModelBase):
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR']
-        kwargs_lens_macro = [
-            {'theta_E': 1.1466296178228925, 'gamma': 2.0014133180207025, 'e1': 0.07143218306427672,
-             'e2': -0.03166973868176683, 'center_x': -0.05379887696364931, 'center_y': 0.008165180380356397,
-             'a3_a': 0.0, 'delta_phi_m3': -0.005969269433780858, 'a4_a': 0.0, 'delta_phi_m4': 0.20840045113672415},
-            {'gamma1': -0.028738087587014873, 'gamma2': -0.10888032218076507, 'ra_0': 0.0, 'dec_0': 0.0}
-        ]
+        if self._data.band == 'NIRCAMF115W':
+            kwargs_lens_macro = [
+                {'theta_E': 1.146794388157141, 'gamma': 2.0, 'e1': 0.07302479386881054, 'e2': -0.029791382569408404,
+                 'center_x': -0.039994569122396795, 'center_y': 0.014323610076049209, 'a3_a': 0.0,
+                 'delta_phi_m3': -0.25822868267439386, 'a4_a': 0.0, 'delta_phi_m4': -0.5135058988689192},
+                {'gamma1': -0.02808702464545221, 'gamma2': -0.10813435935412004, 'ra_0': 0.0, 'dec_0': 0.0}
+            ]
+        else:
+            kwargs_lens_macro = [
+                {'theta_E': 1.1466296178228925, 'gamma': 2.0014133180207025, 'e1': 0.07143218306427672,
+                 'e2': -0.03166973868176683, 'center_x': -0.05379887696364931, 'center_y': 0.008165180380356397,
+                 'a3_a': 0.0, 'delta_phi_m3': -0.005969269433780858, 'a4_a': 0.0, 'delta_phi_m4': 0.20840045113672415},
+                {'gamma1': -0.028738087587014873, 'gamma2': -0.10888032218076507, 'ra_0': 0.0, 'dec_0': 0.0}
+            ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]
         if kwargs_lens_macro_init is not None:
