@@ -50,7 +50,7 @@ class PG1115_HST(_PG1115):
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
         from samana.Data.ImageData.pg1115_f160w import image_data, psf_error_map, psf_model, image_likelihood_mask
-
+        self.band = 'HST160W'
         x_image = np.array([-0.75849943, -0.41470272, 1.06139943, 0.91180272])
         y_image = np.array([-0.61868201, 1.34351346, -0.23637735, -0.6884541])
         magnifications = [1.0, 0.93, 0.16, 0.21]
@@ -126,11 +126,11 @@ class PG1115_NIRCAM(_PG1115):
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
         from samana.Data.ImageData.pg1115_f115w import image_data, psf_error_map, psf_model
-
+        self.band = 'NIRCAM115W'
         x_image = np.array([-0.74449943, -0.40070272, 1.07539943, 0.92580272])
         y_image = np.array([-0.60868201, 1.35351346, -0.22637735, -0.6784541])
-        horizontal_shift = 0.0
-        vertical_shift = 0.0
+        horizontal_shift = 0.00
+        vertical_shift = -0.003
         x_image += horizontal_shift
         y_image += vertical_shift
         magnifications = [1.0, 0.93, 0.16, 0.21]

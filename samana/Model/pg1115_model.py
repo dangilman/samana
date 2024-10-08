@@ -13,12 +13,10 @@ class _PG1115ModelBase(ModelBase):
                               'point_source_offset': True
                               }
         if self._shapelets_order is not None:
-           kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
+            kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
+        if self._data.band == 'NIRCAM115W':
+            kwargs_constraints['joint_lens_light_with_lens_light'] = [[0,1,  ['center_x', 'center_y']]]
         return kwargs_constraints
-
-    @property
-    def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2]]
 
     def setup_source_light_model(self):
 
@@ -66,9 +64,25 @@ class _PG1115ModelBase(ModelBase):
         kwargs_upper_lens_light = [
             {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
         kwargs_lens_light_fixed = [{}]
-        lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
-                             kwargs_upper_lens_light]
 
+        if self._data.band == 'NIRCAM115W':
+            lens_light_model_list += ['SERSIC_ELLIPSE']
+            kwargs_lens_light_init += [
+            {'amp': 17.79328660409551, 'R_sersic': 0.6246009314839133, 'n_sersic': 4.77641982343332,
+             'e1': -0.01152404571524898, 'e2': -0.02358775359542008, 'center_x': -0.039368012822374406,
+             'center_y': -0.017595760001515248}
+            ]
+            kwargs_lens_light_sigma += [
+            {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
+            kwargs_lower_lens_light += [
+            {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10.0, 'center_y': -10.0}]
+            kwargs_upper_lens_light += [
+            {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
+            kwargs_lens_light_fixed += [{}]
+
+        lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed,
+                             kwargs_lower_lens_light,
+                             kwargs_upper_lens_light]
         return lens_light_model_list, lens_light_params
 
     @property
@@ -78,7 +92,6 @@ class _PG1115ModelBase(ModelBase):
                              'source_marg': False,
                              'image_position_uncertainty': 5e-3,
                              'source_position_likelihood': False,
-                             #'check_matched_source_position': False,
                              'source_position_sigma': 0.0001,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],

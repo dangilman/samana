@@ -58,11 +58,24 @@ class Output(object):
             else:
                 self._macromodel_samples_dict = None
 
+    def clean(self):
+        """
+        This method removes elements corresponding to np.nan flux ratios, and elements that correspond to a repeated
+        random seed
+        :return:
+        """
+        return self.clean_nans().clean_repeated_seeds()
+
     def clean_nans(self):
 
         flux_ratios_summed = np.sum(self.flux_ratios, axis=1)
         inds_keep = np.where(np.isfinite(flux_ratios_summed))[0]
         return self._subsample(inds_keep)
+
+    def clean_repeated_seeds(self):
+
+        _, index = np.unique(self.seed, return_index=True)
+        return self._subsample(index)
 
     @classmethod
     def from_raw_output(cls, output_path, job_index_min, job_index_max, fitting_kwargs_list=None,
