@@ -13,7 +13,7 @@ def compute_fluxratio_summarystat(flux_ratios, measured_flux_ratios, measurement
         else:
             sigmas.append(1.0)
             perturbed_flux_ratio[:, i] = np.random.normal(flux_ratios[:, i],
-                                                          flux_ratios[:, i] * measurement_uncertainties[i])
+                                                          measurement_uncertainties[i])
     stat = np.sqrt(-2 * compute_fluxratio_logL(perturbed_flux_ratio, measured_flux_ratios, sigmas))
     return stat
 
@@ -42,8 +42,10 @@ def downselect_fluxratio_likelihood(params, flux_ratios, measured_flux_ratios,
     return params_out, normalized_weights
 
 def downselect_fluxratio_summary_stats(params, flux_ratios, measured_flux_ratios,
-                                       measurement_uncertainties, n_keep, n_bootstraps=1, w_custom=1.0):
+                                       measurement_uncertainties, n_keep,
+                                       n_bootstraps=1, w_custom=1.0):
 
+    kept_index_list = []
     params_out = deepcopy(params)
     normalized_weights = np.zeros(flux_ratios.shape[0])
     fluxratio_summary_statistic = compute_fluxratio_summarystat(flux_ratios, measured_flux_ratios,
@@ -51,6 +53,7 @@ def downselect_fluxratio_summary_stats(params, flux_ratios, measured_flux_ratios
     best_inds = np.argsort(fluxratio_summary_statistic)[0:n_keep]
     normalized_weights[best_inds] = 1.0
     normalized_weights *= w_custom
+    kept_index_list += list(best_inds)
     for n in range(0, n_bootstraps):
         _normalized_weights = np.zeros(flux_ratios.shape[0])
         _fluxratio_summary_statistic = compute_fluxratio_summarystat(flux_ratios, measured_flux_ratios,
@@ -60,8 +63,13 @@ def downselect_fluxratio_summary_stats(params, flux_ratios, measured_flux_ratios
         _normalized_weights *= w_custom
         params_out = np.vstack((params_out, deepcopy(params)))
         normalized_weights = np.append(normalized_weights, _normalized_weights)
+        kept_index_list += list(_best_inds)
     normalized_weights /= np.max(normalized_weights)
     flux_ratio_norm = np.max(np.median(flux_ratios, axis=0))
+    unique_values, unique_indexes = np.unique(kept_index_list, return_index=True)
+    print('after '+str(n_bootstraps)+' bootstraps the number of repeated '
+                                     'indexes is: ' +str(len(kept_index_list)-len(unique_values))+
+          ' out of '+str(len(kept_index_list))+' samples')
     print('median/worst summary statistic value: ',
           np.median(fluxratio_summary_statistic[best_inds])/flux_ratio_norm, fluxratio_summary_statistic[best_inds[-1]]/flux_ratio_norm)
     return params_out, normalized_weights
@@ -77,7 +85,8 @@ def compute_likelihoods(output_class,
                         n_keep=None,
                         n_bootstraps=0,
                         macro_param_weights=None,
-                        dm_param_weights=None):
+                        dm_param_weights=None,
+                        bandwidth_scale=0.75):
 
     param_ranges_dm = [param_ranges_dm_dict[param_name] for param_name in dm_param_names]
     # first down-select on imaging data likelihood
@@ -90,7 +99,8 @@ def compute_likelihoods(output_class,
                                  weights=None,
                                  param_ranges=param_ranges_dm,
                                  use_kde=use_kde,
-                                 nbins=nbins)
+                                 nbins=nbins,
+                                 bandwidth_scale=bandwidth_scale)
 
     # now compute the flux ratio likelihood
     w_custom = 1.0
@@ -123,7 +133,8 @@ def compute_likelihoods(output_class,
                                     weights=normalized_weights,
                                     param_ranges=param_ranges_dm,
                                     use_kde=use_kde,
-                                    nbins=nbins)
+                                    nbins=nbins,
+                                    bandwidth_scale=bandwidth_scale)
     # now compute the final pdf
     pdf = deepcopy(pdf_imgdata_fr)
     pdf.density /= pdf_imgdata.density
@@ -142,7 +153,8 @@ def compute_macromodel_likelihood(output_class,
                                   nbins=5,
                                   n_keep=None,
                                   n_bootstraps=0,
-                                  param_ranges_macro=None):
+                                  param_ranges_macro=None,
+                                  bandwidth_scale=0.75):
 
     # first down-select on imaging data likelihood
     sim = output_class.cut_on_image_data(percentile_cut_image_data)
@@ -154,7 +166,8 @@ def compute_macromodel_likelihood(output_class,
                                  weights=None,
                                  param_ranges=param_ranges_macro,
                                  use_kde=use_kde,
-                                 nbins=nbins)
+                                 nbins=nbins,
+                                 bandwidth_scale=bandwidth_scale)
     param_ranges_macro = pdf_imgdata.param_ranges
 
     # now compute the flux ratio likelihood from the down-selected samples
@@ -179,7 +192,8 @@ def compute_macromodel_likelihood(output_class,
                                     weights=normalized_weights,
                                     param_ranges=param_ranges_macro,
                                     use_kde=use_kde,
-                                    nbins=nbins)
+                                    nbins=nbins,
+                                    bandwidth_scale=bandwidth_scale)
 
     # now only using the flux ratios
     flux_ratios = output_class.flux_ratios
@@ -203,7 +217,8 @@ def compute_macromodel_likelihood(output_class,
                             weights=normalized_weights,
                             param_ranges=param_ranges_macro,
                             use_kde=use_kde,
-                            nbins=nbins)
+                            nbins=nbins,
+                            bandwidth_scale=bandwidth_scale)
     # now compute the final pdf
     pdf = deepcopy(pdf_imgdata_fr)
     inds_nonzero = np.where(pdf.density > 0)

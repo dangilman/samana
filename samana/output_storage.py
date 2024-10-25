@@ -5,7 +5,8 @@ from copy import deepcopy
 
 class Output(object):
 
-    def __init__(self, parameters, image_magnifications, macromodel_samples, fitting_kwargs_list=None,
+    def __init__(self, parameters, image_magnifications,
+                 macromodel_samples, fitting_kwargs_list=None,
                  param_names=None, macromodel_sample_names=None, flux_ratio_summary_statistic=None,
                  flux_ratio_likelihood=None):
         """
@@ -352,7 +353,7 @@ class Output(object):
                       flux_ratio_summary_statistic=flux_ratio_summary_statistic,
                       flux_ratio_likelihood=flux_ratio_likelihood)
 
-    def cut_on_image_data(self, percentile_cut, logL_threshold=None, select_worst=False, undo_prior=True):
+    def cut_on_image_data(self, percentile_cut, logL_threshold=None, select_worst=False, undo_prior=False):
         """
 
         :param percentile_cut:

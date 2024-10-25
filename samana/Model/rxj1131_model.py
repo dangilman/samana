@@ -113,11 +113,11 @@ class _RXJ1131ModelBase(ModelBase):
 
         lens_light_model_list = ['SERSIC_ELLIPSE', 'SERSIC']
         kwargs_lens_light_init = [
-            {'amp': 62.36710261156405, 'R_sersic': 1.1844711774610077, 'n_sersic': 3.769270717843491,
-             'e1': 0.03636972680087215, 'e2': -0.04611601158547492, 'center_x': -0.43657989585448514,
-             'center_y': 0.1344524555733173},
-            {'amp': 29.11652334765286, 'R_sersic': 0.10649631588821883, 'n_sersic': 1.1906176282594878,
-             'center_x': -0.29581713909339646, 'center_y': 0.5501448601891118}
+                {'amp': 62.36710261156405, 'R_sersic': 1.1844711774610077, 'n_sersic': 3.769270717843491,
+                 'e1': 0.03636972680087215, 'e2': -0.04611601158547492, 'center_x': -0.43657989585448514,
+                 'center_y': 0.1344524555733173},
+                {'amp': 29.11652334765286, 'R_sersic': 0.10649631588821883, 'n_sersic': 1.1906176282594878,
+                 'center_x': self._data.g2x, 'center_y': self._data.g2y}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1},
@@ -171,13 +171,23 @@ class RXJ1131ModelEPLM3M4Shear(_RXJ1131ModelBase):
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR', 'SIS']
-        kwargs_lens_macro = [
-            {'theta_E': 1.477157571763176, 'gamma': 2.1957003973362847, 'e1': 0.061215895321337525,
-             'e2': -0.1146635085009388, 'center_x': -0.4268989865545886, 'center_y': 0.04152677365715801, 'a3_a': 0.0,
-             'delta_phi_m3': -0.29527050533980004, 'a4_a': 0.0, 'delta_phi_m4': -0.6210803143805403},
-            {'gamma1': -0.132352186696442, 'gamma2': 0.03510715565395326, 'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.4319041914345371, 'center_x': -0.29581713909339646, 'center_y': 0.5501448601891118}
-        ]
+        if self._data.band == 'hst814w':
+            kwargs_lens_macro = [
+                {'theta_E': 1.477157571763176, 'gamma': 2.1957003973362847, 'e1': 0.061215895321337525,
+                 'e2': -0.1146635085009388, 'center_x': -0.4268989865545886, 'center_y': 0.04152677365715801, 'a3_a': 0.0,
+                 'delta_phi_m3': -0.29527050533980004, 'a4_a': 0.0, 'delta_phi_m4': -0.6210803143805403},
+                {'gamma1': -0.132352186696442, 'gamma2': 0.03510715565395326, 'ra_0': 0.0, 'dec_0': 0.0},
+                {'theta_E': 0.4319041914345371, 'center_x': -0.29581713909339646, 'center_y': 0.5501448601891118}
+            ]
+        else:
+            kwargs_lens_macro = [
+                {'theta_E': 1.477157571763176, 'gamma': 2.1957003973362847, 'e1': 0.061215895321337525,
+                 'e2': -0.1146635085009388, 'center_x': -0.4268989865545886, 'center_y': 0.04152677365715801,
+                 'a3_a': 0.0,
+                 'delta_phi_m3': -0.29527050533980004, 'a4_a': 0.0, 'delta_phi_m4': -0.6210803143805403},
+                {'gamma1': -0.132352186696442, 'gamma2': 0.03510715565395326, 'ra_0': 0.0, 'dec_0': 0.0},
+                {'theta_E': 0.4319041914345371, 'center_x': self._data.g2x, 'center_y': self._data.g2y}
+            ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1, 2]
         if kwargs_lens_macro_init is not None:
@@ -193,9 +203,9 @@ class RXJ1131ModelEPLM3M4Shear(_RXJ1131ModelBase):
             {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.5, 'a4_a': -0.1,
              'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
             {'gamma1': -0.5, 'gamma2': -0.5},
-            {'theta_E': 0.001, 'center_x': -10, 'center_y': -10}]
+            {'theta_E': 0.001, 'center_x': self._data.g2x - 0.15, 'center_y': self._data.g2y - 0.15}]
         kwargs_upper_lens = [
-            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 3.5, 'a4_a': 0.1,
+            {'theta_E': 5.0, 'center_x': self._data.g2x + 0.15, 'center_y': self._data.g2x + 0.15, 'e1': 0.5, 'e2': 0.5, 'gamma': 3.5, 'a4_a': 0.1,
              'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
             {'gamma1': 0.5, 'gamma2': 0.5},
         {'theta_E': 0.5, 'center_x': 10, 'center_y': 10}]

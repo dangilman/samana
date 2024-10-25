@@ -1,20 +1,66 @@
 from samana.Data.data_base import ImagingDataBase
 import numpy as np
-from samana.Data.ImageData.rxj1131_f814W import psf_model, psf_error_map, image_data
 
 class _RXJ1131(ImagingDataBase):
 
     def __init__(self, x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
                  uncertainty_in_fluxes, supersample_factor,
-                 mask_quasar_images_for_logL=True):
+                 mask_quasar_images_for_logL=True,band=None):
 
         self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
         z_lens = 0.3
         z_source = 0.66
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
-        self._psf_estimate_init = psf_model
-        self._psf_error_map_init = psf_error_map
+        self.band = band
+        if band == 'f560w':
+            from samana.Data.ImageData.rxj1131_MIRI560W import psf_model, image_data, noise_map
+            self._deltaPix = 0.11081954147285053
+            self._window_size = 8.533104693409491
+            self._ra_at_xy_0 = -5.8277140575119954
+            self._dec_at_xy_0 = -1.5635493951661728
+            self._transform_pix2angle = np.array([[0.05537876, 0.09599043],
+                                                  [0.09599043, -0.05537876]])
+            self._background_rms = None
+            self._exposure_time = None
+            self._noise_map = noise_map
+            self._psf_supersampling_factor = 3
+            self._psf_error_map_init = None
+            self._psf_estimate_init = psf_model
+            self._psf_estimate_init /= np.sum(self._psf_estimate_init)
+
+        elif band == 'f1280w':
+            from samana.Data.ImageData.rxj1131_MIRI1280W import psf_model, noise_map, image_data
+            self._deltaPix = 0.11081954153620512
+            self._window_size = 8.533104698287795
+            self._ra_at_xy_0 = -5.827706197355736
+            self._dec_at_xy_0 = -1.5635787082007524
+            self._transform_pix2angle = np.array([[0.05537828, 0.09599071],
+                                                  [0.09599071, -0.05537828]])
+            self._background_rms = None
+            self._exposure_time = None
+            self._noise_map = noise_map
+            self._psf_supersampling_factor = 3
+            self._psf_error_map_init = None
+            self._psf_estimate_init = psf_model
+            self._psf_estimate_init /= np.sum(self._psf_estimate_init)
+
+        else:
+            from samana.Data.ImageData.rxj1131_f814W import psf_model, psf_error_map, image_data
+            self._deltaPix = 0.04999
+            self._window_size = 8.399346
+            self._ra_at_xy_0 = -4.89782
+            self._dec_at_xy_0 = -1.840399
+            self._transform_pix2angle = np.array([[ 0.02065827,  0.04552853],
+                                                [ 0.04552853, -0.02065827]])
+            self._background_rms = 0.0075095
+            self._exposure_time = 1980.0
+            self._noise_map = None
+            self._psf_supersampling_factor = 1
+            self._psf_estimate_init = psf_model
+            self._psf_estimate_init /= np.sum(self._psf_estimate_init)
+            self._psf_error_map_init = psf_error_map
+
         self._image_data = image_data
         self._supersample_factor = supersample_factor
         image_band = [self.kwargs_data, self.kwargs_psf, self.kwargs_numerics]
@@ -50,37 +96,37 @@ class _RXJ1131(ImagingDataBase):
     @property
     def kwargs_data(self):
         _, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, _ = self.coordinate_properties
-        kwargs_data = {'background_rms': 0.0075095,
-                       'exposure_time': 1980.0,
+        kwargs_data = {'background_rms': self._background_rms,
+                       'exposure_time': self._exposure_time,
                        'ra_at_xy_0': ra_at_xy_0,
                        'dec_at_xy_0': dec_at_xy_0,
                        'transform_pix2angle': transform_pix2angle,
-                       'image_data': self._image_data}
+                       'image_data': self._image_data,
+                       'noise_map': self._noise_map}
         return kwargs_data
 
     @property
     def coordinate_properties(self):
 
-        deltaPix = 0.04999
-        window_size = 8.399346
-        ra_at_xy_0 = -4.89782
-        dec_at_xy_0 = -1.840399
-        transform_pix2angle = np.array([[ 0.02065827,  0.04552853],
-       [ 0.04552853, -0.02065827]])
+        deltaPix = self._deltaPix
+        window_size = self._window_size
+        ra_at_xy_0 = self._ra_at_xy_0
+        dec_at_xy_0 = self._dec_at_xy_0
+        transform_pix2angle = self._transform_pix2angle
         return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
 
     @property
     def kwargs_numerics(self):
         kwargs_numerics = {
-            'supersampling_factor': int(self._supersample_factor),
+            'supersampling_factor': int(self._supersample_factor * max(1, self._psf_supersampling_factor)),
             'supersampling_convolution': False,  # try with True
-            'point_source_supersampling_factor': 1}
+            'point_source_supersampling_factor': self._psf_supersampling_factor}
         return kwargs_numerics
 
     @property
     def kwargs_psf(self):
         kwargs_psf = {'psf_type': 'PIXEL',
-                      'kernel_point_source': self._psf_estimate_init / np.sum(self._psf_estimate_init),
+                      'kernel_point_source': self._psf_estimate_init,
                       'psf_error_map': self._psf_error_map_init,
                       'point_source_supersampling_factor': 1
                       }
@@ -110,5 +156,59 @@ class RXJ1131_HST(_RXJ1131):
         magnifications = np.array([1.0] * 4)
         uncertainty_in_fluxes= False
         super(RXJ1131_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
-                                        uncertainty_in_fluxes, super_sample_factor)
+                                        uncertainty_in_fluxes, super_sample_factor,band='hst814w')
+
+class RXJ1131_MIRI_f560w(_RXJ1131):
+    g2x = 0.062
+    g2y = 0.549
+    def __init__(self, super_sample_factor=1):
+        """
+
+        :param image_position_uncertainties: list of astrometric uncertainties for each image
+        i.e. [0.003, 0.003, 0.003, 0.003]
+        :param flux_uncertainties: list of flux ratio uncertainties in percentage, or None if these are handled
+        post-processing
+        :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
+        :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
+        """
+        x_image = np.array([2.012, 2.0467, 1.42, -1.1034])
+        y_image = np.array([-0.6, 0.587, -1.7146, 0.2801])
+        horizontal_shift = -0.0
+        vertical_shift = 0.02
+        x_image += horizontal_shift
+        y_image += vertical_shift
+        image_position_uncertainties = [0.005] * 4 # 5 arcsec
+        flux_uncertainties = None
+        magnifications = np.array([1.0] * 4)
+        uncertainty_in_fluxes= False
+        super(RXJ1131_MIRI_f560w, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
+                                        uncertainty_in_fluxes, super_sample_factor, band='f560w')
+
+
+class RXJ1131_MIRI_f1280w(_RXJ1131):
+    g2x = 0.062
+    g2y = 0.55
+    def __init__(self, super_sample_factor=1):
+        """
+
+        :param image_position_uncertainties: list of astrometric uncertainties for each image
+        i.e. [0.003, 0.003, 0.003, 0.003]
+        :param flux_uncertainties: list of flux ratio uncertainties in percentage, or None if these are handled
+        post-processing
+        :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
+        :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
+        """
+        x_image = np.array([2.012, 2.0467, 1.42, -1.1034])
+        y_image = np.array([-0.6, 0.587, -1.7146, 0.2801])
+        horizontal_shift = -0.0
+        vertical_shift = 0.02
+        x_image += horizontal_shift
+        y_image += vertical_shift
+        image_position_uncertainties = [0.005] * 4  # 5 arcsec
+        flux_uncertainties = None
+        magnifications = np.array([1.0] * 4)
+        uncertainty_in_fluxes = False
+        super(RXJ1131_MIRI_f1280w, self).__init__(x_image, y_image, magnifications, image_position_uncertainties,
+                                                 flux_uncertainties,
+                                                 uncertainty_in_fluxes, super_sample_factor,band='f1280w')
 
