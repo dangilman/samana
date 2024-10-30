@@ -1,5 +1,6 @@
 import numpy as np
 from trikde.pdfs import IndependentLikelihoods, DensitySamples
+from samana.output_storage import Output
 from copy import deepcopy
 
 def compute_fluxratio_summarystat(flux_ratios, measured_flux_ratios, measurement_uncertainties):
@@ -90,7 +91,30 @@ def compute_likelihoods(output_class,
 
     param_ranges_dm = [param_ranges_dm_dict[param_name] for param_name in dm_param_names]
     # first down-select on imaging data likelihood
-    sim = output_class.cut_on_image_data(percentile_cut_image_data)
+    if isinstance(output_class, list):
+        parameters = None
+        image_magnifications = None
+        macromodel_samples = None
+        fitting_kwargs_list = None
+        param_names = None
+        macromodel_sample_names = None
+        for simulation in output_class:
+            _sim = simulation.cut_on_image_data(percentile_cut_image_data)
+            if parameters is None:
+                parameters = _sim.parameters
+                image_magnifications = _sim.image_magnifications
+                macromodel_samples = _sim.macromodel_samples
+                param_names = _sim._param_names
+                macromodel_sample_names = _sim._macromodel_sample_names
+            else:
+                parameters = np.vstack((parameters, _sim.parameters))
+                image_magnifications = np.vstack((image_magnifications, _sim.image_magnifications))
+                macromodel_samples = np.vstack((macromodel_samples, _sim.macromodel_samples))
+            sim = Output(parameters, image_magnifications, macromodel_samples,
+                                    fitting_kwargs_list, param_names, macromodel_sample_names,
+                                    )
+    else:
+        sim = output_class.cut_on_image_data(percentile_cut_image_data)
     # get the dark matter parameters of interest
     params = sim.parameter_array(dm_param_names)
     # now we compute the imaging data likelihood only

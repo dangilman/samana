@@ -76,8 +76,8 @@ def numerics_setup(lens_ID):
         rescale_grid_size = 2.5
         rescale_grid_res = 1.3
     elif lens_ID == 'J0924':
-        rescale_grid_size = 1.5
-        rescale_grid_res = 1.3
+        rescale_grid_size = 3.0
+        rescale_grid_res = 1.2
     elif lens_ID in ['J1042', 'J1042_814W']:
         rescale_grid_size = 4.0
         rescale_grid_res = 1.2

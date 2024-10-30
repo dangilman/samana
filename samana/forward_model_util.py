@@ -2,9 +2,7 @@ import numpy as np
 from scipy.stats.kde import gaussian_kde
 from scipy.interpolate import interp1d
 from lenstronomy.LensModel.lens_model import LensModel
-from lenstronomy.LensModel.Solver.solver4point import Solver4Point
 from copy import deepcopy
-from samana.Model.multipole_prior import OpticalMultipolePrior
 
 
 class KwargsLensSampler(object):

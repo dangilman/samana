@@ -7,6 +7,7 @@ from lenstronomy.Workflow.fitting_sequence import FittingSequence
 from lenstronomy.Util.class_creator import create_im_sim
 from lenstronomy.LensModel.QuadOptimizer.optimizer import Optimizer
 from samana.image_magnification_util import setup_gaussian_source
+from samana.light_fitting import FixedLensModelNew, setup_params_light_fitting
 from samana.param_managers import auto_param_class
 from copy import deepcopy
 from multiprocessing.pool import Pool
@@ -29,7 +30,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   kappa_scale_subhalos=1.0,
                   log10_bound_mass_cut=None,
                   parallelize=False,
-                  elliptical_ray_tracing_grid=True):
+                  elliptical_ray_tracing_grid=True,
+                  split_image_data_reconstruction=False):
     """
 
     :param output_path:
@@ -166,7 +168,9 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              fixed_realization,
                              macromodel_readout_function,
                              kappa_scale_subhalos,
-                             log10_bound_mass_cut))
+                             log10_bound_mass_cut,
+                             elliptical_ray_tracing_grid,
+                             split_image_data_reconstruction))
 
             pool = Pool(num_threads)
             output = pool.starmap(forward_model_single_iteration, args)
@@ -233,7 +237,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 use_decoupled_multiplane_approximation, fixed_realization,
                                                 macromodel_readout_function,
                                                 kappa_scale_subhalos, log10_bound_mass_cut,
-                                                elliptical_ray_tracing_grid)
+                                                elliptical_ray_tracing_grid,
+                                                split_image_data_reconstruction)
 
             seed_counter += 1
             acceptance_rate_counter += 1
@@ -366,7 +371,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                    macromodel_readout_function=None,
                                    kappa_scale_subhalos=1.0,
                                    log10_bound_mass_cut=None,
-                                   elliptical_ray_tracing_grid=True):
+                                   elliptical_ray_tracing_grid=True,
+                                   split_image_data_reconstruction=False):
 
     # set the random seed for reproducibility
     np.random.seed(seed)
@@ -459,7 +465,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     else:
         kwargs_constraints['point_source_offset'] = False
 
-    if use_imaging_data:
+    if use_imaging_data and split_image_data_reconstruction is False:
         if verbose:
             print('running fitting sequence...')
             t0 = time()
@@ -627,14 +633,9 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             print('imaging data likelihood (with custom mask): ', logL_imaging_data)
     else:
 
-        bic = -1000
-        logL_imaging_data = -1000
-        # here we replace the lens model used to solve for the four quasar point sources with a lens model that
-        # is defined across the entire image plane. This is useful for visualizing the kappa maps, but is not strictly
-        # necessary to run the code.
         if use_decoupled_multiplane_approximation:
-            lens_model = LensModel(lens_model_list=kwargs_model['lens_model_list'] ,
-                                   lens_redshift_list=kwargs_model['lens_redshift_list'] ,
+            lens_model = LensModel(lens_model_list=kwargs_model['lens_model_list'],
+                                   lens_redshift_list=kwargs_model['lens_redshift_list'],
                                    multi_plane=kwargs_model['multi_plane'],
                                    cosmo=astropy_cosmo,
                                    decouple_multi_plane=kwargs_model['decouple_multi_plane'],
@@ -646,6 +647,68 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                    multi_plane=True,
                                    cosmo=astropy_cosmo,
                                    z_source=kwargs_model['z_source'])
+
+        if split_image_data_reconstruction:
+            tabulated_lens_model = FixedLensModelNew(data_class, lens_model, kwargs_solution,
+                           image_data_grid_resolution_rescale / data_class.kwargs_numerics['supersampling_factor'])
+            kwargs_model_lightfit = model_class.setup_kwargs_model(decoupled_multiplane=False)[0]
+            kwargs_model_lightfit['lens_model_list'] = ['TABULATED_DEFLECTIONS']
+            kwargs_model_lightfit['multi_plane'] = False
+            kwargs_constraints_light_fit = {'num_point_source_list': [len(data_class.x_image)],
+                                  'point_source_offset': True,
+                                  #'joint_source_with_point_source': [[0, 0]]
+                                  }
+            kwargs_likelihood_lightfit = deepcopy(kwargs_likelihood)
+            kwargs_likelihood_lightfit['prior_lens'] = None
+            kwargs_likelihood_lightfit['custom_logL_addition'] = None
+            kwargs_model_lightfit['tabulated_deflection_angles'] = tabulated_lens_model
+            kwargs_model_lightfit['point_source_model_list'] = ['UNLENSED']
+            kwargs_params_lightfit = setup_params_light_fitting(kwargs_params, np.mean(source_x), np.mean(source_y))
+            fitting_sequence = FittingSequence(data_class.kwargs_data_joint,
+                                               kwargs_model_lightfit,
+                                               kwargs_constraints_light_fit,
+                                               kwargs_likelihood_lightfit,
+                                               kwargs_params_lightfit,
+                                               mpi=False,
+                                               verbose=verbose)
+            if fitting_kwargs_list is None:
+                fitting_kwargs_list = [
+                    ['PSO', {'sigma_scale': 1., 'n_particles': 10, 'n_iterations': 100,
+                             'threadCount': num_threads}]
+                ]
+            chain_list = fitting_sequence.fit_sequence(fitting_kwargs_list)
+            kwargs_result = fitting_sequence.best_fit()
+            if verbose:
+                print('result of light fitting: ', kwargs_result)
+            bic = fitting_sequence.bic
+            image_model = create_im_sim(data_class.kwargs_data_joint['multi_band_list'],
+                                        data_class.kwargs_data_joint['multi_band_type'],
+                                        kwargs_model_lightfit,
+                                        bands_compute=None,
+                                        image_likelihood_mask_list=[data_class.likelihood_mask_imaging_weights],
+                                        band_index=0,
+                                        kwargs_pixelbased=None,
+                                        linear_solver=True)
+
+            logL_imaging_data = image_model.likelihood_data_given_model(kwargs_result['kwargs_lens'],
+                                                                        kwargs_result['kwargs_source'],
+                                                                        kwargs_result['kwargs_lens_light'],
+                                                                        kwargs_result['kwargs_ps'],
+                                                                        kwargs_extinction=kwargs_result[
+                                                                            'kwargs_extinction'],
+                                                                        kwargs_special=kwargs_result['kwargs_special'],
+                                                                        source_marg=False,
+                                                                        linear_prior=None,
+                                                                        check_positive_flux=False)[0]
+            if verbose:
+                logL_imaging_data_no_custom_mask = \
+                fitting_sequence.likelihoodModule.image_likelihood.logL(**kwargs_result)[
+                    0]
+                print('imaging data likelihood (without custom mask): ', logL_imaging_data_no_custom_mask)
+                print('imaging data likelihood (with custom mask): ', logL_imaging_data)
+        else:
+            bic = -1000
+            logL_imaging_data = -1000
 
     stat, flux_ratios, flux_ratios_data = flux_ratio_summary_statistic(data_class.magnifications,
                                                                        magnifications,
