@@ -140,13 +140,13 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     seed_counter = 0 + n_kept
     while True:
 
-        # the random seed in numpy maxes out at 4294967295
-        if np.isinstance(random_seed_init, list) or isinstance(random_seed_init, np.ndarray):
+        if isinstance(random_seed_init, list) or isinstance(random_seed_init, np.ndarray):
             random_seed = random_seed_init[seed_counter]
         else:
+            # the random seed in numpy maxes out at 4294967295
             random_seed = random_seed_init + seed_counter
-        if random_seed > 4294967295:
-            random_seed = random_seed - 4294967296
+            if random_seed > 4294967295:
+                random_seed = random_seed - 4294967296
         if fixed_realization_list is not None:
             fixed_realization = fixed_realization_list[acceptance_rate_counter]
         else:
