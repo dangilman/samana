@@ -141,6 +141,10 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     while True:
 
         if isinstance(random_seed_init, list) or isinstance(random_seed_init, np.ndarray):
+            if verbose:
+                print('seed counter: ', seed_counter)
+                print('random seed array: ', random_seed_init)
+                print('running with random seed: ', int(random_seed_init[seed_counter]))
             random_seed = int(random_seed_init[seed_counter])
         else:
             # the random seed in numpy maxes out at 4294967295
