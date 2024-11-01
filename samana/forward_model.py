@@ -121,8 +121,6 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     iteration_counter = 0
     # estimate the sampling rate (CPU minutes per realization) after this many iterations
     readout_sampling_rate_index = 10
-    if n_keep < readout_sampling_rate_index:
-        readout_sampling_rate_index = deepcopy(n_keep)
     acceptance_ratio = np.nan
     sampling_rate = np.nan
     t0 = time()
@@ -130,7 +128,13 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     if random_seed_init is None:
         # pick a random integer from which to generate random seeds
         random_seed_init = np.random.randint(0, 4294967295)
+    elif isinstance(random_seed_init, list) or isinstance(random_seed_init, np.ndarray):
+        if n_keep != len(random_seed_init):
+            print('setting n_keep = '+str(len(random_seed_init)))
+        n_keep = len(random_seed_init)
 
+    if n_keep < readout_sampling_rate_index:
+        readout_sampling_rate_index = deepcopy(n_keep)
     if verbose:
         print('starting with ' + str(n_kept) + ' samples accepted, ' + str(n_keep - n_kept) + ' remain')
         print('existing magnifications: ', _m)
@@ -589,6 +593,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     if verbose:
         print('computed magnifications in '+str(np.round(tend - t0, 1))+' seconds')
         print('magnifications: ', magnifications)
+        print('flux ratios: ', magnifications[1:]/magnifications[0])
         print(kwargs_solution)
         print('\n')
         print(macromodel_samples_fixed_dict)
@@ -726,12 +731,11 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     _flux_ratio_likelihood_weight = flux_ratio_likelihood(data_class.magnifications, magnifications,
                                                          data_class.flux_uncertainty, data_class.uncertainty_in_fluxes,
                                                          data_class.keep_flux_ratio_index)
-    logl_flux = -np.log(_flux_ratio_likelihood_weight)
-    log_flux_ratio_likelihood = min(abs(logl_flux), -100)
+    log_flux_ratio_likelihood = -100
 
     if verbose:
-        print('flux ratios data: ', flux_ratios_data)
-        print('flux ratios model: ', flux_ratios)
+        print('flux ratios data: ', data_class.magnifications[1:]/data_class.magnifications[0])
+        print('flux ratios model: ', magnifications[1:]/magnifications[0])
         print('statistic: ', stat)
         print('log flux_ratio likelihood: ', log_flux_ratio_likelihood)
         if use_imaging_data:

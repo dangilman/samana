@@ -11,27 +11,25 @@ import pickle
 def setup_light_reconstruction(output_class_filename,
                                measured_flux_ratios,
                                flux_ratio_uncertainties,
-                               num_per_core_best=10,
-                               num_per_core_baseline=2):
+                               n_keep_best=50000,
+                               n_keep_random=10000):
 
     with open(output_class_filename, 'rb') as f:
         output = pickle.load(f).clean()
     f.close()
     flux_ratios = output.flux_ratios
-    fr_logL = 0
+    fr_chi2 = 0
     for i in range(0, len(measured_flux_ratios)):
         if flux_ratio_uncertainties[i] == -1:
             continue
-        fr_logL += -0.5 * (flux_ratios[:, i] - measured_flux_ratios[i]) ** 2 / flux_ratio_uncertainties[i] ** 2
-
-    index_best = np.argsort(fr_logL)[::-1]
-    n_keep_best = 100000
-    n_keep_random = 10000
-    index_random = np.random.randint(0, len(fr_logL), n_keep_random)
+        fr_chi2 += 0.5 * (flux_ratios[:, i] - measured_flux_ratios[i]) ** 2 / flux_ratio_uncertainties[i] ** 2
+    print(fr_chi2)
+    index_best = np.argsort(fr_chi2)
+    print(fr_chi2[index_best])
+    index_random = np.random.randint(0, len(fr_chi2), n_keep_random)
     index_best = index_best[0:n_keep_best]
-    _seed_array = np.append(output.seed[index_best], output.seed[index_random])
-    seed_array_baseline = output.seed[index_best]
-    seed_array_best = output.seed[index_random]
+    seed_array_baseline = output.seed[index_random]
+    seed_array_best = output.seed[index_best]
     return seed_array_best, seed_array_baseline
 
 def setup_params_light_fitting(kwargs_params, source_x, source_y):
