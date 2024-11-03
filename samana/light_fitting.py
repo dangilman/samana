@@ -23,6 +23,7 @@ def setup_light_reconstruction(output_class_filename,
         if flux_ratio_uncertainties[i] == -1:
             continue
         fr_chi2 += 0.5 * (flux_ratios[:, i] - measured_flux_ratios[i]) ** 2 / flux_ratio_uncertainties[i] ** 2
+    print('number reduced chi^2 < 1: ', np.sum(fr_chi2/3 < 1))
     index_best = np.argsort(fr_chi2)
     index_random = np.random.randint(0, len(fr_chi2), n_keep_random)
     index_best = index_best[0:n_keep_best]
