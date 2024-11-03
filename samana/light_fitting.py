@@ -11,7 +11,7 @@ import pickle
 def setup_light_reconstruction(output_class_filename,
                                measured_flux_ratios,
                                flux_ratio_uncertainties,
-                               n_keep_best=50000,
+                               n_keep_best=10000,
                                n_keep_random=10000):
 
     with open(output_class_filename, 'rb') as f:
@@ -23,13 +23,13 @@ def setup_light_reconstruction(output_class_filename,
         if flux_ratio_uncertainties[i] == -1:
             continue
         fr_chi2 += 0.5 * (flux_ratios[:, i] - measured_flux_ratios[i]) ** 2 / flux_ratio_uncertainties[i] ** 2
-    print(fr_chi2)
     index_best = np.argsort(fr_chi2)
-    print(fr_chi2[index_best])
     index_random = np.random.randint(0, len(fr_chi2), n_keep_random)
     index_best = index_best[0:n_keep_best]
     seed_array_baseline = output.seed[index_random]
     seed_array_best = output.seed[index_best]
+    print('flux ratio chi2: ', fr_chi2)
+    print('best seeds: ', seed_array_best)
     return seed_array_best, seed_array_baseline
 
 def setup_params_light_fitting(kwargs_params, source_x, source_y):
