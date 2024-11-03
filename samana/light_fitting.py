@@ -29,6 +29,8 @@ def setup_light_reconstruction(output_class_filename,
     seed_array_baseline = output.seed[index_random]
     seed_array_best = output.seed[index_best]
     print('flux ratio chi2: ', fr_chi2)
+    print('median chi2: ', np.median(fr_chi2))
+    print('worst chi2: ', max(fr_chi2))
     print('best seeds: ', seed_array_best)
     return seed_array_best, seed_array_baseline
 
