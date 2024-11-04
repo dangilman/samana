@@ -12,27 +12,31 @@ def setup_light_reconstruction(output_class_filename,
                                measured_flux_ratios,
                                flux_ratio_uncertainties,
                                n_keep_best=10000,
-                               n_keep_random=10000):
-
-    with open(output_class_filename, 'rb') as f:
-        output = pickle.load(f).clean()
-    f.close()
-    flux_ratios = output.flux_ratios
-    fr_chi2 = 0
-    for i in range(0, len(measured_flux_ratios)):
-        if flux_ratio_uncertainties[i] == -1:
-            continue
-        fr_chi2 += 0.5 * (flux_ratios[:, i] - measured_flux_ratios[i]) ** 2 / flux_ratio_uncertainties[i] ** 2
-    print('number reduced chi^2 < 1: ', np.sum(fr_chi2/3 < 1))
-    index_best = np.argsort(fr_chi2)
-    index_random = np.random.randint(0, len(fr_chi2), n_keep_random)
-    index_best = index_best[0:n_keep_best]
-    seed_array_baseline = output.seed[index_random]
-    seed_array_best = output.seed[index_best]
-    print('flux ratio chi2: ', fr_chi2)
-    print('median chi2: ', np.median(fr_chi2))
-    print('worst chi2: ', max(fr_chi2))
-    print('best seeds: ', seed_array_best)
+                               n_keep_random=10000,
+                               seed_filename=None):
+    if seed_filename is not None:
+        seed_array_best = np.loadtxt(seed_filename + '_best_seeds.txt')
+        seed_array_baseline = np.loadtxt(seed_filename + '_random_seeds.txt')
+    else:
+        with open(output_class_filename, 'rb') as f:
+            output = pickle.load(f).clean()
+        f.close()
+        flux_ratios = output.flux_ratios
+        fr_chi2 = 0
+        for i in range(0, len(measured_flux_ratios)):
+            if flux_ratio_uncertainties[i] == -1:
+                continue
+            fr_chi2 += 0.5 * (flux_ratios[:, i] - measured_flux_ratios[i]) ** 2 / flux_ratio_uncertainties[i] ** 2
+        print('number reduced chi^2 < 1: ', np.sum(fr_chi2/3 < 1))
+        index_best = np.argsort(fr_chi2)
+        index_random = np.random.randint(0, len(fr_chi2), n_keep_random)
+        index_best = index_best[0:n_keep_best]
+        seed_array_baseline = output.seed[index_random]
+        seed_array_best = output.seed[index_best]
+        print('flux ratio chi2: ', fr_chi2)
+        print('median chi2: ', np.median(fr_chi2))
+        print('worst chi2: ', max(fr_chi2))
+        print('best seeds: ', seed_array_best)
     return seed_array_best, seed_array_baseline
 
 def setup_params_light_fitting(kwargs_params, source_x, source_y):
