@@ -14,6 +14,7 @@ def setup_light_reconstruction(output_class_filename,
                                n_keep_best=10000,
                                n_keep_random=10000,
                                seed_filename=None):
+
     if seed_filename is not None:
         seed_array_best = np.loadtxt(seed_filename + '_best_seeds.txt')
         seed_array_baseline = np.loadtxt(seed_filename + '_random_seeds.txt')
@@ -26,7 +27,7 @@ def setup_light_reconstruction(output_class_filename,
         for i in range(0, len(measured_flux_ratios)):
             if flux_ratio_uncertainties[i] == -1:
                 continue
-            fr_chi2 += 0.5 * (flux_ratios[:, i] - measured_flux_ratios[i]) ** 2 / flux_ratio_uncertainties[i] ** 2
+            fr_chi2 += (flux_ratios[:, i] - measured_flux_ratios[i]) ** 2 / flux_ratio_uncertainties[i] ** 2
         print('number reduced chi^2 < 1: ', np.sum(fr_chi2/3 < 1))
         index_best = np.argsort(fr_chi2)
         index_random = np.random.randint(0, len(fr_chi2), n_keep_random)

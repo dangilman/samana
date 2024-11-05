@@ -446,3 +446,69 @@ class Output(object):
         ax.set_xlim(smin, smax)
         ax.set_ylim(logLupper, logLlower)
         return ax
+
+def compile_flux_ratios(output_path, job_index_min, job_index_max,
+                        measured_flux_ratios, flux_ratio_uncertainties,
+                        print_missing_files=False, index_reorder=None):
+    
+    init = True
+    random_seeds = None
+    magnifications = None
+    if index_reorder is None:
+        index_reorder = [0,1,2,3]
+    for i in range(job_index_min, job_index_max + 1):
+
+        folder = output_path + '/job_' + str(i) + '/'
+        try:
+            params = np.loadtxt(folder + 'parameters.txt', skiprows=1)
+        except:
+            if print_missing_files:
+                print('params file ' + folder + 'parameters.txt not found... ')
+            continue
+        try:
+            fluxes = np.loadtxt(folder + 'fluxes.txt')
+        except:
+            if print_missing_files:
+                print('fluxes file ' + folder + 'fluxes.txt not found... ')
+            continue
+        try:
+            macrosamples = np.loadtxt(folder + 'macromodel_samples.txt', skiprows=1)
+        except:
+            if print_missing_files:
+                print('macromodel samples file ' + folder + 'macromodel_samples.txt not found... ')
+            continue
+        # check the arrays are all the same length
+        size_params = params.shape[0]
+        size_fluxes = fluxes.shape[0]
+        size_macro = macrosamples.shape[0]
+        if size_params != size_fluxes:
+            print('parameters and fluxes have different shape for ' + folder)
+            continue
+        if size_params != size_macro:
+            print('parameters and macromodel samples have different shape for ' + folder)
+            continue
+        if param_names is None:
+            with open(folder + 'parameters.txt', 'r') as f:
+                param_names = f.readlines(1)[0].split()
+            f.close()
+
+        if init:
+            magnifications = fluxes[:,index_reorder]
+            random_seeds = params[:, -1]
+            init = False
+        else:
+            random_seeds = np.append(random_seeds, params[:, -1])
+            magnifications = np.vstack((magnifications, fluxes[:,index_reorder]))
+
+    flux_ratios = magnifications[:,1:] / magnifications[:,0,np.newaxis]
+    fr_chi2 = 0
+    for i in range(0, len(measured_flux_ratios)):
+        if flux_ratio_uncertainties[i] == -1:
+            continue
+        fr_chi2 += (flux_ratios[:, i] - measured_flux_ratios[i]) ** 2 / flux_ratio_uncertainties[i] ** 2
+    logL = -0.5 * fr_chi2
+    y = np.empty((len(random_seeds), 2))
+    y[:, 0] = logL
+    y[:, 1] = random_seeds
+    return y
+

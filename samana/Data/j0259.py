@@ -98,31 +98,31 @@ class _J0259(ImagingDataBase):
        [-6.64879554e-06,  3.99999805e-02]])
         return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
 
-class J0259_HST_F475X(_J0259):
-
-    def __init__(self, super_sample_factor=1):
-        """
-
-        :param image_position_uncertainties: list of astrometric uncertainties for each image
-        i.e. [0.003, 0.003, 0.003, 0.003]
-        :param flux_uncertainties: list of flux ratio uncertainties in percentage, or None if these are handled
-        post-processing
-        :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
-        :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
-        """
-        x_image = np.array([ 0.67688171, -0.04485759, -0.79680975,  0.35393413])
-        y_image = np.array([-0.29873911, -0.68926224,  0.25911033,  0.57734639])
-        horizontal_shift = -0.01
-        vertical_shift = 0.005
-        x_image += horizontal_shift
-        y_image += vertical_shift
-        image_position_uncertainties = [0.005] * 4 # 5 arcsec
-        flux_uncertainties = None
-        magnifications = np.array([1.0] * 4)
-        uncertainty_in_fluxes= False
-        band = 'F475X'
-        super(J0259_HST_F475X, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
-                                              uncertainty_in_fluxes, super_sample_factor, band)
+# class J0259_HST_F475X(_J0259):
+#
+#     def __init__(self, super_sample_factor=1):
+#         """
+#
+#         :param image_position_uncertainties: list of astrometric uncertainties for each image
+#         i.e. [0.003, 0.003, 0.003, 0.003]
+#         :param flux_uncertainties: list of flux ratio uncertainties in percentage, or None if these are handled
+#         post-processing
+#         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
+#         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
+#         """
+#         x_image = np.array([ 0.67688171, -0.04485759, -0.79680975,  0.35393413])
+#         y_image = np.array([-0.29873911, -0.68926224,  0.25911033,  0.57734639])
+#         horizontal_shift = -0.01
+#         vertical_shift = 0.005
+#         x_image += horizontal_shift
+#         y_image += vertical_shift
+#         image_position_uncertainties = [0.005] * 4 # 5 arcsec
+#         flux_uncertainties = None
+#         magnifications = np.array([1.0] * 4)
+#         uncertainty_in_fluxes= False
+#         band = 'F475X'
+#         super(J0259_HST_F475X, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
+#                                               uncertainty_in_fluxes, super_sample_factor, band)
 
 class J0259_HST_F814W(_J0259):
 
@@ -136,8 +136,10 @@ class J0259_HST_F814W(_J0259):
         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
-        x_image = np.array([ 0.67688171, -0.04485759, -0.79680975,  0.35393413])
-        y_image = np.array([-0.29873911, -0.68926224,  0.25911033,  0.57734639])
+        #x_image = np.array([ 0.67688171, -0.04485759, -0.79680975,  0.35393413])
+        #y_image = np.array([-0.29873911, -0.68926224,  0.25911033,  0.57734639])
+        x_image = np.array([ 0.67321505, -0.04478495, -0.80178495,  0.38521505])
+        y_image = np.array([-0.29821417, -0.68721417,  0.26278583,  0.57578583])
         horizontal_shift = 0.0
         vertical_shift = 0.002
         x_image += horizontal_shift
