@@ -136,12 +136,10 @@ class J0259_HST_F814W(_J0259):
         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
-        #x_image = np.array([ 0.67688171, -0.04485759, -0.79680975,  0.35393413])
-        #y_image = np.array([-0.29873911, -0.68926224,  0.25911033,  0.57734639])
-        x_image = np.array([ 0.67321505, -0.04478495, -0.80178495,  0.38521505])
-        y_image = np.array([-0.29821417, -0.68721417,  0.26278583,  0.57578583])
+        x_image = np.array([-0.04275, -0.79975,  0.35725,  0.67525])
+        y_image = np.array([-0.6905,  0.2595,  0.5725, -0.3015])
         horizontal_shift = 0.0
-        vertical_shift = 0.002
+        vertical_shift = 0.00
         x_image += horizontal_shift
         y_image += vertical_shift
         image_position_uncertainties = [0.005] * 4 # 5 arcsec
