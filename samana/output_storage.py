@@ -450,7 +450,7 @@ class Output(object):
 def compile_flux_ratios(output_path, job_index_min, job_index_max,
                         measured_flux_ratios, flux_ratio_uncertainties,
                         print_missing_files=False, index_reorder=None):
-    
+
     init = True
     random_seeds = None
     magnifications = None
@@ -487,11 +487,6 @@ def compile_flux_ratios(output_path, job_index_min, job_index_max,
         if size_params != size_macro:
             print('parameters and macromodel samples have different shape for ' + folder)
             continue
-        if param_names is None:
-            with open(folder + 'parameters.txt', 'r') as f:
-                param_names = f.readlines(1)[0].split()
-            f.close()
-
         if init:
             magnifications = fluxes[:,index_reorder]
             random_seeds = params[:, -1]
