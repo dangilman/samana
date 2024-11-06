@@ -1,6 +1,7 @@
 from samana.Model.model_base import ModelBase
 import numpy as np
 import pickle
+from samana.param_managers import EPLMultipole34FreeShearLensMassPrior
 
 class _MG0414ModelBase(ModelBase):
 
@@ -116,6 +117,20 @@ class MG0414ModelEPLM3M4Shear(_MG0414ModelBase):
 
     def __init__(self, data_class, shapelets_order=None, shapelets_scale_factor=2.5 / 2):
         super(MG0414ModelEPLM3M4Shear, self).__init__(data_class, shapelets_order, shapelets_scale_factor)
+
+    def param_class_4pointsolver(self, lens_model_list_macro,
+                                 kwargs_lens_init,
+                                 macromodel_samples_fixed_dict):
+        center_x = -0.231 # 0.0718
+        center_y = -0.15282 # -0.22
+        sigma_xy = 0.05
+        param_class = EPLMultipole34FreeShearLensMassPrior(kwargs_lens_init,
+                                                  macromodel_samples_fixed_dict['a4_a'],
+                                                  macromodel_samples_fixed_dict['a3_a'],
+                                                  macromodel_samples_fixed_dict['delta_phi_m3'],
+                                                  macromodel_samples_fixed_dict['delta_phi_m4'],
+                                                  center_x, center_y, sigma_xy)
+        return param_class
 
     def custom_logL(self, kwargs_lens,
                 kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,

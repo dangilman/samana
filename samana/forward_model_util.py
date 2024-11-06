@@ -253,7 +253,7 @@ def flux_ratio_summary_statistic(normalized_magnifcations_measured, model_magnif
     stat = 0
     for f_i_data, f_i_model in zip(flux_ratios_data, flux_ratios):
         stat += (f_i_data - f_i_model) ** 2
-    stat = np.sqrt(stat)
+    stat = np.sqrt(stat) / max(flux_ratios_data)
     return stat, flux_ratios, flux_ratios_data
 
 def flux_ratio_likelihood(measured_fluxes, model_fluxes, measurement_uncertainties, uncertainty_in_fluxes,

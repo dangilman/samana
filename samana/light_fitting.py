@@ -68,18 +68,22 @@ class FixedLensModelNew(object):
     """
 
     """
-    def __init__(self, data_class, lens_model, kwargs_lens, super_sample_factor=1):
+    def __init__(self, data_class, lens_model, kwargs_lens, super_sample_factor, image_data_grid_resolution_rescale):
         """
 
         :param data_class:
         :param lens_model:
         :param kwargs_lens:
         :param super_sample_factor:
+        :param image_data_grid_resolution_rescale: rescales the imaging data grid resolution; a number > 0
+        means lower resolution
         """
         nx, ny = data_class.kwargs_data['image_data'].shape
         nx = int(nx)
         ny = int(ny)
-        super_sample_factor = int(super_sample_factor)
+        if image_data_grid_resolution_rescale < 1:
+            raise Exception('image data resolution rescaling must be an integer >= 1')
+        super_sample_factor = int(super_sample_factor * image_data_grid_resolution_rescale)
         deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size = data_class.coordinate_properties
         grid = RegularGrid(nx, ny, transform_pix2angle, ra_at_xy_0, dec_at_xy_0, super_sample_factor)
         ra_coords, dec_coords = grid.coordinates_evaluate

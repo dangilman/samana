@@ -386,7 +386,39 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                    elliptical_ray_tracing_grid=True,
                                    split_image_data_reconstruction=False,
                                    tolerance=np.inf):
+    """
 
+    :param data_class:
+    :param model:
+    :param preset_model_name:
+    :param kwargs_sample_realization:
+    :param kwargs_sample_source:
+    :param kwargs_sample_macro_fixed:
+    :param log_mlow_mass_sheets:
+    :param rescale_grid_size:
+    :param rescale_grid_resolution:
+    :param image_data_grid_resolution_rescale: rescales the resolution of the imaging data, a number > 1 means
+    higher resolution
+    :param verbose:
+    :param seed:
+    :param n_pso_particles:
+    :param n_pso_iterations:
+    :param num_threads:
+    :param kwargs_model_class:
+    :param astrometric_uncertainty:
+    :param use_imaging_data:
+    :param fitting_kwargs_list:
+    :param test_mode:
+    :param use_decoupled_multiplane_approximation:
+    :param fixed_realization:
+    :param macromodel_readout_function:
+    :param kappa_scale_subhalos:
+    :param log10_bound_mass_cut:
+    :param elliptical_ray_tracing_grid:
+    :param split_image_data_reconstruction:
+    :param tolerance:
+    :return:
+    """
     # set the random seed for reproducibility
     np.random.seed(seed)
 
@@ -457,7 +489,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                     astropy_cosmo)
     lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
         kwargs_mass_sheet={'log_mlow_sheets': log_mlow_mass_sheets, 'kappa_scale_subhalos': kappa_scale_subhalos})
-    grid_resolution_image_data = pixel_size * image_data_grid_resolution_rescale
+    grid_resolution_image_data = pixel_size / image_data_grid_resolution_rescale
     astropy_cosmo = realization.lens_cosmo.cosmo.astropy
     kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split = model_class.setup_kwargs_model(
         decoupled_multiplane=use_decoupled_multiplane_approximation,
@@ -595,7 +627,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     tend = time()
     stat, flux_ratios, flux_ratios_data = flux_ratio_summary_statistic(data_class.magnifications,
                                                                        magnifications,
-                                                                       data_class.flux_uncertainties,
+                                                                       data_class.flux_uncertainty,
                                                                        data_class.keep_flux_ratio_index,
                                                                        data_class.uncertainty_in_fluxes)
 
@@ -673,7 +705,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
 
         if split_image_data_reconstruction and stat < tolerance:
             tabulated_lens_model = FixedLensModelNew(data_class, lens_model, kwargs_solution,
-                           image_data_grid_resolution_rescale / data_class.kwargs_numerics['supersampling_factor'])
+                           data_class.kwargs_numerics['supersampling_factor'], image_data_grid_resolution_rescale)
             kwargs_model_lightfit = model_class.setup_kwargs_model(decoupled_multiplane=False)[0]
             kwargs_model_lightfit['lens_model_list'] = ['TABULATED_DEFLECTIONS']
             kwargs_model_lightfit['multi_plane'] = False
@@ -696,7 +728,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                verbose=verbose)
             if fitting_kwargs_list is None:
                 fitting_kwargs_list = [
-                    ['PSO', {'sigma_scale': 1., 'n_particles': 10, 'n_iterations': 100,
+                    ['PSO', {'sigma_scale': 1., 'n_particles': n_pso_particles, 'n_iterations': n_pso_iterations,
                              'threadCount': num_threads}]
                 ]
             chain_list = fitting_sequence.fit_sequence(fitting_kwargs_list)
