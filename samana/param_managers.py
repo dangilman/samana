@@ -560,12 +560,12 @@ class EPLMultipole34FreeShearLensMassPrior(PowerLawParamManager):
         self.kwargs_lens[1] = kwargs_shear
         return self.kwargs_lens
 
-
 def auto_param_class(lens_model_list_macro, kwargs_lens_init, macromodel_samples_fixed_dict):
 
     macromodel_samples_fixed_param_names = macromodel_samples_fixed_dict.keys()
     condition_1 = lens_model_list_macro[0] == 'EPL_MULTIPOLE_M3M4_ELL' and lens_model_list_macro[1] == 'SHEAR'
     condition_2 = lens_model_list_macro[0] == 'EPL_MULTIPOLE_M3M4' and lens_model_list_macro[1] == 'SHEAR'
+
     if condition_1 or condition_2:
         if 'a4_a' not in macromodel_samples_fixed_param_names:
             raise Exception(
@@ -597,6 +597,7 @@ def auto_param_class(lens_model_list_macro, kwargs_lens_init, macromodel_samples
                                                   macromodel_samples_fixed_dict['delta_phi_m3'],
                                                   macromodel_samples_fixed_dict['delta_phi_m4'])
     else:
+        print(lens_model_list_macro[0])
         raise Exception('this functionality only implemented for EPL_MULTIPOLE_M3M4 plus shear model')
 
     if param_class is None:

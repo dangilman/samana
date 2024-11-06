@@ -60,14 +60,9 @@ def sample_prior(kwargs_prior):
     sample_list = []
     sample_names = []
     joint_multipole_prior_used = False
+
     for param_name in kwargs_prior.keys():
         if param_name == 'OPTICAL_MULTIPOLE_PRIOR':
-            # pdf = OpticalMultipolePrior()
-            # if len(kwargs_prior[param_name]) == 0:
-            #     q_mean, q_sigma = None, None
-            # else:
-            #     q_mean, q_sigma = kwargs_prior[param_name][0], kwargs_prior[param_name][1]
-            # a3a, delta_phi_m3, a4a, delta_phi_m4 = pdf.sample(q_mean, q_sigma)
             a3a = np.random.normal(0.0, 0.005)
             a4a = np.random.normal(0.0, 0.01)
             delta_phi_m3 = np.random.uniform(-np.pi/6, np.pi/6)
@@ -82,7 +77,6 @@ def sample_prior(kwargs_prior):
             sample_list += [a3a, a4a, delta_phi_m3, delta_phi_m4]
             sample_names += ['a3_a', 'a4_a', 'delta_phi_m3', 'delta_phi_m4']
             joint_multipole_prior_used = True
-
         else:
             prior_type = kwargs_prior[param_name][0]
             if prior_type == 'FIXED':
@@ -108,7 +102,6 @@ def sample_prior(kwargs_prior):
             prior_samples_dict[param_name] = sample
             sample_list.append(sample)
             sample_names.append(param_name)
-
     return prior_samples_dict, np.array(sample_list), sample_names
 
 def filenames(output_path, job_index):

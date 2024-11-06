@@ -132,7 +132,6 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
         if n_keep != len(random_seed_init):
             print('setting n_keep = '+str(len(random_seed_init)))
         n_keep = len(random_seed_init)
-
     if n_keep < readout_sampling_rate_index:
         readout_sampling_rate_index = deepcopy(n_keep)
     if verbose:
@@ -181,7 +180,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              kappa_scale_subhalos,
                              log10_bound_mass_cut,
                              elliptical_ray_tracing_grid,
-                             split_image_data_reconstruction))
+                             split_image_data_reconstruction, tolerance))
 
             pool = Pool(num_threads)
             output = pool.starmap(forward_model_single_iteration, args)
@@ -205,6 +204,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                 # this keeps track of how many realizations were analyzed, and resets after each readout (set by readout_steps)
                 # The purpose of this counter is to keep track of the acceptance rate
                 iteration_counter += 1
+
                 if stat < tolerance:
                     # If the statistic is less than the tolerance threshold, we keep the parameters
                     accepted_realizations_counter += 1
@@ -249,7 +249,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 macromodel_readout_function,
                                                 kappa_scale_subhalos, log10_bound_mass_cut,
                                                 elliptical_ray_tracing_grid,
-                                                split_image_data_reconstruction)
+                                                split_image_data_reconstruction,
+                                                                              tolerance)
 
             seed_counter += 1
             acceptance_rate_counter += 1
@@ -296,7 +297,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                     print('N remaining: ', n_keep - n_kept)
 
         if verbose:
-            print('accepted realizations counter: ', acceptance_rate_counter)
+            print('accepted realizations counter: ', accepted_realizations_counter)
         # readout if either of these conditions are met
         if accepted_realizations_counter >= readout_steps:
             readout = True
@@ -383,7 +384,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                    kappa_scale_subhalos=1.0,
                                    log10_bound_mass_cut=None,
                                    elliptical_ray_tracing_grid=True,
-                                   split_image_data_reconstruction=False):
+                                   split_image_data_reconstruction=False,
+                                   tolerance=np.inf):
 
     # set the random seed for reproducibility
     np.random.seed(seed)
@@ -565,7 +567,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                cosmo=astropy_cosmo,
                                z_source=kwargs_model['z_source'])
 
-    source_x, source_y = lens_model.ray_shooting(data_class.x_image, data_class.y_image,
+    source_x, source_y = lens_model.ray_shooting(data_class.x_image,
+                                                 data_class.y_image,
                                                  kwargs_solution)
     if verbose:
         print('\n')
@@ -590,6 +593,14 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                                       lens_model,
                                                                       elliptical_ray_tracing_grid)
     tend = time()
+    stat, flux_ratios, flux_ratios_data = flux_ratio_summary_statistic(data_class.magnifications,
+                                                                       magnifications,
+                                                                       data_class.flux_uncertainties,
+                                                                       data_class.keep_flux_ratio_index,
+                                                                       data_class.uncertainty_in_fluxes)
+
+    log_flux_ratio_likelihood = -100
+
     if verbose:
         print('computed magnifications in '+str(np.round(tend - t0, 1))+' seconds')
         print('magnifications: ', magnifications)
@@ -660,7 +671,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                    cosmo=astropy_cosmo,
                                    z_source=kwargs_model['z_source'])
 
-        if split_image_data_reconstruction:
+        if split_image_data_reconstruction and stat < tolerance:
             tabulated_lens_model = FixedLensModelNew(data_class, lens_model, kwargs_solution,
                            image_data_grid_resolution_rescale / data_class.kwargs_numerics['supersampling_factor'])
             kwargs_model_lightfit = model_class.setup_kwargs_model(decoupled_multiplane=False)[0]
@@ -722,19 +733,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             bic = -1000
             logL_imaging_data = -1000
 
-    stat, flux_ratios, flux_ratios_data = flux_ratio_summary_statistic(data_class.magnifications,
-                                                                       magnifications,
-                                                                       data_class.flux_uncertainty,
-                                                                       data_class.keep_flux_ratio_index,
-                                                                       data_class.uncertainty_in_fluxes)
-
-    _flux_ratio_likelihood_weight = flux_ratio_likelihood(data_class.magnifications, magnifications,
-                                                         data_class.flux_uncertainty, data_class.uncertainty_in_fluxes,
-                                                         data_class.keep_flux_ratio_index)
-    log_flux_ratio_likelihood = -100
-
     if verbose:
-        print('flux ratios data: ', data_class.magnifications[1:]/data_class.magnifications[0])
+        print('flux ratios data: ', np.array(data_class.magnifications)[1:]/data_class.magnifications[0])
         print('flux ratios model: ', magnifications[1:]/magnifications[0])
         print('statistic: ', stat)
         print('log flux_ratio likelihood: ', log_flux_ratio_likelihood)
