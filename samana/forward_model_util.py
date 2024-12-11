@@ -110,9 +110,10 @@ def sample_prior(kwargs_prior):
                 sample = np.random.normal(mean, standard_dev)
             else:
                 raise Exception('only UNIFORM, GAUSSIAN, and FIXED priors currently implemented')
-            if joint_multipole_prior_used and param_name in ['a3_a', 'a4_a', 'delta_phi_m3', 'delta_phi_m3']:
-                raise Exception('you have specified a prior on multipole moments separately '
-                                 'from JOINT_MULTIPOLE_PRIOR, which is not currently allowed!')
+            if joint_multipole_prior_used and param_name in ['a1_a', 'a3_a', 'a4_a', 'delta_phi_m3', 'delta_phi_m3', 'delta_phi_m3']:
+                print('WARNING: you have specified a prior on multipole moments separately '
+                                 'from OPTICAL_MULTIPOLE_PRIOR, which violates the intended use of this '
+                      'prior distribution!')
             positive_definite_param_names = ['satellite_1_theta_E',
                                              'satellite_2_theta_E',
                                              'satellite_3_theta_E']
