@@ -24,6 +24,28 @@ class BaselineSmoothMock(MockBase):
                                                            flux_ratio_uncertainties, image_data,
                                                            super_sample_factor)
 
+class BaselineSmoothMockLowq(MockBase):
+
+    def __init__(self, super_sample_factor=1.0):
+        z_lens = 0.5
+        z_source = 2.0
+        x_image = np.array([-1.11457345,  0.81460192, -0.12067745,  0.22311867])
+        y_image = np.array([-0.05268766,  0.63990518,  0.94723175, -0.6775138 ])
+        magnifications_true = np.array([2.38547657, 2.82826663, 1.60333087, 0.83832858])
+        from samana.Data.ImageData.baseline_smooth_mock_lowq import image_data
+        magnification_measurement_errors = 0.0
+        magnifications = np.array(magnifications_true) + np.array(magnification_measurement_errors)
+        astrometric_uncertainties = [0.00001] * 4
+        flux_ratio_uncertainties = None
+        self.a3a_true = -0.0
+        self.a4a_true = 0.00
+        self.delta_phi_m3_true = 0.0
+        self.delta_phi_m4_true = 0.0
+        super(BaselineSmoothMockLowq, self).__init__(z_lens, z_source, x_image, y_image,
+                                                           magnifications, astrometric_uncertainties,
+                                                           flux_ratio_uncertainties, image_data,
+                                                           super_sample_factor)
+
 class BaselineSmoothMockv2(MockBase):
     """This mock has a relatively large ellipticity q = 0.4"""
     def __init__(self, super_sample_factor=1.0):

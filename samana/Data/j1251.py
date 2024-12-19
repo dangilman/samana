@@ -98,8 +98,8 @@ class J1251_HST(_J1251):
         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
-        x_image = np.array([-1.0734222, 0.63920452, 0.70877884, 0.34943884])
-        y_image = np.array([0.32981853, 0.3459498, -0.24232032, -0.61744801])
+        x_image = np.array([-1.0734222, 0.63920452, 0.70877884, 0.34943884])[[2,3,1,0]]
+        y_image = np.array([0.32981853, 0.3459498, -0.24232032, -0.61744801])[[2,3,1,0]]
         horizontal_shift = 0.0
         vertical_shift = -0.015
         x_image += horizontal_shift
