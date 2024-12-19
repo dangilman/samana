@@ -36,6 +36,180 @@ def default_rendering_area(lens_ID=None,
     thetaE = model.setup_lens_model()[-1][0][0]['theta_E']
     return opening_angle_factor * thetaE
 
+def gamma_macro_priors(lens_ID):
+
+    if lens_ID == 'B1422':
+        rescale_grid_size = 1.4
+        rescale_grid_res = 1.4
+    elif lens_ID == 'WFI2026':
+        rescale_grid_size = 1.2
+        rescale_grid_res = 1.2
+    elif lens_ID == 'B2045':
+        raise Exception('not yet implemented')
+    elif lens_ID == 'HE0435':
+        gamma_macro_prior = {'gamma': ['UNIFORM', 2.12 - 0.15, 2.12 + 0.15]}
+    elif lens_ID == 'J0248':
+        rescale_grid_size = 1.0
+        rescale_grid_res = 1.3
+    elif lens_ID == 'J0248_HST':
+        rescale_grid_size = 1.0
+        rescale_grid_res = 1.3
+    elif lens_ID in ['J0259', 'J0259_HST_475X']:
+        rescale_grid_size = 1.4
+        rescale_grid_res = 1.1
+    elif lens_ID == 'J0607':
+        rescale_grid_res = 1.1
+        rescale_grid_size = 5.0
+    elif lens_ID == 'J0608':
+        rescale_grid_size = 4.0
+        rescale_grid_res = 1.3
+    elif lens_ID == 'J0659':
+        rescale_grid_size = 2.0
+        rescale_grid_res = 1.2
+    elif lens_ID == 'J0803':
+        rescale_grid_size = 2.5
+        rescale_grid_res = 1.3
+    elif lens_ID == 'J0924':
+        rescale_grid_size = 3.0
+        rescale_grid_res = 1.2
+    elif lens_ID in ['J1042', 'J1042_814W']:
+        rescale_grid_size = 4.0
+        rescale_grid_res = 1.2
+    elif lens_ID == 'J1131':
+        rescale_grid_res = 1.3
+        rescale_grid_size = 2.5
+    elif lens_ID == 'J1251':
+        rescale_grid_res = 1.3
+        rescale_grid_size = 2.0
+    elif lens_ID == 'J1537':
+        gamma_macro_prior = {'gamma': ['UNIFORM', 1.8, 2.3]}
+    elif lens_ID == 'J2026':
+        rescale_grid_res = 1.3
+        rescale_grid_size = 1.2
+    elif lens_ID == 'J2205_MIRI':
+        rescale_grid_res = 1.3
+        rescale_grid_size = 1.5
+    elif lens_ID == 'J2205':
+        rescale_grid_res = 1.3
+        rescale_grid_size = 1.5
+    elif lens_ID == 'J2344':
+        rescale_grid_res = 1.3
+        rescale_grid_size = 4.0
+    elif lens_ID == 'MG0414':
+        rescale_grid_res = 1.3
+        rescale_grid_size = 2.0
+    elif lens_ID in ['PG1115', 'PG1115_NIRCAM']:
+        rescale_grid_res = 1.3
+        rescale_grid_size = 2.0
+    elif lens_ID == 'PSJ0147':
+        rescale_grid_res = 1.3
+        rescale_grid_size = 2.5
+    elif lens_ID == 'PSJ1606':
+        rescale_grid_res = 1.3
+        rescale_grid_size = 1.0
+    elif lens_ID == 'RXJ0911':
+        rescale_grid_res = 1.3
+        rescale_grid_size = 1.0
+    elif lens_ID == 'RXJ1131':
+        rescale_grid_res = 1.3
+        rescale_grid_size = 1.0
+    elif lens_ID == 'WFI2033':
+        rescale_grid_res = 1.3
+        rescale_grid_size = 1.0
+    elif lens_ID == 'WGD2038':
+        rescale_grid_res = 1.3
+        rescale_grid_size = 1.
+    elif lens_ID == 'J0405':
+        rescale_grid_res = 1.3
+        rescale_grid_size = 2.0
+    elif lens_ID == 'MG0414':
+        rescale_grid_res = 1.3
+        rescale_grid_size = 2.0
+    elif lens_ID in ['M1134', 'M1134_MIRI']:
+        rescale_grid_res = 1.0
+        rescale_grid_size = 1.0
+    elif lens_ID == 'H1413':
+        rescale_grid_res = 1.3
+        rescale_grid_size = 1.0
+    elif lens_ID == 'J2017':
+        rescale_grid_res = 1.3
+        rescale_grid_size = 2.0
+    elif lens_ID == 'J2145':
+        rescale_grid_res = 1.3
+        rescale_grid_size = 1.
+    else:
+        raise Exception('lens ID '+str(lens_ID)+' not recognized!')
+    return gamma_macro_prior
+
+def satellite_galaxy_priors(lens_ID):
+
+    if lens_ID == 'H1413':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.4, 0.2],
+            'satellite_1_x': ['GAUSSIAN', 1.715, 0.05],
+            'satellite_1_y': ['GAUSSIAN', 3.650, 0.05]
+        }
+    elif lens_ID == 'HE0435':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.37, 0.05],
+            'satellite_1_x': ['GAUSSIAN', -0.0830, 0.05],
+            'satellite_1_y': ['GAUSSIAN', 3.8549, 0.05]
+        }
+    elif lens_ID == 'J0607':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.1, 0.1],
+            'satellite_1_x': ['GAUSSIAN', 1.22, 0.05],
+            'satellite_1_y': ['GAUSSIAN', 0.24, 0.05]
+        }
+    elif lens_ID == 'J0659':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.25, 0.2],
+            'satellite_1_x': ['GAUSSIAN', 0.35, 0.05],
+            'satellite_1_y': ['GAUSSIAN', 1.55, 0.05]
+        }
+    elif lens_ID == 'J1042':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.1, 0.1],
+            'satellite_1_x': ['GAUSSIAN', 1.782, 0.05],
+            'satellite_1_y': ['GAUSSIAN', -0.317, 0.05]
+        }
+    elif lens_ID == 'MG0414':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.15, 0.1],
+            'satellite_1_x': ['GAUSSIAN', -0.61, 0.05],
+            'satellite_1_y': ['GAUSSIAN', 1.325, 0.05]
+        }
+    elif lens_ID == 'PSJ1606':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.15, 0.1],
+            'satellite_1_x': ['GAUSSIAN', -0.28, 0.05],
+            'satellite_1_y': ['GAUSSIAN', -1.24, 0.05]
+        }
+    elif lens_ID == 'RXJ0911':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.25, 0.15],
+            'satellite_1_x': ['GAUSSIAN', -0.767, 0.05],
+            'satellite_1_y': ['GAUSSIAN', 0.657, 0.05]
+        }
+    elif lens_ID == 'RXJ1131':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.3, 0.2],
+            'satellite_1_x': ['GAUSSIAN', -0.328, 0.05],
+            'satellite_1_y': ['GAUSSIAN', 0.700, 0.05]
+        }
+    elif lens_ID == 'WFI2033':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.05, 0.1],
+            'satellite_1_x': ['GAUSSIAN', 0.273217, 0.05],
+            'satellite_1_y': ['GAUSSIAN', 2.00444, 0.05],
+            'satellite_2_theta_E': ['GAUSSIAN', 0.9, 0.1],
+            'satellite_2_x': ['GAUSSIAN', -3.7016, 0.05],
+            'satellite_2_y': ['GAUSSIAN', 0.0414, 0.05]
+        }
+    else:
+        satellite_prior = {}
+    return satellite_prior
+
 def numerics_setup(lens_ID):
     """
     Return the recommended factors by which to rescale ray tracing grids for magnification
