@@ -39,104 +39,73 @@ def default_rendering_area(lens_ID=None,
 def gamma_macro_priors(lens_ID):
 
     if lens_ID == 'B1422':
-        rescale_grid_size = 1.4
-        rescale_grid_res = 1.4
+        gamma_macro_prior = None
     elif lens_ID == 'WFI2026':
-        rescale_grid_size = 1.2
-        rescale_grid_res = 1.2
+        gamma_macro_prior = None
     elif lens_ID == 'B2045':
         raise Exception('not yet implemented')
     elif lens_ID == 'HE0435':
         gamma_macro_prior = {'gamma': ['UNIFORM', 2.12 - 0.15, 2.12 + 0.15]}
     elif lens_ID == 'J0248':
-        rescale_grid_size = 1.0
-        rescale_grid_res = 1.3
+        gamma_macro_prior = None
     elif lens_ID == 'J0248_HST':
-        rescale_grid_size = 1.0
-        rescale_grid_res = 1.3
+        gamma_macro_prior = None
     elif lens_ID in ['J0259', 'J0259_HST_475X']:
-        rescale_grid_size = 1.4
-        rescale_grid_res = 1.1
+        gamma_macro_prior = {'gamma': ['UNIFORM', 1.8, 2.4]}
     elif lens_ID == 'J0607':
-        rescale_grid_res = 1.1
-        rescale_grid_size = 5.0
+        gamma_macro_prior = None
     elif lens_ID == 'J0608':
-        rescale_grid_size = 4.0
-        rescale_grid_res = 1.3
+        gamma_macro_prior = None
     elif lens_ID == 'J0659':
-        rescale_grid_size = 2.0
-        rescale_grid_res = 1.2
+        gamma_macro_prior = None
     elif lens_ID == 'J0803':
-        rescale_grid_size = 2.5
-        rescale_grid_res = 1.3
+        gamma_macro_prior = None
     elif lens_ID == 'J0924':
-        rescale_grid_size = 3.0
-        rescale_grid_res = 1.2
+        gamma_macro_prior = None
     elif lens_ID in ['J1042', 'J1042_814W']:
-        rescale_grid_size = 4.0
-        rescale_grid_res = 1.2
+        gamma_macro_prior = None
     elif lens_ID == 'J1131':
-        rescale_grid_res = 1.3
-        rescale_grid_size = 2.5
+        gamma_macro_prior = None
     elif lens_ID == 'J1251':
-        rescale_grid_res = 1.3
-        rescale_grid_size = 2.0
+        gamma_macro_prior = None
     elif lens_ID == 'J1537':
-        gamma_macro_prior = {'gamma': ['UNIFORM', 1.8, 2.3]}
+        gamma_macro_prior = {'gamma': ['UNIFORM', 1.8, 2.4]}
     elif lens_ID == 'J2026':
-        rescale_grid_res = 1.3
-        rescale_grid_size = 1.2
+        gamma_macro_prior = None
     elif lens_ID == 'J2205_MIRI':
-        rescale_grid_res = 1.3
-        rescale_grid_size = 1.5
+        gamma_macro_prior = None
     elif lens_ID == 'J2205':
-        rescale_grid_res = 1.3
-        rescale_grid_size = 1.5
+        gamma_macro_prior = None
     elif lens_ID == 'J2344':
-        rescale_grid_res = 1.3
-        rescale_grid_size = 4.0
+        gamma_macro_prior = None
     elif lens_ID == 'MG0414':
-        rescale_grid_res = 1.3
-        rescale_grid_size = 2.0
+        gamma_macro_prior = None
     elif lens_ID in ['PG1115', 'PG1115_NIRCAM']:
-        rescale_grid_res = 1.3
-        rescale_grid_size = 2.0
+        gamma_macro_prior = None
     elif lens_ID == 'PSJ0147':
-        rescale_grid_res = 1.3
-        rescale_grid_size = 2.5
+        gamma_macro_prior = None
     elif lens_ID == 'PSJ1606':
-        rescale_grid_res = 1.3
-        rescale_grid_size = 1.0
+        gamma_macro_prior = None
     elif lens_ID == 'RXJ0911':
-        rescale_grid_res = 1.3
-        rescale_grid_size = 1.0
+        gamma_macro_prior = None
     elif lens_ID == 'RXJ1131':
-        rescale_grid_res = 1.3
-        rescale_grid_size = 1.0
+        gamma_macro_prior = None
     elif lens_ID == 'WFI2033':
-        rescale_grid_res = 1.3
-        rescale_grid_size = 1.0
+        gamma_macro_prior = None
     elif lens_ID == 'WGD2038':
-        rescale_grid_res = 1.3
-        rescale_grid_size = 1.
+        gamma_macro_prior = None
     elif lens_ID == 'J0405':
-        rescale_grid_res = 1.3
-        rescale_grid_size = 2.0
+        gamma_macro_prior = None
     elif lens_ID == 'MG0414':
-        rescale_grid_res = 1.3
-        rescale_grid_size = 2.0
+        gamma_macro_prior = None
     elif lens_ID in ['M1134', 'M1134_MIRI']:
-        rescale_grid_res = 1.0
-        rescale_grid_size = 1.0
+        gamma_macro_prior = None
     elif lens_ID == 'H1413':
-        rescale_grid_res = 1.3
-        rescale_grid_size = 1.0
+        gamma_macro_prior = None
     elif lens_ID == 'J2017':
-        rescale_grid_res = 1.3
-        rescale_grid_size = 2.0
+        gamma_macro_prior = None
     elif lens_ID == 'J2145':
-        rescale_grid_res = 1.3
-        rescale_grid_size = 1.
+        gamma_macro_prior = None
     else:
         raise Exception('lens ID '+str(lens_ID)+' not recognized!')
     return gamma_macro_prior

@@ -769,7 +769,6 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         print('flux ratios data: ', np.array(data_class.magnifications)[1:]/data_class.magnifications[0])
         print('flux ratios model: ', magnifications[1:]/magnifications[0])
         print('statistic: ', stat)
-        print('log flux_ratio likelihood: ', log_flux_ratio_likelihood)
         if use_imaging_data:
             print('BIC: ', bic)
 
