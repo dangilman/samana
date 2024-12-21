@@ -136,8 +136,9 @@ class J0259_HST_F814W(_J0259):
         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
-        x_image = np.array([-0.04275, -0.79975,  0.35725,  0.67525])
-        y_image = np.array([-0.6905,  0.2595,  0.5725, -0.3015])
+        reorder = [3,2,1,0]
+        x_image = np.array([-0.04275, -0.79975,  0.35725,  0.67525])[reorder]
+        y_image = np.array([-0.6905,  0.2595,  0.5725, -0.3015])[reorder]
         horizontal_shift = 0.0
         vertical_shift = 0.00
         x_image += horizontal_shift
@@ -149,4 +150,3 @@ class J0259_HST_F814W(_J0259):
         band = 'F814W'
         super(J0259_HST_F814W, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
                                               uncertainty_in_fluxes, super_sample_factor, band)
-

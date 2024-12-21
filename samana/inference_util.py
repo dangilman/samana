@@ -75,24 +75,29 @@ def downselect_fluxratio_summary_stats(params, flux_ratios, measured_flux_ratios
           np.median(fluxratio_summary_statistic[best_inds])/flux_ratio_norm, fluxratio_summary_statistic[best_inds[-1]]/flux_ratio_norm)
     return params_out, normalized_weights
 
-def compute_likelihood(output_class,
-                        percentile_cut_image_data,
-                        measured_flux_ratios,
-                        measurement_uncertainties,
-                        dm_param_names,
-                        param_ranges_dm_dict,
-                        use_kde=False,
-                        nbins=5,
-                        n_keep=None,
-                        n_bootstraps=0,
-                        macro_param_weights=None,
-                        dm_param_weights=None,
-                        bandwidth_scale=0.75):
 
-    param_ranges_dm = [param_ranges_dm_dict[param_name] for param_name in dm_param_names]
+def compute_likelihood(output_class,
+                       percentile_cut_image_data,
+                       measured_flux_ratios,
+                       measurement_uncertainties,
+                       param_names,
+                       param_ranges_dict,
+                       use_kde=False,
+                       nbins=5,
+                       n_keep=None,
+                       n_bootstraps=0,
+                       macro_param_weights=None,
+                       dm_param_weights=None,
+                       bandwidth_scale=0.75,
+                       macromodel=False):
+
+    param_ranges = [param_ranges_dict[param_name] for param_name in param_names]
     # now compute the flux ratio likelihood
     sim = output_class.cut_on_image_data(percentile_cut_image_data)
-    params = output_class.parameter_array(dm_param_names)
+    if macromodel:
+        params = sim.macromodel_parameter_array(param_names)
+    else:
+        params = sim.parameter_array(param_names)
     w_custom = 1.0
     if dm_param_weights is not None:
         for dm_weight in dm_param_weights:
@@ -112,7 +117,7 @@ def compute_likelihood(output_class,
     else:
         if n_keep == -1:
             params_out = params
-            normalized_weights = np.ones_like(params_out)
+            normalized_weights = np.ones(params_out.shape[0])
         else:
             params_out, normalized_weights = downselect_fluxratio_summary_stats(params,
                                                                                 flux_ratios,
@@ -121,111 +126,112 @@ def compute_likelihood(output_class,
                                                                                 n_keep,
                                                                                 n_bootstraps,
                                                                                 w_custom)
+
     pdf = DensitySamples(params_out,
-                        param_names=dm_param_names,
-                        weights=normalized_weights,
-                        param_ranges=param_ranges_dm,
-                        use_kde=use_kde,
-                        nbins=nbins,
-                        bandwidth_scale=bandwidth_scale)
+                         param_names=param_names,
+                         weights=normalized_weights,
+                         param_ranges=param_ranges,
+                         use_kde=use_kde,
+                         nbins=nbins,
+                         bandwidth_scale=bandwidth_scale)
     # now compute the final pdf
     likelihood = IndependentLikelihoods([pdf])
     return likelihood
 
-# def compute_likelihoods_v0(output_class,
-#                         percentile_cut_image_data,
-#                         measured_flux_ratios,
-#                         measurement_uncertainties,
-#                         dm_param_names,
-#                         param_ranges_dm_dict,
-#                         use_kde=False,
-#                         nbins=5,
-#                         n_keep=None,
-#                         n_bootstraps=0,
-#                         macro_param_weights=None,
-#                         dm_param_weights=None,
-#                         bandwidth_scale=0.75):
-#
-#     param_ranges_dm = [param_ranges_dm_dict[param_name] for param_name in dm_param_names]
-#     # first down-select on imaging data likelihood
-#     if isinstance(output_class, list):
-#         parameters = None
-#         image_magnifications = None
-#         macromodel_samples = None
-#         fitting_kwargs_list = None
-#         param_names = None
-#         macromodel_sample_names = None
-#         for simulation in output_class:
-#             _sim = simulation.cut_on_image_data(percentile_cut_image_data)
-#             if parameters is None:
-#                 parameters = _sim.parameters
-#                 image_magnifications = _sim.image_magnifications
-#                 macromodel_samples = _sim.macromodel_samples
-#                 param_names = _sim._param_names
-#                 macromodel_sample_names = _sim._macromodel_sample_names
-#             else:
-#                 parameters = np.vstack((parameters, _sim.parameters))
-#                 image_magnifications = np.vstack((image_magnifications, _sim.image_magnifications))
-#                 macromodel_samples = np.vstack((macromodel_samples, _sim.macromodel_samples))
-#             sim = Output(parameters, image_magnifications, macromodel_samples,
-#                                     fitting_kwargs_list, param_names, macromodel_sample_names,
-#                                     )
-#     else:
-#         sim = output_class.cut_on_image_data(percentile_cut_image_data)
-#     # get the dark matter parameters of interest
-#     params = sim.parameter_array(dm_param_names)
-#     # now we compute the imaging data likelihood only
-#     pdf_imgdata = DensitySamples(params,
-#                                  param_names=dm_param_names,
-#                                  weights=None,
-#                                  param_ranges=param_ranges_dm,
-#                                  use_kde=use_kde,
-#                                  nbins=nbins,
-#                                  bandwidth_scale=bandwidth_scale)
-#
-#     # now compute the flux ratio likelihood
-#     w_custom = 1.0
-#     if dm_param_weights is not None:
-#         for dm_weight in dm_param_weights:
-#             (param, mean, sigma) = dm_weight
-#             w_custom *= np.exp(-0.5 * (np.squeeze(sim.parameter_array([param])) - mean) ** 2 / sigma ** 2)
-#     if macro_param_weights is not None:
-#         for macro_weight in macro_param_weights:
-#             (param, mean, sigma) = macro_weight
-#             w_custom *= np.exp(-0.5 * (np.squeeze(sim.macromodel_parameter_array([param])) - mean) ** 2 / sigma ** 2)
-#     flux_ratios = sim.flux_ratios
-#     if n_keep is None:
-#         params_out, normalized_weights = downselect_fluxratio_likelihood(params,
-#                                                                          flux_ratios,
-#                                                                          measured_flux_ratios,
-#                                                                          measurement_uncertainties,
-#                                                                          w_custom)
-#     else:
-#         params_out, normalized_weights = downselect_fluxratio_summary_stats(params,
-#                                                                             flux_ratios,
-#                                                                             measured_flux_ratios,
-#                                                                             measurement_uncertainties,
-#                                                                             n_keep,
-#                                                                             n_bootstraps,
-#                                                                             w_custom)
-#
-#     pdf_imgdata_fr = DensitySamples(params_out,
-#                                     param_names=dm_param_names,
-#                                     weights=normalized_weights,
-#                                     param_ranges=param_ranges_dm,
-#                                     use_kde=use_kde,
-#                                     nbins=nbins,
-#                                     bandwidth_scale=bandwidth_scale)
-#     # now compute the final pdf
-#     pdf = deepcopy(pdf_imgdata_fr)
-#     pdf.density /= pdf_imgdata.density
-#     imaging_data_likelihood = IndependentLikelihoods([pdf_imgdata])
-#     imaging_data_fluxratio_likelihood = IndependentLikelihoods([pdf_imgdata_fr])
-#     likelihood_joint = IndependentLikelihoods([pdf])
-#     return imaging_data_likelihood, imaging_data_fluxratio_likelihood, likelihood_joint
+def compute_likelihoods_v0(output_class,
+                        percentile_cut_image_data,
+                        measured_flux_ratios,
+                        measurement_uncertainties,
+                        dm_param_names,
+                        param_ranges_dm_dict,
+                        use_kde=False,
+                        nbins=5,
+                        n_keep=None,
+                        n_bootstraps=0,
+                        macro_param_weights=None,
+                        dm_param_weights=None,
+                        bandwidth_scale=0.75):
+
+    param_ranges_dm = [param_ranges_dm_dict[param_name] for param_name in dm_param_names]
+    # first down-select on imaging data likelihood
+    if isinstance(output_class, list):
+        parameters = None
+        image_magnifications = None
+        macromodel_samples = None
+        fitting_kwargs_list = None
+        param_names = None
+        macromodel_sample_names = None
+        for simulation in output_class:
+            _sim = simulation.cut_on_image_data(percentile_cut_image_data)
+            if parameters is None:
+                parameters = _sim.parameters
+                image_magnifications = _sim.image_magnifications
+                macromodel_samples = _sim.macromodel_samples
+                param_names = _sim._param_names
+                macromodel_sample_names = _sim._macromodel_sample_names
+            else:
+                parameters = np.vstack((parameters, _sim.parameters))
+                image_magnifications = np.vstack((image_magnifications, _sim.image_magnifications))
+                macromodel_samples = np.vstack((macromodel_samples, _sim.macromodel_samples))
+            sim = Output(parameters, image_magnifications, macromodel_samples,
+                                    fitting_kwargs_list, param_names, macromodel_sample_names,
+                                    )
+    else:
+        sim = output_class.cut_on_image_data(percentile_cut_image_data)
+    # get the dark matter parameters of interest
+    params = sim.parameter_array(dm_param_names)
+    # now we compute the imaging data likelihood only
+    pdf_imgdata = DensitySamples(params,
+                                 param_names=dm_param_names,
+                                 weights=None,
+                                 param_ranges=param_ranges_dm,
+                                 use_kde=use_kde,
+                                 nbins=nbins,
+                                 bandwidth_scale=bandwidth_scale)
+
+    # now compute the flux ratio likelihood
+    w_custom = 1.0
+    if dm_param_weights is not None:
+        for dm_weight in dm_param_weights:
+            (param, mean, sigma) = dm_weight
+            w_custom *= np.exp(-0.5 * (np.squeeze(sim.parameter_array([param])) - mean) ** 2 / sigma ** 2)
+    if macro_param_weights is not None:
+        for macro_weight in macro_param_weights:
+            (param, mean, sigma) = macro_weight
+            w_custom *= np.exp(-0.5 * (np.squeeze(sim.macromodel_parameter_array([param])) - mean) ** 2 / sigma ** 2)
+    flux_ratios = sim.flux_ratios
+    if n_keep is None:
+        params_out, normalized_weights = downselect_fluxratio_likelihood(params,
+                                                                         flux_ratios,
+                                                                         measured_flux_ratios,
+                                                                         measurement_uncertainties,
+                                                                         w_custom)
+    else:
+        params_out, normalized_weights = downselect_fluxratio_summary_stats(params,
+                                                                            flux_ratios,
+                                                                            measured_flux_ratios,
+                                                                            measurement_uncertainties,
+                                                                            n_keep,
+                                                                            n_bootstraps,
+                                                                            w_custom)
+
+    pdf_imgdata_fr = DensitySamples(params_out,
+                                    param_names=dm_param_names,
+                                    weights=normalized_weights,
+                                    param_ranges=param_ranges_dm,
+                                    use_kde=use_kde,
+                                    nbins=nbins,
+                                    bandwidth_scale=bandwidth_scale)
+    # now compute the final pdf
+    pdf = deepcopy(pdf_imgdata_fr)
+    pdf.density /= pdf_imgdata.density
+    imaging_data_likelihood = IndependentLikelihoods([pdf_imgdata])
+    imaging_data_fluxratio_likelihood = IndependentLikelihoods([pdf_imgdata_fr])
+    likelihood_joint = IndependentLikelihoods([pdf])
+    return imaging_data_likelihood, imaging_data_fluxratio_likelihood, likelihood_joint
 
 
-def compute_macromodel_likelihood(output_class,
+def compute_macromodel_likelihood_v0(output_class,
                                   percentile_cut_image_data,
                                   measured_flux_ratios,
                                   measurement_uncertainties,
