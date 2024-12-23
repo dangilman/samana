@@ -214,7 +214,7 @@ class WFI2033NircamModelEPLM3M4ShearObservedConvention(_WFI2033ModelNircamBase):
         # -1.578481764045944, 1.3689577497404388 first satellite
         # -2.165625453981066 -3.3645306348834603 second bigger satellite
 
-        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4', 'SHEAR', 'SIS', 'SIS']
+        lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS', 'SIS']
         kwargs_lens_macro = [
             {'theta_E': 0.9819352178051077, 'gamma': 2.1840487253312193, 'e1': -0.060421075894487926,
              'e2': -0.08953109900982839, 'center_x': -0.009227587610902884, 'center_y': 0.010009574939230213,
@@ -232,20 +232,20 @@ class WFI2033NircamModelEPLM3M4ShearObservedConvention(_WFI2033ModelNircamBase):
                     kwargs_lens_macro[i][param_name] = kwargs_lens_macro_init[i][param_name]
         kwargs_lens_init = kwargs_lens_macro
         kwargs_lens_sigma = [{'theta_E': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'e1': 0.2, 'e2': 0.2, 'gamma': 0.1,
-                              'a4_a': 0.01, 'a3_a': 0.005, 'delta_phi_m3': np.pi/12, 'delta_phi_m4': np.pi/16},
+                              'a1_a': 0.01, 'delta_phi_m1': 0.1,'a4_a': 0.01, 'a3_a': 0.005, 'delta_phi_m3': np.pi/12, 'delta_phi_m4': np.pi/16},
                              {'gamma1': 0.05, 'gamma2': 0.05},
                              {'theta_E': 0.01, 'center_x': 0.05, 'center_y': 0.05},
                              {'theta_E': 0.1, 'center_x': 0.05, 'center_y': 0.05}]
         kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}, {}, {}]
         kwargs_lower_lens = [
             {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.6, 'a4_a': -0.1,
-             'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
+             'a1_a': -0.1, 'delta_phi_m1': -np.pi,'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
             {'gamma1': -0.5, 'gamma2': -0.5},
             {'theta_E': 0.001, 'center_x': -10, 'center_y': -10},
             {'theta_E': 0.5, 'center_x': -10, 'center_y': -10}]
         kwargs_upper_lens = [
             {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.4, 'a4_a': 0.1,
-             'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
+             'a1_a': 0.1, 'delta_phi_m1': np.pi,'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
             {'gamma1': 0.5, 'gamma2': 0.5},
         {'theta_E': 0.6, 'center_x': 10, 'center_y': 10},
             {'theta_E': 1.2, 'center_x': 10, 'center_y': 10}

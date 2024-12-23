@@ -78,7 +78,7 @@ def sample_prior(kwargs_prior):
             sample_names += ['a3_a', 'a4_a', 'delta_phi_m3', 'delta_phi_m4']
             joint_multipole_prior_used = True
         elif param_name == 'OPTICAL_MULTIPOLE_PRIOR_M1':
-            a1a = np.random.normal(0.0, 0.01)
+            a1a = np.random.normal(0.0, 0.005)
             a3a = np.random.normal(0.0, 0.005)
             a4a = np.random.normal(0.0, 0.01)
             delta_phi_m1 = np.random.uniform(-np.pi, np.pi)
@@ -87,6 +87,38 @@ def sample_prior(kwargs_prior):
                 delta_phi_m4 = 0.0
             else:
                 delta_phi_m4 = np.random.uniform(-np.pi / 8, np.pi / 8)
+            prior_samples_dict['a1_a'] = a1a
+            prior_samples_dict['a3_a'] = a3a
+            prior_samples_dict['a4_a'] = a4a
+            prior_samples_dict['delta_phi_m1'] = delta_phi_m1
+            prior_samples_dict['delta_phi_m3'] = delta_phi_m3
+            prior_samples_dict['delta_phi_m4'] = delta_phi_m4
+            sample_list += [a3a, a4a, delta_phi_m3, delta_phi_m4]
+            sample_names += ['a1_a', 'a3_a', 'a4_a', 'delta_phi_m1', 'delta_phi_m3', 'delta_phi_m4']
+            joint_multipole_prior_used = True
+        elif param_name == '134_MUTLIPOLE_PRIOR':
+            a1a = np.random.normal(0.0, 0.005)
+            a3a = np.random.normal(0.0, 0.005)
+            a4a = np.random.normal(0.0, 0.01)
+            delta_phi_m1 = np.random.uniform(-np.pi, np.pi)
+            delta_phi_m3 = np.random.uniform(-np.pi / 6, np.pi / 6)
+            delta_phi_m4 = np.random.uniform(-np.pi / 8, np.pi / 8)
+            prior_samples_dict['a1_a'] = a1a
+            prior_samples_dict['a3_a'] = a3a
+            prior_samples_dict['a4_a'] = a4a
+            prior_samples_dict['delta_phi_m1'] = delta_phi_m1
+            prior_samples_dict['delta_phi_m3'] = delta_phi_m3
+            prior_samples_dict['delta_phi_m4'] = delta_phi_m4
+            sample_list += [a3a, a4a, delta_phi_m3, delta_phi_m4]
+            sample_names += ['a1_a', 'a3_a', 'a4_a', 'delta_phi_m1', 'delta_phi_m3', 'delta_phi_m4']
+            joint_multipole_prior_used = True
+        elif param_name == '34_MUTLIPOLE_PRIOR':
+            a1a = 0.0
+            a3a = np.random.normal(0.0, 0.005)
+            a4a = np.random.normal(0.0, 0.01)
+            delta_phi_m1 = np.random.uniform(-np.pi, np.pi)
+            delta_phi_m3 = np.random.uniform(-np.pi / 6, np.pi / 6)
+            delta_phi_m4 = np.random.uniform(-np.pi / 8, np.pi / 8)
             prior_samples_dict['a1_a'] = a1a
             prior_samples_dict['a3_a'] = a3a
             prior_samples_dict['a4_a'] = a4a

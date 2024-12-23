@@ -29,9 +29,9 @@ class BaselineSmoothMockLowq(MockBase):
     def __init__(self, super_sample_factor=1.0):
         z_lens = 0.5
         z_source = 2.0
-        x_image = np.array([-1.11457345,  0.81460192, -0.12067745,  0.22311867])
-        y_image = np.array([-0.05268766,  0.63990518,  0.94723175, -0.6775138 ])
-        magnifications_true = np.array([2.38547657, 2.82826663, 1.60333087, 0.83832858])
+        x_image = np.array([ 1.06785869, -0.61402397,  0.12432216, -0.18476854])
+        y_image = np.array([-0.41289394, -0.949661  , -1.09617422,  0.64855028])
+        magnifications_true = np.array([4.01804612, 5.34630254, 5.49621952, 1.0582571 ])
         from samana.Data.ImageData.baseline_smooth_mock_lowq import image_data
         magnification_measurement_errors = 0.0
         magnifications = np.array(magnifications_true) + np.array(magnification_measurement_errors)

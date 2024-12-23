@@ -145,7 +145,7 @@ class J2205ModelEPLM3M4Shear(_J2205ModelBase):
 
         gal_x = -1.122
         gal_y = 0.194
-        lens_model_list_macro = ['EPL_MULTIPOLE_M3M4_ELL', 'SHEAR',
+        lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR',
                                  #'SIS'
                                  ]
         kwargs_lens_macro = [
@@ -167,7 +167,7 @@ class J2205ModelEPLM3M4Shear(_J2205ModelBase):
                     kwargs_lens_macro[i][param_name] = kwargs_lens_macro_init[i][param_name]
         kwargs_lens_init = kwargs_lens_macro
         kwargs_lens_sigma = [{'theta_E': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'e1': 0.2, 'e2': 0.2, 'gamma': 0.1,
-                              'a4_a': 0.01, 'a3_a': 0.005, 'delta_phi_m3': np.pi/12, 'delta_phi_m4': np.pi/16},
+                              'a1_a': 0.01, 'delta_phi_m1': 0.1,'a4_a': 0.01, 'a3_a': 0.005, 'delta_phi_m3': np.pi/12, 'delta_phi_m4': np.pi/16},
                              {'gamma1': 0.1, 'gamma2': 0.1},
                             # {'theta_E': 0.05, 'center_x': 0.05, 'center_y': 0.05}
                              ]
@@ -176,13 +176,13 @@ class J2205ModelEPLM3M4Shear(_J2205ModelBase):
                              ]
         kwargs_lower_lens = [
             {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.4, 'e2': -0.4, 'gamma': 1.7, 'a4_a': -0.1,
-             'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
+             'a1_a': -0.1, 'delta_phi_m1': -np.pi,'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
             {'gamma1': -0.5, 'gamma2': -0.5},
         #{'theta_E': 0.0, 'center_x': gal_x - 0.2, 'center_y': gal_y - 0.2}
         ]
         kwargs_upper_lens = [
             {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.4, 'e2': 0.4, 'gamma': 2.5, 'a4_a': 0.1,
-             'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
+             'a1_a': 0.1, 'delta_phi_m1': np.pi,'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
             {'gamma1': 0.5, 'gamma2': 0.5},
         #{'theta_E': 0.5, 'center_x': gal_x + 0.2, 'center_y': gal_y + 0.2}
             ]
