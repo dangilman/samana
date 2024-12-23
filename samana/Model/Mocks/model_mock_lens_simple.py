@@ -61,7 +61,7 @@ class MockModelBase(ModelBase):
 
     @property
     def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005]]
+        return [[0, 'gamma', 2.0, 0.2]]
 
     def setup_lens_light_model(self):
 
