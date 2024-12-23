@@ -82,7 +82,7 @@ class _J0259ModelBase(ModelBase):
             kwargs_lower_lens_light = [
                 {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -0.15, 'center_y': -0.15}]
             kwargs_upper_lens_light = [
-                {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 0.15, 'center_y': 0.15}]
+                {'R_sersic': 10, 'n_sersic': 8.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 0.15, 'center_y': 0.15}]
             kwargs_lens_light_fixed = [{}]
         elif self._data.band == 'F475X':
             lens_light_model_list = ['SERSIC']

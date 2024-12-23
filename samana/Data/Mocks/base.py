@@ -22,6 +22,7 @@ class MockBase(ImagingDataBase):
                        'dec_at_xy_0': dec_at_xy_0,
                        'transform_pix2angle': transform_pix2angle,
                        'image_data': image_data}
+        self._kwargs_data = kwargs_data
         image_band = [kwargs_data, self.kwargs_psf, self.kwargs_numerics]
         multi_band_list = [image_band]
         kwargs_data_joint = {'multi_band_list': multi_band_list, 'multi_band_type': 'multi-linear'}
@@ -85,3 +86,7 @@ class MockBase(ImagingDataBase):
                       'pixel_size': deltaPix,
                       'truncation': 5}
         return kwargs_psf
+
+    @property
+    def kwargs_data(self):
+        return self._kwargs_data
