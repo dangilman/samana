@@ -47,7 +47,7 @@ def gamma_macro_priors(lens_ID):
     elif lens_ID == 'HE0435':
         gamma_macro_prior = {'gamma': ['UNIFORM', 2.12 - 0.2, 2.12 + 0.2]}
     elif lens_ID == 'J0248':
-        gamma_macro_prior = None
+        gamma_macro_prior = {'gamma': ['UNIFORM', 1.8, 2.4]}
     elif lens_ID == 'J0248_HST':
         gamma_macro_prior = None
     elif lens_ID in ['J0259', 'J0259_HST_475X']:
@@ -91,11 +91,11 @@ def gamma_macro_priors(lens_ID):
     elif lens_ID == 'RXJ1131':
         gamma_macro_prior = None
     elif lens_ID == 'WFI2033':
-        gamma_macro_prior = None
+        gamma_macro_prior = {'gamma': ['UNIFORM', 2.0, 2.25]}
     elif lens_ID == 'WGD2038':
-        gamma_macro_prior = None
+        gamma_macro_prior = {'gamma': ['UNIFORM', 2.0, 2.5]}
     elif lens_ID == 'J0405':
-        gamma_macro_prior = None
+        gamma_macro_prior = {'gamma': ['UNIFORM', 1.8, 2.4]}
     elif lens_ID == 'MG0414':
         gamma_macro_prior = None
     elif lens_ID in ['M1134', 'M1134_MIRI']:
