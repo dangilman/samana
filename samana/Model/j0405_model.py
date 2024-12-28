@@ -1,8 +1,8 @@
-from samana.Model.model_base import ModelBase
+from samana.Model.model_base import EPLModelBase
 import numpy as np
 import pickle
 
-class _J0405ModelBase(ModelBase):
+class _J0405ModelBase(EPLModelBase):
 
     def setup_lens_light_model(self):
 

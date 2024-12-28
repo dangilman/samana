@@ -1,9 +1,9 @@
-from samana.Model.model_base import ModelBase
+from samana.Model.model_base import EPLModelBase
 import numpy as np
 import pickle
 
 
-class _WFI2033ModelNircamBase(ModelBase):
+class _WFI2033ModelNircamBase(EPLModelBase):
 
     def update_kwargs_fixed_macro(self, lens_model_list_macro, kwargs_lens_fixed, kwargs_lens_init, macromodel_samples_fixed=None):
 

@@ -1,9 +1,9 @@
-from samana.Model.model_base import ModelBase
+from samana.Model.model_base import EPLModelBase
 import numpy as np
 import pickle
 
 
-class _H1413ModelBase(ModelBase):
+class _H1413ModelBase(EPLModelBase):
 
     def update_kwargs_fixed_macro(self, lens_model_list_macro, kwargs_lens_fixed, kwargs_lens_init, macromodel_samples_fixed=None):
 
@@ -127,8 +127,7 @@ class H1413ModelEPLM3M4Shear(_H1413ModelBase):
 
     @property
     def prior_lens(self):
-        return self.population_gamma_prior + [[2, 'center_x', self._data.g2x, 0.05],
-                                              [2, 'center_y', self._data.g2y, 0.05]]
+        return [[2, 'center_x', self._data.g2x, 0.05], [2, 'center_y', self._data.g2y, 0.05]]
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 

@@ -1,9 +1,9 @@
-from samana.Model.model_base import ModelBase
+from samana.Model.model_base import EPLModelBase
 import numpy as np
-from samana.param_managers import EPLMultipole34FreeShearLensMassPrior
+from samana.param_managers import EPLMultipole134FreeShearLensMassPrior
 import pickle
 
-class _RXJ0911ModelBase(ModelBase):
+class _RXJ0911ModelBase(EPLModelBase):
 
     def update_kwargs_fixed_macro(self, lens_model_list_macro, kwargs_lens_fixed, kwargs_lens_init, macromodel_samples_fixed=None):
 
@@ -110,12 +110,14 @@ class RXJ0911ModelEPLM3M4Shear(_RXJ0911ModelBase):
         center_x = 0.0
         center_y = 0.0
         sigma_xy = 0.025
-        param_class = EPLMultipole34FreeShearLensMassPrior(kwargs_lens_init,
-                                                  macromodel_samples_fixed_dict['a4_a'],
-                                                  macromodel_samples_fixed_dict['a3_a'],
-                                                  macromodel_samples_fixed_dict['delta_phi_m3'],
-                                                  macromodel_samples_fixed_dict['delta_phi_m4'],
-                                                  center_x, center_y, sigma_xy)
+        param_class = EPLMultipole134FreeShearLensMassPrior(kwargs_lens_init,
+                                                            macromodel_samples_fixed_dict['a1_a'],
+                                                            macromodel_samples_fixed_dict['a4_a'],
+                                                            macromodel_samples_fixed_dict['a3_a'],
+                                                            macromodel_samples_fixed_dict['delta_phi_m1'],
+                                                            macromodel_samples_fixed_dict['delta_phi_m3'],
+                                                            macromodel_samples_fixed_dict['delta_phi_m4'],
+                                                            center_x, center_y, sigma_xy)
         return param_class
 
     @property

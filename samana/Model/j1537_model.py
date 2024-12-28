@@ -1,8 +1,8 @@
-from samana.Model.model_base import ModelBase
+from samana.Model.model_base import EPLModelBase
 import numpy as np
 import pickle
 
-class _J1537ModelBase(ModelBase):
+class _J1537ModelBase(EPLModelBase):
 
     @property
     def kwargs_constraints(self):

@@ -1,8 +1,8 @@
-from samana.Model.model_base import ModelBase
+from samana.Model.model_base import EPLModelBase
 import numpy as np
 from lenstronomy.Util.class_creator import create_class_instances
 
-class _J1042ModelBase(ModelBase):
+class _J1042ModelBase(EPLModelBase):
 
     def update_kwargs_fixed_macro(self, lens_model_list_macro, kwargs_lens_fixed, kwargs_lens_init, macromodel_samples_fixed=None):
 

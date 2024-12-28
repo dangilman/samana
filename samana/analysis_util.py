@@ -45,7 +45,7 @@ def gamma_macro_priors(lens_ID):
     elif lens_ID == 'B2045':
         raise Exception('not yet implemented')
     elif lens_ID == 'HE0435':
-        gamma_macro_prior = {'gamma': ['UNIFORM', 2.12 - 0.15, 2.12 + 0.15]}
+        gamma_macro_prior = {'gamma': ['UNIFORM', 2.12 - 0.2, 2.12 + 0.2]}
     elif lens_ID == 'J0248':
         gamma_macro_prior = None
     elif lens_ID == 'J0248_HST':
@@ -79,7 +79,7 @@ def gamma_macro_priors(lens_ID):
     elif lens_ID == 'J2344':
         gamma_macro_prior = None
     elif lens_ID == 'MG0414':
-        gamma_macro_prior = None
+        gamma_macro_prior = {'gamma': ['UNIFORM', 1.8, 2.4]}
     elif lens_ID in ['PG1115', 'PG1115_NIRCAM']:
         gamma_macro_prior = None
     elif lens_ID == 'PSJ0147':
@@ -144,7 +144,7 @@ def satellite_galaxy_priors(lens_ID):
         }
     elif lens_ID == 'MG0414':
         satellite_prior = {
-            'satellite_1_theta_E': ['GAUSSIAN', 0.15, 0.1],
+            'satellite_1_theta_E': ['GAUSSIAN', 0.1, 0.1],
             'satellite_1_x': ['GAUSSIAN', -0.61, 0.05],
             'satellite_1_y': ['GAUSSIAN', 1.325, 0.05]
         }

@@ -515,10 +515,10 @@ class EPLMultipole34FreeShear(PowerLawParamManager):
         self.kwargs_lens[1] = kwargs_shear
         return self.kwargs_lens
 
-class EPLMultipole34FreeShearLensMassPrior(PowerLawParamManager):
+class EPLMultipole134FreeShearLensMassPrior(PowerLawParamManager):
 
-    def __init__(self, kwargs_lens_init, a4a_init, a3a_init,
-                 delta_phi_m3, delta_phi_m4, center_x, center_y, sigma_xy):
+    def __init__(self, kwargs_lens_init, a1a_init, a4a_init, a3a_init,
+                 delta_phi_m1, delta_phi_m3, delta_phi_m4, center_x, center_y, sigma_xy):
         """
 
         :param kwargs_lens_init: the initial kwargs_lens before optimizing
@@ -526,8 +526,10 @@ class EPLMultipole34FreeShearLensMassPrior(PowerLawParamManager):
         :param delta_phi_m3: the orientation of the m=3 multipole relative to the EPL position angle
         """
 
+        self._a1a_init = a1a_init
         self._a4a_init = a4a_init
         self._a3a_init = a3a_init
+        self._delta_phi_m1 = delta_phi_m1
         self._delta_phi_m3 = delta_phi_m3
         self._delta_phi_m4 = delta_phi_m4
         self._idx_m4 = 0
@@ -535,7 +537,7 @@ class EPLMultipole34FreeShearLensMassPrior(PowerLawParamManager):
         self._center_x = center_x
         self._center_y = center_y
         self._sigmaxy = sigma_xy
-        super(EPLMultipole34FreeShearLensMassPrior, self).__init__(kwargs_lens_init)
+        super(EPLMultipole134FreeShearLensMassPrior, self).__init__(kwargs_lens_init)
 
     def param_chi_square_penalty(self, args):
         center_x = args[1] - self._center_x
@@ -552,14 +554,15 @@ class EPLMultipole34FreeShearLensMassPrior(PowerLawParamManager):
         kwargs_epl = {'theta_E': thetaE, 'center_x': center_x, 'center_y': center_y,
                       'e1': e1, 'e2': e2, 'gamma': gamma}
         self.kwargs_lens[0] = kwargs_epl
+        self.kwargs_lens[0]['a1_a'] = self._a1a_init
         self.kwargs_lens[0]['a4_a'] = self._a4a_init
         self.kwargs_lens[0]['a3_a'] = self._a3a_init
+        self.kwargs_lens[0]['delta_phi_m1'] = self._delta_phi_m1
         self.kwargs_lens[0]['delta_phi_m3'] = self._delta_phi_m3
         self.kwargs_lens[0]['delta_phi_m4'] = self._delta_phi_m4
         kwargs_shear = {'gamma1': g1, 'gamma2': g2}
         self.kwargs_lens[1] = kwargs_shear
         return self.kwargs_lens
-
 
 class EPLMultipole134FreeShear(PowerLawParamManager):
 
@@ -599,38 +602,6 @@ class EPLMultipole134FreeShear(PowerLawParamManager):
         kwargs_shear = {'gamma1': g1, 'gamma2': g2}
         self.kwargs_lens[1] = kwargs_shear
         return self.kwargs_lens
-
-class EPLMultipole134FreeShearLensMassPrior(EPLMultipole134FreeShear):
-
-    def __init__(self, kwargs_lens_init, a1a_init, a4a_init, a3a_init,
-                 delta_phi_m1, delta_phi_m3, delta_phi_m4, center_x, center_y, sigma_xy):
-        """
-
-        :param kwargs_lens_init:
-        :param a1a_init:
-        :param a4a_init:
-        :param a3a_init:
-        :param delta_phi_m1:
-        :param delta_phi_m3:
-        :param delta_phi_m4:
-        :param center_x:
-        :param center_y:
-        :param sigma_xy:
-        """
-        self._center_x = center_x
-        self._center_y = center_y
-        self._sigmaxy = sigma_xy
-        super(EPLMultipole134FreeShearLensMassPrior, self).__init__(kwargs_lens_init, a1a_init, a4a_init, a3a_init,
-                 delta_phi_m1, delta_phi_m3, delta_phi_m4)
-
-    def param_chi_square_penalty(self, args):
-        center_x = args[1] - self._center_x
-        center_y = args[2] - self._center_y
-        dr = np.hypot(center_x, center_y)
-        if dr > 5 * self._sigmaxy:
-            return 1e9
-        else:
-            return np.exp(-0.5 * dr ** 2 / self._sigmaxy ** 2)
 
 def auto_param_class(lens_model_list_macro, kwargs_lens_init, macromodel_samples_fixed_dict):
 

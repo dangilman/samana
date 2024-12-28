@@ -1,11 +1,11 @@
 from lenstronomy.LensModel.Util.decouple_multi_plane_util import *
 from lenstronomy.Util.param_util import ellipticity2phi_q
-from copy import deepcopy
+from samana.param_managers import EPLMultipole134FreeShear
 from samana.image_magnification_util import magnification_finite_decoupled
 import numpy as np
 
 
-class ModelBase(object):
+class EPLModelBase(object):
 
     _spherical_multipole = False
 
@@ -15,8 +15,18 @@ class ModelBase(object):
         self._data = data_class
         self._shapelets_scale_factor = shapelets_scale_factor
 
-    def param_class_4pointsolver(self, *args, **kwargs):
-        return None
+    def param_class_4pointsolver(self, lens_model_list_macro,
+                                 kwargs_lens_init,
+                                 macromodel_samples_fixed_dict):
+
+        param_class = EPLMultipole134FreeShear(kwargs_lens_init,
+                                                            macromodel_samples_fixed_dict['a1_a'],
+                                                            macromodel_samples_fixed_dict['a4_a'],
+                                                            macromodel_samples_fixed_dict['a3_a'],
+                                                            macromodel_samples_fixed_dict['delta_phi_m1'],
+                                                            macromodel_samples_fixed_dict['delta_phi_m3'],
+                                                            macromodel_samples_fixed_dict['delta_phi_m4'])
+        return param_class
 
     @property
     def beta_min(self):

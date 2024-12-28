@@ -1,9 +1,9 @@
-from samana.Model.model_base import ModelBase
+from samana.Model.model_base import EPLModelBase
 import numpy as np
 import pickle
 
 
-class _HE0435NircamModelBase(ModelBase):
+class _HE0435NircamModelBase(EPLModelBase):
 
     def update_kwargs_fixed_macro(self, lens_model_list_macro, kwargs_lens_fixed, kwargs_lens_init, macromodel_samples_fixed=None):
 
@@ -159,7 +159,7 @@ class HE0435ModelNircamEPLM3M4ShearObservedConvention(_HE0435NircamModelBase):
 
     @property
     def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.1], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005],
+        return [[0, 'gamma', 2.0, 0.1],
                 [2, 'center_x', self._data.gx, 0.2],
                 [2, 'center_y', self._data.gx, 0.2],
                 [2, 'theta_E', 0.25, 0.1]

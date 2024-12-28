@@ -1,8 +1,8 @@
-from samana.Model.model_base import ModelBase
+from samana.Model.model_base import EPLModelBase
 import numpy as np
-from lenstronomy.Util.param_util import ellipticity2phi_q
+from samana.param_managers import EPLMultipole134FreeShearLensMassPrior
 
-class _J0147ModelBase(ModelBase):
+class _J0147ModelBase(EPLModelBase):
 
     @property
     def kwargs_constraints(self):
@@ -54,14 +54,14 @@ class _J0147ModelBase(ModelBase):
         kwargs_lens_light_init = [
             {'amp': 226.8787640801956, 'R_sersic': 0.2981038197494028, 'n_sersic': 2.373668072070351,
              'e1': -0.15495299117022826, 'e2': 0.3049476041783155, 'center_x': -0.11293789715104738,
-             'center_y': -0.6771331480455333}
+             'center_y': -0.8}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.05, 'center_y': 0.05}]
         kwargs_lower_lens_light = [
-            {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -0.4, 'center_y': -1.0}]
+            {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -0.4, 'center_y': -1.1}]
         kwargs_upper_lens_light = [
-            {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 0.2, 'center_y': -0.3}]
+            {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 0.2, 'center_y': -0.4}]
         kwargs_lens_light_fixed = [{}]
         add_uniform_light = True
         if add_uniform_light:
@@ -98,6 +98,22 @@ class J0147ModelEPLM3M4Shear(_J0147ModelBase):
 
     def __init__(self, data_class, shapelets_order=None, shapelets_scale_factor=2.5 / 2):
         super(J0147ModelEPLM3M4Shear, self).__init__(data_class, shapelets_order, shapelets_scale_factor)
+
+    def param_class_4pointsolver(self, lens_model_list_macro,
+                                 kwargs_lens_init,
+                                 macromodel_samples_fixed_dict):
+        center_x = -0.190679  # 0.0718
+        center_y = -0.8101  # -0.22
+        sigma_xy = 0.05
+        param_class = EPLMultipole134FreeShearLensMassPrior(kwargs_lens_init,
+                                                            macromodel_samples_fixed_dict['a1_a'],
+                                                            macromodel_samples_fixed_dict['a4_a'],
+                                                            macromodel_samples_fixed_dict['a3_a'],
+                                                            macromodel_samples_fixed_dict['delta_phi_m1'],
+                                                            macromodel_samples_fixed_dict['delta_phi_m3'],
+                                                            macromodel_samples_fixed_dict['delta_phi_m4'],
+                                                            center_x, center_y, sigma_xy)
+        return param_class
 
     @property
     def prior_lens(self):

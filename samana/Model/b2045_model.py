@@ -1,8 +1,8 @@
-from samana.Model.model_base import ModelBase
+from samana.Model.model_base import EPLModelBase
 import numpy as np
 import pickle
 
-class _B2045ModelBase(ModelBase):
+class _B2045ModelBase(EPLModelBase):
 
     @property
     def kwargs_constraints(self):
@@ -111,7 +111,7 @@ class B2045ModelEPLM3M4Shear(_B2045ModelBase):
 
     @property
     def prior_lens(self):
-        return self.population_gamma_prior
+        return None
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 

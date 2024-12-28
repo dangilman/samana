@@ -1,8 +1,8 @@
-from samana.Model.model_base import ModelBase
+from samana.Model.model_base import EPLModelBase
 import numpy as np
 
 
-class MockModelBase(ModelBase):
+class MockModelBase(EPLModelBase):
 
     def __init__(self, data_class, shapelets_order=None):
         self._shapelets_order = shapelets_order

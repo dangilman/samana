@@ -1,9 +1,9 @@
-from samana.Model.model_base import ModelBase
+from samana.Model.model_base import EPLModelBase
 import numpy as np
 import pickle
 from lenstronomy.Util.param_util import ellipticity2phi_q
 
-class _HE1113(ModelBase):
+class _HE1113(EPLModelBase):
 
     @property
     def kwargs_constraints(self):

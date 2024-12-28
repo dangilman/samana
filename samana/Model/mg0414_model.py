@@ -1,9 +1,9 @@
-from samana.Model.model_base import ModelBase
+from samana.Model.model_base import EPLModelBase
 import numpy as np
 import pickle
-from samana.param_managers import EPLMultipole34FreeShearLensMassPrior
+from samana.param_managers import EPLMultipole134FreeShearLensMassPrior
 
-class _MG0414ModelBase(ModelBase):
+class _MG0414ModelBase(EPLModelBase):
 
     def update_kwargs_fixed_macro(self, lens_model_list_macro, kwargs_lens_fixed, kwargs_lens_init, macromodel_samples_fixed=None):
 
@@ -75,11 +75,11 @@ class _MG0414ModelBase(ModelBase):
              'center_y': -0.0772956212475226}
         ]
         kwargs_lens_light_sigma = [
-            {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
+            {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.05, 'center_y': 0.05}]
         kwargs_lower_lens_light = [
-            {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10.0, 'center_y': -10.0}]
+            {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -0.231 - 0.15, 'center_y': -0.15282 - 0.15}]
         kwargs_upper_lens_light = [
-            {'R_sersic': 5.0, 'n_sersic': 5.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
+            {'R_sersic': 5.0, 'n_sersic': 5.0, 'e1': 0.5, 'e2': 0.5, 'center_x': -0.231 + 0.15, 'center_y': -0.15282+0.15}]
         kwargs_lens_light_fixed = [{}]
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
@@ -104,7 +104,6 @@ class _MG0414ModelBase(ModelBase):
                              'source_marg': False,
                              'image_position_uncertainty': 5e-3,
                              'source_position_likelihood': False,
-                             #'check_matched_source_position': False,
                              'source_position_sigma': 0.0001,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
@@ -121,15 +120,17 @@ class MG0414ModelEPLM3M4Shear(_MG0414ModelBase):
     def param_class_4pointsolver(self, lens_model_list_macro,
                                  kwargs_lens_init,
                                  macromodel_samples_fixed_dict):
-        center_x = -0.231 # 0.0718
-        center_y = -0.15282 # -0.22
+        center_x = -0.2130
+        center_y = -0.0724
         sigma_xy = 0.05
-        param_class = EPLMultipole34FreeShearLensMassPrior(kwargs_lens_init,
-                                                  macromodel_samples_fixed_dict['a4_a'],
-                                                  macromodel_samples_fixed_dict['a3_a'],
-                                                  macromodel_samples_fixed_dict['delta_phi_m3'],
-                                                  macromodel_samples_fixed_dict['delta_phi_m4'],
-                                                  center_x, center_y, sigma_xy)
+        param_class = EPLMultipole134FreeShearLensMassPrior(kwargs_lens_init,
+                                                            macromodel_samples_fixed_dict['a1_a'],
+                                                            macromodel_samples_fixed_dict['a4_a'],
+                                                            macromodel_samples_fixed_dict['a3_a'],
+                                                            macromodel_samples_fixed_dict['delta_phi_m1'],
+                                                            macromodel_samples_fixed_dict['delta_phi_m3'],
+                                                            macromodel_samples_fixed_dict['delta_phi_m4'],
+                                                            center_x, center_y, sigma_xy)
         return param_class
 
     def custom_logL(self, kwargs_lens,

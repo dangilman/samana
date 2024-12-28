@@ -681,6 +681,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                 source_marg=False,
                 linear_prior=None,
                 check_positive_flux=False)[0]
+        #logL_imaging_data = fitting_sequence.best_fit_likelihood()
+
         if verbose:
             logL_imaging_data_no_custom_mask = fitting_sequence.likelihoodModule.image_likelihood.logL(**kwargs_result)[
                 0]
@@ -736,6 +738,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             if verbose:
                 print('result of light fitting: ', kwargs_result)
             bic = fitting_sequence.bic
+            #logL_imaging_data = fitting_sequence.best_fit_likelihood()
             image_model = create_im_sim(data_class.kwargs_data_joint['multi_band_list'],
                                         data_class.kwargs_data_joint['multi_band_type'],
                                         kwargs_model_lightfit,
