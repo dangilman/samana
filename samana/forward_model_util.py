@@ -405,8 +405,8 @@ def macromodel_readout_function_0435(kwargs_solution, samples_fixed_dict):
     satellite_1_x = samples_fixed_dict['satellite_1_x']
     satellite_1_y = samples_fixed_dict['satellite_1_y']
     samples_macromodel = []
-    param_names_epl = ['theta_E', 'center_x', 'center_y', 'e1', 'e2', 'gamma', 'a3_a', 'a4_a',
-                       'delta_phi_m3', 'delta_phi_m4']
+    param_names_epl = ['theta_E', 'center_x', 'center_y', 'e1', 'e2', 'gamma', 'a1_a', 'a3_a', 'a4_a',
+                       'delta_phi_m1', 'delta_phi_m3', 'delta_phi_m4']
     param_names_shear = ['gamma1', 'gamma2']
     param_names_satellite = ['satellite_1_theta_E', 'satellite_1_x', 'satellite_1_y']
     for param_name in param_names_epl:

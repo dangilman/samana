@@ -45,7 +45,7 @@ def gamma_macro_priors(lens_ID):
     elif lens_ID == 'B2045':
         raise Exception('not yet implemented')
     elif lens_ID == 'HE0435':
-        gamma_macro_prior = {'gamma': ['UNIFORM', 2.12 - 0.2, 2.12 + 0.2]}
+        gamma_macro_prior = {'gamma': ['UNIFORM', 2.0, 2.4]}
     elif lens_ID == 'J0248':
         gamma_macro_prior = {'gamma': ['UNIFORM', 1.8, 2.4]}
     elif lens_ID == 'J0248_HST':
