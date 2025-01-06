@@ -47,7 +47,7 @@ def gamma_macro_priors(lens_ID):
     elif lens_ID == 'HE0435':
         gamma_macro_prior = {'gamma': ['UNIFORM', 2.0, 2.4]}
     elif lens_ID == 'J0248':
-        gamma_macro_prior = {'gamma': ['UNIFORM', 1.8, 2.4]}
+        gamma_macro_prior = {'gamma': ['UNIFORM', 2.0, 2.4]}
     elif lens_ID == 'J0248_HST':
         gamma_macro_prior = None
     elif lens_ID in ['J0259', 'J0259_HST_475X']:
@@ -198,7 +198,7 @@ def numerics_setup(lens_ID):
         rescale_grid_size = 1.
         rescale_grid_res = 1.3
     elif lens_ID == 'J0248':
-        rescale_grid_size = 1.0
+        rescale_grid_size = 2.5
         rescale_grid_res = 1.3
     elif lens_ID == 'J0248_HST':
         rescale_grid_size = 1.0
