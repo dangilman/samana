@@ -92,7 +92,7 @@ def mock_lens_data_plot(image_sim, window_size, vminmax=1.5, cmap='gist_heat', l
     plt.show()
 
 def mock_substructure_plot(x_image, y_image, window_size, n_pixels, lens_model, lens_model_macro, kwargs_lens,
-                           kwargs_lens_macro, label='', save_fig=False, filename=None):
+                           kwargs_lens_macro, label='', save_fig=False, filename=None, include_cbar=True):
 
     _r = np.linspace(-window_size / 2, window_size / 2, n_pixels)
     _xx, _yy = np.meshgrid(_r, _r)
@@ -125,11 +125,13 @@ def mock_substructure_plot(x_image, y_image, window_size, n_pixels, lens_model, 
     y = -window_size / 2 + 0.3
     ax.plot([xlow, xhigh], [y, y], color='k', lw=4)
     ax.annotate('1 arcsec', xy=(xlow + 0.165, y - 0.21), fontsize=18, color='k')
-    ax.annotate(label, xy=(0.035, 0.9),
-                xycoords='axes fraction', fontsize=24, color='k',
-                bbox=dict(boxstyle="round,pad=0.3", fc="w", alpha=0.9, ec="k", lw=2))
-    cbar = plt.colorbar(im, fraction=0.046, pad=0.01, ticks=[-0.1, -0.05, 0.0, 0.05, 0.1])
-    cbar.set_label(r'$\kappa - \kappa_{\rm{macro}}$', fontsize=25, labelpad=-2.5)
+    if label is not None:
+        ax.annotate(label, xy=(0.035, 0.9),
+                    xycoords='axes fraction', fontsize=24, color='k',
+                    bbox=dict(boxstyle="round,pad=0.3", fc="w", alpha=0.9, ec="k", lw=2))
+    if include_cbar:
+        cbar = plt.colorbar(im, fraction=0.046, pad=0.01, ticks=[-0.1, -0.05, 0.0, 0.05, 0.1])
+        cbar.set_label(r'$\kappa - \kappa_{\rm{macro}}$', fontsize=25, labelpad=-2.5)
     # image_labels = ['A', 'B', 'C', 'D']
     # for i in range(0, 4):
     #     ax.annotate(image_labels[i], xy=(x_image[i]+0.05, y_image[i]+0.05), color='k', fontsize=15)
@@ -137,7 +139,8 @@ def mock_substructure_plot(x_image, y_image, window_size, n_pixels, lens_model, 
     plt.tight_layout()
     if save_fig:
         plt.savefig(filename)
-    plt.show()
+        plt.show()
+    return ax
 
 def macromodel_plot(index_run, nbins):
     import numpy as np
