@@ -71,7 +71,7 @@ def gamma_macro_priors(lens_ID):
     elif lens_ID == 'J1251':
         gamma_macro_prior = None
     elif lens_ID == 'J1537':
-        gamma_macro_prior = {'gamma': ['UNIFORM', 1.8, 2.4]}
+        gamma_macro_prior = {'gamma': ['UNIFORM', 1.8, 2.3]}
     elif lens_ID == 'J2026':
         gamma_macro_prior = None
     elif lens_ID == 'J2205_MIRI':
@@ -81,7 +81,7 @@ def gamma_macro_priors(lens_ID):
     elif lens_ID == 'J2344':
         gamma_macro_prior = None
     elif lens_ID == 'MG0414':
-        gamma_macro_prior = {'gamma': ['UNIFORM', 1.8, 2.4]}
+        gamma_macro_prior = {'gamma': ['UNIFORM', 1.7, 2.2]}
     elif lens_ID in ['PG1115', 'PG1115_NIRCAM']:
         gamma_macro_prior = None
     elif lens_ID == 'PSJ0147':
