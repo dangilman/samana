@@ -814,7 +814,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                               kwargs_model, kwargs_result, arrow_size=0.02, cmap_string="gist_heat",
                               fast_caustic=True,
                               image_likelihood_mask_list=[data_class.likelihood_mask_imaging_weights])
-        if use_imaging_data:
+        if use_imaging_data or split_image_data_reconstruction:
             chain_plot.plot_chain_list(chain_list, 0)
             print('num degrees of freedom: ', fitting_sequence.likelihoodModule.effective_num_data_points(**kwargs_result))
 
@@ -838,6 +838,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         f.tight_layout()
         f.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0., hspace=0.05)
         plt.show()
+
         fig = plt.figure()
         fig.set_size_inches(6, 6)
         ax = plt.subplot(111)

@@ -8,16 +8,16 @@ class _J0405ModelBase(EPLModelBase):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
         kwargs_lens_light_init = [
-            {'amp': 0.22175701394501865, 'R_sersic': 3., 'n_sersic': 4.,
-             'e1': 0.003214053507139389, 'e2': 0.09252885379285762, 'center_x': -0.012603949530237805,
-             'center_y': -0.045673046839539544}
+            {'amp': 4.380770034583611, 'R_sersic': 0.4994727250033706, 'n_sersic': 5.690947857484862,
+             'e1': 0.026257367826405975, 'e2': 0.0921481551933721, 'center_x': -0.012621757601208723,
+             'center_y': -0.04678066518013388}
         ]
         kwargs_lens_light_sigma = [
-            {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
+            {'R_sersic': 0.5, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
         kwargs_lower_lens_light = [
             {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10.0, 'center_y': -10.0}]
         kwargs_upper_lens_light = [
-            {'R_sersic': 5, 'n_sersic': 9.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
+            {'R_sersic': 6.0, 'n_sersic': 9.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
         kwargs_lens_light_fixed = [{}]
 
         add_uniform_light = False
@@ -126,7 +126,7 @@ class J0405ModelEPLM3M4Shear(_J0405ModelBase):
         kwargs_lens_macro = [
             {'theta_E': 0.70170073051008, 'gamma': 1.9920568619394587, 'e1': 0.009652795286929021,
              'e2': 0.10241663645616651, 'center_x': 0.004534075630708269, 'center_y': -0.05236325331590094, 'a3_a': 0.0,
-             'delta_phi_m3': 0.23873998055526482, 'a4_a': 0.0, 'delta_phi_m4': 1.435590596290228},
+             'a1_a': 0.0, 'delta_phi_m1': 0.0, 'delta_phi_m3': 0.23873998055526482, 'a4_a': 0.0, 'delta_phi_m4': 1.435590596290228},
             {'gamma1': 0.031022886724143328, 'gamma2': 0.023670148586850015, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
 
