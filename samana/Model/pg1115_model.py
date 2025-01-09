@@ -26,7 +26,7 @@ class _PG1115ModelBase(EPLModelBase):
              'e1': 0.20890919096969454, 'e2': 0.1916880202287354, 'center_x': -0.022522942468825483,
              'center_y': 0.12563466846140517}
         ]
-        kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
+        kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 1.0, 'e1': 0.2, 'e2': 0.2, 'center_x': 0.1,
                                 'center_y': 0.1}]
         kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
         kwargs_upper_source = [{'R_sersic': 10.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
