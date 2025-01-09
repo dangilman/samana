@@ -96,8 +96,6 @@ def gamma_macro_priors(lens_ID):
         gamma_macro_prior = {'gamma': ['UNIFORM', 2.0, 2.25]}
     elif lens_ID == 'WGD2038':
         gamma_macro_prior = {'gamma': ['UNIFORM', 2.0, 2.5]}
-    elif lens_ID == 'MG0414':
-        gamma_macro_prior = None
     elif lens_ID in ['M1134', 'M1134_MIRI']:
         gamma_macro_prior = None
     elif lens_ID == 'H1413':
