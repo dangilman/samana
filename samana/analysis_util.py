@@ -356,10 +356,10 @@ def quick_setup(lens_ID):
         from samana.Model.mg0414_model import MG0414ModelEPLM3M4Shear as model_class
     elif lens_ID == 'PG1115':
         from samana.Data.pg1115 import PG1115_HST as data_class
-        from samana.Model.pg1115_model import PG1115ModelEPLM3M4Shear as model_class
+        from samana.Model.pg1115_model import PG1115ModelEPLM1M3M4Shear as model_class
     elif lens_ID == 'PG1115_NIRCAM':
         from samana.Data.pg1115 import PG1115_NIRCAM as data_class
-        from samana.Model.pg1115_model import PG1115ModelEPLM3M4Shear as model_class
+        from samana.Model.pg1115_model import PG1115ModelEPLM1M3M4Shear as model_class
     elif lens_ID == 'PSJ0147':
         from samana.Data.j0147 import J0147_MIRI as data_class
         from samana.Model.j0147_model import J0147ModelEPLM3M4Shear as model_class
