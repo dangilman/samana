@@ -59,7 +59,7 @@ def gamma_macro_priors(lens_ID):
     elif lens_ID == 'J0608':
         gamma_macro_prior = None
     elif lens_ID == 'J0659':
-        gamma_macro_prior = None
+        gamma_macro_prior = {'gamma': ['UNIFORM', 2.0, 2.4]}
     elif lens_ID == 'J0803':
         gamma_macro_prior = None
     elif lens_ID == 'J0924':
@@ -302,7 +302,7 @@ def quick_setup(lens_ID):
         from samana.Model.b2045_model import B2045ModelEPLM3M4Shear as model_class
     elif lens_ID == 'HE0435':
         from samana.Data.he0435 import HE0435_NIRCAM as data_class
-        from samana.Model.he0435_model_nircam import HE0435ModelNircamEPLM3M4Shear as model_class
+        from samana.Model.he0435_model_nircam import HE0435ModelNircamEPLM1M3M4Shear as model_class
     elif lens_ID == 'J0248':
         from samana.Data.j0248 import J0248_MIRI as data_class
         from samana.Model.j0248_model import J0248ModelEPLM3M4Shear as model_class

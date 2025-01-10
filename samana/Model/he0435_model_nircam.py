@@ -103,7 +103,7 @@ class _HE0435NircamModelBase(EPLModelBase):
                              }
         return kwargs_likelihood
 
-class HE0435ModelNircamEPLM3M4Shear(_HE0435NircamModelBase):
+class HE0435ModelNircamEPLM1M3M4Shear(_HE0435NircamModelBase):
 
     gx_phys = -0.0830
     gy_phys = 3.8549
@@ -155,7 +155,7 @@ class HE0435ModelNircamEPLM3M4Shear(_HE0435NircamModelBase):
         return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
 
 
-class HE0435ModelNircamEPLM3M4ShearObservedConvention(_HE0435NircamModelBase):
+class HE0435ModelNircamEPLM1M3M4ShearObservedConvention(_HE0435NircamModelBase):
 
     @property
     def prior_lens(self):
@@ -172,6 +172,7 @@ class HE0435ModelNircamEPLM3M4ShearObservedConvention(_HE0435NircamModelBase):
             {'theta_E': 1.1826081417961722, 'gamma': 2.118618947592548, 'e1': -0.08072956888029029,
              'e2': -0.034967049528181644, 'center_x': 0.013609412056721684,
              'center_y': 0.04363667548815146, 'a3_a': 0.0,
+             'a1_a': 0.0, 'delta_phi_m1': 0.0,
              'delta_phi_m3': -0.34686333286833254, 'a4_a': 0.0, 'delta_phi_m4': -0.03780246745368501},
             {'gamma1': 0.030183980671845585, 'gamma2': 0.03001601588630484, 'ra_0': 0.0, 'dec_0': 0.0},
             {'theta_E': 0.36940399665014434, 'center_x': self._data.gx, 'center_y': self._data.gy}

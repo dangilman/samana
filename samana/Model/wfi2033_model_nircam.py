@@ -88,24 +88,30 @@ class _WFI2033ModelNircamBase(EPLModelBase):
     def setup_lens_light_model(self):
 
         lens_light_model_list = ['SERSIC_ELLIPSE',
+                                 'SERSIC',
                                  'SERSIC']
         kwargs_lens_light_init = [
             {'amp': 1.0, 'R_sersic': 2.267929030468463, 'n_sersic': 4.527214657123246,
              'e1': -0.329886025950307, 'e2': 0.05232357447738071, 'center_x': 0.0,
              'center_y': 0.0},
             {'amp': 9295.352803369131, 'R_sersic': 0.027114349427617816, 'n_sersic': 2.9632338353717778,
-             'center_x': 0.2732173973136928, 'center_y': 2.0044491965512194}
+             'center_x': 0.2732173973136928, 'center_y': 2.0044491965512194},
+            {'amp': 9295.352803369131, 'R_sersic': 1.0, 'n_sersic': 4.0,
+             'center_x': -3.68422, 'center_y': 0.125}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.5, 'n_sersic': 0.5, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.05, 'center_y': 0.05},
-            {'R_sersic': 0.01, 'n_sersic': 0.25, 'center_x': 0.025, 'center_y': 0.025}]
+            {'R_sersic': 0.01, 'n_sersic': 0.25, 'center_x': 0.025, 'center_y': 0.025},
+            {'R_sersic': 0.5, 'n_sersic': 0.5, 'center_x': 0.05, 'center_y': 0.05}]
         kwargs_lower_lens_light = [
             {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -0.5, 'center_y': -0.5},
-            {'R_sersic': 0.0001, 'n_sersic': 0.5, 'center_x': 0.2732-0.3, 'center_y': 2.00444-0.3}]
+            {'R_sersic': 0.0001, 'n_sersic': 0.5, 'center_x': 0.2732-0.3, 'center_y': 2.00444-0.3},
+            {'R_sersic': 0.01, 'n_sersic': 0.25, 'center_x': -3.6842-0.25, 'center_y': 0.125-0.25}]
         kwargs_upper_lens_light = [
             {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 0.5, 'center_y': 0.5},
-            {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 0.2732+0.3, 'center_y': 2.00444+0.3}]
-        kwargs_lens_light_fixed = [{}, {}]
+            {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 0.2732+0.3, 'center_y': 2.00444+0.3},
+            {'R_sersic': 10, 'n_sersic':10, 'center_x': -3.6842+0.25, 'center_y': 0.125+0.25}]
+        kwargs_lens_light_fixed = [{}, {} ,{}]
         add_uniform_light = True
         if add_uniform_light:
             kwargs_uniform, kwargs_uniform_sigma, kwargs_uniform_fixed, \

@@ -98,7 +98,7 @@ class _PG1115ModelBase(EPLModelBase):
                              }
         return kwargs_likelihood
 
-class PG1115ModelEPLM3M4Shear(_PG1115ModelBase):
+class PG1115ModelEPLM1M3M4Shear(_PG1115ModelBase):
 
     @property
     def prior_lens(self):
@@ -111,14 +111,14 @@ class PG1115ModelEPLM3M4Shear(_PG1115ModelBase):
             kwargs_lens_macro = [
                 {'theta_E': 1.146794388157141, 'gamma': 2.0, 'e1': 0.07302479386881054, 'e2': -0.029791382569408404,
                  'center_x': -0.039994569122396795, 'center_y': 0.014323610076049209, 'a3_a': 0.0,
-                 'delta_phi_m3': -0.25822868267439386, 'a4_a': 0.0, 'delta_phi_m4': -0.5135058988689192},
+                  'a1_a': 0.01, 'delta_phi_m1': 0.1,'delta_phi_m3': -0.25822868267439386, 'a4_a': 0.0, 'delta_phi_m4': -0.5135058988689192},
                 {'gamma1': -0.02808702464545221, 'gamma2': -0.10813435935412004, 'ra_0': 0.0, 'dec_0': 0.0}
             ]
         else:
             kwargs_lens_macro = [
                 {'theta_E': 1.1466296178228925, 'gamma': 2.0014133180207025, 'e1': 0.07143218306427672,
                  'e2': -0.03166973868176683, 'center_x': -0.05379887696364931, 'center_y': 0.008165180380356397,
-                 'a3_a': 0.0, 'delta_phi_m3': -0.005969269433780858, 'a4_a': 0.0, 'delta_phi_m4': 0.20840045113672415},
+                  'a1_a': 0.01, 'delta_phi_m1': 0.1,'a3_a': 0.0, 'delta_phi_m3': -0.005969269433780858, 'a4_a': 0.0, 'delta_phi_m4': 0.20840045113672415},
                 {'gamma1': -0.028738087587014873, 'gamma2': -0.10888032218076507, 'ra_0': 0.0, 'dec_0': 0.0}
             ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
