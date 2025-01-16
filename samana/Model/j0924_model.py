@@ -113,11 +113,11 @@ class _J0924ModelBase(EPLModelBase):
                              }
         return kwargs_likelihood
 
-class J0924ModelEPLM3M4Shear(_J0924ModelBase):
+class J0924ModelEPLM1M3M4Shear(_J0924ModelBase):
 
     def __init__(self, data_class, shapelets_order=None, shapelets_scale_factor=2.5/2):
 
-        super(J0924ModelEPLM3M4Shear, self).__init__(data_class, shapelets_order, shapelets_scale_factor)
+        super(J0924ModelEPLM1M3M4Shear, self).__init__(data_class, shapelets_order, shapelets_scale_factor)
 
     @property
     def prior_lens(self):
@@ -129,7 +129,7 @@ class J0924ModelEPLM3M4Shear(_J0924ModelBase):
         kwargs_lens_macro = [
             {'theta_E': 0.8762991184266715, 'gamma': 2.1648292579611756, 'e1': 0.10487377719751985,
              'e2': -0.03718310291978024, 'center_x': -0.0463003391175611, 'center_y': 0.04849830487468873, 'a3_a': 0.0,
-             'delta_phi_m3': 0.29024602547651307, 'a4_a': 0.0, 'delta_phi_m4': 1.6475777931629454},
+             'a1_a': 0.0, 'delta_phi_m1': 0.0,'delta_phi_m3': 0.29024602547651307, 'a4_a': 0.0, 'delta_phi_m4': 1.6475777931629454},
             {'gamma1': -0.03939561968540132, 'gamma2': -0.04071833552068792, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]

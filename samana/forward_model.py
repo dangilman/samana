@@ -24,8 +24,11 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   verbose=False, random_seed_init=None, readout_steps=2, write_sampling_rate=True,
                   n_pso_particles=10, n_pso_iterations=50, num_threads=1, astrometric_uncertainty=True,
                   image_data_grid_resolution_rescale=1.0,
-                  use_imaging_data=True, fitting_sequence_kwargs=None, test_mode=False,
-                  use_decoupled_multiplane_approximation=True, fixed_realization_list=None,
+                  use_imaging_data=True,
+                  fitting_sequence_kwargs=None,
+                  test_mode=False,
+                  use_decoupled_multiplane_approximation=True,
+                  fixed_realization_list=None,
                   macromodel_readout_function=None,
                   kappa_scale_subhalos=1.0,
                   log10_bound_mass_cut=None,
@@ -814,7 +817,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                               kwargs_model, kwargs_result, arrow_size=0.02, cmap_string="gist_heat",
                               fast_caustic=True,
                               image_likelihood_mask_list=[data_class.likelihood_mask_imaging_weights])
-        if use_imaging_data or split_image_data_reconstruction:
+        if use_imaging_data or split_image_data_reconstruction and stat<tolerance:
             chain_plot.plot_chain_list(chain_list, 0)
             print('num degrees of freedom: ', fitting_sequence.likelihoodModule.effective_num_data_points(**kwargs_result))
 
