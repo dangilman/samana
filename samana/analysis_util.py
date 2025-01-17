@@ -67,7 +67,7 @@ def gamma_macro_priors(lens_ID):
     elif lens_ID in ['J1042', 'J1042_814W']:
         gamma_macro_prior = None
     elif lens_ID == 'J1131':
-        gamma_macro_prior = None
+        gamma_macro_prior = {'gamma': ['UNIFORM', 1.8, 2.4]}
     elif lens_ID == 'J1251':
         gamma_macro_prior = None
     elif lens_ID == 'J1537':
