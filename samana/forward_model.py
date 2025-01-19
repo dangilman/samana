@@ -34,7 +34,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   log10_bound_mass_cut=None,
                   parallelize=False,
                   elliptical_ray_tracing_grid=True,
-                  split_image_data_reconstruction=False):
+                  split_image_data_reconstruction=False,
+                  filter_subhalo_kwargs=None):
     """
 
     :param output_path:
@@ -70,6 +71,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     :param log10_bound_mass_cut:
     :param parallelize:
     :param elliptical_ray_tracing_grid:
+    :param filter_subhalo_kwargs:
     :return:
     """
 
@@ -183,7 +185,9 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              kappa_scale_subhalos,
                              log10_bound_mass_cut,
                              elliptical_ray_tracing_grid,
-                             split_image_data_reconstruction, tolerance))
+                             split_image_data_reconstruction,
+                             tolerance,
+                             filter_subhalo_kwargs))
 
             pool = Pool(num_threads)
             output = pool.starmap(forward_model_single_iteration, args)
@@ -253,7 +257,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 kappa_scale_subhalos, log10_bound_mass_cut,
                                                 elliptical_ray_tracing_grid,
                                                 split_image_data_reconstruction,
-                                                                              tolerance)
+                                                tolerance,
+                                                filter_subhalo_kwargs)
 
             seed_counter += 1
             acceptance_rate_counter += 1
@@ -388,7 +393,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                    log10_bound_mass_cut=None,
                                    elliptical_ray_tracing_grid=True,
                                    split_image_data_reconstruction=False,
-                                   tolerance=np.inf):
+                                   tolerance=np.inf,
+                                   filter_subhalo_kwargs=None):
     """
 
     :param data_class:
@@ -478,18 +484,23 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         realization = realization_init
     else:
         if verbose:
-            print('realization has ' + str(len(realization_init.halos)) + ' halos')
-        if log10_bound_mass_cut is not None:
-            realization_init = realization_init.filter_bound_mass(10 ** log10_bound_mass_cut)
-            if verbose:
-                print('realization has ' + str(len(realization_init.halos)) + ' halos after cut on '
-                             'bound mass above 10^'+str(log10_bound_mass_cut))
-        realization, _, _, lens_model_align, _ = align_realization(realization_init, kwargs_model_align['lens_model_list'],
+            print('realization has ' + str(len(realization_init.halos)) + ' halos...')
+        realization, _, _, _, _ = align_realization(realization_init, kwargs_model_align['lens_model_list'],
                                     kwargs_model_align['lens_redshift_list'],
                                     kwargs_lens_align,
                                     data_class.x_image,
                                     data_class.y_image,
                                     astropy_cosmo)
+        if filter_subhalo_kwargs is not None:
+            realization = realization.filter_subhalos(**filter_subhalo_kwargs)
+            if verbose:
+                print('realization has ' + str(len(realization.halos)) + ' halos after '
+                            'downselecting on subhalo mass/position...')
+        if log10_bound_mass_cut is not None:
+            realization = realization.filter_bound_mass(10 ** log10_bound_mass_cut)
+            if verbose:
+                print('realization has ' + str(len(realization.halos)) + ' halos after cut on '
+                             'bound mass above 10^'+str(log10_bound_mass_cut)+'... ')
     lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
         kwargs_mass_sheet={'log_mlow_sheets': log_mlow_mass_sheets, 'kappa_scale_subhalos': kappa_scale_subhalos})
     grid_resolution_image_data = pixel_size / image_data_grid_resolution_rescale
