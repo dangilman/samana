@@ -1,6 +1,6 @@
 from samana.Model.model_base import EPLModelBase
 import numpy as np
-import pickle
+from samana.forward_model_util import macromodel_readout_function_2033
 
 
 class _WFI2033ModelNircamBase(EPLModelBase):
@@ -154,6 +154,10 @@ class WFI2033NircamModelEPLM3M4Shear(_WFI2033ModelNircamBase):
     gy2_phys = 0.0414
 
     @property
+    def macromodel_readout_function(self):
+        return macromodel_readout_function_2033
+
+    @property
     def prior_lens(self):
         return [[0, 'gamma', 2.0, 0.1], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005],
                 [2, 'center_x', self._data.gx1, 0.05],
@@ -211,6 +215,10 @@ class WFI2033NircamModelEPLM3M4Shear(_WFI2033ModelNircamBase):
 
 
 class WFI2033NircamModelEPLM3M4ShearObservedConvention(_WFI2033ModelNircamBase):
+
+    @property
+    def macromodel_readout_function(self):
+        return macromodel_readout_function_2033
 
     @property
     def prior_lens(self):

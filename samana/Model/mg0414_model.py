@@ -1,7 +1,8 @@
 from samana.Model.model_base import EPLModelBase
 import numpy as np
-import pickle
 from samana.param_managers import EPLMultipole134FreeShearLensMassPrior
+from samana.forward_model_util import macromodel_readout_function_eplshear_satellite
+
 
 class _MG0414ModelBase(EPLModelBase):
 
@@ -116,6 +117,10 @@ class MG0414ModelEPLM3M4Shear(_MG0414ModelBase):
 
     def __init__(self, data_class, shapelets_order=None, shapelets_scale_factor=2.5 / 2):
         super(MG0414ModelEPLM3M4Shear, self).__init__(data_class, shapelets_order, shapelets_scale_factor)
+
+    @property
+    def macromodel_readout_function(self):
+        return macromodel_readout_function_eplshear_satellite
 
     def param_class_4pointsolver(self, lens_model_list_macro,
                                  kwargs_lens_init,

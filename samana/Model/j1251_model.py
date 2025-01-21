@@ -127,7 +127,7 @@ class J1251ModelEPLM3M4Shear(_J1251ModelBase):
         kwargs_lens_macro = [
             {'theta_E': 0.8412405969441666, 'gamma': 2.1578869095028086, 'e1': -0.11213895402276705,
              'e2': 0.1260380474846413, 'center_x': 0.006254989097191243, 'center_y': -0.01092230601359325, 'a3_a': 0.0,
-             'delta_phi_m3': -0.5179802407886233, 'a4_a': 0.0, 'delta_phi_m4': 2.0068757042927947},
+             'a1_a': 0.0, 'delta_phi_m1': 0.0,'delta_phi_m3': -0.5179802407886233, 'a4_a': 0.0, 'delta_phi_m4': 2.0068757042927947},
             {'gamma1': 0.08065911490816692, 'gamma2': -0.031217950805875975, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]

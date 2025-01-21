@@ -95,7 +95,7 @@ class J2026ModelEPLM3M4Shear(_J2026ModelBase):
         kwargs_lens_macro = [{'theta_E': 0.7080359513151707, 'gamma': 2.0, 'e1': 0.44301405649940157,
                               'e2': -0.042982860335337526, 'center_x': -7.8816310197601e-08,
                               'center_y': -4.050045729301764e-08, 'a3_a': 0.0,
-                              'delta_phi_m3': 0.0, 'a4_a': 0.0,
+                              'a1_a': 0.0, 'delta_phi_m1': 0.0, 'delta_phi_m3': 0.0, 'a4_a': 0.0,
                               'delta_phi_m4': 0.0},
                               {'gamma1': 0.038831457026621344, 'gamma2': -0.02723879062223824, 'ra_0': 0, 'dec_0': 0}]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]

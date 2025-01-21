@@ -1,6 +1,7 @@
 from samana.Model.model_base import EPLModelBase
 import numpy as np
-import pickle
+from samana.forward_model_util import macromodel_readout_function_0435
+
 
 
 class _HE0435NircamModelBase(EPLModelBase):
@@ -109,6 +110,10 @@ class HE0435ModelNircamEPLM1M3M4Shear(_HE0435NircamModelBase):
     gy_phys = 3.8549
 
     @property
+    def macromodel_readout_function(self):
+        return macromodel_readout_function_0435
+
+    @property
     def prior_lens(self):
         return self.population_gamma_prior
 
@@ -164,6 +169,10 @@ class HE0435ModelNircamEPLM1M3M4ShearObservedConvention(_HE0435NircamModelBase):
                 [2, 'center_y', self._data.gx, 0.2],
                 [2, 'theta_E', 0.25, 0.1]
                 ]
+
+    @property
+    def macromodel_readout_function(self):
+        return macromodel_readout_function_0435
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 

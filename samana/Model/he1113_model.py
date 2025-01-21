@@ -139,7 +139,7 @@ class HE1113ModelEPLM3M4Shear(_HE1113):
         kwargs_lens_macro = [
             {'theta_E': 0.4996287175105153, 'gamma': 2.0, 'e1': -0.1,
              'e2': 0.3, 'center_x': -0.07889078629463256, 'center_y': -0.04340801668649531, 'a3_a': 0.0,
-             'delta_phi_m3': -0.4791469952155035, 'a4_a': 0.0, 'delta_phi_m4': -0.34958810974263865},
+             'a1_a': 0.0, 'delta_phi_m1': 0.0,'delta_phi_m3': -0.4791469952155035, 'a4_a': 0.0, 'delta_phi_m4': -0.34958810974263865},
             {'gamma1': -0.133566681846644, 'gamma2': 0.4068824293999763, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]

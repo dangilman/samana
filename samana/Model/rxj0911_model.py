@@ -1,7 +1,8 @@
 from samana.Model.model_base import EPLModelBase
 import numpy as np
 from samana.param_managers import EPLMultipole134FreeShearLensMassPrior
-import pickle
+from samana.forward_model_util import macromodel_readout_function_eplshear_satellite
+
 
 class _RXJ0911ModelBase(EPLModelBase):
 
@@ -121,6 +122,10 @@ class RXJ0911ModelEPLM3M4Shear(_RXJ0911ModelBase):
         return param_class
 
     @property
+    def macromodel_readout_function(self):
+        return macromodel_readout_function_eplshear_satellite
+
+    @property
     def prior_lens(self):
         return self.population_gamma_prior
 
@@ -130,7 +135,7 @@ class RXJ0911ModelEPLM3M4Shear(_RXJ0911ModelBase):
         kwargs_lens_macro = [
             {'theta_E': 0.934665138191743, 'center_x': 0.09217229688856182, 'center_y': -0.018939401025148003,
              'e1': -0.14177163912017746, 'e2': -0.04115433060155392, 'gamma': 2.0678889042835302,
-             'a4_a': -0.01947989859185041, 'a3_a': -0.005869635902847609, 'delta_phi_m3': 0.1438930897875378,
+             'a1_a': 0.0, 'delta_phi_m1': 0.0, 'a4_a': -0.01947989859185041, 'a3_a': -0.005869635902847609, 'delta_phi_m3': 0.1438930897875378,
              'delta_phi_m4': 0.08976356608101888}, {'gamma1': 0.2625362481294369, 'gamma2': -0.09490716163413986},
             {'theta_E': 0.24790976069832207, 'center_x': -0.7631502073820158, 'center_y': 0.6518217772699125}
         ]

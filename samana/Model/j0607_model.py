@@ -1,6 +1,6 @@
 from samana.Model.model_base import EPLModelBase
 import numpy as np
-import pickle
+from samana.forward_model_util import macromodel_readout_function_eplshear_satellite
 
 class _J0607ModelBase(EPLModelBase):
 
@@ -125,9 +125,13 @@ class J0607ModelEPLM3M4Shear(_J0607ModelBase):
         super(J0607ModelEPLM3M4Shear, self).__init__(data_class, shapelets_order, shapelets_scale_factor)
 
     @property
+    def macromodel_readout_function(self):
+        return macromodel_readout_function_eplshear_satellite
+
+    @property
     def prior_lens(self):
-        #satellite_prior = [[2, 'theta_E', 0.10, 0.15]]
-        return self.population_gamma_prior
+        satellite_prior = [[2, 'theta_E', 0.10, 0.15]]
+        return self.population_gamma_prior + satellite_prior
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
@@ -135,7 +139,7 @@ class J0607ModelEPLM3M4Shear(_J0607ModelBase):
         kwargs_lens_macro = [
             {'theta_E': 0.7994927065191947, 'gamma': 2.1862351238116307, 'e1': -0.1966653095750537,
              'e2': 0.041776021660986914, 'center_x': -0.018646557366911974, 'center_y': -0.048681204734772325,
-             'a3_a': 0.0, 'delta_phi_m3': -0.26112879049351506, 'a4_a': 0.0, 'delta_phi_m4': 0.19005519045196465},
+             'a1_a': 0.0, 'delta_phi_m1': 0.0,'a3_a': 0.0, 'delta_phi_m3': -0.26112879049351506, 'a4_a': 0.0, 'delta_phi_m4': 0.19005519045196465},
             {'gamma1': -0.0918551427515339, 'gamma2': 0.008336901501339776, 'ra_0': 0.0, 'dec_0': 0.0},
             {'theta_E': 0.08665345973597675, 'center_x': 1.1962411752993318, 'center_y': 0.22937968643690998}
         ]

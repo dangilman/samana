@@ -1,6 +1,7 @@
 from samana.Model.model_base import EPLModelBase
 import numpy as np
 from lenstronomy.Util.class_creator import create_class_instances
+from samana.forward_model_util import macromodel_readout_function_eplshear_satellite
 
 class _J1042ModelBase(EPLModelBase):
 
@@ -167,6 +168,10 @@ class J1042ModelEPLM3M4Shear(_J1042ModelBase):
         return -0.5 * (dx ** 2 + dy ** 2) / 0.001 ** 2
 
     @property
+    def macromodel_readout_function(self):
+        return macromodel_readout_function_eplshear_satellite
+
+    @property
     def prior_lens(self):
         # note the prior on the lens position is implicitely also a prior on the light position
         return self.population_gamma_prior + [
@@ -180,7 +185,7 @@ class J1042ModelEPLM3M4Shear(_J1042ModelBase):
         kwargs_lens_macro = [
             {'theta_E': 0.8884654787595039, 'gamma': 1.9389205510769976, 'e1': -0.22945509053278765,
              'e2': 0.15832030781687093, 'center_x': 0.024594789216292615, 'center_y': 0.038319171626879284, 'a3_a': 0.0,
-             'delta_phi_m3': 0.40255807918558223, 'a4_a': 0.0, 'delta_phi_m4': -0.5163251300933784},
+             'a1_a': 0.0, 'delta_phi_m1': 0.0,'delta_phi_m3': 0.40255807918558223, 'a4_a': 0.0, 'delta_phi_m4': -0.5163251300933784},
             {'gamma1': -0.1008630901650493, 'gamma2': 0.016019787962277186, 'ra_0': 0.0, 'dec_0': 0.0},
             {'theta_E': 0.07545918728644968, 'center_x': 1.8699636079097566, 'center_y': -0.4847974949545327}
         ]

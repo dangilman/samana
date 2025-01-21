@@ -1,6 +1,6 @@
 from samana.Model.model_base import EPLModelBase
 import numpy as np
-from lenstronomy.Util.param_util import ellipticity2phi_q
+from samana.forward_model_util import macromodel_readout_function_eplshear_satellite
 
 
 class _J0659ModelBase(EPLModelBase):
@@ -127,6 +127,10 @@ class J0659ModelEPLM3M4Shear(_J0659ModelBase):
     def prior_lens(self):
         return self.population_gamma_prior
 
+    @property
+    def macromodel_readout_function(self):
+        return macromodel_readout_function_eplshear_satellite
+
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None, assume_star=False):
 
         star_x, star_y = self._data.satellite_or_star_coords
@@ -134,7 +138,7 @@ class J0659ModelEPLM3M4Shear(_J0659ModelBase):
         kwargs_lens_macro = [
             {'theta_E': 2.0560946477202506, 'gamma': 2.195359768326245, 'e1': -0.06723241831767837,
              'e2': -0.07828322080286804, 'center_x': 0.04304460904762777, 'center_y': -0.2662114594268754, 'a3_a': 0.0,
-             'delta_phi_m3': 0.46158799357466707, 'a4_a': 0.0, 'delta_phi_m4': 2.249405428020844},
+             'a1_a': 0.0, 'delta_phi_m1': 0.0,'delta_phi_m3': 0.46158799357466707, 'a4_a': 0.0, 'delta_phi_m4': 2.249405428020844},
             {'gamma1': 0.0591525470668722, 'gamma2': 0.09640933007569322, 'ra_0': 0.0, 'dec_0': 0.0},
             {'theta_E': 0.41722530247551476, 'center_x': 0.34739428972240965, 'center_y': 1.5488179539833586}
         ]

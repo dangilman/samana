@@ -2,6 +2,7 @@ from lenstronomy.LensModel.Util.decouple_multi_plane_util import *
 from lenstronomy.Util.param_util import ellipticity2phi_q
 from samana.param_managers import EPLMultipole134FreeShear
 from samana.image_magnification_util import magnification_finite_decoupled
+from samana.forward_model_util import macromodel_readout_function_eplshear
 import numpy as np
 
 
@@ -14,6 +15,10 @@ class EPLModelBase(object):
         self._shapelets_order = shapelets_order
         self._data = data_class
         self._shapelets_scale_factor = shapelets_scale_factor
+
+    @property
+    def macromodel_readout_function(self):
+        return macromodel_readout_function_eplshear
 
     def param_class_4pointsolver(self, lens_model_list_macro,
                                  kwargs_lens_init,

@@ -6,8 +6,6 @@ from samana.output_storage import Output
 import matplotlib.pyplot as plt
 from lenstronomy.Plots.model_plot import ModelPlot
 from lenstronomy.Plots import chain_plot
-from lenstronomy.LensModel.lens_model import LensModel
-from lenstronomy.Util.analysis_util import bic_model
 
 __all__ = ['nmax_bic_minimize',
            'cut_on_data',
@@ -260,7 +258,7 @@ def numerics_setup(lens_ID):
         rescale_grid_size = 1.0
     elif lens_ID == 'RXJ1131':
         rescale_grid_res = 1.3
-        rescale_grid_size = 1.0
+        rescale_grid_size = 2.0
     elif lens_ID == 'WFI2033':
         rescale_grid_res = 1.3
         rescale_grid_size = 1.0

@@ -1,6 +1,6 @@
 from samana.Model.model_base import EPLModelBase
 import numpy as np
-import pickle
+from samana.forward_model_util import macromodel_readout_function_eplshear_satellite
 
 
 class _RXJ1131ModelBase(EPLModelBase):
@@ -165,6 +165,10 @@ class _RXJ1131ModelBase(EPLModelBase):
 class RXJ1131ModelEPLM3M4Shear(_RXJ1131ModelBase):
 
     @property
+    def macromodel_readout_function(self):
+        return macromodel_readout_function_eplshear_satellite
+
+    @property
     def prior_lens(self):
         return self.population_gamma_prior
 
@@ -175,7 +179,7 @@ class RXJ1131ModelEPLM3M4Shear(_RXJ1131ModelBase):
             kwargs_lens_macro = [
                 {'theta_E': 1.477157571763176, 'gamma': 2.1957003973362847, 'e1': 0.061215895321337525,
                  'e2': -0.1146635085009388, 'center_x': -0.4268989865545886, 'center_y': 0.04152677365715801, 'a3_a': 0.0,
-                 'delta_phi_m3': -0.29527050533980004, 'a4_a': 0.0, 'delta_phi_m4': -0.6210803143805403},
+                 'a1_a': 0.0, 'delta_phi_m1': 0.0,'delta_phi_m3': -0.29527050533980004, 'a4_a': 0.0, 'delta_phi_m4': -0.6210803143805403},
                 {'gamma1': -0.132352186696442, 'gamma2': 0.03510715565395326, 'ra_0': 0.0, 'dec_0': 0.0},
                 {'theta_E': 0.4319041914345371, 'center_x': -0.29581713909339646, 'center_y': 0.5501448601891118}
             ]
@@ -183,7 +187,7 @@ class RXJ1131ModelEPLM3M4Shear(_RXJ1131ModelBase):
             kwargs_lens_macro = [
                 {'theta_E': 1.477157571763176, 'gamma': 2.1957003973362847, 'e1': 0.061215895321337525,
                  'e2': -0.1146635085009388, 'center_x': -0.4268989865545886, 'center_y': 0.04152677365715801,
-                 'a3_a': 0.0,
+                 'a1_a': 0.0, 'delta_phi_m1': 0.0,'a3_a': 0.0,
                  'delta_phi_m3': -0.29527050533980004, 'a4_a': 0.0, 'delta_phi_m4': -0.6210803143805403},
                 {'gamma1': -0.132352186696442, 'gamma2': 0.03510715565395326, 'ra_0': 0.0, 'dec_0': 0.0},
                 {'theta_E': 0.4319041914345371, 'center_x': self._data.g2x, 'center_y': self._data.g2y}

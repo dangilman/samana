@@ -29,7 +29,6 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   test_mode=False,
                   use_decoupled_multiplane_approximation=True,
                   fixed_realization_list=None,
-                  macromodel_readout_function=None,
                   kappa_scale_subhalos=1.0,
                   log10_bound_mass_cut=None,
                   parallelize=False,
@@ -65,12 +64,13 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     :param use_imaging_data:
     :param fitting_sequence_kwargs:
     :param test_mode:
+    :param use_decoupled_multiplane_approximation:
     :param fixed_realization_list:
-    :param macromodel_readout_function:
     :param kappa_scale_subhalos:
     :param log10_bound_mass_cut:
     :param parallelize:
     :param elliptical_ray_tracing_grid:
+    :param split_image_data_reconstruction:
     :param filter_subhalo_kwargs:
     :return:
     """
@@ -181,7 +181,6 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              test_mode,
                              use_decoupled_multiplane_approximation,
                              fixed_realization,
-                             macromodel_readout_function,
                              kappa_scale_subhalos,
                              log10_bound_mass_cut,
                              elliptical_ray_tracing_grid,
@@ -253,7 +252,6 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 kwargs_model_class, astrometric_uncertainty,
                                                 use_imaging_data, fitting_sequence_kwargs, test_mode,
                                                 use_decoupled_multiplane_approximation, fixed_realization,
-                                                macromodel_readout_function,
                                                 kappa_scale_subhalos, log10_bound_mass_cut,
                                                 elliptical_ray_tracing_grid,
                                                 split_image_data_reconstruction,
@@ -381,20 +379,20 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
 def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_sample_realization,
                             kwargs_sample_source, kwargs_sample_macro_fixed, log_mlow_mass_sheets=6.0, rescale_grid_size=1.0,
                             rescale_grid_resolution=2.0, image_data_grid_resolution_rescale=1.0, verbose=False, seed=None,
-                                   n_pso_particles=10, n_pso_iterations=50, num_threads=1,
-                                   kwargs_model_class={}, astrometric_uncertainty=True,
-                                   use_imaging_data=True,
-                                   fitting_kwargs_list=None,
-                                   test_mode=False,
-                                   use_decoupled_multiplane_approximation=True,
-                                   fixed_realization=None,
-                                   macromodel_readout_function=None,
-                                   kappa_scale_subhalos=1.0,
-                                   log10_bound_mass_cut=None,
-                                   elliptical_ray_tracing_grid=True,
-                                   split_image_data_reconstruction=False,
-                                   tolerance=np.inf,
-                                   filter_subhalo_kwargs=None):
+                           n_pso_particles=10, n_pso_iterations=50, num_threads=1,
+                           kwargs_model_class={}, astrometric_uncertainty=True,
+                           use_imaging_data=True,
+                           fitting_kwargs_list=None,
+                           test_mode=False,
+                           use_decoupled_multiplane_approximation=True,
+                           fixed_realization=None,
+                           kappa_scale_subhalos=1.0,
+                           log10_bound_mass_cut=None,
+                           elliptical_ray_tracing_grid=True,
+                           split_image_data_reconstruction=False,
+                           tolerance=np.inf,
+                           filter_subhalo_kwargs=None,
+                           macromodel_readout_function=None):
     """
 
     :param data_class:
@@ -420,7 +418,6 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     :param test_mode:
     :param use_decoupled_multiplane_approximation:
     :param fixed_realization:
-    :param macromodel_readout_function:
     :param kappa_scale_subhalos:
     :param log10_bound_mass_cut:
     :param elliptical_ray_tracing_grid:
@@ -654,27 +651,12 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         print(kwargs_solution)
         print('\n')
         print(macromodel_samples_fixed_dict)
-    if macromodel_readout_function is not None:
-        samples_macromodel, param_names_macro = macromodel_readout_function(kwargs_solution,
-                                                                            macromodel_samples_fixed_dict)
-    else:
-        param_names_macro = []
-        samples_macromodel = []
-        if use_decoupled_multiplane_approximation:
-            j_max = len(index_lens_split)
-        else:
-            j_max = len(kwargs_model_align)
-        for lm in kwargs_solution[0:j_max]:
-            for key in lm.keys():
-                samples_macromodel.append(lm[key])
-                param_names_macro.append(key)
-        if use_decoupled_multiplane_approximation:
-            for fixed_param in ['satellite_1_theta_E', 'satellite_1_x', 'satellite_1_y',
-                                'satellite_2_theta_E', 'satellite_2_x', 'satellite_2_y']:
-                if fixed_param in macromodel_samples_fixed_dict.keys():
-                    samples_macromodel.append(macromodel_samples_fixed_dict[fixed_param])
-                    param_names_macro.append(fixed_param)
-        samples_macromodel = np.array(samples_macromodel)
+
+    if macromodel_readout_function is None:
+        macromodel_readout_function = model_class.macromodel_readout_function
+
+    samples_macromodel, param_names_macro = macromodel_readout_function(kwargs_solution,
+                                       macromodel_samples_fixed_dict)
 
     if use_imaging_data:
         bic = fitting_sequence.bic

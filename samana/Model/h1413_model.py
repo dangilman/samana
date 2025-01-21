@@ -1,6 +1,6 @@
 from samana.Model.model_base import EPLModelBase
 import numpy as np
-import pickle
+from samana.forward_model_util import macromodel_readout_function_eplshear_satellite
 
 
 class _H1413ModelBase(EPLModelBase):
@@ -76,15 +76,15 @@ class _H1413ModelBase(EPLModelBase):
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25,
              'e1': 0.1, 'e2': 0.1,
-             'center_x': 0.1, 'center_y': 0.1}]
+             'center_x': 0.05, 'center_y': 0.05}]
         kwargs_lower_lens_light = [
             {'R_sersic': 0.001, 'n_sersic': 0.5,
              'e1': -0.5, 'e2': -0.5,
-             'center_x': -10.0, 'center_y': -10.0}]
+             'center_x': -0.25, 'center_y': -0.25}]
         kwargs_upper_lens_light = [
             {'R_sersic': 5, 'n_sersic': 10.0,
              'e1': 0.5, 'e2': 0.5,
-             'center_x': 10, 'center_y': 10}]
+             'center_x': 0.25, 'center_y': 0.25}]
         kwargs_lens_light_fixed = [{}]
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
@@ -114,7 +114,7 @@ class _H1413ModelBase(EPLModelBase):
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True,
-                             'custom_logL_addition': None
+                             'custom_logL_addition': self.generic_axis_ratio_prior
                              }
         return kwargs_likelihood
 
@@ -126,6 +126,10 @@ class H1413ModelEPLM3M4Shear(_H1413ModelBase):
         super(H1413ModelEPLM3M4Shear, self).__init__(data_class, shapelets_order, shapelets_scale_factor)
 
     @property
+    def macromodel_readout_function(self):
+        return macromodel_readout_function_eplshear_satellite
+
+    @property
     def prior_lens(self):
         return [[2, 'center_x', self._data.g2x, 0.05], [2, 'center_y', self._data.g2y, 0.05]]
 
@@ -134,8 +138,9 @@ class H1413ModelEPLM3M4Shear(_H1413ModelBase):
         lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS']
         kwargs_lens_macro = [
             {'theta_E': 0.5945561181171953, 'gamma': 1.9118152489969296, 'e1': -0.27220780635663133,
-             'e2': 0.14288396199766928, 'center_x': 0.027739302935571437, 'center_y': 0.08194389978787217, 'a3_a': 0.0,
-             'delta_phi_m3': -0.2709690505908811, 'a4_a': 0.0, 'delta_phi_m4': 1.9112051591872898},
+             'e2': 0.14288396199766928, 'center_x': 0.027739302935571437, 'center_y': 0.08194389978787217,
+             'a1_a': 0.0, 'delta_phi_m1': -0.2709690505908811, 'a3_a': 0.0, 'delta_phi_m3': -0.2709690505908811,
+             'a4_a': 0.0, 'delta_phi_m4': 1.9112051591872898},
             {'gamma1': -0.08767098811462325, 'gamma2': 0.018614730158481117, 'ra_0': 0.0, 'dec_0': 0.0},
             {'theta_E': 0.5161391605843233, 'center_x': 1.7048249888137141, 'center_y': 3.638644354676061}
         ]

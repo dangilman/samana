@@ -1,7 +1,6 @@
 from samana.Model.model_base import EPLModelBase
 import numpy as np
-import pickle
-
+from samana.forward_model_util import macromodel_readout_function_eplshear_satellite
 
 class _PSJ1606ModelBase(EPLModelBase):
 
@@ -114,6 +113,10 @@ class _PSJ1606ModelBase(EPLModelBase):
 class PSJ1606ModelEPLM3M4Shear(_PSJ1606ModelBase):
 
     @property
+    def macromodel_readout_function(self):
+        return macromodel_readout_function_eplshear_satellite
+
+    @property
     def prior_lens(self):
         return self.population_gamma_prior
 
@@ -123,7 +126,7 @@ class PSJ1606ModelEPLM3M4Shear(_PSJ1606ModelBase):
         kwargs_lens_macro = [
             {'theta_E': 0.6721044430197943, 'gamma': 1.9364928280249465, 'e1': -0.13488767165531232,
              'e2': -0.04224523945300751, 'center_x': 0.013946930634280586, 'center_y': -0.06912566333097787,
-             'a3_a': 0.0, 'delta_phi_m3': 0.4896359685414309, 'a4_a': 0.0, 'delta_phi_m4': -0.041116926982999305},
+             'a1_a': 0.0, 'delta_phi_m1': 0.0,'a3_a': 0.0, 'delta_phi_m3': 0.4896359685414309, 'a4_a': 0.0, 'delta_phi_m4': -0.041116926982999305},
             {'gamma1': 0.06370735243817782, 'gamma2': 0.12175825528023806, 'ra_0': 0.0, 'dec_0': 0.0},
             {'theta_E': 0.0871026401584615, 'center_x': -0.2786378009782961, 'center_y': -1.2375726039851485}
         ]

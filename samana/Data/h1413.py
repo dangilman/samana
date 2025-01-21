@@ -13,7 +13,22 @@ class _H1413(ImagingDataBase):
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
         if image_data_type == 'HST814W':
-            raise Exception('not HST imaging avaialble for this system')
+            from samana.Data.ImageData.h1413_HST814W import image_data
+            from samana.Data.ImageData.psj0147_f814W import psf_model
+            #from samana.Data.ImageData.j0405_814w import psf_error_map
+            self._psf_estimate_init = psf_model
+            self._psf_error_map_init = None
+            self._image_data = image_data
+            self._psf_supersampling_factor = 1
+            self._deltaPix = 0.05
+            self._window_size = 2.8000000000000003
+            self._ra_at_xy_0 = 1.4000000005010238
+            self._dec_at_xy_0 = -1.3999999990815017
+            self._transform_pix2angle = np.array([[-0.05, 0.],
+                                                  [0., 0.05]])
+            self._background_rms = 0.005012
+            self._exposure_time = 5200.0
+            self._noise_map = None
 
         elif image_data_type == 'MIRI540W':
             from samana.Data.ImageData.h1413_MIRI540W import psf_model, image_data, noise_map
@@ -103,6 +118,39 @@ class _H1413(ImagingDataBase):
                       'point_source_supersampling_factor': self._psf_supersampling_factor
                       }
         return kwargs_psf
+
+class H1413_HST(_H1413):
+    g2x = 1.715
+    g2y = 3.650
+    def __init__(self, supersample_factor=1):
+        """
+
+        :param image_position_uncertainties: list of astrometric uncertainties for each image
+        i.e. [0.003, 0.003, 0.003, 0.003]
+        :param flux_uncertainties: list of flux ratio uncertainties in percentage, or None if these are handled
+        post-processing
+        :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
+        :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
+        """
+        x_image = np.array([-0.16336611, 0.58278695, -0.6529185, 0.19349767])
+        y_image = np.array([-0.50028454, -0.33213316, 0.21213795, 0.54027975])
+        horizontal_shift = 0.0
+        vertical_shift = 0.0
+        x_image += horizontal_shift
+        y_image += vertical_shift
+        image_position_uncertainties = [0.005] * 4  # 5 arcsec
+        flux_uncertainties = None
+        uncertainty_in_fluxes = False
+        magnifications = np.array([1.0] * 4)
+        image_data_type = 'HST814W'
+        super(H1413_HST, self).__init__(x_image,
+                                         y_image,
+                                         magnifications,
+                                         image_position_uncertainties,
+                                         flux_uncertainties,
+                                         uncertainty_in_fluxes,
+                                         supersample_factor,
+                                         image_data_type)
 
 class H1413_MIRI(_H1413):
     g2x = 1.715
