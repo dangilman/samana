@@ -134,3 +134,34 @@ class WGD2038_HST(_WGD2038):
         super(WGD2038_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
                                           uncertainty_in_fluxes=False, supersample_factor=supersample_factor)
 
+class WGD2038_HST_AstrometricOffsets(_WGD2038):
+
+    def __init__(self, supersample_factor=1):
+        """
+
+        :param image_position_uncertainties: list of astrometric uncertainties for each image
+        i.e. [0.003, 0.003, 0.003, 0.003]
+        :param flux_uncertainties: list of flux ratio uncertainties in percentage, or None if these are handled
+        post-processing
+        :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
+        :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
+        """
+        # to match narrow-line flux ratios
+        #index_reordering = [3,1,2,0]
+        x_image = np.array([-1.49025, 0.81675, -0.69425, 0.68775])
+        y_image = np.array([0.48425, -1.22275, -1.19375, 0.86825])
+        horizontal_shift = 0.0
+        vertical_shift = 0.0
+        x_image += horizontal_shift
+        y_image += vertical_shift
+        # delta_r = [-0.00485149 -0.00784123 -0.00357889  0.00406346]
+        delta_x_image = np.array([-0.00476707,  0.00463848,  0.00026097,  0.00384329])
+        delta_y_image = np.array([-0.00090109, -0.00632214, -0.00356937, -0.00131938])
+        x_image += delta_x_image
+        y_image += delta_y_image
+        image_position_uncertainties = [0.005] * 4 # 5 arcsec
+        flux_uncertainties = None
+        magnifications = np.array([1.0] * 4)
+        super(WGD2038_HST_AstrometricOffsets, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
+                                          uncertainty_in_fluxes=False, supersample_factor=supersample_factor)
+

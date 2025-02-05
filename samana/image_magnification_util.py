@@ -134,7 +134,7 @@ def mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_
     Ts = cosmo_bkg.T_xy(0, zsource)
     Tds = cosmo_bkg.T_xy(zlens, zsource)
     reduced_to_phys = cosmo_bkg.d_xy(0, zsource) / cosmo_bkg.d_xy(zlens, zsource)
-    flux_array_test = np.zeros(len(grid_x_large))
+    #flux_array_test = np.zeros(len(grid_x_large))
     while True:
         # select new coordinates to ray-trace through
         inds_compute, inds_outside_r, inds_computed = _inds_compute_grid(grid_r, r_min, r_max, inds_compute)
@@ -179,8 +179,8 @@ def mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_
         flux_array[inds_computed] = sb
         flux_array[inds_outside_r] = 0.0
 
-        flux_array_test[inds_computed] = 1.0
-        flux_array_test[inds_outside_r] = 0.0
+        #flux_array_test[inds_computed] = 1.0
+        #flux_array_test[inds_outside_r] = 0.0
 
         magnification_temp = np.sum(flux_array) * grid_resolution ** 2
         diff = (

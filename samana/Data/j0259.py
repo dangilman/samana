@@ -150,3 +150,36 @@ class J0259_HST_F814W(_J0259):
         band = 'F814W'
         super(J0259_HST_F814W, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
                                               uncertainty_in_fluxes, super_sample_factor, band)
+
+class J0259_HST_F814W_AstrometricOffsets(_J0259):
+
+    def __init__(self, super_sample_factor=1):
+        """
+
+        :param image_position_uncertainties: list of astrometric uncertainties for each image
+        i.e. [0.003, 0.003, 0.003, 0.003]
+        :param flux_uncertainties: list of flux ratio uncertainties in percentage, or None if these are handled
+        post-processing
+        :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
+        :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
+        """
+        reorder = [0,1,2,3]
+        x_image = np.array([-0.04273612, -0.79973612,  0.35756388,  0.67526388])[reorder]
+        y_image = np.array([-0.69048947,  0.25951053,  0.57251053, -0.30148947])[reorder]
+        horizontal_shift = 0.00
+        vertical_shift = 0.003
+        x_image += horizontal_shift
+        y_image += vertical_shift
+        #delta_r = [ 0.00665897 -0.01086598 -0.02097221  0.00690206]
+        delta_x_image = np.array([ 0.00654226,  0.00809035, -0.00513224,  0.00290869])
+        delta_y_image = np.array([ 0.00124122,  0.00725367,  0.02033455, -0.00625923])
+        x_image += delta_x_image
+        y_image += delta_y_image
+        image_position_uncertainties = [0.005] * 4 # 5 arcsec
+        flux_uncertainties = None
+        magnifications = np.array([1.0] * 4)
+        uncertainty_in_fluxes= False
+        band = 'F814W'
+        super(J0259_HST_F814W_AstrometricOffsets, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
+                                              uncertainty_in_fluxes, super_sample_factor, band)
+
