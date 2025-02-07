@@ -175,7 +175,7 @@ class J0259_HST_F814W_AstrometricOffsets(_J0259):
         delta_y_image = np.array([ 0.00124122,  0.00725367,  0.02033455, -0.00625923])
         x_image += delta_x_image
         y_image += delta_y_image
-        image_position_uncertainties = [0.005] * 4 # 5 arcsec
+        image_position_uncertainties = [0.005] * 4 # increased from 5
         flux_uncertainties = None
         magnifications = np.array([1.0] * 4)
         uncertainty_in_fluxes= False

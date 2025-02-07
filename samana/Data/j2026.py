@@ -42,10 +42,8 @@ class J2026(_J2026):
                                           uncertainty_in_fluxes=False, z_lens=z_lens)
 
     def redshift_sampling(self):
-        return False
+        return True
 
     def sample_z_lens(self):
-        z_lens = np.random.normal(0.5, 0.2)
-        z_lens = max(z_lens, 0.2)
-        z_lens = min(z_lens, 2.2)
+        z_lens = np.random.uniform(0.2, 1.0)
         return np.round(z_lens, 2)

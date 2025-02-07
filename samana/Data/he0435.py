@@ -195,7 +195,7 @@ class HE0435_NIRCAM(_HE0435):
         x_image += horizontal_shift
         y_image += vertical_shift
         magnifications = [0.96, 0.976, 1.0, 0.65]
-        image_position_uncertainties = [0.005] * 4
+        image_position_uncertainties = [0.005] * 4 # increased from 5
         flux_uncertainties = [0.05, 0.049, 0.048, 0.056]
         uncertainty_in_fluxes = True
         super(HE0435_NIRCAM, self).__init__(x_image, y_image, magnifications, image_position_uncertainties,
