@@ -185,7 +185,7 @@ class PG1115_NIRCAM(_PG1115):
     def kwargs_psf(self):
         kwargs_psf = {'psf_type': 'PIXEL',
                       'kernel_point_source': self._psf_estimate_init / np.sum(self._psf_estimate_init),
-                      'psf_error_map': self._psf_error_map_init,
+                      'psf_variance_map': self._psf_error_map_init,
                       'point_source_supersampling_factor': 1
                       }
         return kwargs_psf
