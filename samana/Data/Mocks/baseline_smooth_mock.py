@@ -24,6 +24,29 @@ class BaselineSmoothMock(MockBase):
                                                            flux_ratio_uncertainties, image_data,
                                                            super_sample_factor)
 
+class BaselineSmoothMockCusp(MockBase):
+
+    def __init__(self, super_sample_factor=1.0):
+
+        z_lens = 0.5
+        z_source = 2.0
+        x_image = np.array([ 0.21444353,  1.10214829,  0.90068483, -0.55478174])
+        y_image = np.array([-1.16268268,  0.20553389, -0.66282107,  0.39551167])
+        magnifications_true = np.array([5.96953758, 6.60914698, 8.81613144, 1.21439187])
+        from samana.Data.ImageData.baseline_smooth_mock_cusp import image_data
+        magnification_measurement_errors = 0.0
+        magnifications = np.array(magnifications_true) + np.array(magnification_measurement_errors)
+        astrometric_uncertainties = [0.00001] * 4
+        flux_ratio_uncertainties = None
+        self.a3a_true = -0.0
+        self.a4a_true = 0.00
+        self.delta_phi_m3_true = 0.0
+        self.delta_phi_m4_true = 0.0
+        super(BaselineSmoothMockCusp, self).__init__(z_lens, z_source, x_image, y_image,
+                                                           magnifications, astrometric_uncertainties,
+                                                           flux_ratio_uncertainties, image_data,
+                                                           super_sample_factor)
+
 class BaselineSmoothMockLowq(MockBase):
 
     def __init__(self, super_sample_factor=1.0):
