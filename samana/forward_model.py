@@ -842,7 +842,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                        'index_macromodel': list(np.arange(0, len(kwargs_result['kwargs_lens']))),
                        'with_critical_curves': True,
                        'v_min': -0.1, 'v_max': 0.1,
-                       'super_sample_factor': 5}
+                       'super_sample_factor': 5,
+                       'subtract_mean': False}
         modelPlot.substructure_plot(band_index=0, **kwargs_plot)
         plt.show()
         a=input('continue?')
