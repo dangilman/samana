@@ -171,6 +171,12 @@ def satellite_galaxy_priors(lens_ID):
             'satellite_2_x': ['GAUSSIAN', -3.7016, 0.05],
             'satellite_2_y': ['GAUSSIAN', 0.0414, 0.05]
         }
+    elif lens_ID == 'M1134':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.4, 0.2],
+            'satellite_1_x': ['GAUSSIAN', 3.127565, 0.05],
+            'satellite_1_y': ['GAUSSIAN', -3.93903, 0.05]
+        }
     else:
         satellite_prior = {}
     return satellite_prior
@@ -246,7 +252,7 @@ def numerics_setup(lens_ID):
         rescale_grid_size = 2.0
     elif lens_ID in ['PG1115', 'PG1115_NIRCAM']:
         rescale_grid_res = 1.3
-        rescale_grid_size = 2.0
+        rescale_grid_size = 2.5
     elif lens_ID == 'PSJ0147':
         rescale_grid_res = 1.3
         rescale_grid_size = 2.5

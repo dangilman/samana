@@ -22,9 +22,9 @@ class _PG1115ModelBase(EPLModelBase):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 26.508023671135287, 'R_sersic': 0.07782968089342661, 'n_sersic': 4.403179084267738,
-             'e1': 0.20890919096969454, 'e2': 0.1916880202287354, 'center_x': -0.022522942468825483,
-             'center_y': 0.12563466846140517}
+            {'amp': 498.6338483531917, 'R_sersic': 0.1611063359090809, 'n_sersic': 4.587266000722903,
+             'e1': -0.029061317690800247, 'e2': -0.024550267213920576, 'center_x': 0.0004111450202642533,
+             'center_y': 0.15368021757678293}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 1.0, 'e1': 0.2, 'e2': 0.2, 'center_x': 0.1,
                                 'center_y': 0.1}]
@@ -53,9 +53,9 @@ class _PG1115ModelBase(EPLModelBase):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
         kwargs_lens_light_init = [
-            {'amp': 17.79328660409551, 'R_sersic': 0.6246009314839133, 'n_sersic': 4.77641982343332,
-             'e1': -0.01152404571524898, 'e2': -0.02358775359542008, 'center_x': -0.039368012822374406,
-             'center_y': -0.017595760001515248}
+            {'amp': 387.6018672764345, 'R_sersic': 0.9366297140343567, 'n_sersic': 6.743254574523031,
+             'e1': 0.022403600775178036, 'e2': -0.0659266694831616, 'center_x': -0.016880130236337134,
+             'center_y': 0.004115812252094602}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
@@ -66,18 +66,16 @@ class _PG1115ModelBase(EPLModelBase):
         kwargs_lens_light_fixed = [{}]
 
         if self._data.band == 'NIRCAM115W':
-            lens_light_model_list += ['SERSIC_ELLIPSE']
-            kwargs_lens_light_init += [
-                {'amp': 1, 'R_sersic': 0.6215124213763222, 'n_sersic': 5.011070108265602, 'e1': -0.005298113309021342,
-                 'e2': -0.1214291478292091, 'center_x': -0.01867512537698528, 'center_y': 0.004351764856603417}
-            ]
-            kwargs_lens_light_sigma += [
-            {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
-            kwargs_lower_lens_light += [
-            {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10.0, 'center_y': -10.0}]
-            kwargs_upper_lens_light += [
-            {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
-            kwargs_lens_light_fixed += [{}]
+            n_max = 5
+            shapelets_list, kwargs_shapelets_init, kwargs_shapelets_sigma, \
+                kwargs_shapelets_fixed, kwargs_lower_shapelets, kwargs_upper_shapelets = \
+                self.add_shapelets_lens(n_max)
+            lens_light_model_list += shapelets_list
+            kwargs_lens_light_init += kwargs_shapelets_init
+            kwargs_lens_light_fixed += kwargs_shapelets_fixed
+            kwargs_lens_light_sigma += kwargs_shapelets_sigma
+            kwargs_lower_lens_light += kwargs_lower_shapelets
+            kwargs_upper_lens_light += kwargs_upper_shapelets
 
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed,
                              kwargs_lower_lens_light,
@@ -109,10 +107,11 @@ class PG1115ModelEPLM1M3M4Shear(_PG1115ModelBase):
         lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR']
         if self._data.band == 'NIRCAMF115W':
             kwargs_lens_macro = [
-                {'theta_E': 1.146794388157141, 'gamma': 2.0, 'e1': 0.07302479386881054, 'e2': -0.029791382569408404,
-                 'center_x': -0.039994569122396795, 'center_y': 0.014323610076049209, 'a3_a': 0.0,
-                  'a1_a': 0.01, 'delta_phi_m1': 0.1,'delta_phi_m3': -0.25822868267439386, 'a4_a': 0.0, 'delta_phi_m4': -0.5135058988689192},
-                {'gamma1': -0.02808702464545221, 'gamma2': -0.10813435935412004, 'ra_0': 0.0, 'dec_0': 0.0}
+                {'theta_E': 1.1433368143806257, 'gamma': 2.195267260231437, 'e1': 0.07033069421094822,
+                 'e2': -0.05353523618672113, 'center_x': -0.03722268271968586, 'center_y': 0.02046786026808224,
+                 'a1_a': 0.0, 'delta_phi_m1': 0.33823761435824107, 'a3_a': 0.0, 'delta_phi_m3': -0.33307053415483157,
+                 'a4_a': 0.0, 'delta_phi_m4': 0.11898793424445868},
+                {'gamma1': -0.04566477118765903, 'gamma2': -0.13016987476487257, 'ra_0': 0.0, 'dec_0': 0.0}
             ]
         else:
             kwargs_lens_macro = [

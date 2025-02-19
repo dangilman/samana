@@ -46,6 +46,23 @@ class EPLModelBase(object):
         pixel_scale = self._data.coordinate_properties[0]
         return pixel_scale * np.sqrt(n_max+1)
 
+    def add_shapelets_lens(self, n_max):
+
+        n_max = int(n_max)
+        source_model_list = ['SHAPELETS']
+        beta_lower_bound = 0.05
+        beta_upper_bound = 0.5
+        beta_sigma = 2.0 * beta_lower_bound
+        beta_init = 3.0 * beta_lower_bound
+        kwargs_source_init = [{'amp': 1.0, 'beta': beta_init, 'center_x': 0.0, 'center_y': 0.0,
+                                'n_max': n_max}]
+        kwargs_source_sigma = [{'amp': 10.0, 'beta': beta_sigma, 'center_x': 0.1, 'center_y': 0.1, 'n_max': 1}]
+        kwargs_lower_source = [{'amp': 10.0, 'beta': beta_lower_bound, 'center_x': -0.2, 'center_y': -0.2, 'n_max': 0}]
+        kwargs_upper_source = [{'amp': 10.0, 'beta': beta_upper_bound, 'center_x': 0.2, 'center_y': 0.2, 'n_max': n_max + 1}]
+        kwargs_source_fixed = [{'n_max': n_max}]
+        return source_model_list, kwargs_source_init, kwargs_source_sigma, \
+               kwargs_source_fixed, kwargs_lower_source, kwargs_upper_source
+
     def add_shapelets_source(self, n_max, beta_init=None):
 
         n_max = int(n_max)
