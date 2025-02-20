@@ -177,6 +177,12 @@ def satellite_galaxy_priors(lens_ID):
             'satellite_1_x': ['GAUSSIAN', 3.127565, 0.05],
             'satellite_1_y': ['GAUSSIAN', -3.93903, 0.05]
         }
+    elif lens_ID == 'J0248':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.08, 0.04],
+            'satellite_1_x': ['GAUSSIAN', 0.99, 0.05],
+            'satellite_1_y': ['GAUSSIAN', -1.46, 0.05]
+        }
     else:
         satellite_prior = {}
     return satellite_prior
@@ -312,7 +318,7 @@ def quick_setup(lens_ID):
         from samana.Model.he0435_model_nircam import HE0435ModelNircamEPLM1M3M4Shear as model_class
     elif lens_ID == 'J0248':
         from samana.Data.j0248 import J0248_MIRI as data_class
-        from samana.Model.j0248_model import J0248ModelEPLM3M4Shear as model_class
+        from samana.Model.j0248_model import J0248ModelEPLM3M4ShearSatellite as model_class
     elif lens_ID == 'J0248_HST':
         from samana.Data.j0248 import J0248_HST as data_class
         from samana.Model.j0248_model import J0248ModelEPLM3M4Shear as model_class
