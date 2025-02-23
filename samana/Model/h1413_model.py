@@ -171,3 +171,67 @@ class H1413ModelEPLM3M4Shear(_H1413ModelBase):
         lens_model_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_lens_fixed, kwargs_lower_lens,
                              kwargs_upper_lens]
         return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
+
+class H1413ModelEPLM3M4ShearTwoSatellites(_H1413ModelBase):
+    # neither companion appears to affect the lens model very much
+    satellite_x1 = 1.70482
+    satellite_y1 = 3.64
+    satellite_x2 = -4.4
+    satellite_y2 = 0.2
+    def __init__(self, data_class, shapelets_order=None, shapelets_scale_factor=2.0):
+        # shapelets scale factor set to 2; lens model changes with increasing nmax suggesting
+        # shapelets are fitting psf noise
+        super(H1413ModelEPLM3M4ShearTwoSatellites, self).__init__(data_class, shapelets_order, shapelets_scale_factor)
+
+    @property
+    def macromodel_readout_function(self):
+        return macromodel_readout_function_eplshear_satellite
+
+    @property
+    def prior_lens(self):
+        return None
+        #return [[2, 'center_x', self._data.g2x, 0.05], [2, 'center_y', self._data.g2y, 0.05]]
+
+    def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
+
+        lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS', 'SIS']
+        kwargs_lens_macro = [
+            {'theta_E': 0.5945561181171953, 'gamma': 1.9118152489969296, 'e1': -0.27220780635663133,
+             'e2': 0.14288396199766928, 'center_x': 0.027739302935571437, 'center_y': 0.08194389978787217,
+             'a1_a': 0.0, 'delta_phi_m1': -0.2709690505908811, 'a3_a': 0.0, 'delta_phi_m3': -0.2709690505908811,
+             'a4_a': 0.0, 'delta_phi_m4': 1.9112051591872898},
+            {'gamma1': -0.08767098811462325, 'gamma2': 0.018614730158481117, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.5161391605843233, 'center_x': self.satellite_x1, 'center_y': self.satellite_y1},
+            {'theta_E': 0.5161391605843233, 'center_x': self.satellite_x2, 'center_y': self.satellite_y2}
+        ]
+        redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens, self._data.z_lens]
+        index_lens_split = [0, 1, 2, 3]
+        if kwargs_lens_macro_init is not None:
+            for i in range(0, len(kwargs_lens_macro_init)):
+                for param_name in kwargs_lens_macro_init[i].keys():
+                    kwargs_lens_macro[i][param_name] = kwargs_lens_macro_init[i][param_name]
+        kwargs_lens_init = kwargs_lens_macro
+        kwargs_lens_sigma = [{'theta_E': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'e1': 0.2, 'e2': 0.2, 'gamma': 0.1,
+                              'a1_a': 0.01, 'delta_phi_m1': 0.1,'a4_a': 0.01, 'a3_a': 0.005, 'delta_phi_m3': np.pi/12, 'delta_phi_m4': np.pi/16},
+                             {'gamma1': 0.1, 'gamma2': 0.1},
+                             {'theta_E': 0.2, 'center_x': 0.05, 'center_y': 0.05},
+                             {'theta_E': 0.2, 'center_x': 0.05, 'center_y': 0.05}
+                             ]
+        kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0},{},{}]
+        kwargs_lower_lens = [
+            {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.6, 'a4_a': -0.1,
+             'a1_a': -0.1, 'delta_phi_m1': -np.pi,'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
+            {'gamma1': -0.5, 'gamma2': -0.5},
+        {'theta_E': 0.0, 'center_x': self.satellite_x1 - 0.3, 'center_y': self.satellite_y1 - 0.3},
+        {'theta_E': 0.0, 'center_x': self.satellite_x2 - 0.3, 'center_y': self.satellite_y2 - 0.3}]
+        kwargs_upper_lens = [
+            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.4, 'a4_a': 0.1,
+             'a1_a': 0.1, 'delta_phi_m1': np.pi,'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
+            {'gamma1': 0.5, 'gamma2': 0.5},
+            {'theta_E': 1.0, 'center_x': self.satellite_x1 + 0.3, 'center_y': self.satellite_y1 + 0.3},
+            {'theta_E': 1.0, 'center_x': self.satellite_x2 + 0.3, 'center_y': self.satellite_y2 + 0.3}]
+        kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
+                                                                             kwargs_lens_init, macromodel_samples_fixed)
+        lens_model_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_lens_fixed, kwargs_lower_lens,
+                             kwargs_upper_lens]
+        return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params

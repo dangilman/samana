@@ -215,7 +215,7 @@ def numerics_setup(lens_ID):
         rescale_grid_size = 1.4
         rescale_grid_res = 1.1
     elif lens_ID == 'J0607':
-        rescale_grid_res = 1.1
+        rescale_grid_res = 2.
         rescale_grid_size = 5.0
     elif lens_ID == 'J0608':
         rescale_grid_size = 2.0
@@ -231,7 +231,7 @@ def numerics_setup(lens_ID):
         rescale_grid_res = 1.2
     elif lens_ID in ['J1042', 'J1042_814W']:
         rescale_grid_size = 4.0
-        rescale_grid_res = 1.2
+        rescale_grid_res = 2.
     elif lens_ID == 'J1131':
         rescale_grid_res = 1.3
         rescale_grid_size = 2.5
@@ -260,7 +260,7 @@ def numerics_setup(lens_ID):
         rescale_grid_res = 1.3
         rescale_grid_size = 2.5
     elif lens_ID == 'PSJ0147':
-        rescale_grid_res = 1.3
+        rescale_grid_res = 2.
         rescale_grid_size = 2.5
     elif lens_ID == 'PSJ1606':
         rescale_grid_res = 1.3
