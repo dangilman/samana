@@ -99,7 +99,6 @@ class _H1413ModelBase(EPLModelBase):
             kwargs_lens_light_fixed += kwargs_uniform_fixed
             kwargs_lower_lens_light += kwargs_uniform_lower
             kwargs_upper_lens_light += kwargs_uniform_upper
-
         return lens_light_model_list, lens_light_params
 
     @property
@@ -140,7 +139,7 @@ class H1413ModelEPLM3M4Shear(_H1413ModelBase):
             {'theta_E': 0.5945561181171953, 'gamma': 1.9118152489969296, 'e1': -0.27220780635663133,
              'e2': 0.14288396199766928, 'center_x': 0.027739302935571437, 'center_y': 0.08194389978787217,
              'a1_a': 0.0, 'delta_phi_m1': -0.2709690505908811, 'a3_a': 0.0, 'delta_phi_m3': -0.2709690505908811,
-             'a4_a': 0.0, 'delta_phi_m4': 1.9112051591872898},
+             'a4_a': 0.0, 'delta_phi_m4': 0.0},
             {'gamma1': -0.08767098811462325, 'gamma2': 0.018614730158481117, 'ra_0': 0.0, 'dec_0': 0.0},
             {'theta_E': 0.5161391605843233, 'center_x': 1.7048249888137141, 'center_y': 3.638644354676061}
         ]
@@ -152,18 +151,19 @@ class H1413ModelEPLM3M4Shear(_H1413ModelBase):
                     kwargs_lens_macro[i][param_name] = kwargs_lens_macro_init[i][param_name]
         kwargs_lens_init = kwargs_lens_macro
         kwargs_lens_sigma = [{'theta_E': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'e1': 0.2, 'e2': 0.2, 'gamma': 0.1,
-                              'a1_a': 0.01, 'delta_phi_m1': 0.1,'a4_a': 0.01, 'a3_a': 0.005, 'delta_phi_m3': np.pi/12, 'delta_phi_m4': np.pi/16},
+                              'a1_a': 0.01, 'delta_phi_m1': 0.1,'a4_a': 0.01, 'a3_a': 0.005, 'delta_phi_m3': np.pi/12,
+                              'delta_phi_m4': np.pi/16},
                              {'gamma1': 0.1, 'gamma2': 0.1},
                              {'theta_E': 0.05, 'center_x': 0.05, 'center_y': 0.05}]
         kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0},{}]
         kwargs_lower_lens = [
             {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.6, 'a4_a': -0.1,
-             'a1_a': -0.1, 'delta_phi_m1': -np.pi,'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
+             'a1_a': -0.1, 'delta_phi_m1': -np.pi,'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -np.pi/8},
             {'gamma1': -0.5, 'gamma2': -0.5},
         {'theta_E': 0.0, 'center_x': self._data.g2x - 0.25, 'center_y': self._data.g2y - 0.25}]
         kwargs_upper_lens = [
             {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.4, 'a4_a': 0.1,
-             'a1_a': 0.1, 'delta_phi_m1': np.pi,'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
+             'a1_a': 0.1, 'delta_phi_m1': np.pi,'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': np.pi/8},
             {'gamma1': 0.5, 'gamma2': 0.5},
         {'theta_E': 1.2, 'center_x': self._data.g2x + 0.25, 'center_y': self._data.g2y + 0.25}]
         kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,

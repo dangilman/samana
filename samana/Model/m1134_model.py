@@ -190,6 +190,11 @@ class M1134ModelEPLM3M4ShearSatellite(_M1134ModelBase):
     satellite_x = 3.208
     satellite_y = -3.962
     # https://arxiv.org/pdf/1803.07175
+
+    def __init__(self, data_class, shapelets_order=None, shapelets_scale_factor=1.,z_satellite=None):
+        self.z_satellite = z_satellite
+        super(M1134ModelEPLM3M4ShearSatellite, self).__init__(data_class, shapelets_order, shapelets_scale_factor)
+
     @property
     def macromodel_readout_function(self):
         return macromodel_readout_function_eplshear_satellite
@@ -202,7 +207,14 @@ class M1134ModelEPLM3M4ShearSatellite(_M1134ModelBase):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS']
         if self._data.band == 'HST814W':
-            raise Exception('check satellite position for this band')
+            kwargs_lens_macro = [
+                {'theta_E': 1.2538458206724918, 'gamma': 2.1412808808936803, 'e1': -0.06757637857085863,
+                 'e2': -0.3019387416020553, 'center_x': -0.056292260390534865, 'center_y': 0.10078365009266271,
+                 'a1_a': 0.0, 'delta_phi_m1': 0.07187266291712717, 'a3_a': 0.0, 'delta_phi_m3': -0.1600946826180891,
+                 'a4_a': 0.0, 'delta_phi_m4': 0.8546894636076561},
+                {'gamma1': -0.009038698270235155, 'gamma2': 0.2656514815616688, 'ra_0': 0.0, 'dec_0': 0.0},
+                {'theta_E': 0.3405663046781864, 'center_x': 3.12756591154999, 'center_y': -3.939035612825615}
+            ]
         elif self._data.band == 'MIRI560W':
             kwargs_lens_macro = [
                 {'theta_E': 1.2538458206724918, 'gamma': 2.1412808808936803, 'e1': -0.06757637857085863,
@@ -212,7 +224,11 @@ class M1134ModelEPLM3M4ShearSatellite(_M1134ModelBase):
                 {'gamma1': -0.009038698270235155, 'gamma2': 0.2656514815616688, 'ra_0': 0.0, 'dec_0': 0.0},
                 {'theta_E': 0.3405663046781864, 'center_x': 3.12756591154999, 'center_y': -3.939035612825615}
             ]
-        redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
+        if self.z_satellite is None:
+            z_satellite = self._data.z_lens
+        else:
+            z_satellite = self.z_satellite
+        redshift_list_macro = [self._data.z_lens, self._data.z_lens, z_satellite]
         index_lens_split = [0, 1, 2]
         if kwargs_lens_macro_init is not None:
             for i in range(0, len(kwargs_lens_macro_init)):

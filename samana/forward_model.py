@@ -852,6 +852,18 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         realization_samples = np.append(realization_samples, z_lens)
         realization_param_names += ['z_lens']
 
+    if 'HIERARCHICAL_MULTIPOLE_PRIOR' in list(kwargs_sample_macro_fixed.keys()):
+        for index, name in enumerate(param_names_macro_fixed):
+            if name == 'scale_multipole':
+                break
+        else:
+            raise Exception('you specified HIERARCHICAL_MULTIPOLE_PRIOR but the sampled macrmodel arguments dont contain'
+                            'the required keywords')
+        realization_samples = np.append(realization_samples,samples_macromodel_fixed[index])
+        realization_param_names += ['scale_multipole']
+        if verbose:
+            print('hierachical multipole scaling: ', realization_samples[-1])
+
     return magnifications, images, realization_samples, source_samples, samples_macromodel, samples_macromodel_fixed, \
            logL_imaging_data, fitting_sequence, \
            stat, log_flux_ratio_likelihood, bic, realization_param_names, \

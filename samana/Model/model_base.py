@@ -164,7 +164,6 @@ class EPLModelBase(object):
         else:
             return -0.5 * (q - 0.9) ** 2 / 0.1 ** 2
 
-
     def shapelet_source_clump(self, center_x, center_y, n_max_clump=4, beta_clump=0.05):
 
         source_model_list = ['SHAPELETS']

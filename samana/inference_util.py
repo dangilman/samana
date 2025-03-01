@@ -18,6 +18,19 @@ def compute_fluxratio_summarystat(flux_ratios, measured_flux_ratios, measurement
     stat = np.sqrt(-2 * compute_fluxratio_logL(perturbed_flux_ratio, measured_flux_ratios, sigmas))
     return stat
 
+def compute_logfluxratio_summarystat(flux_ratios, measured_flux_ratios, measurement_uncertainties):
+
+    perturbed_flux_ratio = np.empty_like(flux_ratios)
+    for i in range(0, 3):
+        if measurement_uncertainties[i] == 10 or measurement_uncertainties[i]==-1:
+            perturbed_flux_ratio[:, i] = measured_flux_ratios[i]
+        else:
+            perturbed_flux_ratio[:, i] = np.random.normal(flux_ratios[:, i],
+                                                          measurement_uncertainties[i])
+    df = np.log(perturbed_flux_ratio) - np.log(measured_flux_ratios)
+    stat = np.sqrt(np.sum(df**2, axis=1))
+    return stat
+
 def compute_fluxratio_logL(flux_ratios, measured_flux_ratios, measurement_uncertainties):
     fr_logL = 0
     for i in range(0, len(measured_flux_ratios)):
@@ -61,14 +74,32 @@ def downselect_fluxratio_likelihood_summary(params, flux_ratios, measured_flux_r
     print('number of good fits (reduced chi^2 < 1): ', np.sum(reduced_chi2 < 1))
     return params_out, normalized_weights
 
+def downselect_logfluxratio_likelihood_summary(params, flux_ratios, measured_flux_ratios,
+                                    measurement_uncertainties, n_keep, w_custom=1.0):
+
+    params_out = deepcopy(params)
+    stat = np.log(flux_ratios) - np.log(measured_flux_ratios)
+    stat = np.sqrt(np.sum(stat ** 2, axis=1))
+    best_inds = np.argsort(stat)[0:n_keep]
+    importance_weights = np.zeros_like(stat)
+    importance_weights[best_inds] = 1.0
+    importance_weights *= w_custom
+    normalized_weights = importance_weights / np.max(importance_weights)
+    return params_out, normalized_weights
+
 def downselect_fluxratio_summary_stats(params, flux_ratios, measured_flux_ratios,
                                        measurement_uncertainties, n_keep,
-                                       n_bootstraps=1, w_custom=1.0):
+                                       n_bootstraps=0, w_custom=1.0,
+                                       use_log_statistic=True):
 
     kept_index_list = []
     params_out = deepcopy(params)
     normalized_weights = np.zeros(flux_ratios.shape[0])
-    fluxratio_summary_statistic = compute_fluxratio_summarystat(flux_ratios, measured_flux_ratios,
+    if use_log_statistic:
+        fluxratio_summary_statistic = compute_logfluxratio_summarystat(flux_ratios, measured_flux_ratios,
+                                                                    measurement_uncertainties)
+    else:
+        fluxratio_summary_statistic = compute_fluxratio_summarystat(flux_ratios, measured_flux_ratios,
                                                                 measurement_uncertainties)
     best_inds = np.argsort(fluxratio_summary_statistic)[0:n_keep]
     normalized_weights[best_inds] = 1.0
@@ -76,7 +107,11 @@ def downselect_fluxratio_summary_stats(params, flux_ratios, measured_flux_ratios
     kept_index_list += list(best_inds)
     for n in range(0, n_bootstraps):
         _normalized_weights = np.zeros(flux_ratios.shape[0])
-        _fluxratio_summary_statistic = compute_fluxratio_summarystat(flux_ratios, measured_flux_ratios,
+        if use_log_statistic:
+            _fluxratio_summary_statistic = compute_logfluxratio_summarystat(flux_ratios, measured_flux_ratios,
+                                                                     measurement_uncertainties)
+        else:
+            _fluxratio_summary_statistic = compute_fluxratio_summarystat(flux_ratios, measured_flux_ratios,
                                                                      measurement_uncertainties)
         _best_inds = np.argsort(_fluxratio_summary_statistic)[0:n_keep]
         _normalized_weights[_best_inds] = 1.0
@@ -107,7 +142,9 @@ def compute_likelihoods(output_class,
                         macro_param_weights=None,
                         dm_param_weights=None,
                         bandwidth_scale=0.75,
-                        flux_ratio_likelihood_summary=True):
+                        flux_ratio_likelihood_summary=False,
+                        log_flux_ratio_likelihood_summary=False,
+                        use_log_statistic=True):
 
     param_ranges_dm = [param_ranges_dm_dict[param_name] for param_name in dm_param_names]
     # first down-select on imaging data likelihood
@@ -165,7 +202,19 @@ def compute_likelihoods(output_class,
                                                                          w_custom)
 
     else:
-        if flux_ratio_likelihood_summary:
+        if log_flux_ratio_likelihood_summary is True and flux_ratio_likelihood_summary is True:
+            raise Exception('log_flux_ratio_likelihood_summary and flux_ratio_likelihood_summary cannot be both True')
+
+        if log_flux_ratio_likelihood_summary:
+
+            params_out, normalized_weights = downselect_logfluxratio_likelihood_summary(params,
+                                                                                     flux_ratios,
+                                                                                     measured_flux_ratios,
+                                                                                     measurement_uncertainties,
+                                                                                     n_keep,
+                                                                                     w_custom)
+        elif flux_ratio_likelihood_summary:
+
             params_out, normalized_weights = downselect_fluxratio_likelihood_summary(params,
                                                                                      flux_ratios,
                                                                                      measured_flux_ratios,
@@ -174,13 +223,15 @@ def compute_likelihoods(output_class,
                                                                                      w_custom)
 
         else:
+            print('using log-likelihood as flux ratio summary statistic')
             params_out, normalized_weights = downselect_fluxratio_summary_stats(params,
                                                                             flux_ratios,
                                                                             measured_flux_ratios,
                                                                             measurement_uncertainties,
                                                                             n_keep,
                                                                             n_bootstraps,
-                                                                            w_custom)
+                                                                            w_custom,
+                                                                            use_log_statistic=use_log_statistic)
 
     pdf_imgdata_fr = DensitySamples(params_out,
                                     param_names=dm_param_names,

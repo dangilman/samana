@@ -166,7 +166,7 @@ class HE0435ModelNircamEPLM1M3M4ShearObservedConvention(_HE0435NircamModelBase):
     def prior_lens(self):
         return [[0, 'gamma', 2.0, 0.1],
                 [2, 'center_x', self._data.gx, 0.2],
-                [2, 'center_y', self._data.gx, 0.2],
+                [2, 'center_y', self._data.gy, 0.2],
                 [2, 'theta_E', 0.25, 0.1]
                 ]
 

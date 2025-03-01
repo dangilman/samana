@@ -93,7 +93,7 @@ def sample_prior(kwargs_prior):
             prior_samples_dict['delta_phi_m1'] = delta_phi_m1
             prior_samples_dict['delta_phi_m3'] = delta_phi_m3
             prior_samples_dict['delta_phi_m4'] = delta_phi_m4
-            sample_list += [a3a, a4a, delta_phi_m3, delta_phi_m4]
+            sample_list += [a1a, a3a, a4a, delta_phi_m1, delta_phi_m3, delta_phi_m4]
             sample_names += ['a1_a', 'a3_a', 'a4_a', 'delta_phi_m1', 'delta_phi_m3', 'delta_phi_m4']
             joint_multipole_prior_used = True
         elif param_name == '134_MUTLIPOLE_PRIOR':
@@ -109,7 +109,7 @@ def sample_prior(kwargs_prior):
             prior_samples_dict['delta_phi_m1'] = delta_phi_m1
             prior_samples_dict['delta_phi_m3'] = delta_phi_m3
             prior_samples_dict['delta_phi_m4'] = delta_phi_m4
-            sample_list += [a3a, a4a, delta_phi_m3, delta_phi_m4]
+            sample_list += [a1a, a3a, a4a, delta_phi_m1, delta_phi_m3, delta_phi_m4]
             sample_names += ['a1_a', 'a3_a', 'a4_a', 'delta_phi_m1', 'delta_phi_m3', 'delta_phi_m4']
             joint_multipole_prior_used = True
         elif param_name == '34_MUTLIPOLE_PRIOR':
@@ -125,7 +125,7 @@ def sample_prior(kwargs_prior):
             prior_samples_dict['delta_phi_m1'] = delta_phi_m1
             prior_samples_dict['delta_phi_m3'] = delta_phi_m3
             prior_samples_dict['delta_phi_m4'] = delta_phi_m4
-            sample_list += [a3a, a4a, delta_phi_m3, delta_phi_m4]
+            sample_list += [a1a, a3a, a4a, delta_phi_m1, delta_phi_m3, delta_phi_m4]
             sample_names += ['a1_a', 'a3_a', 'a4_a', 'delta_phi_m1', 'delta_phi_m3', 'delta_phi_m4']
             joint_multipole_prior_used = True
         elif param_name == 'NO_MUTLIPOLE_PRIOR':
@@ -141,9 +141,35 @@ def sample_prior(kwargs_prior):
             prior_samples_dict['delta_phi_m1'] = delta_phi_m1
             prior_samples_dict['delta_phi_m3'] = delta_phi_m3
             prior_samples_dict['delta_phi_m4'] = delta_phi_m4
-            sample_list += [a3a, a4a, delta_phi_m3, delta_phi_m4]
+            sample_list += [a1a, a3a, a4a, delta_phi_m1, delta_phi_m3, delta_phi_m4]
             sample_names += ['a1_a', 'a3_a', 'a4_a', 'delta_phi_m1', 'delta_phi_m3', 'delta_phi_m4']
             joint_multipole_prior_used = True
+        elif param_name == 'HIERARCHICAL_MULTIPOLE_PRIOR':
+            prior_type = kwargs_prior[param_name][0]
+            if prior_type == 'UNIFORM':
+                param_min, param_max = kwargs_prior[param_name][1], kwargs_prior[param_name][2]
+                scale_multipole = np.random.uniform(param_min, param_max)
+            elif prior_type == 'GAUSSIAN':
+                mean, standard_dev = kwargs_prior[param_name][1], kwargs_prior[param_name][2]
+                scale_multipole = np.random.normal(mean, standard_dev)
+            else:
+                raise Exception('prior type must be UNIFORM or GAUSSIAN')
+            a1a = np.random.normal(0.0, scale_multipole*0.005)
+            a3a = np.random.normal(0.0, scale_multipole*0.005)
+            a4a = np.random.normal(0.0, scale_multipole*0.01)
+            delta_phi_m1 = np.random.uniform(-np.pi, np.pi)
+            delta_phi_m3 = np.random.uniform(-np.pi / 6, np.pi / 6)
+            delta_phi_m4 = np.random.uniform(-np.pi / 8, np.pi / 8)
+            prior_samples_dict['a1_a'] = a1a
+            prior_samples_dict['a3_a'] = a3a
+            prior_samples_dict['a4_a'] = a4a
+            prior_samples_dict['delta_phi_m1'] = delta_phi_m1
+            prior_samples_dict['delta_phi_m3'] = delta_phi_m3
+            prior_samples_dict['delta_phi_m4'] = delta_phi_m4
+            sample_list += [scale_multipole, a1a, a3a, a4a, delta_phi_m1, delta_phi_m3, delta_phi_m4]
+            sample_names += ['scale_multipole', 'a1_a', 'a3_a', 'a4_a', 'delta_phi_m1', 'delta_phi_m3', 'delta_phi_m4']
+            joint_multipole_prior_used = True
+
         else:
             prior_type = kwargs_prior[param_name][0]
             if prior_type == 'FIXED':

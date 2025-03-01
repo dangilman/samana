@@ -62,7 +62,8 @@ def setup_macromodel_inference_plot(output, mock_data_class,
     return like, param_ranges_density
 
 def mock_lens_data_plot(image_sim, window_size, vminmax=1.5, cmap='gist_heat', label='', zd='', zs='',
-                        save_fig=False, filename=None, x_image=None, y_image=None):
+                        save_fig=False, filename=None, x_image=None, y_image=None, image_labels=None,
+                        delta_x_label=None, delta_y_label=None):
     fig = plt.figure(1)
     fig.set_size_inches(8, 8)
     ax = plt.subplot(111)
@@ -82,10 +83,15 @@ def mock_lens_data_plot(image_sim, window_size, vminmax=1.5, cmap='gist_heat', l
                 xycoords='axes fraction', fontsize=24, color='w')
     cbar = plt.colorbar(im, fraction=0.046, pad=0.01)
     cbar.set_label(r'$\log_{10} \ \rm{flux}$', fontsize=25)
-    image_labels = ['A', 'B', 'C', 'D']
+    if image_labels is None:
+        image_labels = ['A', 'B', 'C', 'D']
+    if delta_x_label is None:
+        delta_x_label = [-0.08] *4
+    if delta_y_label is None:
+        delta_y_label = [0.1] * 4
     if x_image is not None:
         for i in range(0, 4):
-            ax.annotate(image_labels[i], xy=(x_image[i]+0.08, y_image[i]+0.08), color='w', fontsize=22)
+            ax.annotate(image_labels[i], xy=(x_image[i]+delta_x_label[i], y_image[i]+delta_y_label[i]), color='w', fontsize=22)
     plt.tight_layout()
     if save_fig:
         plt.savefig(filename)

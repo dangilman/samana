@@ -167,8 +167,8 @@ class H1413_MIRI(_H1413):
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
 
-        x_image = np.array([-0.15336611, 0.59278695, -0.6429185, 0.20349767])
-        y_image = np.array([-0.48028454, -0.31213316, 0.23213795, 0.56027975])
+        x_image = np.array([-0.15336611, 0.59278695, -0.6429185, 0.20349767])[[1,0,2,3]]
+        y_image = np.array([-0.48028454, -0.31213316, 0.23213795, 0.56027975])[[1,0,2,3]]
         horizontal_shift = -0.005
         vertical_shift = -0.02
         x_image += horizontal_shift

@@ -174,7 +174,7 @@ class WFI2033NircamModelEPLM3M4Shear(_WFI2033ModelNircamBase):
         kwargs_lens_macro = [
             {'theta_E': 1.00073793658843, 'gamma': 2.117963495872616, 'e1': -0.0431186975201338,
              'e2': 0.10661592549492657, 'center_x': 0.02864739269529095, 'center_y': -0.01591947145914082, 'a3_a': 0.0,
-             'a1_a': 0.01, 'delta_phi_m1': 0.1,'delta_phi_m3': 0.3650468716845697, 'a4_a': 0.0, 'delta_phi_m4': 0.8765892899103462},
+             'a1_a': 0.01, 'delta_phi_m1': 0.1,'delta_phi_m3': 0.3650468716845697, 'a4_a': 0.0, 'delta_phi_m4': 0.},
             {'gamma1': 0.18179565065440584, 'gamma2': -0.08206855255720198, 'ra_0': 0.0, 'dec_0': 0.0},
             {'theta_E': 0.07397118742374756, 'center_x': 0.2732173973136928, 'center_y': 2.0044491965512194},
             {'theta_E': 0.9620899082928352, 'center_x': -3.6842267732585654, 'center_y': 0.12452244355145467}
@@ -195,13 +195,13 @@ class WFI2033NircamModelEPLM3M4Shear(_WFI2033ModelNircamBase):
         kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}, {}, {}]
         kwargs_lower_lens = [
             {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.6, 'a4_a': -0.1,
-             'a1_a': -0.1, 'delta_phi_m1': -np.pi,'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
+             'a1_a': -0.1, 'delta_phi_m1': -np.pi,'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -np.pi/8},
             {'gamma1': -0.5, 'gamma2': -0.5},
             {'theta_E': 0.001, 'center_x': -10, 'center_y': -10},
             {'theta_E': 0.5, 'center_x': -10, 'center_y': -10}]
         kwargs_upper_lens = [
             {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.4, 'a4_a': 0.1,
-             'a1_a': 0.1, 'delta_phi_m1': np.pi,'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
+             'a1_a': 0.1, 'delta_phi_m1': np.pi,'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': np.pi/8},
             {'gamma1': 0.5, 'gamma2': 0.5},
         {'theta_E': 0.6, 'center_x': 10, 'center_y': 10},
             {'theta_E': 1.2, 'center_x': 10, 'center_y': 10}
