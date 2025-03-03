@@ -168,8 +168,8 @@ def satellite_galaxy_priors(lens_ID):
             'satellite_1_x': ['GAUSSIAN', 0.273217, 0.05],
             'satellite_1_y': ['GAUSSIAN', 2.00444, 0.05],
             'satellite_2_theta_E': ['GAUSSIAN', 0.9, 0.1],
-            'satellite_2_x': ['GAUSSIAN', -3.7016, 0.05],
-            'satellite_2_y': ['GAUSSIAN', 0.0414, 0.05]
+                'satellite_2_x': ['GAUSSIAN', -3.52, 0.1],
+                'satellite_2_y': ['GAUSSIAN', 0.033, 0.1]
         }
     elif lens_ID == 'M1134':
         satellite_prior = {
