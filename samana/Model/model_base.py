@@ -39,7 +39,8 @@ class EPLModelBase(object):
 
     @property
     def beta_max(self):
-        return self.beta_min * 7.0
+        #return self.beta_min * 7.0
+        return self.beta_min * 5
 
     def beta_scale_param(self, n_max):
 
@@ -67,7 +68,7 @@ class EPLModelBase(object):
 
         n_max = int(n_max)
         source_model_list = ['SHAPELETS']
-        beta_lower_bound = self.beta_min
+        beta_lower_bound = self.beta_min / self._data.kwargs_numerics['supersampling_factor']
         beta_upper_bound = self.beta_max
         if beta_init is None:
             beta_sigma = 2.0 * beta_lower_bound
@@ -115,7 +116,7 @@ class EPLModelBase(object):
     @property
     def population_gamma_prior(self):
         # free the prior
-        return [[0, 'gamma', 2.08, 10.0]]
+        return []
 
     def lens_mass_lens_light_alignment(self, kwargs_lens,
                 kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,

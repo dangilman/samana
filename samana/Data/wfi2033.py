@@ -117,8 +117,6 @@ class WFI2033_HST(_WFI2033):
 
 class WFI2033_NIRCAM(_WFI2033):
 
-    gx1, gy1 = 0.28, 2.02
-    gx2, gy2 = -3.9, -0.05
     def __init__(self, supersample_factor=1.0):
         """
 

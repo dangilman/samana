@@ -35,22 +35,19 @@ class _WFI2033ModelNircamBase(EPLModelBase):
     @property
     def kwargs_constraints(self):
         joint_source_with_point_source = [[0, 0]]
-        joint_lens_with_light = [[1, 2, ['center_x', 'center_y']]]
+        joint_lens_with_light = [[2, 2, ['center_x', 'center_y']]]
+        joint_lens_light_with_lens_light = [[0,1,['center_x', 'center_y']]]
         kwargs_constraints = {'joint_source_with_point_source': joint_source_with_point_source,
                               'num_point_source_list': [len(self._data.x_image)],
                               'solver_type': 'PROFILE_SHEAR',
                               'point_source_offset': True,
                               'joint_lens_with_light': joint_lens_with_light,
-                              #'joint_lens_light_with_lens_light': joint_lens_light_with_lens_light,
+                              'joint_lens_light_with_lens_light': joint_lens_light_with_lens_light,
                               'image_plane_source_list': self._image_plane_source_list
                               }
         if self._shapelets_order is not None:
             kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
         return kwargs_constraints
-
-    @property
-    def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.1]]
 
     def setup_source_light_model(self):
 
@@ -121,7 +118,7 @@ class _WFI2033ModelNircamBase(EPLModelBase):
         add_uniform_light = True
         if add_uniform_light:
             kwargs_uniform, kwargs_uniform_sigma, kwargs_uniform_fixed, \
-            kwargs_uniform_lower, kwargs_uniform_upper = self.add_uniform_lens_light(-12.6447)
+            kwargs_uniform_lower, kwargs_uniform_upper = self.add_uniform_lens_light(60)
             lens_light_model_list += ['UNIFORM']
             kwargs_lens_light_init += kwargs_uniform
             kwargs_lens_light_sigma += kwargs_uniform_sigma
@@ -150,8 +147,9 @@ class _WFI2033ModelNircamBase(EPLModelBase):
 
 class WFI2033NircamModelEPLM3M4Shear(_WFI2033ModelNircamBase):
 
-    gx2_phys = -3.7016
-    gy2_phys = 0.0414
+    gx1, gy1 = 0.28, 2.02
+    gx2_phys = -3.62
+    gy2_phys = -0.118
 
     @property
     def macromodel_readout_function(self):
@@ -159,25 +157,18 @@ class WFI2033NircamModelEPLM3M4Shear(_WFI2033ModelNircamBase):
 
     @property
     def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.1], [0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005],
-                [2, 'center_x', self._data.gx1, 0.05],
-                [2, 'center_y', self._data.gy1, 0.05],
-                [2, 'theta_E', 0.05, 0.1],
-                #[3, 'center_x', self.gx2_phys, 0.1],
-                #[3, 'center_y', self.gy2_phys, 0.1],
-                #[3, 'theta_E', 0.9, 0.1]
-                ]
+        return None
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4', 'SHEAR', 'SIS', 'SIS']
         kwargs_lens_macro = [
-            {'theta_E': 0.9364303494726072, 'gamma': 2.1331494713908254, 'e1': -0.036123261307694034,
-             'e2': 0.12458938833908947, 'center_x': 0.016305142064483028, 'center_y': -0.008652493157235784,
-             'a1_a': 0.0, 'delta_phi_m1': 0.0, 'a3_a': 0.0, 'delta_phi_m3': 0.0, 'a4_a': 0.0, 'delta_phi_m4': 0.0},
-            {'gamma1': 0.22093939223207587, 'gamma2': -0.08277495517430819, 'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.07123176071640608, 'center_x': 0.03648402114393852, 'center_y': -0.03552860923950886},
-            {'theta_E': 1.0394906734030547, 'center_x': -3.8579819047525516, 'center_y': 0.10711299834239145}
+            {'theta_E': 1.0454888661247383, 'gamma': 2.1755401713110873, 'e1': 0.08938756621035646,
+             'e2': -0.15316964697257626, 'center_x': 0.11244446883142852, 'center_y': -0.02934915508235012, 'a1_a': 0.0,
+             'delta_phi_m1': 0.0, 'a3_a': 0.0, 'delta_phi_m3': 0.0, 'a4_a': 0.0, 'delta_phi_m4': 0.0},
+            {'gamma1': 0.15537172489670434, 'gamma2': -0.1507370003750051, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.10591747129050832, 'center_x': 0.28260230277800535, 'center_y': 2.006334505540786},
+            {'theta_E': 0.5687769686133726, 'center_x': -3.6161439901328154, 'center_y': -0.1129634056345186}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens,
                                self._data.z_lens, 0.745]
@@ -197,14 +188,14 @@ class WFI2033NircamModelEPLM3M4Shear(_WFI2033ModelNircamBase):
             {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.6, 'a4_a': -0.1,
              'a1_a': -0.1, 'delta_phi_m1': -np.pi,'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -np.pi/8},
             {'gamma1': -0.5, 'gamma2': -0.5},
-            {'theta_E': 0.001, 'center_x': -10, 'center_y': -10},
-            {'theta_E': 0.5, 'center_x': -3.857 - 0.3, 'center_y': 0.1071 - 0.3}]
+            {'theta_E': 0.001, 'center_x': self.gx1-0.3, 'center_y': self.gy1-0.3},
+            {'theta_E': 0.5, 'center_x': self.gx2_phys - 0.5, 'center_y': self.gy2_phys - 0.5}]
         kwargs_upper_lens = [
             {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.4, 'a4_a': 0.1,
              'a1_a': 0.1, 'delta_phi_m1': np.pi,'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': np.pi/8},
             {'gamma1': 0.5, 'gamma2': 0.5},
-        {'theta_E': 0.6, 'center_x': 10, 'center_y': 10},
-            {'theta_E': 1.2, 'center_x': -3.857 + 0.3, 'center_y': 0.1071 + 0.3}
+        {'theta_E': 0.6, 'center_x': self.gx1+0.3, 'center_y': self.gy1+0.3},
+            {'theta_E': 1.2, 'center_x': self.gx2_phys + 0.5, 'center_y': self.gy2_phys + 0.5}
         ]
         kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
                                                                              kwargs_lens_init, macromodel_samples_fixed)
@@ -216,6 +207,9 @@ class WFI2033NircamModelEPLM3M4Shear(_WFI2033ModelNircamBase):
 
 class WFI2033NircamModelEPLM3M4ShearObservedConvention(_WFI2033ModelNircamBase):
 
+    gx1, gy1 = 0.28, 2.02
+    gx2, gy2 = -3.9, -0.05
+
     @property
     def macromodel_readout_function(self):
         return macromodel_readout_function_2033
@@ -223,12 +217,12 @@ class WFI2033NircamModelEPLM3M4ShearObservedConvention(_WFI2033ModelNircamBase):
     @property
     def prior_lens(self):
         return self.population_gamma_prior + [[0, 'a4_a', 0.0, 0.01], [0, 'a3_a', 0.0, 0.005],
-                [2, 'center_x', self._data.gx1, 0.05],
-                [2, 'center_y', self._data.gy1, 0.05],
+                [2, 'center_x', self.gx1, 0.05],
+                [2, 'center_y', self.gy1, 0.05],
                 [2, 'theta_E', 0.05, 0.05],
-                [3, 'center_x', self._data.gx2, 0.1],
-                [3, 'center_y', self._data.gy2, 0.1],
-                [3, 'theta_E', 0.9, 0.1]
+                [3, 'center_x', self.gx2, 0.1],
+                [3, 'center_y', self.gy2, 0.1],
+                [3, 'theta_E', 0.6, 0.06]
                 ]
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
@@ -243,8 +237,8 @@ class WFI2033NircamModelEPLM3M4ShearObservedConvention(_WFI2033ModelNircamBase):
              'e2': -0.08953109900982839, 'center_x': -0.009227587610902884, 'center_y': 0.010009574939230213,
              'a1_a': 0.01, 'delta_phi_m1': 0.1,'a3_a': 0.0, 'delta_phi_m3': -0.08915130660163478, 'a4_a': 0.0, 'delta_phi_m4': 1.5213918804074946},
             {'gamma1': -0.0029842967957686463, 'gamma2': 0.213368145715242, 'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.07669619849915402, 'center_x': self._data.gx1, 'center_y': self._data.gy1},
-            {'theta_E': 1.0, 'center_x': self._data.gx2, 'center_y': self._data.gy2}
+            {'theta_E': 0.07669619849915402, 'center_x': self.gx1, 'center_y': self.gy1},
+            {'theta_E': 0.6, 'center_x': self.gx2, 'center_y': self.gy2}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens,
                                self._data.z_lens, 0.745]
@@ -264,14 +258,14 @@ class WFI2033NircamModelEPLM3M4ShearObservedConvention(_WFI2033ModelNircamBase):
             {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.6, 'a4_a': -0.1,
              'a1_a': -0.1, 'delta_phi_m1': -np.pi,'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
             {'gamma1': -0.5, 'gamma2': -0.5},
-            {'theta_E': 0.001, 'center_x': -10, 'center_y': -10},
-            {'theta_E': 0.5, 'center_x': -10, 'center_y': -10}]
+            {'theta_E': 0.001, 'center_x': self.gx1-0.3, 'center_y': self.gy1-0.3},
+            {'theta_E': 0.5, 'center_x': self.gx2-0.3, 'center_y': self.gy2-0.3}]
         kwargs_upper_lens = [
             {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.4, 'a4_a': 0.1,
              'a1_a': 0.1, 'delta_phi_m1': np.pi,'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
             {'gamma1': 0.5, 'gamma2': 0.5},
-        {'theta_E': 0.6, 'center_x': 10, 'center_y': 10},
-            {'theta_E': 1.2, 'center_x': 10, 'center_y': 10}
+        {'theta_E': 0.6, 'center_x': self.gx1+0.3, 'center_y': self.gy1+0.3},
+            {'theta_E': 1.2, 'center_x': self.gx2+0.3, 'center_y': self.gy2+0.3}
         ]
         kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
                                                                              kwargs_lens_init, macromodel_samples_fixed)
