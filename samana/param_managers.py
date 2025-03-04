@@ -78,19 +78,18 @@ class PowerLawParamManager(object):
         :param scale: scales the size of the uncertainty window
         :return:
         """
-
         args = self.kwargs_to_args(self.kwargs_lens)
         if re_optimize:
             thetaE_shift = 0.005
             center_shift = 0.01
             e_shift = 0.05
-            g_shift = 0.005
+            g_shift = 0.01
 
         else:
             thetaE_shift = 0.25
             center_shift = 0.2
             e_shift = 0.2
-            g_shift = 0.01
+            g_shift = 0.05
 
         shifts = np.array([thetaE_shift, center_shift, center_shift, e_shift, e_shift, g_shift, g_shift])
         low = np.array(args) - shifts * scale
