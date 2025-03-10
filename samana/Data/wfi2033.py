@@ -135,14 +135,14 @@ class WFI2033_NIRCAM(_WFI2033):
         x_image += horizontal_shift
         y_image += vertical_shift
         from samana.Data.ImageData.wfi2033_f115W import image_data, psf_error_map, psf_model
-
+        image_data_background_subtracted = image_data - 0.
         magnifications = [1.,   0.65, 0.5,  0.53]
         image_position_uncertainties = [0.005] * 4
         flux_uncertainties = [0.03, 0.03/0.64, 0.02/0.5, 0.02/0.53]
         uncertainty_in_fluxes = True
         super(WFI2033_NIRCAM, self).__init__(x_image, y_image, magnifications, image_position_uncertainties,
                                           flux_uncertainties, uncertainty_in_fluxes,
-                                         supersample_factor, image_data, psf_model, psf_error_map)
+                                         supersample_factor, image_data_background_subtracted, psf_model, psf_error_map)
 
     @property
     def kwargs_data(self):

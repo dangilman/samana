@@ -139,9 +139,9 @@ class J2145_MIRI(_J2145):
         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
-
-        x_image = np.array([-0.92551199, -0.46027406, 0.91743508, 0.60435097])
-        y_image = np.array([-0.76745182, 0.90484046, 0.15995747, -0.40934611])
+        reorder = [3,2,1,0]
+        x_image = np.array([-0.92551199, -0.46027406, 0.91743508, 0.60435097])[reorder]
+        y_image = np.array([-0.76745182, 0.90484046, 0.15995747, -0.40934611])[reorder]
         horizontal_shift = -0.01
         vertical_shift = -0.01
         x_image += horizontal_shift

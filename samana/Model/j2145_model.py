@@ -129,7 +129,7 @@ class J2145ModelEPLM3M4Shear(_J2145):
         kwargs_lens_macro = [
             {'theta_E': 0.998769587003212, 'gamma': 1.9744110382168731, 'e1': -0.017941674550855997,
              'e2': 0.043047979752150065, 'center_x': -0.18228132405929476, 'center_y': 0.20599853383689018, 'a3_a': 0.0,
-             'a1_a': 0.0, 'delta_phi_m1': 0.0, 'delta_phi_m3': 0.47412736802809846, 'a4_a': 0.0, 'delta_phi_m4': 2.939320541612013},
+             'a1_a': 0.0, 'delta_phi_m1': 0.0, 'delta_phi_m3': 0., 'a4_a': 0.0, 'delta_phi_m4': 0.0},
             {'gamma1': 0.052049597314606864, 'gamma2': 0.14840243517340163, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
@@ -145,11 +145,11 @@ class J2145ModelEPLM3M4Shear(_J2145):
         kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}]
         kwargs_lower_lens = [
             {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.6, 'a4_a': -0.1,
-             'a1_a': -0.1, 'delta_phi_m1': -np.pi,'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
+             'a1_a': -0.1, 'delta_phi_m1': -np.pi,'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -np.pi/8},
             {'gamma1': -0.5, 'gamma2': -0.5}]
         kwargs_upper_lens = [
             {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.4, 'a4_a': 0.1,
-             'a1_a': 0.1, 'delta_phi_m1': np.pi,'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
+             'a1_a': 0.1, 'delta_phi_m1': np.pi,'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': np.pi/8},
             {'gamma1': 0.5, 'gamma2': 0.5}]
         kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
                                                                              kwargs_lens_init, macromodel_samples_fixed)

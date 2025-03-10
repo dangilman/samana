@@ -392,7 +392,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            split_image_data_reconstruction=False,
                            tolerance=np.inf,
                            filter_subhalo_kwargs=None,
-                           macromodel_readout_function=None):
+                           macromodel_readout_function=None,
+                            return_realization=False):
     """
 
     :param data_class:
@@ -423,6 +424,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     :param elliptical_ray_tracing_grid:
     :param split_image_data_reconstruction:
     :param tolerance:
+    :param return_realization:
     :return:
     """
     # set the random seed for reproducibility
@@ -498,6 +500,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             if verbose:
                 print('realization has ' + str(len(realization.halos)) + ' halos after cut on '
                              'bound mass above 10^'+str(log10_bound_mass_cut)+'... ')
+    if return_realization:
+        return realization
     lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
         kwargs_mass_sheet={'log_mlow_sheets': log_mlow_mass_sheets, 'kappa_scale_subhalos': kappa_scale_subhalos})
     grid_resolution_image_data = pixel_size / image_data_grid_resolution_rescale
