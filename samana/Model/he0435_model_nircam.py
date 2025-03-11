@@ -124,8 +124,8 @@ class HE0435ModelNircamEPLM1M3M4Shear(_HE0435NircamModelBase):
             {'theta_E': 1.180943352708307, 'gamma': 2.135741300072584, 'e1': -0.08019714584843007,
              'e2': -0.0349862277275131, 'center_x': 0.013680938966111337, 'center_y': 0.044582561975761555,
              'a1_a': 0.0, 'delta_phi_m1': 0.0,
-             'a3_a': 0.0, 'delta_phi_m3': -0.3400141112155623,
-             'a4_a': 0.0, 'delta_phi_m4': -0.13902096266160333},
+             'a3_a': 0.0, 'delta_phi_m3': -0.,
+             'a4_a': 0.0, 'delta_phi_m4': -0.},
             {'gamma1': 0.03054215641227033, 'gamma2': 0.029168118917460642, 'ra_0': 0.0, 'dec_0': 0.0},
             {'theta_E': 0.35703001841356063, 'center_x': -0.09, 'center_y': 3.8582546199894088}
         ]
@@ -144,12 +144,12 @@ class HE0435ModelNircamEPLM1M3M4Shear(_HE0435NircamModelBase):
         kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}, {}]
         kwargs_lower_lens = [
             {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.5, 'a4_a': -0.1,
-             'a1_a': -0.1, 'delta_phi_m1': -np.pi, 'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
+             'a1_a': -0.1, 'delta_phi_m1': -np.pi, 'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -np.pi/8},
             {'gamma1': -0.5, 'gamma2': -0.5},
             {'theta_E': 0.001, 'center_x': self.gx_phys-0.5, 'center_y': self.gy_phys-0.5}]
         kwargs_upper_lens = [
             {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.5, 'a4_a': 0.1,
-             'a1_a': 0.1, 'delta_phi_m1': np.pi, 'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
+             'a1_a': 0.1, 'delta_phi_m1': np.pi, 'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': np.pi/8},
             {'gamma1': 0.5, 'gamma2': 0.5},
         {'theta_E': 0.5, 'center_x': self.gx_phys+0.5, 'center_y': self.gy_phys+0.5}]
         kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,

@@ -223,7 +223,7 @@ def compute_likelihoods(output_class,
                                                                                      w_custom)
 
         else:
-            print('using log-likelihood as flux ratio summary statistic')
+
             params_out, normalized_weights = downselect_fluxratio_summary_stats(params,
                                                                             flux_ratios,
                                                                             measured_flux_ratios,

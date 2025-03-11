@@ -130,7 +130,6 @@ class _J1042ModelBase(EPLModelBase):
 
         return lens_light_model_list, lens_light_params
 
-
 class J1042ModelEPLM3M4Shear(_J1042ModelBase):
 
     def __init__(self, data_class, shapelets_order=None, shapelets_scale_factor=1):
@@ -177,7 +176,7 @@ class J1042ModelEPLM3M4Shear(_J1042ModelBase):
         return self.population_gamma_prior + [
                 [2, 'center_x', self._data.gx, 0.05],
                 [2, 'center_y', self._data.gy, 0.05],
-                [2, 'theta_E', 0.05, 0.1]]
+                [2, 'theta_E', 0.05, 0.2]]
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
@@ -185,7 +184,7 @@ class J1042ModelEPLM3M4Shear(_J1042ModelBase):
         kwargs_lens_macro = [
             {'theta_E': 0.8884654787595039, 'gamma': 1.9389205510769976, 'e1': -0.22945509053278765,
              'e2': 0.15832030781687093, 'center_x': 0.024594789216292615, 'center_y': 0.038319171626879284, 'a3_a': 0.0,
-             'a1_a': 0.0, 'delta_phi_m1': 0.0,'delta_phi_m3': 0.40255807918558223, 'a4_a': 0.0, 'delta_phi_m4': -0.5163251300933784},
+             'a1_a': 0.0, 'delta_phi_m1': 0.0,'delta_phi_m3': 0., 'a4_a': 0.0, 'delta_phi_m4': -0.},
             {'gamma1': -0.1008630901650493, 'gamma2': 0.016019787962277186, 'ra_0': 0.0, 'dec_0': 0.0},
             {'theta_E': 0.07545918728644968, 'center_x': 1.8699636079097566, 'center_y': -0.4847974949545327}
         ]
@@ -202,12 +201,12 @@ class J1042ModelEPLM3M4Shear(_J1042ModelBase):
         kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}, {}]
         kwargs_lower_lens = [
             {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.7, 'a4_a': -0.1,
-             'a1_a': -0.1, 'delta_phi_m1': -np.pi,'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
+             'a1_a': -0.1, 'delta_phi_m1': -np.pi,'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -np.pi/8},
             {'gamma1': -0.5, 'gamma2': -0.5},
             {'theta_E': 0.0, 'center_x': self._data.gx - 0.2, 'center_y': self._data.gy - 0.2}]
         kwargs_upper_lens = [
             {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.6, 'a4_a': 0.1,
-             'a1_a': 0.1, 'delta_phi_m1': np.pi,'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
+             'a1_a': 0.1, 'delta_phi_m1': np.pi,'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': np.pi/8},
             {'gamma1': 0.5, 'gamma2': 0.5},
         {'theta_E': 0.25, 'center_x': self._data.gx + 0.2, 'center_y': self._data.gy + 0.2}]
         kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
