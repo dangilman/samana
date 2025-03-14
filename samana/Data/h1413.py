@@ -15,7 +15,7 @@ class _H1413(ImagingDataBase):
         if image_data_type == 'HST814W':
             from samana.Data.ImageData.h1413_HST814W import image_data
             from samana.Data.ImageData.psj0147_f814W import psf_model
-            #from samana.Data.ImageData.j0405_814w import psf_error_map
+            # from samana.Data.ImageData.j0405_814w import psf_error_map
             self._psf_estimate_init = psf_model
             self._psf_error_map_init = None
             self._image_data = image_data
@@ -26,7 +26,7 @@ class _H1413(ImagingDataBase):
             self._dec_at_xy_0 = -1.3999999990815017
             self._transform_pix2angle = np.array([[-0.05, 0.],
                                                   [0., 0.05]])
-            self._background_rms = 0.005012
+            self._background_rms = 0.0028
             self._exposure_time = 5200.0
             self._noise_map = None
 
@@ -132,8 +132,8 @@ class H1413_HST(_H1413):
         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
-        x_image = np.array([-0.16336611, 0.58278695, -0.6529185, 0.19349767])
-        y_image = np.array([-0.50028454, -0.33213316, 0.21213795, 0.54027975])
+        x_image = np.array([-0.16336611, 0.58278695, -0.6529185, 0.19349767])[[1,0,2,3]] + 0.03
+        y_image = np.array([-0.50028454, -0.33213316, 0.21213795, 0.54027975])[[1,0,2,3]] - 0.037
         horizontal_shift = 0.0
         vertical_shift = 0.0
         x_image += horizontal_shift

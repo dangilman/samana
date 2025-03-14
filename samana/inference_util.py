@@ -194,7 +194,8 @@ def compute_likelihoods(output_class,
             (param, mean, sigma) = macro_weight
             w_custom *= np.exp(-0.5 * (np.squeeze(sim.macromodel_parameter_array([param])) - mean) ** 2 / sigma ** 2)
     flux_ratios = sim.flux_ratios
-    if n_keep is None:
+
+    if n_keep is None and callable(measurement_uncertainties) is False:
         params_out, normalized_weights = downselect_fluxratio_likelihood(params,
                                                                          flux_ratios,
                                                                          measured_flux_ratios,
@@ -202,10 +203,15 @@ def compute_likelihoods(output_class,
                                                                          w_custom)
 
     else:
-        if log_flux_ratio_likelihood_summary is True and flux_ratio_likelihood_summary is True:
+        if callable(measurement_uncertainties):
+            importance_weights = measurement_uncertainties(sim.image_magnifications, n_keep)
+            params_out = deepcopy(params)
+            normalized_weights = importance_weights / np.max(importance_weights)
+
+        elif log_flux_ratio_likelihood_summary is True and flux_ratio_likelihood_summary is True:
             raise Exception('log_flux_ratio_likelihood_summary and flux_ratio_likelihood_summary cannot be both True')
 
-        if log_flux_ratio_likelihood_summary:
+        elif log_flux_ratio_likelihood_summary:
 
             params_out, normalized_weights = downselect_logfluxratio_likelihood_summary(params,
                                                                                      flux_ratios,

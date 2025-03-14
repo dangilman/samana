@@ -130,18 +130,18 @@ class H1413ModelEPLM3M4Shear(_H1413ModelBase):
 
     @property
     def prior_lens(self):
-        return [[2, 'center_x', self._data.g2x, 0.05], [2, 'center_y', self._data.g2y, 0.05]]
+        return [[2, 'center_x', self._data.g2x, 0.05], [2, 'center_y', self._data.g2y, 0.05], [2, 'theta_E', 0.5, 0.1]]
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS']
         kwargs_lens_macro = [
-            {'theta_E': 0.5945561181171953, 'gamma': 1.9118152489969296, 'e1': -0.27220780635663133,
-             'e2': 0.14288396199766928, 'center_x': 0.027739302935571437, 'center_y': 0.08194389978787217,
-             'a1_a': 0.0, 'delta_phi_m1': -0.2709690505908811, 'a3_a': 0.0, 'delta_phi_m3': -0.2709690505908811,
-             'a4_a': 0.0, 'delta_phi_m4': 0.0},
-            {'gamma1': -0.08767098811462325, 'gamma2': 0.018614730158481117, 'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.5161391605843233, 'center_x': 1.7048249888137141, 'center_y': 3.638644354676061}
+            {'theta_E': 0.5572237697796922, 'gamma': 1.7590114081399728, 'e1': -0.11445566775779056,
+             'e2': -0.005456834152063129, 'center_x': 0.022068352330487328, 'center_y': 0.06987126178817833,
+             'a1_a': 0.0, 'delta_phi_m1': -0.2816284758597358, 'a3_a': 0.0, 'delta_phi_m3': 0.27025495271440064,
+             'a4_a': 0.0, 'delta_phi_m4': -0.10611421863617054},
+            {'gamma1': -0.06105938233582977, 'gamma2': -0.020669935655420205, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.6099876560738409, 'center_x': 1.5150160867635873, 'center_y': 3.737785802018212}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1, 2]
@@ -154,7 +154,7 @@ class H1413ModelEPLM3M4Shear(_H1413ModelBase):
                               'a1_a': 0.01, 'delta_phi_m1': 0.1,'a4_a': 0.01, 'a3_a': 0.005, 'delta_phi_m3': np.pi/12,
                               'delta_phi_m4': np.pi/16},
                              {'gamma1': 0.1, 'gamma2': 0.1},
-                             {'theta_E': 0.05, 'center_x': 0.05, 'center_y': 0.05}]
+                             {'theta_E': 0.2, 'center_x': 0.05, 'center_y': 0.05}]
         kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0},{}]
         kwargs_lower_lens = [
             {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.6, 'a4_a': -0.1,

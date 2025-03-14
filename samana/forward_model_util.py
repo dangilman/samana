@@ -72,6 +72,8 @@ def sample_prior(kwargs_prior):
                 delta_phi_m4 = np.random.uniform(-np.pi/8, np.pi/8)
             prior_samples_dict['a3_a'] = a3a
             prior_samples_dict['a4_a'] = a4a
+            prior_samples_dict['a1_a'] = 0.0
+            prior_samples_dict['delta_phi_m1'] = 0.0
             prior_samples_dict['delta_phi_m3'] = delta_phi_m3
             prior_samples_dict['delta_phi_m4'] = delta_phi_m4
             sample_list += [a3a, a4a, delta_phi_m3, delta_phi_m4]
