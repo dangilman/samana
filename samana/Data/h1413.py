@@ -13,6 +13,7 @@ class _H1413(ImagingDataBase):
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
         if image_data_type == 'HST814W':
+            self.data_band = 'HST814W'
             from samana.Data.ImageData.h1413_HST814W import image_data, tiny_tim_psf
             #from samana.Data.ImageData.psj0147_f814W import psf_model
             # from samana.Data.ImageData.j0405_814w import psf_error_map
@@ -32,6 +33,7 @@ class _H1413(ImagingDataBase):
             self._noise_map = None
 
         elif image_data_type == 'MIRI540W':
+            self.data_band = 'MIRI540W'
             from samana.Data.ImageData.h1413_MIRI540W import psf_model, image_data, noise_map
             self._psf_estimate_init = psf_model
             self._psf_error_map_init = None

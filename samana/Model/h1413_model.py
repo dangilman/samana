@@ -89,7 +89,10 @@ class _H1413ModelBase(EPLModelBase):
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
 
-        add_uniform_light = True
+        if self._data.data_band == 'MIRI540W':
+            add_uniform_light = True
+        else:
+            add_uniform_light = False
         if add_uniform_light:
             kwargs_uniform, kwargs_uniform_sigma, kwargs_uniform_fixed, \
                 kwargs_uniform_lower, kwargs_uniform_upper = self.add_uniform_lens_light()
@@ -149,12 +152,12 @@ class H1413ModelEPLM3M4Shear(_H1413ModelBase):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS']
         kwargs_lens_macro = [
-            {'theta_E': 0.5572237697796922, 'gamma': 1.7590114081399728, 'e1': -0.11445566775779056,
-             'e2': -0.005456834152063129, 'center_x': 0.022068352330487328, 'center_y': 0.06987126178817833,
-             'a1_a': 0.0, 'delta_phi_m1': -0.2816284758597358, 'a3_a': 0.0, 'delta_phi_m3': 0.27025495271440064,
-             'a4_a': 0.0, 'delta_phi_m4': -0.10611421863617054},
-            {'gamma1': -0.06105938233582977, 'gamma2': -0.020669935655420205, 'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.6099876560738409, 'center_x': 1.5150160867635873, 'center_y': 3.737785802018212}
+            {'theta_E': 0.587455262745606, 'gamma': 2.1055423125208983, 'e1': -0.037509215602455695,
+             'e2': -0.17957522030983888, 'center_x': 0.009515249579949515, 'center_y': 0.0482884145994108, 'a1_a': 0.0,
+             'delta_phi_m1': -0.22390439344439808, 'a3_a': 0.0, 'delta_phi_m3': -0.30191108801054467, 'a4_a': 0.0,
+             'delta_phi_m4': -0.23064728686098634},
+            {'gamma1': 0.009791375875788436, 'gamma2': -0.1353193461451556, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.34489506399633674, 'center_x': 1.4900758399245648, 'center_y': 3.760227228927477}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1, 2]

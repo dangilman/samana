@@ -140,8 +140,9 @@ class M1134_HST(_2M1134):
         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
-        x_image = np.array([ 1.48667844, -0.5005318 ,  0.75275602, -1.19123804])[[0,1,3,2]]
-        y_image = np.array([ 0.98634326,  0.59067364, -0.77144427, -1.54090464])[[0,1,3,2]]
+        reorder = [3,1,0,2]
+        x_image = np.array([ 1.48667844, -0.5005318 ,  0.75275602, -1.19123804])[reorder]
+        y_image = np.array([ 0.98634326,  0.59067364, -0.77144427, -1.54090464])[reorder]
         horizontal_shift = 0.0
         vertical_shift = 0.0
         x_image += horizontal_shift
