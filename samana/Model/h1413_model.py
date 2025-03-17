@@ -113,7 +113,7 @@ class _H1413ModelBase(EPLModelBase):
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True,
-                             'custom_logL_addition': self.generic_axis_ratio_prior
+                             'custom_logL_addition': self.custom_prior
                              }
         return kwargs_likelihood
 
@@ -123,6 +123,19 @@ class H1413ModelEPLM3M4Shear(_H1413ModelBase):
         # shapelets scale factor set to 2; lens model changes with increasing nmax suggesting
         # shapelets are fitting psf noise
         super(H1413ModelEPLM3M4Shear, self).__init__(data_class, shapelets_order, shapelets_scale_factor)
+
+    def custom_prior(self, kwargs_lens,
+                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                kwargs_extinction, kwargs_tracer_source):
+
+        prior = self.hard_cut_axis_ratio_prior(kwargs_lens,
+                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                kwargs_extinction, kwargs_tracer_source)
+        prior += self.joint_lens_with_light_prior(kwargs_lens,
+                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                kwargs_extinction, kwargs_tracer_source)
+        return prior
+
 
     @property
     def macromodel_readout_function(self):

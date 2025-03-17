@@ -13,20 +13,21 @@ class _H1413(ImagingDataBase):
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
         if image_data_type == 'HST814W':
-            from samana.Data.ImageData.h1413_HST814W import image_data
-            from samana.Data.ImageData.psj0147_f814W import psf_model
+            from samana.Data.ImageData.h1413_HST814W import image_data, tiny_tim_psf
+            #from samana.Data.ImageData.psj0147_f814W import psf_model
             # from samana.Data.ImageData.j0405_814w import psf_error_map
-            self._psf_estimate_init = psf_model
+            #self._psf_estimate_init = psf_model
+            self._psf_estimate_init = tiny_tim_psf
             self._psf_error_map_init = None
             self._image_data = image_data
             self._psf_supersampling_factor = 1
             self._deltaPix = 0.05
-            self._window_size = 2.8000000000000003
-            self._ra_at_xy_0 = 1.4000000005010238
-            self._dec_at_xy_0 = -1.3999999990815017
+            self._window_size = 2.8
+            self._ra_at_xy_0 = 1.4
+            self._dec_at_xy_0 = -1.34
             self._transform_pix2angle = np.array([[-0.05, 0.],
                                                   [0., 0.05]])
-            self._background_rms = 0.0028
+            self._background_rms = 0.0034
             self._exposure_time = 5200.0
             self._noise_map = None
 
@@ -132,10 +133,10 @@ class H1413_HST(_H1413):
         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
-        x_image = np.array([-0.16336611, 0.58278695, -0.6529185, 0.19349767])[[1,0,2,3]] + 0.03
-        y_image = np.array([-0.50028454, -0.33213316, 0.21213795, 0.54027975])[[1,0,2,3]] - 0.037
-        horizontal_shift = 0.0
-        vertical_shift = 0.0
+        x_image = np.array([-0.16336611, 0.58278695, -0.6529185, 0.19349767])[[1,0,2,3]]
+        y_image = np.array([-0.50028454, -0.33213316, 0.21213795, 0.54027975])[[1,0,2,3]]
+        horizontal_shift = 0.00
+        vertical_shift = 0.05
         x_image += horizontal_shift
         y_image += vertical_shift
         image_position_uncertainties = [0.005] * 4  # 5 arcsec

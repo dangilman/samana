@@ -115,7 +115,6 @@ class EPLModelBase(object):
 
     @property
     def population_gamma_prior(self):
-        # free the prior
         return []
 
     def lens_mass_lens_light_alignment(self, kwargs_lens,

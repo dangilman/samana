@@ -138,23 +138,9 @@ class MG0414ModelEPLM3M4Shear(_MG0414ModelBase):
                                                             center_x, center_y, sigma_xy)
         return param_class
 
-    def custom_logL(self, kwargs_lens,
-                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
-                kwargs_extinction, kwargs_tracer_source):
-
-        alignment = self.lens_mass_lens_light_alignment(kwargs_lens,
-                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
-                kwargs_extinction, kwargs_tracer_source)
-
-        axis_ratio = self.hard_cut_axis_ratio_prior(kwargs_lens,
-                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
-                kwargs_extinction, kwargs_tracer_source)
-
-        return alignment + axis_ratio
-
     @property
     def prior_lens(self):
-        satellite_prior = [[2, 'center_x', -0.61, 0.05], [2, 'center_y', 1.325, 0.05], [2, 'theta_E', 0.1, 0.2]]
+        satellite_prior = [[2, 'center_x', -0.61, 0.1], [2, 'center_y', 1.325, 0.1], [2, 'theta_E', 0.1, 0.2]]
         return self.population_gamma_prior + satellite_prior
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
