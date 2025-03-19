@@ -88,8 +88,7 @@ class _PG1115ModelBase(EPLModelBase):
                              'force_no_add_image': False,
                              'source_marg': False,
                              'image_position_uncertainty': 5e-3,
-                             'source_position_likelihood': False,
-                             'source_position_sigma': 0.0001,
+                             'source_position_tolerance': 0.0001,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True

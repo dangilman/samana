@@ -36,10 +36,6 @@ class _J2344ModelBase(EPLModelBase):
            kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
         return kwargs_constraints
 
-    @property
-    def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2]]
-
     def setup_source_light_model(self):
 
         source_model_list = ['SERSIC_ELLIPSE']
@@ -108,8 +104,7 @@ class _J2344ModelBase(EPLModelBase):
                              'source_marg': False,
                              'image_position_uncertainty': 5e-3,
                              'source_position_likelihood': True,
-                             #'check_matched_source_position': False,
-                             'source_position_sigma': 0.0001,
+                             'source_position_tolerance': 0.0001,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True

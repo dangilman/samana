@@ -423,7 +423,7 @@ def quick_setup(lens_ID):
     return data_class, model_class
 
 def nmax_bic_minimize(data_class, model_class, fitting_kwargs_list, n_max_list,
-                      verbose=True, make_plots=False, lens_ID=None, shapelets_scale_factor=1):
+                      verbose=True, make_plots=False, shapelets_scale_factor=1):
     """
 
     :param data:
@@ -434,11 +434,6 @@ def nmax_bic_minimize(data_class, model_class, fitting_kwargs_list, n_max_list,
     :return:
     """
     bic_list = []
-    beta_source_list = []
-
-    if data_class is None:
-        data_class, model_class = quick_setup(lens_ID)
-    data_class = data_class()
 
     for idx, n_max in enumerate(n_max_list):
         if n_max == 0:
@@ -480,11 +475,6 @@ def nmax_bic_minimize(data_class, model_class, fitting_kwargs_list, n_max_list,
         )
         bic = -2 * logL + (np.log(num_data) * num_param)
         bic_list.append(bic)
-
-        if n_max == 0:
-            beta_source_list.append(0.0)
-        else:
-            beta_source_list.append(kwargs_result['kwargs_source'][1]['beta'])
 
         if make_plots:
 
@@ -530,7 +520,7 @@ def nmax_bic_minimize(data_class, model_class, fitting_kwargs_list, n_max_list,
         print('bic: ', bic)
         print('bic list: ', bic_list)
 
-    return bic_list, beta_source_list
+    return bic_list
 
 def cut_on_data(output, data,
                 ABC_flux_ratio_likelihood=True,
