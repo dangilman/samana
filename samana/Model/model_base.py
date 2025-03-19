@@ -117,17 +117,18 @@ class EPLModelBase(object):
     def population_gamma_prior(self):
         return []
 
-    def lens_mass_lens_light_alignment(self, kwargs_lens,
+    def axis_ratio_masslight_alignment(self, kwargs_lens,
                 kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
                 kwargs_extinction, kwargs_tracer_source):
 
-        e1, e2 = kwargs_lens[0]['e1'], kwargs_lens[0]['e2']
-        phi_lens, _ = ellipticity2phi_q(e1, e2)
-        e1, e2 = kwargs_lens_light[0]['e1'], kwargs_lens_light[0]['e2']
-        phi_light, _ = ellipticity2phi_q(e1, e2)
-        angle_radian = phi_light - phi_lens
-        angle_degree = angle_radian * 180 / np.pi
-        return -0.5 * angle_degree ** 2 / 10 ** 2
+        q_prior = self.axis_ratio_prior(kwargs_lens,
+                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                kwargs_extinction, kwargs_tracer_source)
+
+        alignment_prior = self.joint_lens_with_light_prior(kwargs_lens,
+                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                kwargs_extinction, kwargs_tracer_source)
+        return q_prior + alignment_prior
 
     def joint_lens_with_light_prior(self, kwargs_lens,
                                   kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
@@ -141,28 +142,16 @@ class EPLModelBase(object):
             return -1e9
         return -0.5 * (dr_squared / sigma ** 2)
 
-    def hard_cut_axis_ratio_prior(self, kwargs_lens,
-                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
-                kwargs_extinction, kwargs_tracer_source):
-
-        q_cut = 1/5
-        e1, e2 = kwargs_lens[0]['e1'], kwargs_lens[0]['e2']
-        _, q = ellipticity2phi_q(e1, e2)
-        if q < q_cut:
-            return -1e9
-        else:
-            return 0.0
-
-    def generic_axis_ratio_prior(self, kwargs_lens,
+    def axis_ratio_prior(self, kwargs_lens,
                 kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
                 kwargs_extinction, kwargs_tracer_source):
 
         e1, e2 = kwargs_lens[0]['e1'], kwargs_lens[0]['e2']
         _, q = ellipticity2phi_q(e1, e2)
-        if q < 0.33:
-            return -1e9
+        if q < 0.4:
+            return -1e10
         else:
-            return -0.5 * (q - 0.9) ** 2 / 0.1 ** 2
+            return -0.5 * (q - 0.8) ** 2 / 0.3 ** 2
 
     def shapelet_source_clump(self, center_x, center_y, n_max_clump=4, beta_clump=0.05):
 

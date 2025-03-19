@@ -102,6 +102,7 @@ class _PSJ1606ModelBase(EPLModelBase):
                              'source_marg': False,
                              'image_position_uncertainty': 5e-3,
                              'source_position_tolerance': 0.0001,
+                             'custom_logL_addition': self.axis_ratio_prior,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True

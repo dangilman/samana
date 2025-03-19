@@ -98,7 +98,8 @@ class _HE0435NircamModelBase(EPLModelBase):
                              'source_position_tolerance': 0.0001,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
-                             'astrometric_likelihood': True
+                             'astrometric_likelihood': True,
+                             'custom_logL_addition': self.axis_ratio_prior,
                              }
         return kwargs_likelihood
 

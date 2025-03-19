@@ -68,9 +68,9 @@ class _J0147ModelBase(EPLModelBase):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
         kwargs_lens_light_init = [
-            {'amp': 226.8787640801956, 'R_sersic': 0.2981038197494028, 'n_sersic': 2.373668072070351,
-             'e1': -0.15495299117022826, 'e2': 0.3049476041783155, 'center_x': -0.11293789715104738,
-             'center_y': -0.8}
+            {'amp': 127.88313253676964, 'R_sersic': 0.46024488705309535, 'n_sersic': 2.49195891539224,
+             'e1': -0.1224594036654916, 'e2': 0.08026827494141357, 'center_x': -0.11696162778554385,
+             'center_y': -0.6396853584275617}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.05, 'center_y': 0.05}]
@@ -100,10 +100,11 @@ class _J0147ModelBase(EPLModelBase):
                              'force_no_add_image': False,
                              'source_marg': False,
                              'image_position_uncertainty': 5e-3,
+                             'source_position_tolerance': 0.0001,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True,
-                             'custom_logL_addition': self.joint_lens_with_light_prior,
+                             'custom_logL_addition': self.axis_ratio_masslight_alignment
                              }
         return kwargs_likelihood
 
@@ -162,13 +163,11 @@ class J0147ModelEPLM3M4ShearSatellite(_J0147ModelBase):
                              'force_no_add_image': False,
                              'source_marg': False,
                              'image_position_uncertainty': 5e-3,
-                             'source_position_likelihood': False,
-                             # 'check_matched_source_position': False,
                              'source_position_tolerance': 0.0001,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True,
-                             'custom_logL_addition': self.joint_lens_with_light_prior,
+                             'custom_logL_addition': self.axis_ratio_masslight_alignment
                              }
         return kwargs_likelihood
 

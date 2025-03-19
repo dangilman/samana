@@ -59,7 +59,7 @@ class _RXJ1131(ImagingDataBase):
             self._psf_supersampling_factor = 1
             self._psf_estimate_init = psf_model
             self._psf_estimate_init /= np.sum(self._psf_estimate_init)
-            self._psf_error_map_init = psf_error_map
+            self._psf_error_map_init = self.mask_psf_error_map(psf_error_map)
 
         self._image_data = image_data
         self._supersample_factor = supersample_factor

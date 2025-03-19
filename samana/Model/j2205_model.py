@@ -129,7 +129,7 @@ class _J2205ModelBase(EPLModelBase):
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True,
-                             #'custom_logL_addition': self.joint_lens_with_light_prior
+                             'custom_logL_addition': self.axis_ratio_prior
                              }
         return kwargs_likelihood
 

@@ -42,6 +42,20 @@ class ImagingDataBase(object):
         self._likelihood_mask_imaging_weights = likelihood_mask_imaging_weights
         self.mask_quasar_image_for_reconstruction(False)
 
+    def mask_psf_error_map(self, psf_error_map):
+        """
+        Set the psf error map to 0 far from the center
+        :param psf_error_map:
+        :return:
+        """
+        size = psf_error_map.shape[0]
+        r = np.linspace(-size/2, size/2, size)
+        xx, yy = np.meshgrid(r, r)
+        rr = np.sqrt(xx ** 2 + yy ** 2)
+        inds = np.where(rr > size/3)
+        psf_error_map[inds] = 0
+        return psf_error_map
+
     @property
     def redshift_sampling(self):
         return False

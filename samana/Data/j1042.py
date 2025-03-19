@@ -16,7 +16,7 @@ class _J1042(ImagingDataBase):
         if band == '814W':
             from samana.Data.ImageData.j1042_f814w import psf_model, psf_error_map, image_data
             self._psf_estimate_init = psf_model
-            self._psf_error_map_init = psf_error_map
+            self._psf_error_map_init = self.mask_psf_error_map(psf_error_map)
             self._image_data = image_data
             self._noise_map = None
             self._background_rms = 0.005579
@@ -30,7 +30,7 @@ class _J1042(ImagingDataBase):
         elif band == '160W':
             from samana.Data.ImageData.j1042_F160W import image_data, psf_model, psf_error_map
             self._psf_estimate_init = psf_model
-            self._psf_error_map_init = psf_error_map
+            self._psf_error_map_init = self.mask_psf_error_map(psf_error_map)
             self._image_data = image_data
             self._background_rms = 0.0066673
             self._exposure_time = 1596.92626
@@ -43,7 +43,7 @@ class _J1042(ImagingDataBase):
         elif band == '125W':
             from samana.Data.ImageData.j1042_F125W import image_data, psf_model, psf_error_map
             self._psf_estimate_init = psf_model
-            self._psf_error_map_init = psf_error_map
+            self._psf_error_map_init = self.mask_psf_error_map(psf_error_map)
             self._image_data = image_data
             self._background_rms = 0.010539
             self._exposure_time = 896.935304

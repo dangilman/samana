@@ -53,9 +53,8 @@ class _PG1115ModelBase(EPLModelBase):
 
         lens_light_model_list = ['SERSIC_ELLIPSE']
         kwargs_lens_light_init = [
-            {'amp': 387.6018672764345, 'R_sersic': 0.9366297140343567, 'n_sersic': 6.743254574523031,
-             'e1': 0.022403600775178036, 'e2': -0.0659266694831616, 'center_x': -0.016880130236337134,
-             'center_y': 0.004115812252094602}
+            {'amp': 1, 'R_sersic': 0.931857213603357, 'n_sersic': 6.6831217688402145, 'e1': 0.022950513140317954,
+             'e2': -0.062492598644636396, 'center_x': -0.01708814312274429, 'center_y': 0.0040634619638040105}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]

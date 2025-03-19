@@ -73,10 +73,11 @@ class _J0659ModelBase(EPLModelBase):
         star_x, star_y = self._data.satellite_or_star_coords
         lens_light_model_list = ['SERSIC_ELLIPSE', 'SERSIC']
         kwargs_lens_light_init = [
-            {'amp': 1, 'R_sersic': 1.7332945516937548, 'n_sersic': 7.462004413953694, 'e1': -0.017669802784214886,
-             'e2': 0.01671647962957627, 'center_x': -0.05528819042555275, 'center_y': -0.051185485411311835},
-            {'amp': 1, 'R_sersic': 0.05057338818931155, 'n_sersic': 0.2236662426180082,
-             'center_x': 0.34739428972240965, 'center_y': 1.5488179539833586}
+            {'amp': 10.450234405031102, 'R_sersic': 1.737527935340475, 'n_sersic': 7.4682965093953015,
+             'e1': -0.023151872115479435, 'e2': 0.026955362323890737, 'center_x': -0.055760458891117394,
+             'center_y': -0.051625032347535536},
+            {'amp': 4082.368009420127, 'R_sersic': 0.03410282693090055, 'n_sersic': 0.3632581097611388,
+             'center_x': 0.33390603531414254, 'center_y': 1.5585950178180106}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1},

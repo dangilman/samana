@@ -13,6 +13,7 @@ __all__ = ['nmax_bic_minimize',
            'quick_setup',
            'numerics_setup']
 
+
 def default_rendering_area(lens_ID=None,
                            data_class=None,
                            model_class=None,

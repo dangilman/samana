@@ -83,7 +83,7 @@ class _J1251ModelBase(EPLModelBase):
             {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
         kwargs_lens_light_fixed = [{}]
 
-        add_uniform_light = True
+        add_uniform_light = False
         if add_uniform_light:
             kwargs_uniform, kwargs_uniform_sigma, kwargs_uniform_fixed, \
             kwargs_uniform_lower, kwargs_uniform_upper = self.add_uniform_lens_light(2.0)

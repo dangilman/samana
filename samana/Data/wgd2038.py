@@ -15,7 +15,7 @@ class _WGD2038(ImagingDataBase):
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
         self._psf_estimate_init = psf_model
-        self._psf_error_map_init = psf_error_map
+        self._psf_error_map_init = self.mask_psf_error_map(psf_error_map)
         self._image_data = image_data
         self._supersample_factor = supersample_factor
         image_band = [self.kwargs_data, self.kwargs_psf, self.kwargs_numerics]

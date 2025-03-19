@@ -105,7 +105,7 @@ class HE1113ModelEPLM3M4Shear(_HE1113):
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True,
-                             'custom_logL_addition': self.joint_lens_with_light_prior
+                             'custom_logL_addition': self.axis_ratio_masslight_alignment,
                              }
         return kwargs_likelihood
 
@@ -135,10 +135,11 @@ class HE1113ModelEPLM3M4Shear(_HE1113):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR']
         kwargs_lens_macro = [
-            {'theta_E': 0.4996287175105153, 'gamma': 2.0, 'e1': -0.1,
-             'e2': 0.3, 'center_x': -0.07889078629463256, 'center_y': -0.04340801668649531, 'a3_a': 0.0,
-             'a1_a': 0.0, 'delta_phi_m1': 0.0,'delta_phi_m3': -0.4791469952155035, 'a4_a': 0.0, 'delta_phi_m4': -0.34958810974263865},
-            {'gamma1': -0.133566681846644, 'gamma2': 0.4068824293999763, 'ra_0': 0.0, 'dec_0': 0.0}
+            {'theta_E': 0.3536519255418004, 'gamma': 1.9758557647300843, 'e1': -0.12765273133916696,
+             'e2': 0.4009752016571935, 'center_x': -0.050765861657884534, 'center_y': -0.024413071923722968,
+             'a1_a': 0.0, 'delta_phi_m1': -0.043994984823729585, 'a3_a': 0.0, 'delta_phi_m3': -0.32721968983036276,
+             'a4_a': 0.0, 'delta_phi_m4': -0.39941320567259203},
+            {'gamma1': -0.04143178211377716, 'gamma2': 0.11000978389143896, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]
