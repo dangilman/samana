@@ -83,7 +83,7 @@ class _2M1134(ImagingDataBase):
                 likelihood_mask,
                 x_image,
                 y_image,
-                self._image_data.shape, radius_arcsec=0.6
+                self._image_data.shape, radius_arcsec=0.4
             )
             return likelihood_mask, likelihood_mask_imaging_weights
         else:
@@ -140,11 +140,13 @@ class M1134_HST(_2M1134):
         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
-        reorder = [3,1,0,2]
-        x_image = np.array([ 1.48667844, -0.5005318 ,  0.75275602, -1.19123804])[reorder]
-        y_image = np.array([ 0.98634326,  0.59067364, -0.77144427, -1.54090464])[reorder]
-        horizontal_shift = 0.0
-        vertical_shift = 0.0
+        # reorder = [3,1,0,2]
+        # x_image = np.array([ 1.48667844, -0.5005318 ,  0.75275602, -1.19123804])[reorder]
+        # y_image = np.array([ 0.98634326,  0.59067364, -0.77144427, -1.54090464])[reorder]
+        x_image = np.array([-1.24171241, -0.54108785, 1.43621075, 0.70658951])
+        y_image = np.array([-1.45103786, 0.6893056, 1.07930078, -0.67756853])
+        horizontal_shift = 0.048
+        vertical_shift = -0.09
         x_image += horizontal_shift
         y_image += vertical_shift
         image_position_uncertainties = [0.005] * 4 # 5 arcsec

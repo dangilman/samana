@@ -86,6 +86,7 @@ class _J2145(ImagingDataBase):
         likelihood_mask[xx, yy] = 0.0
 
         if self._mask_quasar_images_for_logL:
+
             likelihood_mask_imaging_weights = self.quasar_image_mask(
                 likelihood_mask,
                 x_image,

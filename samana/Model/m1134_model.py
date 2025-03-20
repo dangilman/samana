@@ -151,28 +151,28 @@ class M1134ModelEPLM3M4ShearSatellite(_M1134ModelBase):
 
     @property
     def prior_lens(self):
-        return self.population_gamma_prior
+        return [[2, 'theta_E', 0.15, 0.05]]
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS']
         if self._data.band == 'HST814W':
             kwargs_lens_macro = [
-                {'theta_E': 1.2386858327327679, 'gamma': 2.197949349105164, 'e1': -0.07181599131960777,
-                 'e2': -0.148121156860746, 'center_x': -0.06371822765700086, 'center_y': 0.09752899927115061,
-                 'a1_a': 0.0, 'delta_phi_m1': 0.013569351203598552, 'a3_a': 0.0, 'delta_phi_m3': -0.48464944547015704,
-                 'a4_a': 0.0, 'delta_phi_m4': 0.6786230184849307},
-                {'gamma1': -0.0038159207840149597, 'gamma2': 0.3609340651280836, 'ra_0': 0.0, 'dec_0': 0.0},
-                {'theta_E': 0.050479483337966896, 'center_x': 3.3527689955490216, 'center_y': -3.995395025902885}
+                {'theta_E': 1.1977973522694216, 'gamma': 2.1811804820363756, 'e1': -0.049259366198138886,
+                 'e2': 0.03393966515095142, 'center_x': 0.01310572691186353, 'center_y': -0.040971570963843316,
+                 'a1_a': 0.0, 'delta_phi_m1': 0.0946244679093586, 'a3_a': 0.0, 'delta_phi_m3': -0.5205287918514736,
+                 'a4_a': 0.0, 'delta_phi_m4': 0.7240750564861568},
+                {'gamma1': -0.001539234313987411, 'gamma2': 0.3660613471494284, 'ra_0': 0.0, 'dec_0': 0.0},
+                {'theta_E': 0.23750596785356515, 'center_x': 3.3841857914879068, 'center_y': -3.998138778021614}
             ]
         elif self._data.band == 'MIRI560W':
             kwargs_lens_macro = [
-                {'theta_E': 1.2386858327327679, 'gamma': 2.197949349105164, 'e1': -0.07181599131960777,
-                 'e2': -0.148121156860746, 'center_x': -0.06371822765700086, 'center_y': 0.09752899927115061,
-                 'a1_a': 0.0, 'delta_phi_m1': 0.013569351203598552, 'a3_a': 0.0, 'delta_phi_m3': -0.48464944547015704,
-                 'a4_a': 0.0, 'delta_phi_m4': 0.6786230184849307},
-                {'gamma1': -0.0038159207840149597, 'gamma2': 0.3609340651280836, 'ra_0': 0.0, 'dec_0': 0.0},
-                {'theta_E': 0.050479483337966896, 'center_x': 3.3527689955490216, 'center_y': -3.995395025902885}
+                {'theta_E': 1.2128051442284533, 'gamma': 2.3417510269959703, 'e1': -0.07613658453691555,
+                 'e2': -0.04677832515324652, 'center_x': -0.05029154884342433, 'center_y': 0.07887971250297662,
+                 'a1_a': 0.0, 'delta_phi_m1': 0.18167336876426537, 'a3_a': 0.0, 'delta_phi_m3': -0.03053852529246417,
+                 'a4_a': 0.0, 'delta_phi_m4': 0.7978670578128553},
+                {'gamma1': 0.0006014103799520669, 'gamma2': 0.4273562498399638, 'ra_0': 0.0, 'dec_0': 0.0},
+                {'theta_E': 0.035528174387371776, 'center_x': 3.3548647214696916, 'center_y': -3.9578092339596487}
             ]
         if self.z_satellite is None:
             z_satellite = self._data.z_lens
@@ -194,12 +194,12 @@ class M1134ModelEPLM3M4ShearSatellite(_M1134ModelBase):
             {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.7, 'a4_a': -0.1,
              'a1_a': -0.1, 'delta_phi_m1': -np.pi,'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
             {'gamma1': -0.5, 'gamma2': -0.5},
-            {'theta_E': 0.05, 'center_x': self.satellite_x - 0.3, 'center_y': self.satellite_y - 0.3}]
+            {'theta_E': 0.0, 'center_x': self.satellite_x - 0.3, 'center_y': self.satellite_y - 0.3}]
         kwargs_upper_lens = [
             {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.6, 'a4_a': 0.1,
              'a1_a': 0.1, 'delta_phi_m1': np.pi,'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
             {'gamma1': 0.5, 'gamma2': 0.5},
-        {'theta_E': 1.0, 'center_x': self.satellite_x + 0.3, 'center_y': self.satellite_y + 0.3}]
+        {'theta_E': 0.4, 'center_x': self.satellite_x + 0.3, 'center_y': self.satellite_y + 0.3}]
         kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
                                                                              kwargs_lens_init, macromodel_samples_fixed)
         lens_model_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_lens_fixed, kwargs_lower_lens,
