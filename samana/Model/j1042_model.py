@@ -214,3 +214,38 @@ class J1042ModelEPLM3M4Shear(_J1042ModelBase):
         lens_model_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_lens_fixed, kwargs_lower_lens,
                              kwargs_upper_lens]
         return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
+
+class J1042ModelEPLM3M4ShearExpShapelets(J1042ModelEPLM3M4Shear):
+
+    def setup_source_light_model(self):
+
+        self._image_plane_source_list = [False]
+        source_model_list = ['SERSIC_ELLIPSE']
+        kwargs_source_init = [
+            {'amp': 19.65100967474721, 'R_sersic': 0.3623232419635632, 'n_sersic': 4.631856837954162,
+             'e1': 0.11925205084786344, 'e2': 0.06692796091466355, 'center_x': 0.011226501439929489,
+             'center_y': 0.07155978396187809}
+        ]
+        kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
+                                'center_y': 0.1}]
+        kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10.0}]
+        kwargs_upper_source = [{'R_sersic': 1.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10.0, 'center_y': 10.0}]
+        kwargs_source_fixed = [{}]
+
+        if self._shapelets_order is not None:
+            self._image_plane_source_list += [False]
+            n_max = int(self._shapelets_order)
+            shapelets_source_list, kwargs_shapelets_init, kwargs_shapelets_sigma, \
+            kwargs_shapelets_fixed, kwargs_lower_shapelets, kwargs_upper_shapelets = \
+                self.add_exp_shapelets_source(n_max)
+            source_model_list += shapelets_source_list
+            kwargs_source_init += kwargs_shapelets_init
+            kwargs_source_fixed += kwargs_shapelets_fixed
+            kwargs_source_sigma += kwargs_shapelets_sigma
+            kwargs_lower_source += kwargs_lower_shapelets
+            kwargs_upper_source += kwargs_upper_shapelets
+
+        source_params = [kwargs_source_init, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source,
+                         kwargs_upper_source]
+
+        return source_model_list, source_params

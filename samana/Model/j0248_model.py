@@ -218,7 +218,7 @@ class J0248ModelEPLM3M4ShearSatellite(_J0248ModelBase):
             {'gamma1': 0.5, 'gamma2': 0.5},
         #{'theta_E': 1.0, 'center_x': self.satellite_x1+0.3, 'center_y': self.satellite_y1+0.3},
            # {'theta_E': 1.0, 'center_x': self.satellite_x2 + 0.3, 'center_y': self.satellite_y2 + 0.3},
-        {'theta_E': 0.5, 'center_x': self.satellite_x3+0.3, 'center_y': self.satellite_y3+0.3}]
+        {'theta_E': 0.3, 'center_x': self.satellite_x3+0.3, 'center_y': self.satellite_y3+0.3}]
         kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
                                                                              kwargs_lens_init, macromodel_samples_fixed)
         lens_model_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_lens_fixed, kwargs_lower_lens,
