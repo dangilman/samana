@@ -133,15 +133,15 @@ class PG1115_NIRCAM(_PG1115):
         vertical_shift = -0.003
         x_image += horizontal_shift
         y_image += vertical_shift
-        magnifications = [1.0, 0.93, 0.16, 0.21]
+        magnifications = np.array([1.0] * 4)
         image_position_uncertainties = [0.005]*4
-        flux_uncertainties = [0.06/0.93, 0.07/0.16, 0.04/0.21]  # percent uncertainty
+        flux_uncertainties = None  # percent uncertainty
         uncertainty_in_fluxes = False
         self._image_data_nircam = image_data
         image_likelihood_mask = self.likelihood_masks(x_image, y_image)[0]
-
-        inds_nan = (np.array([104, 105, 106, 106, 106, 107, 107]), np.array([78, 78, 62, 63, 64, 63, 64]))
-        self._image_data_nircam[inds_nan] = 300.0 # bad pixels at the quasar image positions
+        #inds_nan = (np.array([104, 105, 106, 106, 106, 107, 107]), np.array([78, 78, 62, 63, 64, 63, 64]))
+        #self._image_data_nircam[inds_nan] = 300.0 # bad pixels at the quasar image positions
+        #image_likelihood_mask[inds_nan] = 0.0
         super(PG1115_NIRCAM, self).__init__(x_image, y_image, magnifications, image_position_uncertainties,
                                          flux_uncertainties,
                                          uncertainty_in_fluxes,
@@ -156,10 +156,12 @@ class PG1115_NIRCAM(_PG1115):
         _y = np.linspace(-window_size / 2, window_size / 2, self._image_data_nircam.shape[1])
         _xx, _yy = np.meshgrid(_x, _y)
         likelihood_mask = np.ones_like(_xx)
-        inds = np.where(np.sqrt(_xx ** 2 + _yy ** 2) >= window_size / 2)
+        inds = np.where(np.sqrt(_xx ** 2 + _yy ** 2) >= window_size / 2.1)
         likelihood_mask[inds] = 0.0
         inds_nan = (np.array([104, 105, 106, 106, 106, 107, 107]), np.array([78, 78, 62, 63, 64, 63, 64]))
         likelihood_mask[inds_nan] = 0.0
+        likelihood_mask[:, 125:] = 0
+        likelihood_mask[:, 0:15] = 0
         return likelihood_mask, likelihood_mask
 
     @property
