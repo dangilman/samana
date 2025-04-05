@@ -1,6 +1,6 @@
 from pyHalo.preset_models import preset_model_from_name
-from samana.forward_model_util import filenames, sample_prior, align_realization, \
-    flux_ratio_summary_statistic, flux_ratio_likelihood, split_kwargs_params
+from samana.forward_model_util import filenames, sample_prior, align_realization, align_realization_old, \
+    flux_ratio_summary_statistic, flux_ratio_likelihood, split_kwargs_params, interpolate_ray_paths
 from lenstronomy.LensModel.lens_model import LensModel
 from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_resolution, auto_raytracing_grid_size
 from lenstronomy.Workflow.fitting_sequence import FittingSequence
@@ -34,7 +34,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   parallelize=False,
                   elliptical_ray_tracing_grid=True,
                   split_image_data_reconstruction=False,
-                  filter_subhalo_kwargs=None):
+                  filter_subhalo_kwargs=None, custom_preset_model_function=None):
     """
 
     :param output_path:
@@ -146,6 +146,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
         print('running simulation with a summary statistic tolerance of: ', tolerance)
     # start the simulation, the while loop will execute until one has obtained n_keep samples from the posterior
     seed_counter = 0 + n_kept
+    macromodel_readout_function = None
+    return_realization = False
     while True:
 
         if isinstance(random_seed_init, list) or isinstance(random_seed_init, np.ndarray):
@@ -186,7 +188,10 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              elliptical_ray_tracing_grid,
                              split_image_data_reconstruction,
                              tolerance,
-                             filter_subhalo_kwargs))
+                             filter_subhalo_kwargs,
+                             macromodel_readout_function,
+                             return_realization,
+                             custom_preset_model_function))
 
             pool = Pool(num_threads)
             output = pool.starmap(forward_model_single_iteration, args)
@@ -256,7 +261,10 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 elliptical_ray_tracing_grid,
                                                 split_image_data_reconstruction,
                                                 tolerance,
-                                                filter_subhalo_kwargs)
+                                                filter_subhalo_kwargs,
+                                                macromodel_readout_function,
+                                                return_realization,
+                                                custom_preset_model_function)
 
             seed_counter += 1
             acceptance_rate_counter += 1
@@ -393,7 +401,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            tolerance=np.inf,
                            filter_subhalo_kwargs=None,
                            macromodel_readout_function=None,
-                            return_realization=False):
+                           return_realization=False,
+                           custom_preset_model_function=None):
     """
 
     :param data_class:
@@ -451,7 +460,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         realization_init = fixed_realization
         preset_realization = True
     else:
-        present_model_function = preset_model_from_name(preset_model_name)
+        present_model_function = preset_model_from_name(preset_model_name,
+                                                        custom_function=custom_preset_model_function)
         if 'cone_opening_angle_arcsec' not in realization_dict.keys():
             theta_E = model_class.setup_lens_model()[-1][0][0]['theta_E']
             realization_dict['cone_opening_angle_arcsec'] = max(6.0 * theta_E, 6.0)
@@ -484,12 +494,21 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     else:
         if verbose:
             print('realization has ' + str(len(realization_init.halos)) + ' halos...')
-        realization, _, _, _, _ = align_realization(realization_init, kwargs_model_align['lens_model_list'],
+        if hasattr(model_class, 'use_deprecated') and model_class.use_deprecated:
+            print('using old code')
+            realization, ray_align_x, ray_align_y, _, _ = align_realization_old(realization_init, kwargs_model_align['lens_model_list'],
                                     kwargs_model_align['lens_redshift_list'],
                                     kwargs_lens_align,
                                     data_class.x_image,
                                     data_class.y_image,
                                     astropy_cosmo)
+        else:
+            realization, ray_align_x, ray_align_y, _, _ = align_realization(realization_init, kwargs_model_align['lens_model_list'],
+                                                        kwargs_model_align['lens_redshift_list'],
+                                                        kwargs_lens_align,
+                                                        data_class.x_image,
+                                                        data_class.y_image,
+                                                        astropy_cosmo)
         if filter_subhalo_kwargs is not None:
             realization = realization.filter_subhalos(**filter_subhalo_kwargs)
             if verbose:
@@ -833,8 +852,11 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         modelPlot.decomposition_plot(ax=axes[1, 1], text='Source light convolved', source_add=True)
         modelPlot.decomposition_plot(ax=axes[0, 2], text='All components', source_add=True, lens_light_add=True,
                                      unconvolved=True)
-        modelPlot.decomposition_plot(ax=axes[1, 2], text='All components convolved', source_add=True,
+        try:
+            modelPlot.decomposition_plot(ax=axes[1, 2], text='All components convolved', source_add=True,
                                      lens_light_add=True, point_source_add=True)
+        except:
+            print('failed to create decomposition plot')
         f.tight_layout()
         f.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0., hspace=0.05)
         plt.show()
@@ -845,10 +867,18 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         kwargs_plot = {'ax': ax,
                        'index_macromodel': list(np.arange(0, len(kwargs_result['kwargs_lens']))),
                        'with_critical_curves': True,
-                       'v_min': -0.1, 'v_max': 0.1,
+                       'v_min': -0.075, 'v_max': 0.075,
                        'super_sample_factor': 5,
-                       'subtract_mean': False}
+                       'subtract_mean': True}
         modelPlot.substructure_plot(band_index=0, **kwargs_plot)
+        plt.show()
+
+        fig = plt.figure()
+        fig.set_size_inches(12, 12)
+        ax = plt.axes(projection='3d')
+        realization.plot(ax,
+                         ray_interp_x_list=ray_align_x,
+                         ray_interp_y_list=ray_align_y)
         plt.show()
         a=input('continue?')
 

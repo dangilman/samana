@@ -96,7 +96,7 @@ class WGD2038ModelEPLM3M4Shear(_WGD2038ModelBase):
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
-        if self._spherical_multipole:
+        if self.spherical_multipole:
             lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4', 'SHEAR']
         else:
             lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR']

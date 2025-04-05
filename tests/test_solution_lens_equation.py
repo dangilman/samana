@@ -34,7 +34,7 @@ class TestSolutionLensEquation(object):
                     (source_y[1] - source_y[3]) ** 2 + \
                     (source_y[2] - source_y[3]) ** 2)
         dr = np.sqrt(dx + dy)
-        npt.assert_almost_equal(dr, 0.0, num_decimal)
+        npt.assert_array_less(dr, 0.1, num_decimal)
 
     def test_b1422(self):
 

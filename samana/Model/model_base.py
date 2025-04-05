@@ -8,7 +8,7 @@ import numpy as np
 
 class EPLModelBase(object):
 
-    _spherical_multipole = False
+    spherical_multipole = False
 
     def __init__(self, data_class, shapelets_order=None, shapelets_scale_factor=1):
 
