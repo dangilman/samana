@@ -295,6 +295,8 @@ class Output(object):
                 samples[:, i] = self.macromodel_samples_dict['delta_phi_m3'] + phi_q
             elif param_name == 'phi_m4':
                 samples[:, i] = self.macromodel_samples_dict['delta_phi_m4'] + phi_q
+            elif param_name == 'phi_m1':
+                samples[:, i] = self.macromodel_samples_dict['delta_phi_m1'] + phi_q
             elif param_name == 'f2/f1':
                 samples[:, i] = self.flux_ratios[:, 0]
             elif param_name == 'f3/f1':

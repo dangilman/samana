@@ -155,20 +155,39 @@ class WFI2033NircamModelEPLM3M4Shear(_WFI2033ModelNircamBase):
         return macromodel_readout_function_2033
 
     @property
-    def prior_lens(self):
-        return None
+    def kwargs_likelihood(self):
+        kwargs_likelihood = {'check_bounds': True,
+                             'force_no_add_image': False,
+                             'source_marg': False,
+                             'image_position_uncertainty': 0.005,
+                             'prior_lens': self.prior_lens,
+                             'source_position_tolerance': 0.0001,
+                             'image_likelihood_mask_list': [self._data.likelihood_mask],
+                             'astrometric_likelihood': True,
+                             'custom_logL_addition': self.shear_prior
+                             }
+        return kwargs_likelihood
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4', 'SHEAR', 'SIS', 'SIS']
+        # used in forward modeling v1
+        # kwargs_lens_macro = [
+        #     {'theta_E': 1.0534360481718583, 'gamma': 2.171762510566768, 'e1': 0.1020681308697495, 'e2': -0.1443852511147689,
+        #      'center_x': 0.10864691301522046, 'center_y': -0.027685070187009064,
+        #      'a1_a': 0.0, 'delta_phi_m1': 0.0, 'a3_a': 0.0, 'delta_phi_m3': 0.0,
+        #      'a4_a': 0.0, 'delta_phi_m4': 0.0},
+        #     {'gamma1': 0.15493703472766196, 'gamma2': -0.14691208945427703, 'ra_0': 0.0, 'dec_0': 0.0},
+        #     {'theta_E': 0.10385813844247266, 'center_x': 0.27996727180682557, 'center_y': 2.0044560444528003},
+        #     {'theta_E': 0.5004528970016093, 'center_x': -3.596830704357751, 'center_y': -0.21494848752766837}
+        # ]
         kwargs_lens_macro = [
-            {'theta_E': 1.0534360481718583, 'gamma': 2.171762510566768, 'e1': 0.1020681308697495, 'e2': -0.1443852511147689,
-             'center_x': 0.10864691301522046, 'center_y': -0.027685070187009064,
-             'a1_a': 0.0, 'delta_phi_m1': 0.0, 'a3_a': 0.0, 'delta_phi_m3': 0.0,
-             'a4_a': 0.0, 'delta_phi_m4': 0.0},
-            {'gamma1': 0.15493703472766196, 'gamma2': -0.14691208945427703, 'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.10385813844247266, 'center_x': 0.27996727180682557, 'center_y': 2.0044560444528003},
-            {'theta_E': 0.5004528970016093, 'center_x': -3.596830704357751, 'center_y': -0.21494848752766837}
+            {'theta_E': 1.0321027224447663, 'gamma': 2.072978345285635, 'e1': -0.035056879216832815,
+             'e2': 0.14118073989452923, 'center_x': 0.015104732586054595, 'center_y': -0.02997087202454787, 'a1_a': 0.0,
+             'delta_phi_m1': 0.0, 'a3_a': 0.0, 'delta_phi_m3': 0.0, 'a4_a': 0.0, 'delta_phi_m4': 0.0},
+            {'gamma1': 0.15628116029629033, 'gamma2': -0.04746184092482805, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.07471026075145329, 'center_x': 0.2821279374833845, 'center_y': 2.0055514296524075},
+            {'theta_E': 0.7682870829485742, 'center_x': -3.7280301576075505, 'center_y': -0.3672325791192176}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens,
                                self._data.z_lens, 0.745]
