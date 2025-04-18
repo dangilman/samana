@@ -259,7 +259,7 @@ class EPLModelBase(object):
                         'cosmo': astropy_cosmo}
 
         if kwargs_halos is not None:
-            kwargs_lens_init = [lens_model_params[0] + kwargs_halos]
+            kwargs_lens_init = lens_model_params[0] + kwargs_halos
             lm_list = lens_model_list_macro + lens_model_list_halos
             z_list = list(redshift_list_macro) + list(redshift_list_halos)
         else:
