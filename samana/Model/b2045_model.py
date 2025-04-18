@@ -117,7 +117,7 @@ class B2045ModelEPLM3M4Shear(_B2045ModelBase):
         kwargs_lens_macro = [
             {'theta_E': 1.8136290468520597, 'gamma': 1.8952226001329209, 'e1': 0.05,
              'e2': 0.05, 'center_x': 0.7964104949065247, 'center_y': -0.29056763783593453, 'a3_a': 0.0,
-             'delta_phi_m3': 0.041963414625198245, 'a4_a': 0.0, 'delta_phi_m4': 0.919713353796713},
+             'a1_a': 0.0, 'delta_phi_m1': 0.0, 'delta_phi_m3': 0.041963414625198245, 'a4_a': 0.0, 'delta_phi_m4': 0.919713353796713},
             {'gamma1': 0.09228359645270254, 'gamma2': -0.09209425821025873, 'ra_0': 0.0, 'dec_0': 0.0}
             ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]

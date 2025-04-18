@@ -263,7 +263,7 @@ class EPLModelBase(object):
             lm_list = lens_model_list_macro + lens_model_list_halos
             z_list = list(redshift_list_macro) + list(redshift_list_halos)
         else:
-            kwargs_lens_init = [lens_model_params[0]]
+            kwargs_lens_init = lens_model_params[0]
             lm_list = lens_model_list_macro
             z_list = list(redshift_list_macro)
 

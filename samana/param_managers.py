@@ -104,7 +104,6 @@ class PowerLawParamManager(object):
         :param kwargs: keyword arguments corresponding to the lens model parameters being optimized
         :return: array of lens model parameters
         """
-
         thetaE = kwargs[0]['theta_E']
         center_x = kwargs[0]['center_x']
         center_y = kwargs[0]['center_y']
