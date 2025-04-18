@@ -34,44 +34,65 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   parallelize=False,
                   elliptical_ray_tracing_grid=True,
                   split_image_data_reconstruction=False,
-                  filter_subhalo_kwargs=None, custom_preset_model_function=None):
+                  filter_subhalo_kwargs=None,
+                  custom_preset_model_function=None,
+                  run_initial_PSO=True):
     """
+    Top-level function for forward modeling strong lenses with substructure. This function makes repeated calls to
+    the forward_model_single_iteration routine below, and outputs the results to text files. Lens modeling and dark matter
+    calculations take place inside the forward_model_single_iteration function
 
-    :param output_path:
-    :param job_index:
-    :param n_keep:
-    :param data_class:
-    :param model:
-    :param preset_model_name:
-    :param kwargs_sample_realization:
-    :param kwargs_sample_source:
-    :param kwargs_sample_fixed_macromodel:
-    :param tolerance:
-    :param log_mlow_mass_sheets:
-    :param kwargs_model_class:
-    :param rescale_grid_size:
-    :param rescale_grid_resolution:
-    :param readout_macromodel_samples:
-    :param verbose:
-    :param random_seed_init:
-    :param readout_steps:
-    :param write_sampling_rate:
-    :param n_pso_particles:
-    :param n_pso_iterations:
-    :param num_threads:
-    :param astrometric_uncertainty:
-    :param image_data_grid_resolution_rescale:
-    :param use_imaging_data:
-    :param fitting_sequence_kwargs:
-    :param test_mode:
-    :param use_decoupled_multiplane_approximation:
-    :param fixed_realization_list:
-    :param kappa_scale_subhalos:
-    :param log10_bound_mass_cut:
-    :param parallelize:
-    :param elliptical_ray_tracing_grid:
-    :param split_image_data_reconstruction:
-    :param filter_subhalo_kwargs:
+    :param output_path: directory where output files will be saved, for example ~/OUTPUT_FILES/LENS_NUMBER_1/
+    :param job_index: the unique integer identifying output from each CPU (if running inside a job array). Output is
+    written to ~/OUTPUT_FILES/LENS_NUMBER_1/job_I where I = job_index
+    :param n_keep: the number of samples to produce on each CPU; the code will stop once n_keep lenses are simulated. To
+    increase the number of realizations, perform calculations across more CPUs or increase n_keep, both are equivalent
+    :param data_class: an instance of a Data class with image positions, imaging data, lens/source redshifts, etc. See
+    class in the Data module
+    :param model:  an instance of a Model class; see classes in the Model module
+    :param preset_model_name: a string identifying a preset model pyHalo
+    :param kwargs_sample_realization: a dictionary specifying priors on DM parameters, for example:
+    - kwargs_sample_realization = {'sigma_sub': ['UNIFORM', 0.0, 0.1]} is a uniform prior on sigma_sub between 0 and 0.1.
+    - kwargs_sample_realization = {'sigma_sub': ['GAUSSIAN', 0.0, 0.1]} is a Gaussian prior on sigma_sub with mean 0 and
+    standard deviation 0.1.
+    - kwargs_sample_realization = {'sigma_sub': ['FIXED', 0.1]} fixes the value of sigma_sub = 0.1
+    :param kwargs_sample_source: a dictionary specifying priors on source parameters, same syntax as kwargs_sample_realization.
+    :param kwargs_sample_fixed_macromodel: a dictionary specifying priors on macromodel parameters, same syntax as kwargs_sample_realization
+    :param tolerance: tolerance for accepting/rejecting flux ratio summary statistic; np.inf will accept everything
+    :param log_mlow_mass_sheets: minimum halo mass used to calculate the amount of convergence to subtract at each lens plane,
+    should be the minimum halo mass rendered along the line of sight
+    :param kwargs_model_class: keyword arguments to be passed to the Model class; see classes in the Model module
+    :param rescale_grid_size: rescales the size of the ray tracing grid for computing image magnifications
+    :param rescale_grid_resolution: rescales the resolution of the ray tracing grid for computing image magnifications
+    :param readout_macromodel_samples: bool; if True, will create text files with macromodel samples saved
+    :param verbose: bool; make print statements while running
+    :param random_seed_init: a random seed for reproducibility
+    :param readout_steps: determines how frequently to write output to files; recommended to use a number > 2. For example,
+    readout_steps=2 will append output to files after every 2 realizations
+    :param write_sampling_rate: bool; create text files with the sampling rate (minutes per realization)
+    :param n_pso_particles: number of PSO particles to use when modeling imaging data
+    :param n_pso_iterations: number of PSO iteraations to use when modeling imaging data
+    :param num_threads: number of threads to parallization; WARNING, this appears to mess with the reproducibility/
+    random_seed functionality
+    :param astrometric_uncertainty: bool; add astrometric uncertainty to image positions before lens modeling
+    :param image_data_grid_resolution_rescale: rescales the resoltuion of the image grid for imaging data calculations
+    :param use_imaging_data: bool; reconstruct imaging data
+    :param fitting_sequence_kwargs: a list specifying the fitting sequence operations done by lenstronomy
+    :param test_mode: bool; prints output and makes plots of convergence, image magnifications, reconstructed light, etc
+    :param use_decoupled_multiplane_approximation: bool; use the decoupled multiplane approximation as detailed in Gilman et al. 2024
+    :param fixed_realization_list: a list of fixed pyHalo realizations to use in the calculations
+    :param kappa_scale_subhalos: rescales the negative convergence sheet associated with subhalos; should be approx. equal
+    to the amplitude of the bound mass function relative to the infall mass function
+    :param log10_bound_mass_cut: remove subhalos with bound masses below 10^log10_bound_mass_cut
+    :param parallelize: bool; use parallelization (not well tested)
+    :param elliptical_ray_tracing_grid: bool; use an elliptical ray tracing grid (instead of circular) to calculate image magnifications. This
+    is faster, but can fail in some cases with extremely high magnifications and/or a poorly constrained lens model
+    :param split_image_data_reconstruction: bool; reconstruct source light to fit image data with a fixed lens model, rather
+    than joint reconstruction of both
+    :param filter_subhalo_kwargs: keyword arguments passed to pyHalo to remove low-mass subhalos that are far away from images
+    :param custom_preset_model_function: a custom preset_model function that can be passed to pyHalo; only used when
+    preset_model_name='CUSTOM'
+    :param run_initial_PSO: bool; run initial particle swarm optimization when NOT using imaging data
     :return:
     """
 
@@ -191,7 +212,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              filter_subhalo_kwargs,
                              macromodel_readout_function,
                              return_realization,
-                             custom_preset_model_function))
+                             custom_preset_model_function,
+                             run_initial_PSO))
 
             pool = Pool(num_threads)
             output = pool.starmap(forward_model_single_iteration, args)
@@ -264,7 +286,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 filter_subhalo_kwargs,
                                                 macromodel_readout_function,
                                                 return_realization,
-                                                custom_preset_model_function)
+                                                custom_preset_model_function,
+                                                run_initial_PSO)
 
             seed_counter += 1
             acceptance_rate_counter += 1
@@ -402,7 +425,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            filter_subhalo_kwargs=None,
                            macromodel_readout_function=None,
                            return_realization=False,
-                           custom_preset_model_function=None):
+                           custom_preset_model_function=None,
+                           run_initial_PSO=True):
     """
 
     :param data_class:
@@ -591,6 +615,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                  kwargs_lens_init,
                                                  index_lens_split,
                                                  param_class,
+                                                 particle_swarm=run_initial_PSO,
                                                  tol_simplex_func=1e-5,
                                                  simplex_n_iterations=500
                                                  )
@@ -614,7 +639,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                             param_class,
                                             tol_simplex_func=1e-5,
                                             simplex_n_iterations=500,
-                                            particle_swarm=True)
+                                            particle_swarm=run_initial_PSO)
             kwargs_solution, _ = opt.optimize(50, 50, verbose=verbose, seed=seed)
             kwargs_multiplane_model = opt.kwargs_multiplane_model
 
