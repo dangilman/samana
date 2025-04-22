@@ -164,7 +164,7 @@ class WFI2033NircamModelEPLM3M4Shear(_WFI2033ModelNircamBase):
                              'source_position_tolerance': 0.0001,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True,
-                             'custom_logL_addition': self.shear_prior
+                             #'custom_logL_addition': self.shear_prior
                              }
         return kwargs_likelihood
 
