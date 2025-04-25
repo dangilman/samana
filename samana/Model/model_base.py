@@ -233,10 +233,7 @@ class EPLModelBase(object):
                 elif param_fixed == 'satellite_2_y':
                     kwargs_lens_fixed[3]['center_y'] = macromodel_samples_fixed[param_fixed]
                     kwargs_lens_init[3]['center_y'] = macromodel_samples_fixed[param_fixed]
-                elif param_fixed == 'gamma_ext':
-                    # ignore this
-                    pass
-                elif param_fixed == 'q':
+                elif param_fixed in ['gamma_ext', 'q', 'mass_centroid_x', 'mass_centroid_y', 'sigma_xy_mass_centroid']:
                     # ignore this
                     pass
                 else:

@@ -201,7 +201,9 @@ class EPLMultipole134LensMassPrior(EPLMultipole134):
         :param q_min:
         :return:
         """
-        return self.axis_ratio_penalty(args, q_min) + self.mass_centroid_penalty(args)
+        axis_ratio_pen = self.axis_ratio_penalty(args, q_min)
+        mass_centroid_pen = self.mass_centroid_penalty(args)
+        return axis_ratio_pen + mass_centroid_pen
 
     def mass_centroid_penalty(self, args):
         """
