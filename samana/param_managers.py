@@ -217,7 +217,7 @@ class EPLMultipole134LensMassPrior(EPLMultipole134):
         if dr > 5 * self._sigmaxy:
             return 1e9
         else:
-            return np.exp(-0.5 * dr ** 2 / self._sigmaxy ** 2)
+            return 0.5 * dr ** 2 / self._sigmaxy ** 2
 
 def auto_param_class(lens_model_list_macro, kwargs_lens_init, macromodel_samples_fixed_dict):
     """
