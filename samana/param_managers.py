@@ -1,5 +1,5 @@
 from lenstronomy.Util.param_util import shear_cartesian2polar, shear_polar2cartesian
-from lenstronomy.Util.param_util import ellipticity2phi_q
+from lenstronomy.Util.param_util import ellipticity2phi_q, phi_q2_ellipticity
 import numpy as np
 from copy import deepcopy
 
@@ -20,26 +20,13 @@ class PowerLawParamManager(object):
 
         self.kwargs_lens = kwargs_lens_init
 
-    @staticmethod
-    def am_measured_to_physical(a_m_measured, theta_E, q):
+    def axis_ratio_penalty(self, args, q_min=0.3):
         """
-        Computes the scaling factor for the multipole moments to implement the "shape distortion" convention.
-
-        Priors are specified on a3_a and a4_a, the MEASURED shapes of ellipitical galaxies. These quantities are
-        transformed in the PHYSICAL amplitudes of the multipole moments using the relation:
-
-        a4_a_measured = a4_a_physical * lambda
-
-        where lambda = theta_E / sqrt(q).
+        Penalize unphysical axis ratios < 0.3
+        :param args: vector of numbers corresponding to kwargs_lens
+        :param q_min: minimum allowed axis ratio
+        :return: penalty term if q drops below q_min
         """
-        lam = theta_E / np.sqrt(q)
-        a_m_phys = a_m_measured * lam
-        # note that the multipole classes in lenstronomy do not apply this scaling, but the multipole
-        # terms in EPL_MULTIPOLE_M3M4, EPL_BOXY_DISKY, and EPL_MULTIPOLE_M3M4_ELL do automatically
-        # apply the scaling (so this method isn't used for those classes)
-        return a_m_phys
-
-    def param_chi_square_penalty(self, args, q_min=0.1):
         e1 = args[3]
         e2 = args[4]
         c = np.sqrt(e1 ** 2 + e2 ** 2)
@@ -111,417 +98,24 @@ class PowerLawParamManager(object):
         e2 = kwargs[0]['e2']
         g1 = kwargs[1]['gamma1']
         g2 = kwargs[1]['gamma2']
-
         args = (thetaE, center_x, center_y, e1, e2, g1, g2)
         return args
 
-class PowerLawFixedShear(PowerLawParamManager):
+class EPLMultipole134(PowerLawParamManager):
 
-    """
-    This class implements a fit of EPL + external shear with every parameter except the power law slope AND the
-    shear strength allowed to vary. The user should specify shear_strengh in the args_param_class keyword when
-    creating the Optimizer class
-    """
-
-    def __init__(self, kwargs_lens_init, shear_strength):
-
+    def __init__(self, kwargs_lens_init, a1a_init, a3a_init, a4a_init,
+                 delta_phi_m1, delta_phi_m3, delta_phi_m4, q=None, gamma_ext=None):
         """
 
-        :param kwargs_lens_init: the initial kwargs_lens before optimizing
-        :param shear_strength: the strenght of the external shear to be kept fixed
-        """
-        self._shear_strength = shear_strength
-
-        super(PowerLawFixedShear, self).__init__(kwargs_lens_init)
-
-    def args_to_kwargs(self, args):
-
-        """
-
-        :param args: array of lens model parameters
-        :return: dictionary of lens model parameters with fixed shear = shear_strength
-        """
-
-        (thetaE, center_x, center_y, e1, e2, g1, g2) = args
-        gamma = self.kwargs_lens[0]['gamma']
-
-        kwargs_epl = {'theta_E': thetaE, 'center_x': center_x, 'center_y': center_y,
-                      'e1': e1, 'e2': e2, 'gamma': gamma}
-
-        phi, _ = shear_cartesian2polar(g1, g2)
-        gamma1, gamma2 = shear_polar2cartesian(phi, self._shear_strength)
-        kwargs_shear = {'gamma1': gamma1, 'gamma2': gamma2}
-
-        self.kwargs_lens[0] = kwargs_epl
-        self.kwargs_lens[1] = kwargs_shear
-
-        return self.kwargs_lens
-
-
-class PowerLawFreeShearMultipole(PowerLawParamManager):
-
-    """
-    This class implements a fit of EPL + external shear + a multipole term with every parameter except the
-    power law slope and multipole moment free to vary. The mass centroid and orientation of the multipole term are
-    fixed to that of the EPL profile
-
-    """
-
-    def __init__(self, kwargs_lens_init, a4a_init):
-
-        """
-
-        :param kwargs_lens_init: the initial kwargs_lens before optimizing
-        """
-
-        self._a4a_init = a4a_init
-        super(PowerLawFreeShearMultipole, self).__init__(kwargs_lens_init)
-
-    @property
-    def to_vary_index(self):
-
-        """
-        The number of lens models being varied in this routine. This is set to 3 because the first three lens models
-        are EPL, SHEAR, and MULTIPOLE, and their parameters are being optimized.
-
-        The kwargs_list is split at to to_vary_index with indicies < to_vary_index accessed in this class,
-        and lens models with indicies > to_vary_index kept fixed.
-
-        Note that this requires a specific ordering of lens_model_list
-        :return:
-        """
-
-        return 3
-
-    def args_to_kwargs(self, args):
-
-        (thetaE, center_x, center_y, e1, e2, g1, g2) = args
-
-        gamma = self.kwargs_lens[0]['gamma']
-
-        kwargs_epl = {'theta_E': thetaE, 'center_x': center_x, 'center_y': center_y,
-                      'e1': e1, 'e2': e2, 'gamma': gamma}
-        kwargs_shear = {'gamma1': g1, 'gamma2': g2}
-
-        self.kwargs_lens[0] = kwargs_epl
-        self.kwargs_lens[1] = kwargs_shear
-
-        self.kwargs_lens[2]['center_x'] = center_x
-        self.kwargs_lens[2]['center_y'] = center_y
-        phi, q = ellipticity2phi_q(e1, e2)
-        self.kwargs_lens[2]['a_m'] = self.am_measured_to_physical(self._a4a_init, thetaE, q)
-        self.kwargs_lens[2]['phi_m'] = phi
-        return self.kwargs_lens
-
-
-class PowerLawFixedShearMultipole(PowerLawFixedShear):
-    """
-    This class implements a fit of EPL + external shear + a multipole term with every parameter except the
-    power law slope, shear strength, and multipole moment free to vary. The mass centroid and orientation of the
-    multipole term are fixed to that of the EPL profile
-    """
-
-    def __init__(self, kwargs_lens_init, shear_strength, a4a_init):
-
-        """
-
-        :param kwargs_lens_init: the initial kwargs_lens before optimizing
-        """
-
-        self._a4a_init = a4a_init
-        super(PowerLawFixedShearMultipole, self).__init__(kwargs_lens_init, shear_strength)
-
-    @property
-    def to_vary_index(self):
-
-        """
-        The number of lens models being varied in this routine. This is set to 3 because the first three lens models
-        are EPL, SHEAR, and MULTIPOLE, and their parameters are being optimized.
-
-        The kwargs_list is split at to to_vary_index with indicies < to_vary_index accessed in this class,
-        and lens models with indicies > to_vary_index kept fixed.
-
-        Note that this requires a specific ordering of lens_model_list
-        :return:
-        """
-
-        return 3
-
-    def args_to_kwargs(self, args):
-
-        (thetaE, center_x, center_y, e1, e2, g1, g2) = args
-        gamma = self.kwargs_lens[0]['gamma']
-
-        kwargs_epl = {'theta_E': thetaE, 'center_x': center_x, 'center_y': center_y,
-                      'e1': e1, 'e2': e2, 'gamma': gamma}
-
-        phi, _ = shear_cartesian2polar(g1, g2)
-        gamma1, gamma2 = shear_polar2cartesian(phi, self._shear_strength)
-        kwargs_shear = {'gamma1': gamma1, 'gamma2': gamma2}
-
-        self.kwargs_lens[0] = kwargs_epl
-        self.kwargs_lens[1] = kwargs_shear
-
-        self.kwargs_lens[2]['center_x'] = center_x
-        self.kwargs_lens[2]['center_y'] = center_y
-        phi, q = ellipticity2phi_q(e1, e2)
-        self.kwargs_lens[2]['phi_m'] = phi
-        self.kwargs_lens[2]['a_m'] = self.am_measured_to_physical(self._a4a_init, thetaE, q)
-        return self.kwargs_lens
-
-class PowerLawFreeShear(PowerLawParamManager):
-
-    """
-    This class implements a fit of EPL + external shear with every parameter except the power law slope allowed to vary
-    """
-    def args_to_kwargs(self, args):
-
-        """
-
-        :param args: array of lens model parameters
-        :return: dictionary of lens model parameters
-        """
-
-        gamma = self.kwargs_lens[0]['gamma']
-        kwargs_epl = {'theta_E': args[0], 'center_x': args[1], 'center_y': args[2],
-                      'e1': args[3], 'e2': args[4], 'gamma': gamma}
-
-        kwargs_shear = {'gamma1': args[5], 'gamma2': args[6]}
-
-        self.kwargs_lens[0] = kwargs_epl
-        self.kwargs_lens[1] = kwargs_shear
-
-        return self.kwargs_lens
-
-class PowerLawFixedShearMultipole_34(PowerLawFixedShear):
-    """
-    This class implements a fit of EPL + external shear + two multipole terms (m=3 and m=4) with every parameter except the
-    power law slope, shear strength, and multipole moments free to vary. The mass centroid and orientation of the
-    m=4 multipole term are fixed to that of the EPL profile, and the orientation of m=3 multiple term is
-    fixed to some user-defined angle.
-    """
-
-    def __init__(self, kwargs_lens_init, shear_strength, a4a_init, a3a_init, delta_phi_m3):
-
-        """
-
-        :param kwargs_lens_init: the initial kwargs_lens before optimizing
-        :param shear_strength: the strenght of the external shear to be kept fixed
-        :param delta_phi_m3: the orientation of the m=3 multipole relative to the EPL position angle
-        """
-
-        self._a4a_init = a4a_init
-        self._a3a_init = a3a_init
-        self._delta_phi_m3 = delta_phi_m3
-        if kwargs_lens_init[2]['m'] == 3:
-            self._idx_m3 = 2
-            self._idx_m4 = 3
-        else:
-            self._idx_m3 = 3
-            self._idx_m4 = 2
-        super(PowerLawFixedShearMultipole_34, self).__init__(kwargs_lens_init, shear_strength)
-
-    @property
-    def to_vary_index(self):
-
-        """
-        The number of lens models being varied in this routine. This is set to 4 because the first four lens models
-        are EPL, SHEAR, MULTIPOLE, and MULTIPOLE, and their parameters are being optimized.
-
-        The kwargs_list is split at to to_vary_index with indicies < to_vary_index accessed in this class,
-        and lens models with indicies > to_vary_index kept fixed.
-
-        Note that this requires a specific ordering of lens_model_list
-        :return:
-        """
-
-        return 4
-
-    def args_to_kwargs(self, args):
-
-        (thetaE, center_x, center_y, e1, e2, g1, g2) = args
-        gamma = self.kwargs_lens[0]['gamma']
-
-        # handle the EPL profile
-        kwargs_epl = {'theta_E': thetaE, 'center_x': center_x, 'center_y': center_y,
-                      'e1': e1, 'e2': e2, 'gamma': gamma}
-        self.kwargs_lens[0] = kwargs_epl
-
-        # determine the orientation of external shear
-        phi, _ = shear_cartesian2polar(g1, g2)
-        gamma1, gamma2 = shear_polar2cartesian(phi, self._shear_strength)
-        kwargs_shear = {'gamma1': gamma1, 'gamma2': gamma2}
-        self.kwargs_lens[1] = kwargs_shear
-
-        # fix m=4 multipole centroid to EPL centroid
-        self.kwargs_lens[self._idx_m4]['center_x'] = center_x
-        self.kwargs_lens[self._idx_m4]['center_y'] = center_y
-        # fix m=4 multipole orientation to EPL orientation
-        phi, q = ellipticity2phi_q(e1, e2)
-        self.kwargs_lens[self._idx_m4]['phi_m'] = phi
-        self.kwargs_lens[self._idx_m4]['a_m'] = self.am_measured_to_physical(self._a4a_init, thetaE, q)
-
-        # fix m=3 multipole centroid to EPL centroid
-        self.kwargs_lens[self._idx_m3]['center_x'] = center_x
-        self.kwargs_lens[self._idx_m3]['center_y'] = center_y
-
-        phi, _ = ellipticity2phi_q(e1, e2)
-        self.kwargs_lens[self._idx_m3]['phi_m'] = phi + self._delta_phi_m3
-        self.kwargs_lens[self._idx_m3]['a_m'] = self.am_measured_to_physical(self._a3a_init, thetaE, q)
-
-        return self.kwargs_lens
-
-class PowerLawFreeShearMultipole_34(PowerLawParamManager):
-
-    """
-    This class implements a fit of EPL + external shear + a multipole term with every parameter except the
-    power law slope and multipole moment free to vary. The mass centroid and orientation of the multipole term are
-    fixed to that of the EPL profile
-
-    """
-
-    def __init__(self, kwargs_lens_init, a4a_init, a3a_init, delta_phi_m3):
-
-        """
-
-        :param kwargs_lens_init: the initial kwargs_lens before optimizing
-        :param shear_strength: the strenght of the external shear to be kept fixed
-        :param the orientation of the m=3 multipole relative to the EPL position angle
-        """
-
-        self._a4a_init = a4a_init
-        self._a3a_init = a3a_init
-        self._delta_phi_m3 = delta_phi_m3
-        if kwargs_lens_init[2]['m'] == 3:
-            self._idx_m3 = 2
-            self._idx_m4 = 3
-        else:
-            self._idx_m3 = 3
-            self._idx_m4 = 2
-        super(PowerLawFreeShearMultipole_34, self).__init__(kwargs_lens_init)
-
-    @property
-    def to_vary_index(self):
-
-        """
-        The number of lens models being varied in this routine. This is set to 3 because the first three lens models
-        are EPL, SHEAR, and MULTIPOLE, and their parameters are being optimized.
-
-        The kwargs_list is split at to to_vary_index with indicies < to_vary_index accessed in this class,
-        and lens models with indicies > to_vary_index kept fixed.
-
-        Note that this requires a specific ordering of lens_model_list
-        :return:
-        """
-
-        return 4
-
-    def args_to_kwargs(self, args):
-
-        (thetaE, center_x, center_y, e1, e2, g1, g2) = args
-        gamma = self.kwargs_lens[0]['gamma']
-
-        # handle the EPL profile
-        kwargs_epl = {'theta_E': thetaE, 'center_x': center_x, 'center_y': center_y,
-                      'e1': e1, 'e2': e2, 'gamma': gamma}
-        self.kwargs_lens[0] = kwargs_epl
-
-        kwargs_shear = {'gamma1': g1, 'gamma2': g2}
-        self.kwargs_lens[1] = kwargs_shear
-
-        # fix m=4 multipole centroid to EPL centroid
-        self.kwargs_lens[self._idx_m4]['center_x'] = center_x
-        self.kwargs_lens[self._idx_m4]['center_y'] = center_y
-        # fix m=4 multipole orientation to EPL orientation
-        phi, q = ellipticity2phi_q(e1, e2)
-        self.kwargs_lens[self._idx_m4]['phi_m'] = phi
-        self.kwargs_lens[self._idx_m4]['a_m'] = self.am_measured_to_physical(self._a4a_init, thetaE, q)
-
-        # fix m=3 multipole centroid to EPL centroid
-        self.kwargs_lens[self._idx_m3]['center_x'] = center_x
-        self.kwargs_lens[self._idx_m3]['center_y'] = center_y
-
-        phi, _ = ellipticity2phi_q(e1, e2)
-        self.kwargs_lens[self._idx_m3]['phi_m'] = phi + self._delta_phi_m3
-        self.kwargs_lens[self._idx_m3]['a_m'] = self.am_measured_to_physical(self._a3a_init, thetaE, q)
-
-        return self.kwargs_lens
-
-class EPLMultipole34FixedShear(PowerLawFixedShear):
-
-    def __init__(self, kwargs_lens_init, shear_strength, a4a_init, a3a_init, delta_phi_m3, delta_phi_m4):
-
-        """
-
-        :param kwargs_lens_init: the initial kwargs_lens before optimizing
-        :param shear_strength: the strenght of the external shear to be kept fixed
-        :param delta_phi_m3: the orientation of the m=3 multipole relative to the EPL position angle
-        """
-
-        self._a4a_init = a4a_init
-        self._a3a_init = a3a_init
-        self._delta_phi_m3 = delta_phi_m3
-        self._delta_phi_m4 = delta_phi_m4
-        self._idx_m4 = 0
-        self._idx_m3 = 0
-        super(EPLMultipole34FixedShear, self).__init__(kwargs_lens_init, shear_strength)
-
-    def args_to_kwargs(self, args):
-
-        (thetaE, center_x, center_y, e1, e2, g1, g2) = args
-        gamma = self.kwargs_lens[0]['gamma']
-        kwargs_epl = {'theta_E': thetaE, 'center_x': center_x, 'center_y': center_y,
-                      'e1': e1, 'e2': e2, 'gamma': gamma}
-        self.kwargs_lens[0] = kwargs_epl
-        self.kwargs_lens[0]['a4_a'] = self._a4a_init
-        self.kwargs_lens[0]['a3_a'] = self._a3a_init
-        self.kwargs_lens[0]['delta_phi_m3'] = self._delta_phi_m3
-        self.kwargs_lens[0]['delta_phi_m4'] = self._delta_phi_m4
-        kwargs_shear = {'gamma1': g1, 'gamma2': g2}
-        self.kwargs_lens[1] = kwargs_shear
-        return self.kwargs_lens
-
-class EPLMultipole34FreeShear(PowerLawParamManager):
-
-    def __init__(self, kwargs_lens_init, a4a_init, a3a_init, delta_phi_m3, delta_phi_m4):
-        """
-
-        :param kwargs_lens_init: the initial kwargs_lens before optimizing
-        :param shear_strength: the strenght of the external shear to be kept fixed
-        :param delta_phi_m3: the orientation of the m=3 multipole relative to the EPL position angle
-        """
-
-        self._a4a_init = a4a_init
-        self._a3a_init = a3a_init
-        self._delta_phi_m3 = delta_phi_m3
-        self._delta_phi_m4 = delta_phi_m4
-        self._idx_m4 = 0
-        self._idx_m3 = 0
-        super(EPLMultipole34FreeShear, self).__init__(kwargs_lens_init)
-
-    def args_to_kwargs(self, args):
-        (thetaE, center_x, center_y, e1, e2, g1, g2) = args
-        gamma = self.kwargs_lens[0]['gamma']
-        kwargs_epl = {'theta_E': thetaE, 'center_x': center_x, 'center_y': center_y,
-                      'e1': e1, 'e2': e2, 'gamma': gamma}
-        self.kwargs_lens[0] = kwargs_epl
-        self.kwargs_lens[0]['a4_a'] = self._a4a_init
-        self.kwargs_lens[0]['a3_a'] = self._a3a_init
-        self.kwargs_lens[0]['delta_phi_m3'] = self._delta_phi_m3
-        self.kwargs_lens[0]['delta_phi_m4'] = self._delta_phi_m4
-        kwargs_shear = {'gamma1': g1, 'gamma2': g2}
-        self.kwargs_lens[1] = kwargs_shear
-        return self.kwargs_lens
-
-class EPLMultipole134FreeShearLensMassPrior(PowerLawParamManager):
-
-    def __init__(self, kwargs_lens_init, a1a_init, a4a_init, a3a_init,
-                 delta_phi_m1, delta_phi_m3, delta_phi_m4, center_x, center_y, sigma_xy):
-        """
-
-        :param kwargs_lens_init: the initial kwargs_lens before optimizing
-        :param shear_strength: the strenght of the external shear to be kept fixed
-        :param delta_phi_m3: the orientation of the m=3 multipole relative to the EPL position angle
+        :param kwargs_lens_init:
+        :param a1a_init:
+        :param a3a_init:
+        :param a4a_init:
+        :param delta_phi_m1:
+        :param delta_phi_m3:
+        :param delta_phi_m4:
+        :param q:
+        :param gamma_ext:
         """
 
         self._a1a_init = a1a_init
@@ -530,143 +124,149 @@ class EPLMultipole134FreeShearLensMassPrior(PowerLawParamManager):
         self._delta_phi_m1 = delta_phi_m1
         self._delta_phi_m3 = delta_phi_m3
         self._delta_phi_m4 = delta_phi_m4
-        self._idx_m4 = 0
-        self._idx_m3 = 0
+        self._q = q
+        self._gamma_ext = gamma_ext
+        super(EPLMultipole134, self).__init__(kwargs_lens_init)
+
+    def param_chi_square_penalty(self, args, q_min=0.1):
+        """
+
+        :param args:
+        :param q_min:
+        :return:
+        """
+        return self.axis_ratio_penalty(args, q_min)
+
+    def args_to_kwargs(self, args):
+        (thetaE, center_x, center_y, _e1, _e2, _g1, _g2) = args
+        if self._q is None:
+            e1, e2 = _e1, _e2
+        else:
+            # enforce fixed q while sampling phi_q
+            phi_q, _ = ellipticity2phi_q(_e1, _e2)
+            e1, e2 = phi_q2_ellipticity(phi_q, self._q)
+        if self._gamma_ext is None:
+            g1, g2 = _g1, _g2
+        else:
+            phi_gamma, _ = shear_cartesian2polar(_g1, _g2)
+            g1, g2 = shear_polar2cartesian(phi_gamma, self._gamma_ext)
+        gamma = self.kwargs_lens[0]['gamma']
+        kwargs_epl = {'theta_E': thetaE, 'center_x': center_x, 'center_y': center_y,
+                      'e1': e1, 'e2': e2, 'gamma': gamma}
+        self.kwargs_lens[0] = kwargs_epl
+        self.kwargs_lens[0]['a1_a'] = self._a1a_init
+        self.kwargs_lens[0]['a4_a'] = self._a4a_init
+        self.kwargs_lens[0]['a3_a'] = self._a3a_init
+        self.kwargs_lens[0]['delta_phi_m1'] = self._delta_phi_m1
+        self.kwargs_lens[0]['delta_phi_m3'] = self._delta_phi_m3
+        self.kwargs_lens[0]['delta_phi_m4'] = self._delta_phi_m4
+        kwargs_shear = {'gamma1': g1, 'gamma2': g2}
+        self.kwargs_lens[1] = kwargs_shear
+        return self.kwargs_lens
+
+class EPLMultipole134LensMassPrior(EPLMultipole134):
+
+    def __init__(self, kwargs_lens_init, a1a_init, a3a_init, a4a_init,
+                 delta_phi_m1, delta_phi_m3, delta_phi_m4, center_x, center_y, sigma_xy,
+                 q=None, gamma_ext=None):
+        """
+        Attempts to solve the lens equation with a punishing term on the deflector mass centroid deviating from
+        (center_x, center_y) by more than sigma_xy
+
+        :param kwargs_lens_init:
+        :param a1a_init:
+        :param a3a_init:
+        :param a4a_init:
+        :param delta_phi_m1:
+        :param delta_phi_m3:
+        :param delta_phi_m4:
+        :param center_x:
+        :param center_y:
+        :param sigma_xy:
+        :param q:
+        :param gamma_ext:
+        """
         self._center_x = center_x
         self._center_y = center_y
         self._sigmaxy = sigma_xy
-        super(EPLMultipole134FreeShearLensMassPrior, self).__init__(kwargs_lens_init)
+        self._q = q
+        self._gamma_ext = gamma_ext
+        super(EPLMultipole134LensMassPrior, self).__init__(kwargs_lens_init, a1a_init, a4a_init, a3a_init,
+                 delta_phi_m1, delta_phi_m3, delta_phi_m4, q, gamma_ext)
 
-    def param_chi_square_penalty(self, args):
-        center_x = args[1] - self._center_x
-        center_y = args[2] - self._center_y
-        dr = np.hypot(center_x, center_y)
+    def param_chi_square_penalty(self, args, q_min=0.1):
+        """
+
+        :param args:
+        :param q_min:
+        :return:
+        """
+        return self.axis_ratio_penalty(args, q_min) + self.mass_centroid_penalty(args)
+
+    def mass_centroid_penalty(self, args):
+        """
+        Penalizes mass centroids far away from a fixed coordinate
+        :param args: vector of lens model parameters corresponding to kwargs_lens
+        :return: penalty term
+        """
+        delta_center_x = args[1] - self._center_x
+        delta_center_y = args[2] - self._center_y
+        dr = np.hypot(delta_center_x, delta_center_y)
         if dr > 5 * self._sigmaxy:
             return 1e9
         else:
             return np.exp(-0.5 * dr ** 2 / self._sigmaxy ** 2)
 
-    def args_to_kwargs(self, args):
-        (thetaE, center_x, center_y, e1, e2, g1, g2) = args
-        gamma = self.kwargs_lens[0]['gamma']
-        kwargs_epl = {'theta_E': thetaE, 'center_x': center_x, 'center_y': center_y,
-                      'e1': e1, 'e2': e2, 'gamma': gamma}
-        self.kwargs_lens[0] = kwargs_epl
-        self.kwargs_lens[0]['a1_a'] = self._a1a_init
-        self.kwargs_lens[0]['a4_a'] = self._a4a_init
-        self.kwargs_lens[0]['a3_a'] = self._a3a_init
-        self.kwargs_lens[0]['delta_phi_m1'] = self._delta_phi_m1
-        self.kwargs_lens[0]['delta_phi_m3'] = self._delta_phi_m3
-        self.kwargs_lens[0]['delta_phi_m4'] = self._delta_phi_m4
-        kwargs_shear = {'gamma1': g1, 'gamma2': g2}
-        self.kwargs_lens[1] = kwargs_shear
-        return self.kwargs_lens
-
-class EPLMultipole134FreeShear(PowerLawParamManager):
-
-    def __init__(self, kwargs_lens_init, a1a_init, a4a_init, a3a_init,
-                 delta_phi_m1, delta_phi_m3, delta_phi_m4):
-        """
-
-        :param kwargs_lens_init:
-        :param a1a_init:
-        :param a4a_init:
-        :param a3a_init:
-        :param delta_phi_m1:
-        :param delta_phi_m3:
-        :param delta_phi_m4:
-        """
-
-        self._a1a_init = a1a_init
-        self._a4a_init = a4a_init
-        self._a3a_init = a3a_init
-        self._delta_phi_m1 = delta_phi_m1
-        self._delta_phi_m3 = delta_phi_m3
-        self._delta_phi_m4 = delta_phi_m4
-        super(EPLMultipole134FreeShear, self).__init__(kwargs_lens_init)
-
-    def args_to_kwargs(self, args):
-        (thetaE, center_x, center_y, e1, e2, g1, g2) = args
-        gamma = self.kwargs_lens[0]['gamma']
-        kwargs_epl = {'theta_E': thetaE, 'center_x': center_x, 'center_y': center_y,
-                      'e1': e1, 'e2': e2, 'gamma': gamma}
-        self.kwargs_lens[0] = kwargs_epl
-        self.kwargs_lens[0]['a1_a'] = self._a1a_init
-        self.kwargs_lens[0]['a4_a'] = self._a4a_init
-        self.kwargs_lens[0]['a3_a'] = self._a3a_init
-        self.kwargs_lens[0]['delta_phi_m1'] = self._delta_phi_m1
-        self.kwargs_lens[0]['delta_phi_m3'] = self._delta_phi_m3
-        self.kwargs_lens[0]['delta_phi_m4'] = self._delta_phi_m4
-        kwargs_shear = {'gamma1': g1, 'gamma2': g2}
-        self.kwargs_lens[1] = kwargs_shear
-        return self.kwargs_lens
-
 def auto_param_class(lens_model_list_macro, kwargs_lens_init, macromodel_samples_fixed_dict):
+    """
 
+    :param lens_model_list_macro:
+    :param kwargs_lens_init:
+    :param macromodel_samples_fixed_dict:
+    :return:
+    """
     macromodel_samples_fixed_param_names = macromodel_samples_fixed_dict.keys()
-    condition_1 = lens_model_list_macro[0] == 'EPL_MULTIPOLE_M3M4_ELL' and lens_model_list_macro[1] == 'SHEAR'
-    condition_2 = lens_model_list_macro[0] == 'EPL_MULTIPOLE_M3M4' and lens_model_list_macro[1] == 'SHEAR'
-    condition_3 = lens_model_list_macro[0] == 'EPL_MULTIPOLE_M1M3M4_ELL' and lens_model_list_macro[1] == 'SHEAR'
-    condition_4 = lens_model_list_macro[0] == 'EPL_MULTIPOLE_M1M3M4' and lens_model_list_macro[1] == 'SHEAR'
-
-    if condition_1 or condition_2 or condition_3 or condition_4:
-        if 'a4_a' not in macromodel_samples_fixed_param_names:
-            raise Exception(
-                'when specifying a param class with an m=4 multi-pole moment, the amplitude of the multi-moment '
-                'must be sampled from a prior specified with argument a4_a')
-        if 'a3_a' not in macromodel_samples_fixed_param_names:
-            raise Exception(
-                'when specifying a param class with an m=3 multi-pole moment, the amplitude of the multi-moment '
-                'must be sampled from a prior specified with argument a3_a')
-        if 'delta_phi_m3' not in macromodel_samples_fixed_param_names:
-            raise Exception(
-                'when specifying a param class with an m=3 multi-pole moment, the orientation of the multi-moment '
-                'must be sampled from a prior specified with keyword arguement delta_phi_m3')
-        if 'delta_phi_m4' not in macromodel_samples_fixed_param_names:
-            raise Exception(
-                'when specifying a param class with an m=4 multi-pole moment, the orientation of the multi-moment '
-                'must be sampled from a prior specified with keyword arguement delta_phi_m4')
-        if condition_3 or condition_4:
-            if 'a1_a' not in macromodel_samples_fixed_param_names:
-                raise Exception(
-                    'when specifying a param class with an m=1 multipole moment, the amplitude of the multipole moment '
-                    'must be sampled from a prior specified with argument a1_a')
-            if 'delta_phi_m1' not in macromodel_samples_fixed_param_names:
-                raise Exception(
-                    'when specifying a param class with an m=1 multipole moment, the orientation of the multipole moment '
-                    'must be sampled from a prior specified with keyword arguement delta_phi_m1')
-        if 'gamma_ext' in macromodel_samples_fixed_param_names:
-            if condition_1 or condition_2:
-                param_class = EPLMultipole34FixedShear(kwargs_lens_init,
-                                                   macromodel_samples_fixed_dict['gamma_ext'],
-                                                   macromodel_samples_fixed_dict['a4_a'],
-                                                   macromodel_samples_fixed_dict['a3_a'],
-                                                   macromodel_samples_fixed_dict['delta_phi_m3'],
-                                                   macromodel_samples_fixed_dict['delta_phi_m4'])
-            else:
-                raise Exception('fixed shear with m1m3m4 class not implemented')
-        else:
-            if condition_1 or condition_2:
-                param_class = EPLMultipole34FreeShear(kwargs_lens_init,
-                                                  macromodel_samples_fixed_dict['a4_a'],
-                                                  macromodel_samples_fixed_dict['a3_a'],
-                                                  macromodel_samples_fixed_dict['delta_phi_m3'],
-                                                  macromodel_samples_fixed_dict['delta_phi_m4'])
-            else:
-                param_class = EPLMultipole134FreeShear(kwargs_lens_init,
-                                                       macromodel_samples_fixed_dict['a1_a'],
-                                                      macromodel_samples_fixed_dict['a4_a'],
-                                                      macromodel_samples_fixed_dict['a3_a'],
-                                                      macromodel_samples_fixed_dict['delta_phi_m1'],
-                                                      macromodel_samples_fixed_dict['delta_phi_m3'],
-                                                      macromodel_samples_fixed_dict['delta_phi_m4'])
+    assert lens_model_list_macro[0] in ['EPL_MULTIPOLE_M1M3M4_ELL', 'EPL_MULTIPOLE_M1M3M4']
+    assert lens_model_list_macro[1] == 'SHEAR'
+    if 'gamma_ext' in macromodel_samples_fixed_param_names:
+        fixed_gamma_ext = macromodel_samples_fixed_dict['gamma_ext']
     else:
-        print(lens_model_list_macro[0])
-        raise Exception('this functionality only implemented for EPL_MULTIPOLE_M3M4 plus shear model')
-
-    if param_class is None:
-        raise Exception(
-            'param class could not be identified from the specified lens model list and sampled macromodel parameters'
+        fixed_gamma_ext = None
+    if 'q' in macromodel_samples_fixed_param_names:
+        fixed_q = macromodel_samples_fixed_dict['q']
+    else:
+        fixed_q = None
+    if 'mass_centroid_x' in macromodel_samples_fixed_param_names:
+        assert 'mass_centroid_y' in macromodel_samples_fixed_param_names
+        assert 'sigma_xy_mass_centroid' in macromodel_samples_fixed_param_names
+        mass_centroid_x = macromodel_samples_fixed_dict['mass_centroid_x']
+        mass_centroid_y = macromodel_samples_fixed_dict['mass_centroid_y']
+        sigma_xy_mass_centroid = macromodel_samples_fixed_dict['sigma_xy_mass_centroid']
+        param_class = EPLMultipole134LensMassPrior(
+            kwargs_lens_init,
+            macromodel_samples_fixed_dict['a1_a'],
+            macromodel_samples_fixed_dict['a3_a'],
+            macromodel_samples_fixed_dict['a4_a'],
+            macromodel_samples_fixed_dict['delta_phi_m1'],
+            macromodel_samples_fixed_dict['delta_phi_m3'],
+            macromodel_samples_fixed_dict['delta_phi_m4'],
+            mass_centroid_x,
+            mass_centroid_y,
+            sigma_xy_mass_centroid,
+            fixed_q,
+            fixed_gamma_ext
+        )
+    else:
+        param_class = EPLMultipole134(
+            kwargs_lens_init,
+            macromodel_samples_fixed_dict['a1_a'],
+            macromodel_samples_fixed_dict['a3_a'],
+            macromodel_samples_fixed_dict['a4_a'],
+            macromodel_samples_fixed_dict['delta_phi_m1'],
+            macromodel_samples_fixed_dict['delta_phi_m3'],
+            macromodel_samples_fixed_dict['delta_phi_m4'],
+            fixed_q,
+            fixed_gamma_ext
         )
     return param_class
 

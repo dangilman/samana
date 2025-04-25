@@ -1,6 +1,5 @@
 from lenstronomy.LensModel.Util.decouple_multi_plane_util import *
 from lenstronomy.Util.param_util import ellipticity2phi_q
-from samana.param_managers import EPLMultipole134FreeShear
 from samana.image_magnification_util import magnification_finite_decoupled
 from samana.forward_model_util import macromodel_readout_function_eplshear
 import numpy as np
@@ -23,15 +22,15 @@ class EPLModelBase(object):
     def param_class_4pointsolver(self, lens_model_list_macro,
                                  kwargs_lens_init,
                                  macromodel_samples_fixed_dict):
-
-        param_class = EPLMultipole134FreeShear(kwargs_lens_init,
-                                                            macromodel_samples_fixed_dict['a1_a'],
-                                                            macromodel_samples_fixed_dict['a4_a'],
-                                                            macromodel_samples_fixed_dict['a3_a'],
-                                                            macromodel_samples_fixed_dict['delta_phi_m1'],
-                                                            macromodel_samples_fixed_dict['delta_phi_m3'],
-                                                            macromodel_samples_fixed_dict['delta_phi_m4'])
-        return param_class
+        return None
+        # param_class = EPLMultipole134FreeShear(kwargs_lens_init,
+        #                                                     macromodel_samples_fixed_dict['a1_a'],
+        #                                                     macromodel_samples_fixed_dict['a4_a'],
+        #                                                     macromodel_samples_fixed_dict['a3_a'],
+        #                                                     macromodel_samples_fixed_dict['delta_phi_m1'],
+        #                                                     macromodel_samples_fixed_dict['delta_phi_m3'],
+        #                                                     macromodel_samples_fixed_dict['delta_phi_m4'])
+        # return param_class
 
     @property
     def beta_min(self):
@@ -151,6 +150,7 @@ class EPLModelBase(object):
         alignment_prior = self.joint_lens_with_light_prior(kwargs_lens,
                 kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
                 kwargs_extinction, kwargs_tracer_source)
+
         return q_prior + alignment_prior
 
     def joint_lens_with_light_prior(self, kwargs_lens,
@@ -215,8 +215,33 @@ class EPLModelBase(object):
 
         if macromodel_samples_fixed is not None:
             for param_fixed in macromodel_samples_fixed:
-                kwargs_lens_fixed[0][param_fixed] = macromodel_samples_fixed[param_fixed]
-                kwargs_lens_init[0][param_fixed] = macromodel_samples_fixed[param_fixed]
+                if param_fixed == 'satellite_1_theta_E':
+                    kwargs_lens_fixed[2]['theta_E'] = macromodel_samples_fixed[param_fixed]
+                    kwargs_lens_init[2]['theta_E'] = macromodel_samples_fixed[param_fixed]
+                elif param_fixed == 'satellite_1_x':
+                    kwargs_lens_fixed[2]['center_x'] = macromodel_samples_fixed[param_fixed]
+                    kwargs_lens_init[2]['center_x'] = macromodel_samples_fixed[param_fixed]
+                elif param_fixed == 'satellite_1_y':
+                    kwargs_lens_fixed[2]['center_y'] = macromodel_samples_fixed[param_fixed]
+                    kwargs_lens_init[2]['center_y'] = macromodel_samples_fixed[param_fixed]
+                elif param_fixed == 'satellite_2_theta_E':
+                    kwargs_lens_fixed[3]['theta_E'] = macromodel_samples_fixed[param_fixed]
+                    kwargs_lens_init[3]['theta_E'] = macromodel_samples_fixed[param_fixed]
+                elif param_fixed == 'satellite_2_x':
+                    kwargs_lens_fixed[3]['center_x'] = macromodel_samples_fixed[param_fixed]
+                    kwargs_lens_init[3]['center_x'] = macromodel_samples_fixed[param_fixed]
+                elif param_fixed == 'satellite_2_y':
+                    kwargs_lens_fixed[3]['center_y'] = macromodel_samples_fixed[param_fixed]
+                    kwargs_lens_init[3]['center_y'] = macromodel_samples_fixed[param_fixed]
+                elif param_fixed == 'gamma_ext':
+                    # ignore this
+                    pass
+                elif param_fixed == 'q':
+                    # ignore this
+                    pass
+                else:
+                    kwargs_lens_fixed[0][param_fixed] = macromodel_samples_fixed[param_fixed]
+                    kwargs_lens_init[0][param_fixed] = macromodel_samples_fixed[param_fixed]
         return kwargs_lens_fixed, kwargs_lens_init
 
     def image_magnification_gaussian(self, source_model_quasar, kwargs_source, lens_model_init, kwargs_lens_init,
@@ -234,10 +259,11 @@ class EPLModelBase(object):
     def setup_kwargs_model(self, decoupled_multiplane=False, lens_model_list_halos=None,
                            redshift_list_halos=None, kwargs_halos=None, kwargs_lens_macro_init=None,
                            grid_resolution=0.05, verbose=False, macromodel_samples_fixed=None,
-                           observed_convention_index=None, astropy_cosmo=None):
+                           observed_convention_index=None, astropy_cosmo=None, x_image=None, y_image=None):
 
-        lens_model_list_macro, redshift_list_macro, _, lens_model_params = self.setup_lens_model(kwargs_lens_macro_init,
-                                                                                 macromodel_samples_fixed)
+        lens_model_list_macro, redshift_list_macro, _, lens_model_params = self.setup_lens_model(
+            kwargs_lens_macro_init,
+            macromodel_samples_fixed)
         source_model_list, _ = self.setup_source_light_model()
         lens_light_model_list, _ = self.setup_lens_light_model()
         point_source_list, _ = self.setup_point_source_model()
@@ -257,15 +283,42 @@ class EPLModelBase(object):
                         'fixed_magnification_list': [False] * len(point_source_list),
                         'observed_convention_index': observed_convention_index,
                         'cosmo': astropy_cosmo}
-
+        kwargs_lens_macro = lens_model_params[0]
         if kwargs_halos is not None:
-            kwargs_lens_init = lens_model_params[0] + kwargs_halos
+            kwargs_lens_init = kwargs_lens_macro + kwargs_halos
             lm_list = lens_model_list_macro + lens_model_list_halos
             z_list = list(redshift_list_macro) + list(redshift_list_halos)
         else:
-            kwargs_lens_init = lens_model_params[0]
+            kwargs_lens_init = kwargs_lens_macro
             lm_list = lens_model_list_macro
             z_list = list(redshift_list_macro)
+
+        # optionally force the kwargs_lens_macro_init to satisfy lens equation
+        if x_image is not None:
+            if verbose:
+                print('setting up initial lens model that satisfies the lens equation... ')
+            assert y_image is not None
+            assert len(x_image) == len(y_image)
+            # force the macromodel guess to satisfy the lens equation
+            lens_model_init_macro = LensModel(lens_model_list_macro,
+                                              cosmo=astropy_cosmo,
+                                              lens_redshift_list=list(redshift_list_macro),
+                                              z_source=self._data.z_source,
+                                              multi_plane=True)
+            from lenstronomy.LensModel.Solver.solver4point import Solver4Point
+            solver = Solver4Point(lens_model_init_macro, solver_type='PROFILE_SHEAR')
+            kwargs_lens_macro, tol_source = solver.constraint_lensmodel(x_image, y_image, kwargs_lens_macro)
+            if verbose:
+                print('found solution for the macromodel: ', kwargs_lens_macro)
+                print('source plane penalty: ', tol_source)
+            if kwargs_halos is not None:
+                kwargs_lens_init = kwargs_lens_macro + kwargs_halos
+                lm_list = lens_model_list_macro + lens_model_list_halos
+                z_list = list(redshift_list_macro) + list(redshift_list_halos)
+            else:
+                kwargs_lens_init = kwargs_lens_macro
+                lm_list = lens_model_list_macro
+                z_list = list(redshift_list_macro)
 
         index_lens_split = None
         lens_model_init = LensModel(lm_list,
@@ -273,6 +326,7 @@ class EPLModelBase(object):
                                     cosmo=astropy_cosmo,
                                     z_source=self._data.z_source,
                                     multi_plane=True)
+
         if decoupled_multiplane:
             if verbose:
                 print('setting up decoupled multi-plane approximation...')
@@ -280,10 +334,11 @@ class EPLModelBase(object):
                 lens_model_list_halos,
                 redshift_list_halos,
                 kwargs_halos,
-                kwargs_lens_macro_init,
+                kwargs_lens_macro,
                 grid_resolution,
                 macromodel_samples_fixed,
-                astropy_cosmo)
+                astropy_cosmo,
+                scale_window_size=1.0)
             if verbose:
                 print('done.')
             kwargs_model['kwargs_multiplane_model'] = kwargs_decoupled_class_setup['kwargs_multiplane_model']
@@ -326,7 +381,6 @@ class EPLModelBase(object):
         if self.kwargs_constraints['point_source_offset']:
             special_params = self.setup_special_params(delta_x_image, delta_y_image)
             kwargs_params['special'] = special_params
-
         return kwargs_params
 
     def _setup_decoupled_multiplane_model(self, lens_model_list_halos, redshift_list_halos, kwargs_halos,
@@ -356,7 +410,6 @@ class EPLModelBase(object):
                                          alpha_beta_suby, z_split, \
                                          coordinate_type='GRID', \
                                          interp_points=interp_points)
-
         return kwargs_class_setup, lens_model_init, kwargs_lens_init, index_lens_split
 
     def setup_lens_model(self, *args, **kwargs):

@@ -5,33 +5,6 @@ from samana.forward_model_util import macromodel_readout_function_2033
 
 class _WFI2033ModelNircamBase(EPLModelBase):
 
-    def update_kwargs_fixed_macro(self, lens_model_list_macro, kwargs_lens_fixed, kwargs_lens_init, macromodel_samples_fixed=None):
-
-        if macromodel_samples_fixed is not None:
-            for param_fixed in macromodel_samples_fixed:
-                if param_fixed == 'satellite_1_theta_E':
-                    kwargs_lens_fixed[2]['theta_E'] = macromodel_samples_fixed[param_fixed]
-                    kwargs_lens_init[2]['theta_E'] = macromodel_samples_fixed[param_fixed]
-                elif param_fixed == 'satellite_1_x':
-                    kwargs_lens_fixed[2]['center_x'] = macromodel_samples_fixed[param_fixed]
-                    kwargs_lens_init[2]['center_x'] = macromodel_samples_fixed[param_fixed]
-                elif param_fixed == 'satellite_1_y':
-                    kwargs_lens_fixed[2]['center_y'] = macromodel_samples_fixed[param_fixed]
-                    kwargs_lens_init[2]['center_y'] = macromodel_samples_fixed[param_fixed]
-                elif param_fixed == 'satellite_2_theta_E':
-                    kwargs_lens_fixed[3]['theta_E'] = macromodel_samples_fixed[param_fixed]
-                    kwargs_lens_init[3]['theta_E'] = macromodel_samples_fixed[param_fixed]
-                elif param_fixed == 'satellite_2_x':
-                    kwargs_lens_fixed[3]['center_x'] = macromodel_samples_fixed[param_fixed]
-                    kwargs_lens_init[3]['center_x'] = macromodel_samples_fixed[param_fixed]
-                elif param_fixed == 'satellite_2_y':
-                    kwargs_lens_fixed[3]['center_y'] = macromodel_samples_fixed[param_fixed]
-                    kwargs_lens_init[3]['center_y'] = macromodel_samples_fixed[param_fixed]
-                else:
-                    kwargs_lens_fixed[0][param_fixed] = macromodel_samples_fixed[param_fixed]
-                    kwargs_lens_init[0][param_fixed] = macromodel_samples_fixed[param_fixed]
-        return kwargs_lens_fixed, kwargs_lens_init
-
     @property
     def kwargs_constraints(self):
         joint_source_with_point_source = [[0, 0]]
@@ -67,9 +40,11 @@ class _WFI2033ModelNircamBase(EPLModelBase):
         if self._shapelets_order is not None:
             self._image_plane_source_list += [False]
             n_max = int(self._shapelets_order)
-            shapelets_source_list, kwargs_shapelets_init, kwargs_shapelets_sigma, \
-            kwargs_shapelets_fixed, kwargs_lower_shapelets, kwargs_upper_shapelets = \
+            shapelets_source_list, _, kwargs_shapelets_sigma, \
+            kwargs_shapelets_fixed, kwargs_lower_shapelets, _ = \
                 self.add_shapelets_source(n_max)
+            kwargs_shapelets_init = [{'amp': 1.0, 'beta': 0.08, 'center_x': 0.0, 'center_y': 0.0, 'n_max': n_max}]
+            kwargs_upper_shapelets = [{'amp': 10.0, 'beta': 0.25, 'center_x': 0.2, 'center_y': 0.2, 'n_max': n_max + 1}]
             source_model_list += shapelets_source_list
             kwargs_source_init += kwargs_shapelets_init
             kwargs_source_fixed += kwargs_shapelets_fixed
@@ -116,7 +91,7 @@ class _WFI2033ModelNircamBase(EPLModelBase):
             {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 0.2732+0.3, 'center_y': 2.00444+0.3},
             {'R_sersic': 10, 'n_sersic':10, 'center_x': -3.6842+0.25, 'center_y': 0.125+0.25}]
         kwargs_lens_light_fixed = [{}, {} ,{}, {}]
-        add_uniform_light = False
+        add_uniform_light = True
         if add_uniform_light:
             kwargs_uniform, kwargs_uniform_sigma, kwargs_uniform_fixed, \
             kwargs_uniform_lower, kwargs_uniform_upper = self.add_uniform_lens_light(60)

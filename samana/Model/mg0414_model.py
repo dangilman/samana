@@ -1,28 +1,9 @@
 from samana.Model.model_base import EPLModelBase
 import numpy as np
-from samana.param_managers import EPLMultipole134FreeShearLensMassPrior
 from samana.forward_model_util import macromodel_readout_function_eplshear_satellite
 
 
 class _MG0414ModelBase(EPLModelBase):
-
-    def update_kwargs_fixed_macro(self, lens_model_list_macro, kwargs_lens_fixed, kwargs_lens_init, macromodel_samples_fixed=None):
-
-        if macromodel_samples_fixed is not None:
-            for param_fixed in macromodel_samples_fixed:
-                if param_fixed == 'satellite_1_theta_E':
-                    kwargs_lens_fixed[2]['theta_E'] = macromodel_samples_fixed[param_fixed]
-                    kwargs_lens_init[2]['theta_E'] = macromodel_samples_fixed[param_fixed]
-                elif param_fixed == 'satellite_1_x':
-                    kwargs_lens_fixed[2]['center_x'] = macromodel_samples_fixed[param_fixed]
-                    kwargs_lens_init[2]['center_x'] = macromodel_samples_fixed[param_fixed]
-                elif param_fixed == 'satellite_1_y':
-                    kwargs_lens_fixed[2]['center_y'] = macromodel_samples_fixed[param_fixed]
-                    kwargs_lens_init[2]['center_y'] = macromodel_samples_fixed[param_fixed]
-                else:
-                    kwargs_lens_fixed[0][param_fixed] = macromodel_samples_fixed[param_fixed]
-                    kwargs_lens_init[0][param_fixed] = macromodel_samples_fixed[param_fixed]
-        return kwargs_lens_fixed, kwargs_lens_init
 
     @property
     def kwargs_constraints(self):
@@ -124,18 +105,19 @@ class MG0414ModelEPLM3M4Shear(_MG0414ModelBase):
     def param_class_4pointsolver(self, lens_model_list_macro,
                                  kwargs_lens_init,
                                  macromodel_samples_fixed_dict):
-        center_x = -0.2130
-        center_y = -0.0724
-        sigma_xy = 0.05
-        param_class = EPLMultipole134FreeShearLensMassPrior(kwargs_lens_init,
-                                                            macromodel_samples_fixed_dict['a1_a'],
-                                                            macromodel_samples_fixed_dict['a4_a'],
-                                                            macromodel_samples_fixed_dict['a3_a'],
-                                                            macromodel_samples_fixed_dict['delta_phi_m1'],
-                                                            macromodel_samples_fixed_dict['delta_phi_m3'],
-                                                            macromodel_samples_fixed_dict['delta_phi_m4'],
-                                                            center_x, center_y, sigma_xy)
-        return param_class
+        return None
+        # center_x = -0.2130
+        # center_y = -0.0724
+        # sigma_xy = 0.05
+        # param_class = EPLMultipole134FreeShearLensMassPrior(kwargs_lens_init,
+        #                                                     macromodel_samples_fixed_dict['a1_a'],
+        #                                                     macromodel_samples_fixed_dict['a4_a'],
+        #                                                     macromodel_samples_fixed_dict['a3_a'],
+        #                                                     macromodel_samples_fixed_dict['delta_phi_m1'],
+        #                                                     macromodel_samples_fixed_dict['delta_phi_m3'],
+        #                                                     macromodel_samples_fixed_dict['delta_phi_m4'],
+        #                                                     center_x, center_y, sigma_xy)
+        # return param_class
 
     @property
     def prior_lens(self):

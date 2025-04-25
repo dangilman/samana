@@ -120,14 +120,12 @@ class J0405ModelEPLM3M4Shear(_J0405ModelBase):
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR']
-
         kwargs_lens_macro = [
             {'theta_E': 0.70170073051008, 'gamma': 1.9920568619394587, 'e1': 0.009652795286929021,
              'e2': 0.10241663645616651, 'center_x': 0.004534075630708269, 'center_y': -0.05236325331590094, 'a3_a': 0.0,
              'a1_a': 0.0, 'delta_phi_m1': 0.0, 'delta_phi_m3': 0.23873998055526482, 'a4_a': 0.0, 'delta_phi_m4': 1.435590596290228},
             {'gamma1': 0.031022886724143328, 'gamma2': 0.023670148586850015, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
-
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]
         if kwargs_lens_macro_init is not None:

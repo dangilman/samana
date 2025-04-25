@@ -192,9 +192,13 @@ def sample_prior(kwargs_prior):
                       'prior distribution!')
             positive_definite_param_names = ['satellite_1_theta_E',
                                              'satellite_2_theta_E',
-                                             'satellite_3_theta_E']
+                                             'satellite_3_theta_E',
+                                             'q', 'gamma_ext', 'gamma']
             if param_name in positive_definite_param_names:
                 sample = abs(sample)
+            less_than_one_param_names = ['q']
+            if param_name in less_than_one_param_names:
+                sample = min(sample, 0.999)
             prior_samples_dict[param_name] = sample
             sample_list.append(sample)
             sample_names.append(param_name)
@@ -240,29 +244,6 @@ def ray_angles(alpha_x, alpha_y, lens_model, kwargs_lens, zsource):
         zstart = zi
     return x_angle_list, y_angle_list, tz
 
-def ray_angles_old(alpha_x, alpha_y, lens_model, kwargs_lens, zsource):
-
-    redshift_list = lens_model.redshift_list + [zsource]
-    redshift_list_finely_sampled = np.arange(0.02, zsource, 0.02)
-    full_redshift_list = np.unique(np.append(redshift_list, redshift_list_finely_sampled))
-    full_redshift_list_sorted = full_redshift_list[np.argsort(full_redshift_list)]
-    x_angle_list, y_angle_list, tz = [alpha_x], [alpha_y], [0.]
-
-    cosmo_calc = lens_model.lens_model._multi_plane_base._cosmo_bkg.T_xy
-
-    x0, y0 = 0., 0.
-    zstart = 0.
-    for zi in full_redshift_list_sorted:
-        assert len(lens_model.lens_model_list) == len(kwargs_lens)
-        x0, y0, alpha_x, alpha_y = lens_model.lens_model.ray_shooting_partial(x0, y0, alpha_x, alpha_y, zstart, zi,
-                                                                              kwargs_lens)
-        d = cosmo_calc(0., zi)
-        x_angle_list.append(x0 / d)
-        y_angle_list.append(y0 / d)
-        tz.append(d)
-        zstart = zi
-    return x_angle_list, y_angle_list, tz
-
 def interpolate_ray_paths(x_image, y_image, lens_model, kwargs_lens, zsource,
                           terminate_at_source=False, source_x=None, source_y=None):
     """
@@ -293,36 +274,6 @@ def interpolate_ray_paths(x_image, y_image, lens_model, kwargs_lens, zsource,
 
     return ray_angles_x, ray_angles_y
 
-def interpolate_ray_paths_old(x_image, y_image, lens_model, kwargs_lens, zsource,
-                          terminate_at_source=False, source_x=None, source_y=None):
-    """
-    :param x_image: x coordinates to interpolate (arcsec)
-    :param y_image: y coordinates to interpolate (arcsec)
-    :param lens_model: instance of LensModel
-    :param kwargs_lens: keyword arguments for lens model
-    :param zsource: source redshift
-    :param terminate_at_source: fix the final angular coordinate to the source coordinate
-    :param source_x: source x coordinate (arcsec)
-    :param source_y: source y coordinate (arcsec)
-    :return: Instances of interp1d (scipy) that return the angular coordinate of a ray given a
-    comoving distance
-    """
-
-    ray_angles_x = []
-    ray_angles_y = []
-
-    # print('coordinate: ', (x_image, y_image))
-    for (xi, yi) in zip(x_image, y_image):
-        angle_x, angle_y, tz = ray_angles_old(xi, yi, lens_model, kwargs_lens, zsource)
-        if terminate_at_source:
-            angle_x[-1] = source_x
-            angle_y[-1] = source_y
-
-        ray_angles_x.append(interp1d(tz, angle_x))
-        ray_angles_y.append(interp1d(tz, angle_y))
-
-    return ray_angles_x, ray_angles_y
-
 def align_realization(realization, lens_model_list_macro, redshift_list_macro,
                       kwargs_lens_init, x_image, y_image, astropy_cosmo):
     """
@@ -343,45 +294,6 @@ def align_realization(realization, lens_model_list_macro, redshift_list_macro,
     #kwargs_lens, _ = solver.constraint_lensmodel(x_image, y_image, kwargs_lens_init)
     source_x, source_y = lens_model.ray_shooting(x_image[0], y_image[0], kwargs_lens_init)
     ray_interp_x_image, ray_interp_y_image = interpolate_ray_paths(
-        x_image, y_image, lens_model, kwargs_lens_init, z_source, terminate_at_source=True,
-        source_x=source_x, source_y=source_y)
-    ### Now compute the centroid of the light cone as the coordinate centroid of the individual images
-    z_range = np.linspace(0, z_source, 100)
-    distances = [realization.lens_cosmo.cosmo.D_C_transverse(zi) for zi in z_range]
-    angular_coordinates_x = []
-    angular_coordinates_y = []
-    for di in distances:
-        x_coords = [ray_x(di) for i, ray_x in enumerate(ray_interp_x_image)]
-        y_coords = [ray_y(di) for i, ray_y in enumerate(ray_interp_y_image)]
-        x_center = np.mean(x_coords)
-        y_center = np.mean(y_coords)
-        angular_coordinates_x.append(x_center)
-        angular_coordinates_y.append(y_center)
-    ray_interp_x = [interp1d(distances, angular_coordinates_x)]
-    ray_interp_y = [interp1d(distances, angular_coordinates_y)]
-    realization = realization.shift_background_to_source(ray_interp_x[0], ray_interp_y[0])
-    return realization, ray_interp_x, ray_interp_y, lens_model, kwargs_lens_init
-
-def align_realization_old(realization, lens_model_list_macro, redshift_list_macro,
-                      kwargs_lens_init, x_image, y_image, astropy_cosmo):
-    """
-
-    :param realization:
-    :param lens_model_list_macro:
-    :param redshift_list_macro:
-    :param kwargs_lens_init:
-    :param x_image:
-    :param y_image:
-    :param astropy_cosmo:
-    :return:
-    """
-    z_source = realization.lens_cosmo.z_source
-    lens_model = LensModel(lens_model_list_macro, lens_redshift_list=redshift_list_macro,
-                           z_source=z_source, multi_plane=True, cosmo=astropy_cosmo)
-    #solver = Solver4Point(lens_model, solver_type='PROFILE_SHEAR')
-    #kwargs_lens, _ = solver.constraint_lensmodel(x_image, y_image, kwargs_lens_init)
-    source_x, source_y = lens_model.ray_shooting(x_image[0], y_image[0], kwargs_lens_init)
-    ray_interp_x_image, ray_interp_y_image = interpolate_ray_paths_old(
         x_image, y_image, lens_model, kwargs_lens_init, z_source, terminate_at_source=True,
         source_x=source_x, source_y=source_y)
     ### Now compute the centroid of the light cone as the coordinate centroid of the individual images
@@ -487,7 +399,7 @@ def flux_ratio_likelihood(measured_fluxes, model_fluxes, measurement_uncertainti
             importance_weight += df ** 2
         return 0.5 * importance_weight
 
-def check_solution(source_x, source_y, tolerance=0.0001):
+def check_lens_equation_solution(source_x, source_y, tolerance=0.0001):
     """
     Verifies the degree to which the lens equation is satisfied based on the scatter in the source position
     :param source_x: source coordinate

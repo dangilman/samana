@@ -1,6 +1,6 @@
 from pyHalo.preset_models import preset_model_from_name
-from samana.forward_model_util import filenames, sample_prior, align_realization, align_realization_old, \
-    flux_ratio_summary_statistic, flux_ratio_likelihood, split_kwargs_params, interpolate_ray_paths
+from samana.forward_model_util import filenames, sample_prior, align_realization, \
+    flux_ratio_summary_statistic, split_kwargs_params, check_lens_equation_solution
 from lenstronomy.LensModel.lens_model import LensModel
 from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_resolution, auto_raytracing_grid_size
 from lenstronomy.Workflow.fitting_sequence import FittingSequence
@@ -238,7 +238,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                 # The purpose of this counter is to keep track of the acceptance rate
                 iteration_counter += 1
 
-                if stat < tolerance:
+                if stat < tolerance and magnifications is not None:
                     # If the statistic is less than the tolerance threshold, we keep the parameters
                     accepted_realizations_counter += 1
                     n_kept += 1
@@ -303,7 +303,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
             # this keeps track of how many realizations were analyzed, and resets after each readout (set by readout_steps)
             # The purpose of this counter is to keep track of the acceptance rate
             iteration_counter += 1
-            if stat < tolerance:
+            if magnifications is not None and stat < tolerance:
                 # If the statistic is less than the tolerance threshold, we keep the parameters
                 accepted_realizations_counter += 1
                 n_kept += 1
@@ -506,7 +506,9 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         decoupled_multiplane=False,
         kwargs_lens_macro_init=kwargs_lens_macro_init,
         macromodel_samples_fixed=macromodel_samples_fixed_dict,
-        astropy_cosmo=astropy_cosmo)
+        astropy_cosmo=astropy_cosmo,
+        x_image=data_class.x_image,
+        y_image=data_class.y_image)
     kwargs_params = model_class.kwargs_params(kwargs_lens_macro_init=kwargs_lens_macro_init,
                                               delta_x_image=-delta_x_image,
                                               delta_y_image=-delta_y_image,
@@ -518,16 +520,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     else:
         if verbose:
             print('realization has ' + str(len(realization_init.halos)) + ' halos...')
-        if hasattr(model_class, 'use_deprecated') and model_class.use_deprecated:
-            print('using old code')
-            realization, ray_align_x, ray_align_y, _, _ = align_realization_old(realization_init, kwargs_model_align['lens_model_list'],
-                                    kwargs_model_align['lens_redshift_list'],
-                                    kwargs_lens_align,
-                                    data_class.x_image,
-                                    data_class.y_image,
-                                    astropy_cosmo)
-        else:
-            realization, ray_align_x, ray_align_y, _, _ = align_realization(realization_init, kwargs_model_align['lens_model_list'],
+        realization, ray_align_x, ray_align_y, _, _ = align_realization(realization_init, kwargs_model_align['lens_model_list'],
                                                         kwargs_model_align['lens_redshift_list'],
                                                         kwargs_lens_align,
                                                         data_class.x_image,
@@ -558,7 +551,10 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         kwargs_halos=kwargs_halos,
         verbose=verbose,
         macromodel_samples_fixed=macromodel_samples_fixed_dict,
-        astropy_cosmo=astropy_cosmo)
+        astropy_cosmo=astropy_cosmo,
+        x_image=data_class.x_image,
+        y_image=data_class.y_image
+    )
     kwargs_constraints = model_class.kwargs_constraints
     kwargs_likelihood = model_class.kwargs_likelihood
     kwargs_params = split_kwargs_params(kwargs_params, index_lens_split)
@@ -664,31 +660,40 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     if verbose:
         print('\n')
         print('kwargs solution: ', kwargs_solution)
-        print('\n')
-        print('computing image magnifications...')
     t0 = time()
     if verbose and use_imaging_data:
         print('recovered source position: ', source_x, source_y)
-    source_model_quasar, kwargs_source = setup_gaussian_source(source_dict['source_size_pc'],
-                                                               np.mean(source_x), np.mean(source_y),
-                                                               astropy_cosmo, data_class.z_source)
-    grid_size = rescale_grid_size * auto_raytracing_grid_size(source_dict['source_size_pc'])
-    grid_resolution = rescale_grid_resolution * auto_raytracing_grid_resolution(source_dict['source_size_pc'])
-    magnifications, images = model_class.image_magnification_gaussian(source_model_quasar,
-                                                                      kwargs_source,
-                                                                      lens_model_init,
-                                                                      kwargs_lens_init,
-                                                                      kwargs_solution,
-                                                                      grid_size,
-                                                                      grid_resolution,
-                                                                      lens_model,
-                                                                      elliptical_ray_tracing_grid)
+    # verify that the lens equation is satisfied to high precision
+    source_plane_image_solution = check_lens_equation_solution(source_x, source_y, tolerance=0.001)
+    if source_plane_image_solution > 1:
+        # reject this lens model on the basis of not satisfying lens equation
+        if verbose:
+            print('rejecting lens model on the basis of not satisfying the lens equation')
+        output_vector = [None] * 18
+        return output_vector
+    else:
+        if verbose:
+            print('computing image magnifications...')
+        source_model_quasar, kwargs_source = setup_gaussian_source(source_dict['source_size_pc'],
+                                                                   np.mean(source_x), np.mean(source_y),
+                                                                   astropy_cosmo, data_class.z_source)
+        grid_size = rescale_grid_size * auto_raytracing_grid_size(source_dict['source_size_pc'])
+        grid_resolution = rescale_grid_resolution * auto_raytracing_grid_resolution(source_dict['source_size_pc'])
+        magnifications, images = model_class.image_magnification_gaussian(source_model_quasar,
+                                                                          kwargs_source,
+                                                                          lens_model_init,
+                                                                          kwargs_lens_init,
+                                                                          kwargs_solution,
+                                                                          grid_size,
+                                                                          grid_resolution,
+                                                                          lens_model,
+                                                                          elliptical_ray_tracing_grid)
+        stat, flux_ratios, flux_ratios_data = flux_ratio_summary_statistic(data_class.magnifications,
+                                                                           magnifications,
+                                                                           data_class.flux_uncertainty,
+                                                                           data_class.keep_flux_ratio_index,
+                                                                           data_class.uncertainty_in_fluxes)
     tend = time()
-    stat, flux_ratios, flux_ratios_data = flux_ratio_summary_statistic(data_class.magnifications,
-                                                                       magnifications,
-                                                                       data_class.flux_uncertainty,
-                                                                       data_class.keep_flux_ratio_index,
-                                                                       data_class.uncertainty_in_fluxes)
 
     log_flux_ratio_likelihood = -100
 
@@ -853,7 +858,6 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             ax.annotate('magnification: '+str(np.round(mag,2)), xy=(0.3,0.9),
                         xycoords='axes fraction',color='w',fontsize=12)
         plt.show()
-
         modelPlot = ModelPlot(data_class.kwargs_data_joint['multi_band_list'],
                               kwargs_model, kwargs_result, arrow_size=0.02, cmap_string="gist_heat",
                               fast_caustic=True,
@@ -922,9 +926,9 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         realization_param_names += ['scale_multipole']
         if verbose:
             print('hierachical multipole scaling: ', realization_samples[-1])
-
-    return magnifications, images, realization_samples, source_samples, samples_macromodel, samples_macromodel_fixed, \
+    output_vector = (magnifications, images, realization_samples, source_samples, samples_macromodel, samples_macromodel_fixed, \
            logL_imaging_data, fitting_sequence, \
            stat, log_flux_ratio_likelihood, bic, realization_param_names, \
            source_param_names, param_names_macro, \
-           param_names_macro_fixed, kwargs_model_plot, lens_model, kwargs_solution
+           param_names_macro_fixed, kwargs_model_plot, lens_model, kwargs_solution)
+    return output_vector

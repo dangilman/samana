@@ -43,6 +43,12 @@ class _WFI2033(ImagingDataBase):
                 y_image,
                 self._image_data.shape, radius_arcsec=0.25
             )
+            likelihood_mask_imaging_weights = self.quasar_image_mask(
+                likelihood_mask_imaging_weights,
+                [0.0393],
+                [-0.0309],
+                self._image_data.shape, radius_arcsec=0.15
+            )
             return likelihood_mask, likelihood_mask_imaging_weights
         else:
             return likelihood_mask, likelihood_mask
