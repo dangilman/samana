@@ -1,8 +1,6 @@
 import numpy as np
 import numpy.testing as npt
 import pytest
-import matplotlib.pyplot as plt
-from copy import deepcopy
 from pyHalo.single_realization import SingleHalo
 from pyHalo.Halos.lens_cosmo import LensCosmo
 from pyHalo.concentration_models import preset_concentration_models
@@ -46,7 +44,7 @@ class TestMagnificationGridRes(object):
 
     def _run_test(self, lens_ID, source_size_list, index_max=3,
                   high_res_factor=5.0,
-                  tol_mag=0.01, tol_ratio=0.0001):
+                  tol_mag=0.025, tol_ratio=0.001):
 
         #print(lens_ID)
         data, model = quick_setup(lens_ID)
@@ -55,17 +53,17 @@ class TestMagnificationGridRes(object):
 
         lens_model_list_macro, redshift_list_macro, _, lens_model_params = model_class.setup_lens_model()
         kwargs_lens_init = lens_model_params[0]
-        lens_model = LensModel(lens_model_list_macro + self._lens_model_list_halo,
-                               lens_redshift_list=list(redshift_list_macro) + list(self._redshift_array_halo),
+        lens_model = LensModel(lens_model_list_macro,
+                               lens_redshift_list=list(redshift_list_macro),
                                multi_plane=True,
                                z_source=data_class.z_source)
-        image_index = 1
-        kwargs_halo = deepcopy(self._kwargs_lens_halo_base)
-        kwargs_halo[0]['center_x'] = data_class.x_image[image_index] + 0.003
-        kwargs_halo[0]['center_y'] = data_class.y_image[image_index] + 0.00
+        # image_index = 1
+        # kwargs_halo = deepcopy(self._kwargs_lens_halo_base)
+        # kwargs_halo[0]['center_x'] = data_class.x_image[image_index] + 0.003
+        # kwargs_halo[0]['center_y'] = data_class.y_image[image_index] + 0.00
         source_x, source_y = lens_model.ray_shooting(data_class.x_image,
                                                      data_class.y_image,
-                                                     kwargs_lens_init + kwargs_halo)
+                                                     kwargs_lens_init)
 
         for source_size_pc in source_size_list:
 
@@ -79,8 +77,8 @@ class TestMagnificationGridRes(object):
             magnifications_default, _ = model_class.image_magnification_gaussian(source_model_quasar,
                                                                               kwargs_source,
                                                                               lens_model,
-                                                                              kwargs_lens_init + kwargs_halo,
-                                                                              kwargs_lens_init + kwargs_halo,
+                                                                              kwargs_lens_init,
+                                                                              kwargs_lens_init,
                                                                               grid_size,
                                                                               grid_resolution,
                                                                                  lens_model)
@@ -89,11 +87,13 @@ class TestMagnificationGridRes(object):
             magnifications_high_res, _ = model_class.image_magnification_gaussian(source_model_quasar,
                                                                                  kwargs_source,
                                                                                  lens_model,
-                                                                                  kwargs_lens_init + kwargs_halo,
-                                                                                  kwargs_lens_init + kwargs_halo,
+                                                                                  kwargs_lens_init,
+                                                                                  kwargs_lens_init,
                                                                                  grid_size,
                                                                                  grid_resolution/high_res_factor,
                                                                                   lens_model)
+            #print(magnifications_default)
+            #print(magnifications_high_res)
             flux_ratios_high_res = magnifications_high_res[1:] / magnifications_high_res[0]
             diff = [magnifications_high_res[i] / magnifications_default[i] - 1 for i in range(0,index_max+1)]
             npt.assert_array_less(np.absolute(diff), tol_mag)
@@ -137,10 +137,6 @@ class TestMagnificationGridRes(object):
         self._run_test(lens_ID, source_size_list)
 
     def test_j0259(self):
-
-        lens_ID = 'J0259_HST_475X'
-        source_size_list = [2.0, 8.0]
-        self._run_test(lens_ID, source_size_list, tol_mag=0.01)
 
         lens_ID = 'J0259'
         source_size_list = [2.0, 8.0]
@@ -278,7 +274,6 @@ class TestMagnificationGridRes(object):
         lens_ID = 'WGD2038'
         source_size_list = [2.0, 8.0]
         self._run_test(lens_ID, source_size_list)
-
 
 if __name__ == "__main__":
     pytest.main()

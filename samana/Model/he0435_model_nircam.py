@@ -77,11 +77,12 @@ class _HE0435NircamModelBase(EPLModelBase):
                              'force_no_add_image': False,
                              'source_marg': False,
                              'image_position_uncertainty': 0.005,
-                             'source_position_tolerance': 0.0001,
+                             'source_position_tolerance': 0.00001,
+                             'source_position_likelihood': True,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True,
-                             'custom_logL_addition': self.axis_ratio_prior,
+                             'custom_logL_addition': self.axis_ratio_prior_with_light,
                              }
         return kwargs_likelihood
 
@@ -102,13 +103,12 @@ class HE0435ModelNircamEPLM1M3M4Shear(_HE0435NircamModelBase):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS']
         kwargs_lens_macro = [
-            {'theta_E': 1.180943352708307, 'gamma': 2.135741300072584, 'e1': -0.08019714584843007,
-             'e2': -0.0349862277275131, 'center_x': 0.013680938966111337, 'center_y': 0.044582561975761555,
-             'a1_a': 0.0, 'delta_phi_m1': 0.0,
-             'a3_a': 0.0, 'delta_phi_m3': -0.,
-             'a4_a': 0.0, 'delta_phi_m4': -0.},
-            {'gamma1': 0.03054215641227033, 'gamma2': 0.029168118917460642, 'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.35703001841356063, 'center_x': -0.09, 'center_y': 3.8582546199894088}
+            {'theta_E': 1.1859958448585592, 'gamma': 2.1860320927735675, 'e1': -0.12026304094434084,
+             'e2': -0.05631509779061331, 'center_x': 0.014479699221285936, 'center_y': 0.038594387027429906,
+             'a1_a': 0.0, 'delta_phi_m1': 0.017926600918483446, 'a3_a': 0.0, 'delta_phi_m3': 0.010539231046425691,
+             'a4_a': 0.0, 'delta_phi_m4': -0.048583081835370065},
+            {'gamma1': 0.027329524566610502, 'gamma2': 0.02828855432756749, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.3444866200135506, 'center_x': -0.0875237607444984, 'center_y': 3.8820688903177105}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens,
                                0.78]

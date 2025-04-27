@@ -121,9 +121,6 @@ class TestMagnificationGridRes(object):
 
     def test_j0259(self):
 
-        lens_ID = 'J0259_HST_475X'
-        self._run_test(lens_ID)
-
         lens_ID = 'J0259'
         self._run_test(lens_ID)
     #

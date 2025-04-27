@@ -36,7 +36,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   split_image_data_reconstruction=False,
                   filter_subhalo_kwargs=None,
                   custom_preset_model_function=None,
-                  run_initial_PSO=True):
+                  run_initial_PSO=True,
+                  scipy_minimize_method='Nelder-Mead'):
     """
     Top-level function for forward modeling strong lenses with substructure. This function makes repeated calls to
     the forward_model_single_iteration routine below, and outputs the results to text files. Lens modeling and dark matter
@@ -93,6 +94,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     :param custom_preset_model_function: a custom preset_model function that can be passed to pyHalo; only used when
     preset_model_name='CUSTOM'
     :param run_initial_PSO: bool; run initial particle swarm optimization when NOT using imaging data
+    :param scipy_minimize_method: string that specifies the minimize method used by scipy when solving for point source positions
+     without imaging data
     :return:
     """
 
@@ -213,7 +216,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              macromodel_readout_function,
                              return_realization,
                              custom_preset_model_function,
-                             run_initial_PSO))
+                             run_initial_PSO,
+                             scipy_minimize_method))
 
             pool = Pool(num_threads)
             output = pool.starmap(forward_model_single_iteration, args)
@@ -287,7 +291,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 macromodel_readout_function,
                                                 return_realization,
                                                 custom_preset_model_function,
-                                                run_initial_PSO)
+                                                run_initial_PSO,
+                                                scipy_minimize_method)
 
             seed_counter += 1
             acceptance_rate_counter += 1
@@ -426,7 +431,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            macromodel_readout_function=None,
                            return_realization=False,
                            custom_preset_model_function=None,
-                           run_initial_PSO=True):
+                           run_initial_PSO=True,
+                           minimize_method='Nelder-Mead'):
     """
 
     :param data_class:
@@ -612,13 +618,13 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                  index_lens_split,
                                                  param_class,
                                                  particle_swarm=run_initial_PSO,
-                                                 tol_simplex_func=1e-5,
+                                                 tol_simplex_func=1e-9,
                                                  simplex_n_iterations=500
                                                  )
-            kwargs_solution, _ = opt.optimize(50, 50, verbose=verbose, seed=seed)
+            kwargs_solution, _ = opt.optimize(50, 50, verbose=verbose, seed=seed,
+                                              minimize_method=minimize_method)
             kwargs_multiplane_model = opt.kwargs_multiplane_model
         else:
-
             kwargs_lens_init = kwargs_lens_align + kwargs_halos
             if param_class_4pointsolver is None:
                 param_class = auto_param_class(lens_model_init.lens_model_list,
@@ -664,7 +670,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     if verbose and use_imaging_data:
         print('recovered source position: ', source_x, source_y)
     # verify that the lens equation is satisfied to high precision
-    source_plane_image_solution = check_lens_equation_solution(source_x, source_y, tolerance=0.001)
+    source_plane_image_solution = check_lens_equation_solution(source_x, source_y, tolerance=0.0001)
     if source_plane_image_solution > 1:
         # reject this lens model on the basis of not satisfying lens equation
         if verbose:
@@ -694,9 +700,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                                            data_class.keep_flux_ratio_index,
                                                                            data_class.uncertainty_in_fluxes)
     tend = time()
-
     log_flux_ratio_likelihood = -100
-
     if verbose:
         print('computed magnifications in '+str(np.round(tend - t0, 1))+' seconds')
         print('magnifications: ', magnifications)

@@ -2,6 +2,8 @@ from samana.Model.model_base import EPLModelBase
 import numpy as np
 from lenstronomy.Util.class_creator import create_class_instances
 from samana.forward_model_util import macromodel_readout_function_eplshear_satellite
+from lenstronomy.Util.param_util import ellipticity2phi_q
+
 
 class _J1042ModelBase(EPLModelBase):
 
@@ -25,9 +27,9 @@ class _J1042ModelBase(EPLModelBase):
         self._image_plane_source_list = [False]
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 19.65100967474721, 'R_sersic': 0.3623232419635632, 'n_sersic': 4.631856837954162,
-             'e1': 0.11925205084786344, 'e2': 0.06692796091466355, 'center_x': 0.011226501439929489,
-             'center_y': 0.07155978396187809}
+            {'amp': 3.3744972356729663, 'R_sersic': 0.4474039432568018, 'n_sersic': 5.05467376415875,
+             'e1': 0.10114424434535499, 'e2': 0.3036593003967822, 'center_x': -0.024591454450440663,
+             'center_y': 0.08165022745322371}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
@@ -73,13 +75,12 @@ class _J1042ModelBase(EPLModelBase):
                                  #'SERSIC_ELLIPSE',
                                  'SERSIC_ELLIPSE']
         kwargs_lens_light_init = [
-            {'amp': 19.026845496478845, 'R_sersic': 1.1468682264695191,
-             'n_sersic': 4.304024393673574, 'e1': -0.15282662272021008,
-             'e2': 0.09702321511158565, 'center_x': 0.0536959704997544,
-             'center_y': 0.014209507219575921},
-            {'amp': 4.913981821321209, 'R_sersic': 0.18737736861280985, 'n_sersic': 3.8362876729343975,
-             'e1': 0.1858321164784092, 'e2': -0.2753944179112829, 'center_x': self._data.gx,
-             'center_y': self._data.gy}
+            {'amp': 20.26840868517619, 'R_sersic': 1.0944366759485558, 'n_sersic': 4.356436990256856,
+             'e1': -0.14179393969864268, 'e2': 0.11376265630262214, 'center_x': 0.053111677261926483,
+             'center_y': 0.012181545978949382},
+            {'amp': 3.122706493583511, 'R_sersic': 0.15748965221512662, 'n_sersic': 4.427836211253151,
+             'e1': 0.2508985183627598, 'e2': -0.2788941645631706, 'center_x': 1.8818250941196057,
+             'center_y': -0.24600847097834963}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1},
@@ -125,18 +126,21 @@ class J1042ModelEPLM3M4Shear(_J1042ModelBase):
                              'force_no_add_image': False,
                              'source_marg': False,
                              'image_position_uncertainty': 5e-3,
-                             'source_position_tolerance': 0.0001,
+                             'source_position_tolerance': 0.00001,
+                             'source_position_likelihood': True,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True,
-                             'custom_logL_addition': self.axis_ratio_prior
+                             'custom_logL_addition': self.axis_ratio_masslight_alignment
                              }
         return kwargs_likelihood
 
     def custom_logL(self, kwargs_lens,
                 kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
                 kwargs_extinction, kwargs_tracer_source, kwargs_model):
-
+        """
+        Note: this only works with a modified version of lenstronomy where kwargs_model gets passed to custom_logL_addtion
+        """
         lens_model = create_class_instances(**kwargs_model, only_lens_model=True)
         point_x = -0.95
         point_y = 0.
@@ -163,12 +167,12 @@ class J1042ModelEPLM3M4Shear(_J1042ModelBase):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS']
         kwargs_lens_macro = [
-            {'theta_E': 0.8665434610467629, 'gamma': 1.9983629236617138, 'e1': -0.20769779478108497,
-             'e2': 0.17443910629637527, 'center_x': 0.02892808565187211, 'center_y': 0.03091672469050571, 'a1_a': 0.0,
-             'delta_phi_m1': -0.04620581610361707, 'a3_a': 0.0, 'delta_phi_m3': 0.40156230464362386, 'a4_a': 0.0,
-             'delta_phi_m4': 0.37692029773477903},
-            {'gamma1': -0.05927029669161889, 'gamma2': 0.003486416361112763, 'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.12819651892187917, 'center_x': 1.6870364490427552, 'center_y': -0.30007815616428585}
+            {'theta_E': 0.8849554512395507, 'gamma': 2.082322949717141, 'e1': -0.15888570155198645,
+             'e2': 0.15857160380293264, 'center_x': 0.007422379850661033, 'center_y': 0.02648838109905435, 'a1_a': 0.0,
+             'delta_phi_m1': 0.42386516901676236, 'a3_a': 0.0, 'delta_phi_m3': 0.5042549203165205, 'a4_a': 0.0,
+             'delta_phi_m4': 0.0646589723529078},
+            {'gamma1': -0.053097552455548126, 'gamma2': 0.008165121330997928, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.05675346094302038, 'center_x': 1.8818250941196057, 'center_y': -0.24600847097834963}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1, 2]

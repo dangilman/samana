@@ -1,6 +1,5 @@
 from samana.Model.model_base import EPLModelBase
 import numpy as np
-from samana.param_managers import EPLMultipole134FreeShearLensMassPrior
 
 class _J0147ModelBase(EPLModelBase):
 
@@ -102,7 +101,8 @@ class _J0147ModelBase(EPLModelBase):
                              'force_no_add_image': False,
                              'source_marg': False,
                              'image_position_uncertainty': 5e-3,
-                             'source_position_tolerance': 0.0001,
+                             'source_position_tolerance': 0.00001,
+                             'source_position_likelihood': True,
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True,

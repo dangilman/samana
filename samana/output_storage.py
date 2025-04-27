@@ -251,10 +251,14 @@ class Output(object):
                 samples[:, i] = q
             elif param_name == 'phi_q':
                 samples[:, i] = phi_q
+            elif param_name == 'phi_q_angle':
+                samples[:, i] = phi_q * 180/np.pi
             elif param_name == 'gamma_ext':
                 samples[:, i] = gamma_ext
             elif param_name == 'phi_gamma':
                 samples[:, i] = phi_gamma
+            elif param_name == 'phi_gamma_angle':
+                samples[:, i] = phi_gamma * 180/np.pi
             elif param_name == 'gamma_cos_phi_gamma':
                 samples[:, i] = gamma_ext * np.cos(2*phi_gamma)
             elif param_name == 'q_cos_phi':

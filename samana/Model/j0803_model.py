@@ -78,15 +78,30 @@ class _J0803ModelBase(EPLModelBase):
 
         return lens_light_model_list, lens_light_params
 
+    def axis_ratio_masslight_alignment(self, kwargs_lens,
+                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                kwargs_extinction, kwargs_tracer_source):
+
+        q_prior = self.axis_ratio_prior(kwargs_lens,
+                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                kwargs_extinction, kwargs_tracer_source)
+
+        alignment_prior = self.lens_mass_lens_light_alignment_prior(kwargs_lens,
+                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                kwargs_extinction, kwargs_tracer_source)
+
+        return q_prior + alignment_prior
+
     @property
     def kwargs_likelihood(self):
         kwargs_likelihood = {'check_bounds': True,
                              'force_no_add_image': False,
                              'source_marg': False,
                              'image_position_uncertainty': 5e-3,
-                             'source_position_tolerance': 0.0001,
+                             'source_position_tolerance': 0.00001,
+                             'source_position_likelihood': True,
                              'prior_lens': self.prior_lens,
-                             'custom_logL_addition': self.axis_ratio_prior,
+                             'custom_logL_addition': self.axis_ratio_masslight_alignment,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True
                              }

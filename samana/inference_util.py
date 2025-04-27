@@ -193,4 +193,5 @@ def compute_likelihoods(output_class,
     imaging_data_likelihood = IndependentLikelihoods([pdf_imgdata])
     imaging_data_fluxratio_likelihood = IndependentLikelihoods([pdf_imgdata_fr])
     likelihood_joint = imaging_data_fluxratio_likelihood/imaging_data_likelihood
-    return imaging_data_likelihood, imaging_data_fluxratio_likelihood, likelihood_joint
+    inds_return = np.where(normalized_weights > 0)
+    return imaging_data_likelihood, imaging_data_fluxratio_likelihood, likelihood_joint, np.squeeze(params_out[inds_return,:])

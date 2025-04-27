@@ -3,6 +3,7 @@ from lenstronomy.Util.param_util import ellipticity2phi_q
 from samana.image_magnification_util import magnification_finite_decoupled
 from samana.forward_model_util import macromodel_readout_function_eplshear
 import numpy as np
+from lenstronomy.Util.class_creator import create_class_instances
 
 
 class EPLModelBase(object):
@@ -143,17 +144,17 @@ class EPLModelBase(object):
                 kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
                 kwargs_extinction, kwargs_tracer_source):
 
-        q_prior = self.axis_ratio_prior(kwargs_lens,
+        q_prior = self.axis_ratio_prior_with_light(kwargs_lens,
                 kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
                 kwargs_extinction, kwargs_tracer_source)
 
-        alignment_prior = self.joint_lens_with_light_prior(kwargs_lens,
+        alignment_prior = self.lens_mass_lens_light_alignment_prior(kwargs_lens,
                 kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
                 kwargs_extinction, kwargs_tracer_source)
 
         return q_prior + alignment_prior
 
-    def joint_lens_with_light_prior(self, kwargs_lens,
+    def lens_mass_lens_light_alignment_prior(self, kwargs_lens,
                                   kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
                                   kwargs_extinction, kwargs_tracer_source, max_offset=0.2):
 
@@ -165,13 +166,52 @@ class EPLModelBase(object):
             return -1e9
         return -0.5 * (dr_squared / sigma ** 2)
 
-    def axis_ratio_prior(self, kwargs_lens,
+    def extreme_magnification_prior(self, kwargs_lens,
+                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                kwargs_extinction, kwargs_tracer_source, kwargs_model):
+        """
+        Penalize lens models that predict huge magnifications
+        """
+        lens_model = create_class_instances(**kwargs_model, only_lens_model=True)
+        m = lens_model.magnification(self._data.x_image, self._data.y_image, kwargs_lens)
+        magnifications = np.absolute(m)
+        if np.any(magnifications > 100):
+            return -1e10
+        else:
+            return 0
+
+    def axis_ratio_prior_with_light(self, kwargs_lens,
                 kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
                 kwargs_extinction, kwargs_tracer_source):
+        """
+        Prior on the main deflector axis ratio and lens light axis ratio enforcing alignment between the two
+        :param kwargs_lens:
+        :param kwargs_source:
+        :param kwargs_lens_light:
+        :param kwargs_ps:
+        :param kwargs_special:
+        :param kwargs_extinction:
+        :param kwargs_tracer_source:
+        :return:
+        """
+        e1, e2 = kwargs_lens[0]['e1'], kwargs_lens[0]['e2']
+        _, q_mass = ellipticity2phi_q(e1, e2)
+        e1, e2 = kwargs_lens_light[0]['e1'], kwargs_lens_light[0]['e2']
+        _, q_light = ellipticity2phi_q(e1, e2)
+        if q_mass < q_light - 0.1:
+            return -1e10
+        elif q_mass < 0.35:
+            return -1e10
+        else:
+            return 0.0
+
+    def axis_ratio_prior(self, kwargs_lens,
+                                        kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                                        kwargs_extinction, kwargs_tracer_source):
 
         e1, e2 = kwargs_lens[0]['e1'], kwargs_lens[0]['e2']
         _, q = ellipticity2phi_q(e1, e2)
-        if q < 0.4:
+        if q < 0.35:
             return -1e10
         else:
             return -0.5 * (q - 0.8) ** 2 / 0.3 ** 2
