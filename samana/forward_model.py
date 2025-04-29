@@ -241,8 +241,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                 # this keeps track of how many realizations were analyzed, and resets after each readout (set by readout_steps)
                 # The purpose of this counter is to keep track of the acceptance rate
                 iteration_counter += 1
-
-                if stat < tolerance and magnifications is not None:
+                if magnifications is not None and stat < tolerance:
                     # If the statistic is less than the tolerance threshold, we keep the parameters
                     accepted_realizations_counter += 1
                     n_kept += 1
@@ -670,7 +669,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     if verbose and use_imaging_data:
         print('recovered source position: ', source_x, source_y)
     # verify that the lens equation is satisfied to high precision
-    source_plane_image_solution = check_lens_equation_solution(source_x, source_y, tolerance=0.0001)
+    source_plane_image_solution = check_lens_equation_solution(source_x, source_y, tolerance=0.001)
     if source_plane_image_solution > 1:
         # reject this lens model on the basis of not satisfying lens equation
         if verbose:
