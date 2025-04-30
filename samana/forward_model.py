@@ -227,7 +227,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                 macromodel_samples_fixed, \
                 logL_imaging_data, fitting_sequence, stat, log_flux_ratio_likelihood, bic, param_names_realization,
                 param_names_source, param_names_macro, \
-                param_names_macro_fixed, _, _, _) = result
+                param_names_macro_fixed, _, _, _,source_plane_image_solution) = result
                 acceptance_rate_counter += 1
                 seed_counter += 1
                 # Once we have computed a couple realizations, keep a log of the time it takes to run per realization
@@ -275,7 +275,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
         else:
             magnifications, images, realization_samples, source_samples, macromodel_samples, macromodel_samples_fixed, \
             logL_imaging_data, fitting_sequence, stat, log_flux_ratio_likelihood, bic, param_names_realization, param_names_source, param_names_macro, \
-            param_names_macro_fixed, _, _, _ = forward_model_single_iteration(data_class, model, preset_model_name, kwargs_sample_realization,
+            param_names_macro_fixed, _, _, _ , source_plane_image_solution= forward_model_single_iteration(data_class, model, preset_model_name, kwargs_sample_realization,
                                                 kwargs_sample_source, kwargs_sample_fixed_macromodel, log_mlow_mass_sheets,
                                                 rescale_grid_size, rescale_grid_resolution, image_data_grid_resolution_rescale,
                                                 verbose, random_seed, n_pso_particles, n_pso_iterations, num_threads,
@@ -317,8 +317,9 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                 params = np.append(params, log_flux_ratio_likelihood)
                 params = np.append(params, logL_imaging_data)
                 params = np.append(params, random_seed)
+                params = np.append(params, source_plane_image_solution)
                 param_names = param_names_realization + param_names_source + ['bic', 'summary_statistic', 'flux_ratio_log_likelihood',
-                                                                              'logL_image_data', 'seed']
+                                                                              'logL_image_data', 'seed','source plane fit']
                 acceptance_ratio = accepted_realizations_counter / iteration_counter
 
                 if parameter_array is None:
@@ -674,7 +675,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         # reject this lens model on the basis of not satisfying lens equation
         if verbose:
             print('rejecting lens model on the basis of not satisfying the lens equation')
-        output_vector = [None] * 18
+        output_vector = [None] * 19
         return output_vector
     else:
         if verbose:
@@ -933,5 +934,5 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
            logL_imaging_data, fitting_sequence, \
            stat, log_flux_ratio_likelihood, bic, realization_param_names, \
            source_param_names, param_names_macro, \
-           param_names_macro_fixed, kwargs_model_plot, lens_model, kwargs_solution)
+           param_names_macro_fixed, kwargs_model_plot, lens_model, kwargs_solution, source_plane_image_solution)
     return output_vector
