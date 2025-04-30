@@ -282,7 +282,8 @@ class EPLModelBase(object):
         return kwargs_lens_fixed, kwargs_lens_init
 
     def image_magnification_gaussian(self, source_model_quasar, kwargs_source, lens_model_init, kwargs_lens_init,
-                            kwargs_lens, grid_size, grid_resolution, lens_model, elliptical_ray_tracing_grid=True):
+                            kwargs_lens, grid_size, grid_resolution, lens_model, elliptical_ray_tracing_grid=True,
+                                     setup_decoupled_multiplane_lens_model_output=None):
 
         _, _, index_lens_split, _ = self.setup_lens_model()
         mags = magnification_finite_decoupled(source_model_quasar, kwargs_source,
@@ -290,7 +291,8 @@ class EPLModelBase(object):
                                               lens_model_init, kwargs_lens_init,
                                               kwargs_lens, index_lens_split,
                                               grid_size, grid_resolution, lens_model,
-                                              elliptical_ray_tracing_grid)
+                                              elliptical_ray_tracing_grid,
+                                              setup_decoupled_multiplane_lens_model_output=setup_decoupled_multiplane_lens_model_output)
         return mags
 
     def setup_kwargs_model(self, decoupled_multiplane=False, lens_model_list_halos=None,
@@ -363,11 +365,12 @@ class EPLModelBase(object):
                                     cosmo=astropy_cosmo,
                                     z_source=self._data.z_source,
                                     multi_plane=True)
-
+        setup_decoupled_multiplane_lens_model_output = None
         if decoupled_multiplane:
             if verbose:
                 print('setting up decoupled multi-plane approximation...')
-            kwargs_decoupled_class_setup, lens_model_init, kwargs_lens_init, index_lens_split = self._setup_decoupled_multiplane_model(
+            (kwargs_decoupled_class_setup, lens_model_init, kwargs_lens_init,
+             index_lens_split, setup_decoupled_multiplane_lens_model_output) = self._setup_decoupled_multiplane_model(
                 lens_model_list_halos,
                 redshift_list_halos,
                 kwargs_halos,
@@ -382,7 +385,7 @@ class EPLModelBase(object):
             kwargs_model['decouple_multi_plane'] = True
             kwargs_model['lens_model_list'] = kwargs_decoupled_class_setup['lens_model_list']
             kwargs_model['lens_redshift_list'] = kwargs_decoupled_class_setup['lens_redshift_list']
-        return kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split
+        return kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split, setup_decoupled_multiplane_lens_model_output
 
     def setup_special_params(self, delta_x_image=None, delta_y_image=None):
 
@@ -437,8 +440,18 @@ class EPLModelBase(object):
                                           z_source=self._data.z_source,
                                           multi_plane=True)
         kwargs_lens_init = kwargs_lens_macro + kwargs_halos
-        lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free, z_source, z_split, cosmo_bkg = \
-            setup_lens_model(lens_model_init, kwargs_lens_init, index_lens_split)
+        use_jax_bool_list = []
+        for i, lens_model_name in enumerate(lens_model_init.lens_model_list):
+            if i in index_lens_split:
+                continue
+            if lens_model_name in ['TNFW', 'CONVERGENCE']:
+                use_jax_bool_list.append(True)
+            else:
+                use_jax_bool_list.append(False)
+        setup_decoupled_multiplane_lens_model_output = \
+            setup_lens_model(lens_model_init, kwargs_lens_init, index_lens_split, use_jax_bool_list)
+        (lens_model_fixed, lens_model_free, kwargs_lens_fixed,
+         kwargs_lens_free, z_source, z_split, cosmo_bkg) = setup_decoupled_multiplane_lens_model_output
         xD, yD, alpha_x_foreground, alpha_y_foreground, alpha_beta_subx, alpha_beta_suby = coordinates_and_deflections(
             lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
             x_grid, y_grid, z_split, z_source, cosmo_bkg)
@@ -447,7 +460,7 @@ class EPLModelBase(object):
                                          alpha_beta_suby, z_split, \
                                          coordinate_type='GRID', \
                                          interp_points=interp_points)
-        return kwargs_class_setup, lens_model_init, kwargs_lens_init, index_lens_split
+        return kwargs_class_setup, lens_model_init, kwargs_lens_init, index_lens_split, setup_decoupled_multiplane_lens_model_output
 
     def setup_lens_model(self, *args, **kwargs):
         raise Exception('must define a setup_lens_model function in the model class')

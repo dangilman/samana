@@ -66,11 +66,16 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                                    lens_model_init, kwargs_lens_init, kwargs_lens, index_lens_split,
                                    grid_size, grid_resolution, lens_model_full,
                                    elliptical_ray_tracing_grid,
-                                   grid_increment_factor=15.0):
+                                   grid_increment_factor=15.0,
+                                   setup_decoupled_multiplane_lens_model_output=None):
     """
     """
-    lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free, z_source, z_split, cosmo_bkg = \
-        setup_lens_model(lens_model_init, kwargs_lens_init, index_lens_split)
+    if setup_decoupled_multiplane_lens_model_output is None:
+        lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free, z_source, z_split, cosmo_bkg = \
+            setup_lens_model(lens_model_init, kwargs_lens_init, index_lens_split)
+    else:
+        (lens_model_fixed, lens_model_free, kwargs_lens_fixed,
+         kwargs_lens_free, z_source, z_split, cosmo_bkg) = setup_decoupled_multiplane_lens_model_output
     grid_x_large, grid_y_large, interp_points_large, npix_large = setup_grids(grid_size,
                                                                               grid_resolution,
                                                                               0.0, 0.0)

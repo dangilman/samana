@@ -507,7 +507,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
 
     kwargs_lens_macro_init = None
     astropy_cosmo = realization_init.lens_cosmo.cosmo.astropy
-    kwargs_model_align, _, _, _ = model_class.setup_kwargs_model(
+    kwargs_model_align, _, _, _, _ = model_class.setup_kwargs_model(
         decoupled_multiplane=False,
         kwargs_lens_macro_init=kwargs_lens_macro_init,
         macromodel_samples_fixed=macromodel_samples_fixed_dict,
@@ -547,7 +547,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         kwargs_mass_sheet={'log_mlow_sheets': log_mlow_mass_sheets, 'kappa_scale_subhalos': kappa_scale_subhalos})
     grid_resolution_image_data = pixel_size / image_data_grid_resolution_rescale
     astropy_cosmo = realization.lens_cosmo.cosmo.astropy
-    kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split = model_class.setup_kwargs_model(
+    kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split, setup_decoupled_multiplane_lens_model_output = (
+        model_class.setup_kwargs_model(
         decoupled_multiplane=use_decoupled_multiplane_approximation,
         lens_model_list_halos=lens_model_list_halos,
         kwargs_lens_macro_init=kwargs_lens_macro_init,
@@ -559,7 +560,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         astropy_cosmo=astropy_cosmo,
         x_image=data_class.x_image,
         y_image=data_class.y_image
-    )
+    ))
     kwargs_constraints = model_class.kwargs_constraints
     kwargs_likelihood = model_class.kwargs_likelihood
     kwargs_params = split_kwargs_params(kwargs_params, index_lens_split)
@@ -692,7 +693,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                                           grid_size,
                                                                           grid_resolution,
                                                                           lens_model,
-                                                                          elliptical_ray_tracing_grid)
+                                                                          elliptical_ray_tracing_grid,
+                                                                          setup_decoupled_multiplane_lens_model_output)
         stat, flux_ratios, flux_ratios_data = flux_ratio_summary_statistic(data_class.magnifications,
                                                                            magnifications,
                                                                            data_class.flux_uncertainty,
