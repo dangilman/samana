@@ -192,8 +192,6 @@ def sample_prior(kwargs_prior):
                 random_draw = abs(truncnorm.rvs(-max_sig_units,max_sig_units,scale=standard_dev))
 
                 sample = mean+ random_draw
-                print('sample')
-                print(sample)
 
             else:
                 raise Exception('only UNIFORM, GAUSSIAN, FIXED and TRUNC-HALF-GAUSS priors currently implemented')
