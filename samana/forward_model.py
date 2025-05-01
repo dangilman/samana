@@ -316,10 +316,10 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                 params = np.append(params, stat)
                 params = np.append(params, log_flux_ratio_likelihood)
                 params = np.append(params, logL_imaging_data)
-                params = np.append(params, random_seed)
                 params = np.append(params, source_plane_image_solution)
+                params = np.append(params, random_seed)
                 param_names = param_names_realization + param_names_source + ['bic', 'summary_statistic', 'flux_ratio_log_likelihood',
-                                                                              'logL_image_data', 'seed','source plane fit']
+                                                                              'logL_image_data', 'source plane fit','seed']
                 acceptance_ratio = accepted_realizations_counter / iteration_counter
 
                 if parameter_array is None:
