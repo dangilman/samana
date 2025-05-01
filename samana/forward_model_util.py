@@ -3,6 +3,7 @@ from scipy.stats.kde import gaussian_kde
 from scipy.interpolate import interp1d
 from lenstronomy.LensModel.lens_model import LensModel
 from copy import deepcopy
+from scipy.stats import truncnorm
 
 
 class KwargsLensSampler(object):
@@ -171,7 +172,6 @@ def sample_prior(kwargs_prior):
             sample_list += [scale_multipole, a1a, a3a, a4a, delta_phi_m1, delta_phi_m3, delta_phi_m4]
             sample_names += ['scale_multipole', 'a1_a', 'a3_a', 'a4_a', 'delta_phi_m1', 'delta_phi_m3', 'delta_phi_m4']
             joint_multipole_prior_used = True
-
         else:
             prior_type = kwargs_prior[param_name][0]
             if prior_type == 'FIXED':
@@ -184,6 +184,13 @@ def sample_prior(kwargs_prior):
             elif prior_type == 'GAUSSIAN':
                 mean, standard_dev = kwargs_prior[param_name][1], kwargs_prior[param_name][2]
                 sample = np.random.normal(mean, standard_dev)
+            elif prior_type == 'TRUNC-HALF-GAUSS':
+                mean, standard_dev, max_value = kwargs_prior[param_name][1], kwargs_prior[param_name][2], \
+                kwargs_prior[param_name][3]
+                ##truncation is defined in terms of standard_deviations
+                max_sig_units = (max_value - mean) / standard_dev
+                random_draw = abs(truncnorm.rvs(-max_sig_units, max_sig_units, scale=standard_dev))
+                sample = mean + random_draw
             else:
                 raise Exception('only UNIFORM, GAUSSIAN, and FIXED priors currently implemented')
             if joint_multipole_prior_used and param_name in ['a1_a', 'a3_a', 'a4_a', 'delta_phi_m3', 'delta_phi_m3', 'delta_phi_m3']:
@@ -193,7 +200,9 @@ def sample_prior(kwargs_prior):
             positive_definite_param_names = ['satellite_1_theta_E',
                                              'satellite_2_theta_E',
                                              'satellite_3_theta_E',
-                                             'q', 'gamma_ext', 'gamma']
+                                             'q',
+                                             'gamma_ext',
+                                             'gamma']
             if param_name in positive_definite_param_names:
                 sample = abs(sample)
             less_than_one_param_names = ['q']

@@ -7,7 +7,6 @@ from lenstronomy.Workflow.fitting_sequence import FittingSequence
 from lenstronomy.Util.class_creator import create_im_sim
 from lenstronomy.LensModel.QuadOptimizer.optimizer import Optimizer
 from samana.image_magnification_util import setup_gaussian_source
-from samana.light_fitting import FixedLensModelNew, setup_params_light_fitting
 from samana.param_managers import auto_param_class
 from copy import deepcopy
 from multiprocessing.pool import Pool
@@ -226,7 +225,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                 macromodel_samples_fixed, \
                 logL_imaging_data, fitting_sequence, stat, bic, param_names_realization,
                 param_names_source, param_names_macro, \
-                param_names_macro_fixed, _, _, _) = result
+                param_names_macro_fixed, _, _, _, source_plane_image_solution) = result
                 acceptance_rate_counter += 1
                 seed_counter += 1
                 # Once we have computed a couple realizations, keep a log of the time it takes to run per realization
@@ -248,9 +247,10 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                     params = np.append(params, bic)
                     params = np.append(params, stat)
                     params = np.append(params, logL_imaging_data)
+                    params = np.append(params, source_plane_image_solution)
                     params = np.append(params, random_seed + seed_counter)
                     param_names = param_names_realization + param_names_source + ['bic', 'summary_statistic',
-                                                                                  'logL_image_data', 'seed']
+                                                                                  'logL_image_data', 'source_plane_sol', 'seed']
                     acceptance_ratio = accepted_realizations_counter / iteration_counter
 
                     if parameter_array is None:
@@ -272,7 +272,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
         else:
             magnifications, images, realization_samples, source_samples, macromodel_samples, macromodel_samples_fixed, \
             logL_imaging_data, fitting_sequence, stat, bic, param_names_realization, param_names_source, param_names_macro, \
-            param_names_macro_fixed, _, _, _ = forward_model_single_iteration(data_class, model, preset_model_name, kwargs_sample_realization,
+            param_names_macro_fixed, _, _, _, source_plane_image_solution = forward_model_single_iteration(data_class, model, preset_model_name, kwargs_sample_realization,
                                                 kwargs_sample_source, kwargs_sample_fixed_macromodel, log_mlow_mass_sheets,
                                                 rescale_grid_size, rescale_grid_resolution, image_data_grid_resolution_rescale,
                                                 verbose, random_seed, n_pso_particles, n_pso_iterations, num_threads,
@@ -312,9 +312,10 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                 params = np.append(params, bic)
                 params = np.append(params, stat)
                 params = np.append(params, logL_imaging_data)
+                params = np.append(params, source_plane_image_solution)
                 params = np.append(params, random_seed)
                 param_names = param_names_realization + param_names_source + ['bic', 'summary_statistic',
-                                                                              'logL_image_data', 'seed']
+                                                                              'logL_image_data', 'source_plane_sol','seed']
                 acceptance_ratio = accepted_realizations_counter / iteration_counter
 
                 if parameter_array is None:
@@ -368,7 +369,6 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                         param_name_string += name + ' '
                     f.write(param_name_string + '\n')
                     write_param_names = False
-
                 nrows, ncols = int(parameter_array.shape[0]), int(parameter_array.shape[1])
                 for row in range(0, nrows):
                     for col in range(0, ncols):
@@ -672,7 +672,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         # reject this lens model on the basis of not satisfying lens equation
         if verbose:
             print('rejecting lens model on the basis of not satisfying the lens equation')
-        output_vector = [None] * 17
+        output_vector = [None] * 18
         return output_vector
     else:
         if verbose:
@@ -868,5 +868,5 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
            logL_imaging_data, fitting_sequence, \
            stat, bic, realization_param_names, \
            source_param_names, param_names_macro, \
-           param_names_macro_fixed, kwargs_model_plot, lens_model, kwargs_solution)
+           param_names_macro_fixed, kwargs_model_plot, lens_model, kwargs_solution, source_plane_image_solution)
     return output_vector
