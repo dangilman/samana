@@ -33,11 +33,11 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   log10_bound_mass_cut=None,
                   parallelize=False,
                   elliptical_ray_tracing_grid=True,
-                  split_image_data_reconstruction=False,
                   filter_subhalo_kwargs=None,
                   custom_preset_model_function=None,
                   run_initial_PSO=True,
-                  scipy_minimize_method='Nelder-Mead'):
+                  scipy_minimize_method='Nelder-Mead',
+                  use_JAXstronomy=False):
     """
     Top-level function for forward modeling strong lenses with substructure. This function makes repeated calls to
     the forward_model_single_iteration routine below, and outputs the results to text files. Lens modeling and dark matter
@@ -88,14 +88,13 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     :param parallelize: bool; use parallelization (not well tested)
     :param elliptical_ray_tracing_grid: bool; use an elliptical ray tracing grid (instead of circular) to calculate image magnifications. This
     is faster, but can fail in some cases with extremely high magnifications and/or a poorly constrained lens model
-    :param split_image_data_reconstruction: bool; reconstruct source light to fit image data with a fixed lens model, rather
-    than joint reconstruction of both
     :param filter_subhalo_kwargs: keyword arguments passed to pyHalo to remove low-mass subhalos that are far away from images
     :param custom_preset_model_function: a custom preset_model function that can be passed to pyHalo; only used when
     preset_model_name='CUSTOM'
     :param run_initial_PSO: bool; run initial particle swarm optimization when NOT using imaging data
     :param scipy_minimize_method: string that specifies the minimize method used by scipy when solving for point source positions
      without imaging data
+    :param use_JAXstronomy: bool; use JAXstronomy deflector profiles where available
     :return:
     """
 
@@ -210,14 +209,14 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              kappa_scale_subhalos,
                              log10_bound_mass_cut,
                              elliptical_ray_tracing_grid,
-                             split_image_data_reconstruction,
                              tolerance,
                              filter_subhalo_kwargs,
                              macromodel_readout_function,
                              return_realization,
                              custom_preset_model_function,
                              run_initial_PSO,
-                             scipy_minimize_method))
+                             scipy_minimize_method,
+                             use_JAXstronomy))
 
             pool = Pool(num_threads)
             output = pool.starmap(forward_model_single_iteration, args)
@@ -225,7 +224,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
             for _, result in enumerate(output):
                 (magnifications, images, realization_samples, source_samples, macromodel_samples,
                 macromodel_samples_fixed, \
-                logL_imaging_data, fitting_sequence, stat, log_flux_ratio_likelihood, bic, param_names_realization,
+                logL_imaging_data, fitting_sequence, stat, bic, param_names_realization,
                 param_names_source, param_names_macro, \
                 param_names_macro_fixed, _, _, _) = result
                 acceptance_rate_counter += 1
@@ -248,11 +247,9 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                     params = np.append(realization_samples, source_samples)
                     params = np.append(params, bic)
                     params = np.append(params, stat)
-                    params = np.append(params, log_flux_ratio_likelihood)
                     params = np.append(params, logL_imaging_data)
                     params = np.append(params, random_seed + seed_counter)
                     param_names = param_names_realization + param_names_source + ['bic', 'summary_statistic',
-                                                                                  'flux_ratio_log_likelihood',
                                                                                   'logL_image_data', 'seed']
                     acceptance_ratio = accepted_realizations_counter / iteration_counter
 
@@ -274,7 +271,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
 
         else:
             magnifications, images, realization_samples, source_samples, macromodel_samples, macromodel_samples_fixed, \
-            logL_imaging_data, fitting_sequence, stat, log_flux_ratio_likelihood, bic, param_names_realization, param_names_source, param_names_macro, \
+            logL_imaging_data, fitting_sequence, stat, bic, param_names_realization, param_names_source, param_names_macro, \
             param_names_macro_fixed, _, _, _ = forward_model_single_iteration(data_class, model, preset_model_name, kwargs_sample_realization,
                                                 kwargs_sample_source, kwargs_sample_fixed_macromodel, log_mlow_mass_sheets,
                                                 rescale_grid_size, rescale_grid_resolution, image_data_grid_resolution_rescale,
@@ -284,14 +281,14 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 use_decoupled_multiplane_approximation, fixed_realization,
                                                 kappa_scale_subhalos, log10_bound_mass_cut,
                                                 elliptical_ray_tracing_grid,
-                                                split_image_data_reconstruction,
                                                 tolerance,
                                                 filter_subhalo_kwargs,
                                                 macromodel_readout_function,
                                                 return_realization,
                                                 custom_preset_model_function,
                                                 run_initial_PSO,
-                                                scipy_minimize_method)
+                                                scipy_minimize_method,
+                                                use_JAXstronomy)
 
             seed_counter += 1
             acceptance_rate_counter += 1
@@ -314,10 +311,9 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                 params = np.append(realization_samples, source_samples)
                 params = np.append(params, bic)
                 params = np.append(params, stat)
-                params = np.append(params, log_flux_ratio_likelihood)
                 params = np.append(params, logL_imaging_data)
                 params = np.append(params, random_seed)
-                param_names = param_names_realization + param_names_source + ['bic', 'summary_statistic', 'flux_ratio_log_likelihood',
+                param_names = param_names_realization + param_names_source + ['bic', 'summary_statistic',
                                                                               'logL_image_data', 'seed']
                 acceptance_ratio = accepted_realizations_counter / iteration_counter
 
@@ -424,14 +420,14 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            kappa_scale_subhalos=1.0,
                            log10_bound_mass_cut=None,
                            elliptical_ray_tracing_grid=True,
-                           split_image_data_reconstruction=False,
                            tolerance=np.inf,
                            filter_subhalo_kwargs=None,
                            macromodel_readout_function=None,
                            return_realization=False,
                            custom_preset_model_function=None,
                            run_initial_PSO=True,
-                           minimize_method='Nelder-Mead'):
+                           minimize_method='Nelder-Mead',
+                           use_JAXstronomy=False):
     """
 
     :param data_class:
@@ -460,9 +456,9 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     :param kappa_scale_subhalos:
     :param log10_bound_mass_cut:
     :param elliptical_ray_tracing_grid:
-    :param split_image_data_reconstruction:
     :param tolerance:
     :param return_realization:
+    :param use_JAXstronomy:
     :return:
     """
     # set the random seed for reproducibility
@@ -559,7 +555,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         macromodel_samples_fixed=macromodel_samples_fixed_dict,
         astropy_cosmo=astropy_cosmo,
         x_image=data_class.x_image,
-        y_image=data_class.y_image
+        y_image=data_class.y_image,
+        use_JAXstronomy=use_JAXstronomy
     ))
     kwargs_constraints = model_class.kwargs_constraints
     kwargs_likelihood = model_class.kwargs_likelihood
@@ -570,7 +567,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     else:
         kwargs_constraints['point_source_offset'] = False
 
-    if use_imaging_data and split_image_data_reconstruction is False:
+    if use_imaging_data:
         if verbose:
             print('running fitting sequence...')
             t0 = time()
@@ -675,7 +672,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         # reject this lens model on the basis of not satisfying lens equation
         if verbose:
             print('rejecting lens model on the basis of not satisfying the lens equation')
-        output_vector = [None] * 18
+        output_vector = [None] * 17
         return output_vector
     else:
         if verbose:
@@ -701,7 +698,6 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                                            data_class.keep_flux_ratio_index,
                                                                            data_class.uncertainty_in_fluxes)
     tend = time()
-    log_flux_ratio_likelihood = -100
     if verbose:
         print('computed magnifications in '+str(np.round(tend - t0, 1))+' seconds')
         print('magnifications: ', magnifications)
@@ -735,7 +731,6 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                 source_marg=False,
                 linear_prior=None,
                 check_positive_flux=False)[0]
-        #logL_imaging_data = fitting_sequence.best_fit_likelihood()
 
         if verbose:
             logL_imaging_data_no_custom_mask = fitting_sequence.likelihoodModule.image_likelihood.logL(**kwargs_result)[
@@ -743,7 +738,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             print('imaging data likelihood (without custom mask): ', logL_imaging_data_no_custom_mask)
             print('imaging data likelihood (with custom mask): ', logL_imaging_data)
     else:
-
+        bic = -1000
+        logL_imaging_data = -100
         if use_decoupled_multiplane_approximation:
             lens_model = LensModel(lens_model_list=kwargs_model['lens_model_list'],
                                    lens_redshift_list=kwargs_model['lens_redshift_list'],
@@ -758,69 +754,6 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                    multi_plane=True,
                                    cosmo=astropy_cosmo,
                                    z_source=kwargs_model['z_source'])
-
-        if split_image_data_reconstruction and stat < tolerance:
-            tabulated_lens_model = FixedLensModelNew(data_class, lens_model, kwargs_solution,
-                           data_class.kwargs_numerics['supersampling_factor'], image_data_grid_resolution_rescale)
-            kwargs_model_lightfit = model_class.setup_kwargs_model(decoupled_multiplane=False)[0]
-            kwargs_model_lightfit['lens_model_list'] = ['TABULATED_DEFLECTIONS']
-            kwargs_model_lightfit['multi_plane'] = False
-            kwargs_constraints_light_fit = {'num_point_source_list': [len(data_class.x_image)],
-                                  'point_source_offset': True,
-                                  #'joint_source_with_point_source': [[0, 0]]
-                                  }
-            kwargs_likelihood_lightfit = deepcopy(kwargs_likelihood)
-            kwargs_likelihood_lightfit['prior_lens'] = None
-            kwargs_likelihood_lightfit['custom_logL_addition'] = None
-            kwargs_model_lightfit['tabulated_deflection_angles'] = tabulated_lens_model
-            kwargs_model_lightfit['point_source_model_list'] = ['UNLENSED']
-            kwargs_params_lightfit = setup_params_light_fitting(kwargs_params, np.mean(source_x), np.mean(source_y))
-            fitting_sequence = FittingSequence(data_class.kwargs_data_joint,
-                                               kwargs_model_lightfit,
-                                               kwargs_constraints_light_fit,
-                                               kwargs_likelihood_lightfit,
-                                               kwargs_params_lightfit,
-                                               mpi=False,
-                                               verbose=verbose)
-            if fitting_kwargs_list is None:
-                fitting_kwargs_list = [
-                    ['PSO', {'sigma_scale': 1., 'n_particles': n_pso_particles, 'n_iterations': n_pso_iterations,
-                             'threadCount': num_threads}]
-                ]
-            chain_list = fitting_sequence.fit_sequence(fitting_kwargs_list)
-            kwargs_result = fitting_sequence.best_fit()
-            if verbose:
-                print('result of light fitting: ', kwargs_result)
-            bic = fitting_sequence.bic
-            #logL_imaging_data = fitting_sequence.best_fit_likelihood()
-            image_model = create_im_sim(data_class.kwargs_data_joint['multi_band_list'],
-                                        data_class.kwargs_data_joint['multi_band_type'],
-                                        kwargs_model_lightfit,
-                                        bands_compute=None,
-                                        image_likelihood_mask_list=[data_class.likelihood_mask_imaging_weights],
-                                        band_index=0,
-                                        kwargs_pixelbased=None,
-                                        linear_solver=True)
-
-            logL_imaging_data = image_model.likelihood_data_given_model(kwargs_result['kwargs_lens'],
-                                                                        kwargs_result['kwargs_source'],
-                                                                        kwargs_result['kwargs_lens_light'],
-                                                                        kwargs_result['kwargs_ps'],
-                                                                        kwargs_extinction=kwargs_result[
-                                                                            'kwargs_extinction'],
-                                                                        kwargs_special=kwargs_result['kwargs_special'],
-                                                                        source_marg=False,
-                                                                        linear_prior=None,
-                                                                        check_positive_flux=False)[0]
-            if verbose:
-                logL_imaging_data_no_custom_mask = \
-                fitting_sequence.likelihoodModule.image_likelihood.logL(**kwargs_result)[
-                    0]
-                print('imaging data likelihood (without custom mask): ', logL_imaging_data_no_custom_mask)
-                print('imaging data likelihood (with custom mask): ', logL_imaging_data)
-        else:
-            bic = -1000
-            logL_imaging_data = -1000
 
     if verbose:
         print('flux ratios data: ', np.array(data_class.magnifications)[1:]/data_class.magnifications[0])
@@ -867,7 +800,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                               kwargs_model, kwargs_result, arrow_size=0.02, cmap_string="gist_heat",
                               fast_caustic=True,
                               image_likelihood_mask_list=[data_class.likelihood_mask_imaging_weights])
-        if use_imaging_data or split_image_data_reconstruction and stat<tolerance:
+        if use_imaging_data:
             chain_plot.plot_chain_list(chain_list, 0)
             print('num degrees of freedom: ', fitting_sequence.likelihoodModule.effective_num_data_points(**kwargs_result))
 
@@ -933,7 +866,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             print('hierachical multipole scaling: ', realization_samples[-1])
     output_vector = (magnifications, images, realization_samples, source_samples, samples_macromodel, samples_macromodel_fixed, \
            logL_imaging_data, fitting_sequence, \
-           stat, log_flux_ratio_likelihood, bic, realization_param_names, \
+           stat, bic, realization_param_names, \
            source_param_names, param_names_macro, \
            param_names_macro_fixed, kwargs_model_plot, lens_model, kwargs_solution)
     return output_vector

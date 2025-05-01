@@ -298,7 +298,8 @@ class EPLModelBase(object):
     def setup_kwargs_model(self, decoupled_multiplane=False, lens_model_list_halos=None,
                            redshift_list_halos=None, kwargs_halos=None, kwargs_lens_macro_init=None,
                            grid_resolution=0.05, verbose=False, macromodel_samples_fixed=None,
-                           observed_convention_index=None, astropy_cosmo=None, x_image=None, y_image=None):
+                           observed_convention_index=None, astropy_cosmo=None, x_image=None, y_image=None,
+                           use_JAXstronomy=False):
 
         lens_model_list_macro, redshift_list_macro, _, lens_model_params = self.setup_lens_model(
             kwargs_lens_macro_init,
@@ -378,7 +379,8 @@ class EPLModelBase(object):
                 grid_resolution,
                 macromodel_samples_fixed,
                 astropy_cosmo,
-                scale_window_size=1.0)
+                scale_window_size=1.0,
+                use_JAXstronomy=use_JAXstronomy)
             if verbose:
                 print('done.')
             kwargs_model['kwargs_multiplane_model'] = kwargs_decoupled_class_setup['kwargs_multiplane_model']
@@ -426,7 +428,7 @@ class EPLModelBase(object):
     def _setup_decoupled_multiplane_model(self, lens_model_list_halos, redshift_list_halos, kwargs_halos,
                                          kwargs_macro_init=None, grid_resolution=0.05,
                                           macromodel_samples_fixed=None, astropy_cosmo=None,
-                                          scale_window_size=1.25):
+                                          scale_window_size=1.25, use_JAXstronomy=False):
 
         deltaPix, _, _, _, window_size = self._data.coordinate_properties
         grid_size = window_size * scale_window_size
@@ -441,13 +443,16 @@ class EPLModelBase(object):
                                           multi_plane=True)
         kwargs_lens_init = kwargs_lens_macro + kwargs_halos
         use_jax_bool_list = []
-        for i, lens_model_name in enumerate(lens_model_init.lens_model_list):
-            if i in index_lens_split:
-                continue
-            if lens_model_name in ['TNFW', 'CONVERGENCE']:
-                use_jax_bool_list.append(True)
-            else:
-                use_jax_bool_list.append(False)
+        if use_JAXstronomy:
+            for i, lens_model_name in enumerate(lens_model_init.lens_model_list):
+                if i in index_lens_split:
+                    continue
+                if lens_model_name in ['TNFW', 'CONVERGENCE']:
+                    use_jax_bool_list.append(True)
+                else:
+                    use_jax_bool_list.append(False)
+        else:
+            use_jax_bool_list = False
         setup_decoupled_multiplane_lens_model_output = \
             setup_lens_model(lens_model_init, kwargs_lens_init, index_lens_split, use_jax_bool_list)
         (lens_model_fixed, lens_model_free, kwargs_lens_fixed,

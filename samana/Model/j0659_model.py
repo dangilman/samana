@@ -44,15 +44,12 @@ class _J0659ModelBase(EPLModelBase):
             kwargs_source_sigma += kwargs_shapelets_sigma
             kwargs_lower_source += kwargs_lower_shapelets
             kwargs_upper_source += kwargs_upper_shapelets
-
         source_params = [kwargs_source_init, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source,
                          kwargs_upper_source]
-
         return source_model_list, source_params
 
     def setup_lens_light_model(self):
 
-        star_x, star_y = self._data.satellite_or_star_coords
         lens_light_model_list = ['SERSIC_ELLIPSE', 'SERSIC']
         kwargs_lens_light_init = [
             {'amp': 10.450234405031102, 'R_sersic': 1.737527935340475, 'n_sersic': 7.4682965093953015,
@@ -71,7 +68,6 @@ class _J0659ModelBase(EPLModelBase):
             {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10},
         {'R_sersic': 1.0, 'n_sersic': 10.0, 'center_x': 10.0, 'center_y': 10.0}]
         kwargs_lens_light_fixed = [{}, {}]
-
         include_uniform_comp = True
         if include_uniform_comp:
             kwargs_light_uniform, kwargs_light_sigma_uniform, kwargs_light_fixed_uniform, \
