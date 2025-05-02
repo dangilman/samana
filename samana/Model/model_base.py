@@ -460,10 +460,11 @@ class EPLModelBase(object):
         xD, yD, alpha_x_foreground, alpha_y_foreground, alpha_beta_subx, alpha_beta_suby = coordinates_and_deflections(
             lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
             x_grid, y_grid, z_split, z_source, cosmo_bkg)
+        coordinate_type = "GRID"
         kwargs_class_setup = decoupled_multiplane_class_setup(lens_model_free, xD, yD, alpha_x_foreground, \
                                          alpha_y_foreground, alpha_beta_subx, \
                                          alpha_beta_suby, z_split, \
-                                         coordinate_type='GRID', \
+                                         coordinate_type=coordinate_type, \
                                          interp_points=interp_points)
         return kwargs_class_setup, lens_model_init, kwargs_lens_init, index_lens_split, setup_decoupled_multiplane_lens_model_output
 
