@@ -200,7 +200,7 @@ class EPLModelBase(object):
         _, q_light = ellipticity2phi_q(e1, e2)
         if q_mass < q_light - 0.1:
             return -1e10
-        elif q_mass < 0.35:
+        elif q_mass < 0.4:
             return -1e10
         else:
             return 0.0
@@ -211,10 +211,10 @@ class EPLModelBase(object):
 
         e1, e2 = kwargs_lens[0]['e1'], kwargs_lens[0]['e2']
         _, q = ellipticity2phi_q(e1, e2)
-        if q < 0.35:
+        if q < 0.4:
             return -1e10
         else:
-            return -0.5 * (q - 0.8) ** 2 / 0.3 ** 2
+            return -0.5 * (q - 0.8) ** 2 / 0.25 ** 2
 
     def shapelet_source_clump(self, center_x, center_y, n_max_clump=4, beta_clump=0.05):
 
@@ -397,8 +397,8 @@ class EPLModelBase(object):
             delta_y_image = [0.0] * len(self._data.y_image)
         special_init = {'delta_x_image': delta_x_image,
                         'delta_y_image': delta_y_image}
-        special_sigma = {'delta_x_image': [0.005] * 4,
-                         'delta_y_image': [0.005] * 4}
+        special_sigma = {'delta_x_image': [0.01] * 4,
+                         'delta_y_image': [0.01] * 4}
         special_lower = {'delta_x_image': [-1.0] * 4,
                          'delta_y_image': [-1.0] * 4}
         special_upper = {'delta_x_image': [1.0] * 4,

@@ -58,13 +58,12 @@ def setup_params_light_fitting(kwargs_params, source_x, source_y):
     source_params_init = source_params[0]
     for i, kwargs_source in enumerate(source_params_init):
         if 'center_x' in kwargs_source.keys():
-            source_params_fixed[i]['center_x'] = source_y
-            source_params_fixed[i]['center_y'] = source_x
+            source_params_fixed[i]['center_x'] = source_x
+            source_params_fixed[i]['center_y'] = source_y
     kwargs_params_out['source_model'][2] = source_params_fixed
-
     return kwargs_params_out
 
-class FixedLensModelNew(object):
+class FixedLensModel(object):
     """
 
     """
@@ -107,12 +106,10 @@ class FixedLensModelNew(object):
         point = (y, x)
         alpha_x = self._interp_x(point)
         alpha_y = self._interp_y(point)
-
         if isinstance(x, float) or isinstance(x, int) and isinstance(y, float) or isinstance(y, int):
             alpha_x = float(alpha_x)
             alpha_y = float(alpha_y)
         else:
             alpha_x = np.squeeze(alpha_x)
             alpha_y = np.squeeze(alpha_y)
-
         return alpha_x, alpha_y

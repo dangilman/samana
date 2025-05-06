@@ -1,6 +1,6 @@
 from samana.Model.model_base import EPLModelBase
 import numpy as np
-import pickle
+from lenstronomy.Util.param_util import ellipticity2phi_q
 
 class _J0608ModelBase(EPLModelBase):
 
@@ -53,18 +53,18 @@ class _J0608ModelBase(EPLModelBase):
 
     def setup_lens_light_model(self):
 
-        lens_light_model_list = ['SERSIC_ELLIPSE']
+        lens_light_model_list = ['SERSIC']
         kwargs_lens_light_init = [
             {'amp': 15.706133065583586, 'R_sersic': 0.8871638406380125, 'n_sersic': 4.728275206827924,
-             'e1': 0.22911316499975554, 'e2': -0.32146556786876257, 'center_x': -0.19921336974353324,
+             'center_x': -0.19921336974353324,
              'center_y': -0.12110002900287818}
         ]
         kwargs_lens_light_sigma = [
-            {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.025, 'center_y': 0.025}]
+            {'R_sersic': 0.05, 'n_sersic': 0.25, 'center_x': 0.025, 'center_y': 0.025}]
         kwargs_lower_lens_light = [
-            {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -0.2, 'center_y': -0.2}]
+            {'R_sersic': 0.001, 'n_sersic': 0.5, 'center_x': -0.2, 'center_y': -0.2}]
         kwargs_upper_lens_light = [
-            {'R_sersic': 10, 'n_sersic': 8.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 0.2, 'center_y': 0.2}]
+            {'R_sersic': 10, 'n_sersic': 8.0, 'center_x': 0.2, 'center_y': 0.2}]
         kwargs_lens_light_fixed = [{}]
         add_uniform_light = True
         if add_uniform_light:
@@ -80,6 +80,20 @@ class _J0608ModelBase(EPLModelBase):
                              kwargs_upper_lens_light]
 
         return lens_light_model_list, lens_light_params
+
+    def axis_ratio_masslight_alignment(self, kwargs_lens,
+                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                kwargs_extinction, kwargs_tracer_source):
+
+        q_prior = self.axis_ratio_prior(kwargs_lens,
+                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                kwargs_extinction, kwargs_tracer_source)
+
+        alignment_prior = self.lens_mass_lens_light_alignment_prior(kwargs_lens,
+                kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special,
+                kwargs_extinction, kwargs_tracer_source)
+
+        return q_prior + alignment_prior
 
     @property
     def kwargs_likelihood(self):

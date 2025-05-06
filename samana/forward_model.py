@@ -8,6 +8,7 @@ from lenstronomy.Util.class_creator import create_im_sim
 from lenstronomy.LensModel.QuadOptimizer.optimizer import Optimizer
 from samana.image_magnification_util import setup_gaussian_source
 from samana.param_managers import auto_param_class
+from samana.light_fitting import FixedLensModel, setup_params_light_fitting
 from copy import deepcopy
 from multiprocessing.pool import Pool
 import os
@@ -36,7 +37,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   custom_preset_model_function=None,
                   run_initial_PSO=True,
                   scipy_minimize_method='Nelder-Mead',
-                  use_JAXstronomy=False):
+                  use_JAXstronomy=False,
+                  split_image_data_reconstruction=False):
     """
     Top-level function for forward modeling strong lenses with substructure. This function makes repeated calls to
     the forward_model_single_iteration routine below, and outputs the results to text files. Lens modeling and dark matter
@@ -94,6 +96,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     :param scipy_minimize_method: string that specifies the minimize method used by scipy when solving for point source positions
      without imaging data
     :param use_JAXstronomy: bool; use JAXstronomy deflector profiles where available
+    :param split_image_data_reconstruction: bool; if True, reconstructs the imaging data only for systems for which
+    the flux ratios match the data better than a specified tolerance threshold
     :return:
     """
 
@@ -215,7 +219,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              custom_preset_model_function,
                              run_initial_PSO,
                              scipy_minimize_method,
-                             use_JAXstronomy))
+                             use_JAXstronomy,
+                             split_image_data_reconstruction))
 
             pool = Pool(num_threads)
             output = pool.starmap(forward_model_single_iteration, args)
@@ -288,7 +293,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 custom_preset_model_function,
                                                 run_initial_PSO,
                                                 scipy_minimize_method,
-                                                use_JAXstronomy)
+                                                use_JAXstronomy,
+                                                split_image_data_reconstruction)
 
             seed_counter += 1
             acceptance_rate_counter += 1
@@ -427,7 +433,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            custom_preset_model_function=None,
                            run_initial_PSO=True,
                            minimize_method='Nelder-Mead',
-                           use_JAXstronomy=False):
+                           use_JAXstronomy=False,
+                           split_image_data_reconstruction=False):
     """
 
     :param data_class:
@@ -459,11 +466,16 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     :param tolerance:
     :param return_realization:
     :param use_JAXstronomy:
+    :param split_image_data_reconstruction:
     :return:
     """
     # set the random seed for reproducibility
     np.random.seed(seed)
-
+    if split_image_data_reconstruction and use_imaging_data:
+        raise Exception('cannot use split_image_data_reconstruction=True when use_imaging_data=True. The methodology '
+                        'triggered by split_image_data_reconstruction=True reconstructs the source for lens models '
+                        'that fit the flux ratios, but the initial lens modeling should be done without imaging data'
+                        '(use_imaging_data = False)')
     if astrometric_uncertainty:
         delta_x_image, delta_y_image = data_class.perturb_image_positions()
     else:
@@ -741,22 +753,66 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             print('imaging data likelihood (without custom mask): ', logL_imaging_data_no_custom_mask)
             print('imaging data likelihood (with custom mask): ', logL_imaging_data)
     else:
-        bic = -1000
-        logL_imaging_data = -100
-        if use_decoupled_multiplane_approximation:
-            lens_model = LensModel(lens_model_list=kwargs_model['lens_model_list'],
-                                   lens_redshift_list=kwargs_model['lens_redshift_list'],
-                                   multi_plane=kwargs_model['multi_plane'],
-                                   cosmo=astropy_cosmo,
-                                   decouple_multi_plane=kwargs_model['decouple_multi_plane'],
-                                   kwargs_multiplane_model=kwargs_model['kwargs_multiplane_model'],
-                                   z_source=kwargs_model['z_source'])
+
+        if split_image_data_reconstruction and stat < tolerance:
+            tabulated_lens_model = FixedLensModel(data_class, lens_model, kwargs_solution,
+                                                  data_class.kwargs_numerics['supersampling_factor'],
+                                                  image_data_grid_resolution_rescale)
+            kwargs_model_lightfit = model_class.setup_kwargs_model(decoupled_multiplane=False)[0]
+            kwargs_model_lightfit['lens_model_list'] = ['TABULATED_DEFLECTIONS']
+            kwargs_model_lightfit['multi_plane'] = False
+            kwargs_constraints_light_fit = {'num_point_source_list': [len(data_class.x_image)],
+                                            'point_source_offset': True,
+                                            # 'joint_source_with_point_source': [[0, 0]]
+                                            }
+            kwargs_likelihood_lightfit = deepcopy(kwargs_likelihood)
+            kwargs_likelihood_lightfit['prior_lens'] = None
+            kwargs_likelihood_lightfit['custom_logL_addition'] = None
+            kwargs_model_lightfit['lens_profile_kwargs_list'] = [{'custom_class': tabulated_lens_model}]
+            kwargs_model_lightfit['point_source_model_list'] = ['UNLENSED']
+            kwargs_params_lightfit = setup_params_light_fitting(kwargs_params,
+                                                                np.mean(source_x),
+                                                                np.mean(source_y))
+            fitting_sequence_light = FittingSequence(data_class.kwargs_data_joint,
+                                               kwargs_model_lightfit,
+                                               kwargs_constraints_light_fit,
+                                               kwargs_likelihood_lightfit,
+                                               kwargs_params_lightfit,
+                                               mpi=False,
+                                               verbose=verbose)
+            if fitting_kwargs_list is None:
+                fitting_kwargs_list = [
+                    ['PSO', {'sigma_scale': 1., 'n_particles': n_pso_particles, 'n_iterations': n_pso_iterations,
+                             'threadCount': num_threads}]
+                ]
+            chain_list = fitting_sequence_light.fit_sequence(fitting_kwargs_list)
+            kwargs_result = fitting_sequence_light.best_fit()
+            if verbose:
+                print('result of light fitting: ', kwargs_result)
+            bic = fitting_sequence_light.bic
+            # logL_imaging_data = fitting_sequence.best_fit_likelihood()
+            image_model = create_im_sim(data_class.kwargs_data_joint['multi_band_list'],
+                                        data_class.kwargs_data_joint['multi_band_type'],
+                                        kwargs_model_lightfit,
+                                        bands_compute=None,
+                                        image_likelihood_mask_list=[data_class.likelihood_mask_imaging_weights],
+                                        band_index=0,
+                                        kwargs_pixelbased=None,
+                                        linear_solver=True)
+            logL_imaging_data = image_model.likelihood_data_given_model(kwargs_result['kwargs_lens'],
+                                                                        kwargs_result['kwargs_source'],
+                                                                        kwargs_result['kwargs_lens_light'],
+                                                                        kwargs_result['kwargs_ps'],
+                                                                        kwargs_extinction=kwargs_result[
+                                                                            'kwargs_extinction'],
+                                                                        kwargs_special=kwargs_result['kwargs_special'],
+                                                                        source_marg=False,
+                                                                        linear_prior=None,
+                                                                        check_positive_flux=False)[0]
+
         else:
-            lens_model = LensModel(lens_model_list=lens_model_init.lens_model_list,
-                                   lens_redshift_list=lens_model_init.redshift_list,
-                                   multi_plane=True,
-                                   cosmo=astropy_cosmo,
-                                   z_source=kwargs_model['z_source'])
+            bic = -1000
+            logL_imaging_data = -1000
 
     if verbose:
         print('flux ratios data: ', np.array(data_class.magnifications)[1:]/data_class.magnifications[0])
