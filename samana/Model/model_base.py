@@ -447,7 +447,7 @@ class EPLModelBase(object):
             for i, lens_model_name in enumerate(lens_model_init.lens_model_list):
                 if i in index_lens_split:
                     continue
-                if lens_model_name in ['EPL_MULTIPOLE_134_ELL', 'SHEAR', 'TNFW', 'CONVERGENCE']:
+                if lens_model_name in ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS', 'TNFW', 'CONVERGENCE']:
                     use_jax_bool_list.append(True)
                 else:
                     use_jax_bool_list.append(False)
