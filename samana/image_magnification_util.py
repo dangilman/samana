@@ -165,8 +165,8 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
 def mag_finite_single_image_v2(source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
                             kwargs_lens_free, kwargs_lens, z_split, z_source,
                             cosmo_bkg, x_image, y_image, grid_resolution, grid_size_max,
-                               zlens, zsource, intial_resolution_reduction_factor=5,flux_threshold_factor=100,
-                               distance_factor=50):
+                               zlens, zsource, intial_resolution_reduction_factor=4,flux_threshold_factor=100,
+                               distance_factor=20):
     """
 
     """
@@ -293,10 +293,10 @@ def mag_finite_single_image_v2(source_model, kwargs_source, lens_model_fixed, le
     magnification_highres = np.sum(flux_array_highres) * grid_resolution ** 2
     flux_array_highres = flux_array_highres.reshape(numPix, numPix)
     #
-    # plt.imshow(flux_array_highres, origin='upper');
-    # plt.scatter(pixel_x_large, pixel_y_large, color='r',alpha=0.1,s=5)
-    # plt.show()
-    # a = input('continue')
+    #plt.imshow(flux_array_highres, origin='upper');
+    #plt.scatter(pixel_x_large, pixel_y_large, color='r',alpha=0.1,s=5)
+    #plt.show()
+    #a = input('continue')
     return magnification_highres, flux_array_highres
 
 def calc_source_sb(x, y, alpha_x_foreground, alpha_y_foreground, alpha_x_background, alpha_y_background,
