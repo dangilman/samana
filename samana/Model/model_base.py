@@ -283,7 +283,8 @@ class EPLModelBase(object):
 
     def image_magnification_gaussian(self, source_model_quasar, kwargs_source, lens_model_init, kwargs_lens_init,
                             kwargs_lens, grid_size, grid_resolution, lens_model, elliptical_ray_tracing_grid=True,
-                                     setup_decoupled_multiplane_lens_model_output=None):
+                                     setup_decoupled_multiplane_lens_model_output=None,
+                                     magnification_method=0):
 
         _, _, index_lens_split, _ = self.setup_lens_model()
         mags = magnification_finite_decoupled(source_model_quasar, kwargs_source,
@@ -292,7 +293,8 @@ class EPLModelBase(object):
                                               kwargs_lens, index_lens_split,
                                               grid_size, grid_resolution, lens_model,
                                               elliptical_ray_tracing_grid,
-                                              setup_decoupled_multiplane_lens_model_output=setup_decoupled_multiplane_lens_model_output)
+                                              setup_decoupled_multiplane_lens_model_output=setup_decoupled_multiplane_lens_model_output,
+                                              magnification_method=magnification_method)
         return mags
 
     def setup_kwargs_model(self, decoupled_multiplane=False, lens_model_list_halos=None,

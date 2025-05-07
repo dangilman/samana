@@ -126,7 +126,8 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                                    grid_size, grid_resolution, lens_model_full,
                                    elliptical_ray_tracing_grid,
                                    grid_increment_factor=15.0,
-                                   setup_decoupled_multiplane_lens_model_output=None):
+                                   setup_decoupled_multiplane_lens_model_output=None,
+                                   magnification_method=0):
     """
     """
     if setup_decoupled_multiplane_lens_model_output is None:
@@ -137,29 +138,35 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
          kwargs_lens_free, z_source, z_split, cosmo_bkg) = setup_decoupled_multiplane_lens_model_output
     magnifications = []
     flux_arrays = []
-    # use_method_2 = True
+
     grid_x_large, grid_y_large, interp_points_large, npix_large = setup_grids(grid_size,
                                                                               grid_resolution,
                                                                               0.0, 0.0)
     grid_x_large = grid_x_large.ravel()
     grid_y_large = grid_y_large.ravel()
-    grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
-    r_step = grid_size / grid_increment_factor
+    if magnification_method == 0:
+        grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
+        r_step = grid_size / grid_increment_factor
     for (x_img, y_img) in zip(x_image, y_image):
-        mag, flux_array = mag_finite_single_image_v2(source_model, kwargs_source, lens_model_fixed,
+        if magnification_method == 1:
+            mag, flux_array = mag_finite_single_image_v2(source_model, kwargs_source, lens_model_fixed,
                                                          lens_model_free, kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
-                                                         z_split, z_source, cosmo_bkg, x_img, y_img, grid_resolution, grid_size,
+                                                         z_split, z_source, cosmo_bkg, x_img, y_img, grid_resolution,
+                                                         grid_size,
                                                          z_split, z_source)
-        magnifications.append(mag)
-        flux_arrays.append(flux_array)
-        # else:
-        #     mag, flux_array = mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_model_free,
-        #                                               kwargs_lens_fixed,
-        #                                               kwargs_lens_free, kwargs_lens, z_split, z_source,
-        #                                               cosmo_bkg, x_img, y_img, grid_x_large, grid_y_large,
-        #                                               grid_r, r_step, grid_resolution, grid_size, z_split, z_source)
-        #     magnifications.append(mag)
-        #     flux_arrays.append(flux_array.reshape(npix_large, npix_large))
+            magnifications.append(mag)
+            flux_arrays.append(flux_array)
+        elif magnification_method == 0:
+            mag, flux_array = mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_model_free,
+                                                      kwargs_lens_fixed,
+                                                      kwargs_lens_free, kwargs_lens, z_split, z_source,
+                                                      cosmo_bkg, x_img, y_img, grid_x_large, grid_y_large,
+                                                      grid_r, r_step, grid_resolution, grid_size, z_split, z_source)
+            magnifications.append(mag)
+            flux_arrays.append(flux_array.reshape(npix_large, npix_large))
+        else:
+            raise Exception('magnification method must be 0 or 1')
+
     return np.array(magnifications), flux_arrays
 
 def mag_finite_single_image_v2(source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
@@ -176,7 +183,7 @@ def mag_finite_single_image_v2(source_model, kwargs_source, lens_model_fixed, le
     reduced_to_phys = cosmo_bkg.d_xy(0, zsource) / cosmo_bkg.d_xy(zlens, zsource)
 
     # initialize low-res flux array
-    deltapix_init = intial_resolution_reduction_factor * grid_resolution # lower res by a factor 5
+    deltapix_init = intial_resolution_reduction_factor * grid_resolution
     numPix_init = int(grid_size_max / deltapix_init)
     (grid_x_large_init, grid_y_large_init, ra_at_xy_0, dec_at_xy_0,
      x_at_radec_0, y_at_radec_0, Mpix2coord, Mcoord2pix) = (
