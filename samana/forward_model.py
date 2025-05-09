@@ -32,13 +32,14 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   kappa_scale_subhalos=1.0,
                   log10_bound_mass_cut=None,
                   parallelize=False,
-                  elliptical_ray_tracing_grid=True,
                   filter_subhalo_kwargs=None,
                   custom_preset_model_function=None,
-                  run_initial_PSO=True,
+                  run_initial_PSO=False,
                   scipy_minimize_method='Nelder-Mead',
                   use_JAXstronomy=False,
-                  split_image_data_reconstruction=False):
+                  split_image_data_reconstruction=False,
+                  magnification_method='CIRCULAR_APERTURE',
+                  no_mag=False):
     """
     Top-level function for forward modeling strong lenses with substructure. This function makes repeated calls to
     the forward_model_single_iteration routine below, and outputs the results to text files. Lens modeling and dark matter
@@ -86,9 +87,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     :param kappa_scale_subhalos: rescales the negative convergence sheet associated with subhalos; should be approx. equal
     to the amplitude of the bound mass function relative to the infall mass function
     :param log10_bound_mass_cut: remove subhalos with bound masses below 10^log10_bound_mass_cut
-    :param parallelize: bool; use parallelization (not well tested)
-    :param elliptical_ray_tracing_grid: bool; use an elliptical ray tracing grid (instead of circular) to calculate image magnifications. This
-    is faster, but can fail in some cases with extremely high magnifications and/or a poorly constrained lens model
+    :param parallelize: bool; use parallelization
     :param filter_subhalo_kwargs: keyword arguments passed to pyHalo to remove low-mass subhalos that are far away from images
     :param custom_preset_model_function: a custom preset_model function that can be passed to pyHalo; only used when
     preset_model_name='CUSTOM'
@@ -98,6 +97,15 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     :param use_JAXstronomy: bool; use JAXstronomy deflector profiles where available
     :param split_image_data_reconstruction: bool; if True, reconstructs the imaging data only for systems for which
     the flux ratios match the data better than a specified tolerance threshold
+    :param magnification_method: the algorithm for computing the image magnification, options include:
+     - CIRCULAR_APERTURE: start with a circular aperture centered at image position, gradually increase size until
+     magnification converges to 0.1%
+     - ELLIPTICAL_APERTURE: start with an elliptical aperture centered at image position, gradually increase size until
+     magnification converges to 0.1%. The orientation and size of ellipse is estimated from the hessian eigenvectors at
+     the image position
+     - ADAPTIVE: estimates the shape of the image from a low-resolution calculation, then performs a high-resolution
+     ray-tracing calculation around pixels identified in the low-resolution calculation
+    :param no_mag: bool; if True, does not compute image magnifications
     :return:
     """
 
@@ -211,7 +219,6 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              fixed_realization,
                              kappa_scale_subhalos,
                              log10_bound_mass_cut,
-                             elliptical_ray_tracing_grid,
                              tolerance,
                              filter_subhalo_kwargs,
                              macromodel_readout_function,
@@ -220,7 +227,9 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              run_initial_PSO,
                              scipy_minimize_method,
                              use_JAXstronomy,
-                             split_image_data_reconstruction))
+                             split_image_data_reconstruction,
+                             magnification_method,
+                             no_mag))
 
             pool = Pool(num_threads)
             output = pool.starmap(forward_model_single_iteration, args)
@@ -285,7 +294,6 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 use_imaging_data, fitting_sequence_kwargs, test_mode,
                                                 use_decoupled_multiplane_approximation, fixed_realization,
                                                 kappa_scale_subhalos, log10_bound_mass_cut,
-                                                elliptical_ray_tracing_grid,
                                                 tolerance,
                                                 filter_subhalo_kwargs,
                                                 macromodel_readout_function,
@@ -294,7 +302,9 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 run_initial_PSO,
                                                 scipy_minimize_method,
                                                 use_JAXstronomy,
-                                                split_image_data_reconstruction)
+                                                split_image_data_reconstruction,
+                                                magnification_method,
+                                                no_mag)
 
             seed_counter += 1
             acceptance_rate_counter += 1
@@ -425,7 +435,6 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            fixed_realization=None,
                            kappa_scale_subhalos=1.0,
                            log10_bound_mass_cut=None,
-                           elliptical_ray_tracing_grid=True,
                            tolerance=np.inf,
                            filter_subhalo_kwargs=None,
                            macromodel_readout_function=None,
@@ -434,7 +443,9 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            run_initial_PSO=True,
                            minimize_method='Nelder-Mead',
                            use_JAXstronomy=False,
-                           split_image_data_reconstruction=False):
+                           split_image_data_reconstruction=False,
+                           magnification_method=None,
+                           no_mag=False):
     """
 
     :param data_class:
@@ -462,7 +473,6 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     :param fixed_realization:
     :param kappa_scale_subhalos:
     :param log10_bound_mass_cut:
-    :param elliptical_ray_tracing_grid:
     :param tolerance:
     :param return_realization:
     :param use_JAXstronomy:
@@ -697,21 +707,25 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         if use_JAXstronomy:
             # JAXstronomy will be slower here due to smaller array sizes
             setup_decoupled_multiplane_lens_model_output = None
-        magnifications, images = model_class.image_magnification_gaussian(source_model_quasar,
-                                                                          kwargs_source,
-                                                                          lens_model_init,
-                                                                          kwargs_lens_init,
-                                                                          kwargs_solution,
-                                                                          grid_size,
-                                                                          grid_resolution,
-                                                                          lens_model,
-                                                                          elliptical_ray_tracing_grid,
-                                                                          setup_decoupled_multiplane_lens_model_output)
+        if no_mag:
+            magnifications, images = np.array([1.0]*4), [np.zeros((10,10))]*4
+        else:
+            magnifications, images = model_class.image_magnification_gaussian(source_model_quasar,
+                                                                              kwargs_source,
+                                                                              lens_model_init,
+                                                                              kwargs_lens_init,
+                                                                              kwargs_solution,
+                                                                              grid_size,
+                                                                              grid_resolution,
+                                                                              lens_model,
+                                                                              setup_decoupled_multiplane_lens_model_output,
+                                                                              magnification_method=magnification_method)
         stat, flux_ratios, flux_ratios_data = flux_ratio_summary_statistic(data_class.magnifications,
-                                                                           magnifications,
-                                                                           data_class.flux_uncertainty,
-                                                                           data_class.keep_flux_ratio_index,
-                                                                           data_class.uncertainty_in_fluxes)
+                                                                               magnifications,
+                                                                               data_class.flux_uncertainty,
+                                                                               data_class.keep_flux_ratio_index,
+                                                                               data_class.uncertainty_in_fluxes)
+
     tend = time()
     if verbose:
         print('computed magnifications in '+str(np.round(tend - t0, 1))+' seconds')

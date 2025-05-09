@@ -63,73 +63,13 @@ def perturbed_fluxes_from_fluxes(fluxes, flux_measurement_uncertainties_percenta
             fluxes_perturbed[:, i] = fluxes[:, i] + df
     return fluxes_perturbed
 
-
-def magnification_finite_decoupled_v2(source_model, kwargs_source, x_image, y_image,
-                                   lens_model_init, kwargs_lens_init, kwargs_lens, index_lens_split,
-                                   grid_size, grid_resolution, lens_model_full,
-                                   elliptical_ray_tracing_grid,
-                                   grid_increment_factor=15.0,
-                                   setup_decoupled_multiplane_lens_model_output=None):
-    """
-    """
-    if setup_decoupled_multiplane_lens_model_output is None:
-        lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free, z_source, z_split, cosmo_bkg = \
-            setup_lens_model(lens_model_init, kwargs_lens_init, index_lens_split)
-    else:
-        (lens_model_fixed, lens_model_free, kwargs_lens_fixed,
-         kwargs_lens_free, z_source, z_split, cosmo_bkg) = setup_decoupled_multiplane_lens_model_output
-    grid_x_large, grid_y_large, interp_points_large, npix_large = setup_grids(grid_size,
-                                                                              5*grid_resolution,
-                                                                              0.0, 0.0)
-    grid_x_large = grid_x_large.ravel()
-    grid_y_large = grid_y_large.ravel()
-    r_step = grid_size / grid_increment_factor
-    magnifications = []
-    flux_arrays = []
-    ext = LensModelExtensions(lens_model_full)
-    for (x_img, y_img) in zip(x_image, y_image):
-        if elliptical_ray_tracing_grid:
-            try:
-                w1, w2, v11, v12, v21, v22 = ext.hessian_eigenvectors(
-                    x_img, y_img, kwargs_lens
-                )
-                _v = [np.array([v11, v12]), np.array([v21, v22])]
-                _w = [abs(w1), abs(w2)]
-                idx = int(np.argmax(_w))
-                v = _v[idx]
-                rotation_angle = np.arctan(v[1] / v[0]) - np.pi / 2
-                grid_x, grid_y = util.rotate(grid_x_large, grid_y_large,
-                                             rotation_angle)
-                sort = np.argsort(_w)
-                q_eigenvalue = _w[sort[0]] / _w[sort[1]]
-                q = max(0.1, q_eigenvalue)
-                grid_r = np.hypot(grid_x, grid_y / q).ravel()
-            except:
-                print('q eigenvalue not defined; computing image magifications on a circular grid.')
-                grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
-        else:
-            grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
-        # mag, flux_array = mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
-        #                     kwargs_lens_free, kwargs_lens, z_split, z_source,
-        #                     cosmo_bkg, x_img, y_img, grid_x_large, grid_y_large,
-        #                     grid_r, r_step, grid_resolution, grid_size, z_split, z_source)
-        mag, flux_array = mag_finite_single_image_v2(source_model, kwargs_source, lens_model_fixed,
-                                                     lens_model_free, kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
-                                                     z_split, z_source, cosmo_bkg, x_img, y_img, grid_resolution, grid_size,
-                                                     z_split, z_source)
-        magnifications.append(mag)
-        flux_arrays.append(flux_array.reshape(npix_large, npix_large))
-    return np.array(magnifications), flux_arrays
-
 def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image,
                                    lens_model_init, kwargs_lens_init, kwargs_lens, index_lens_split,
                                    grid_size, grid_resolution, lens_model_full,
-                                   elliptical_ray_tracing_grid,
                                    grid_increment_factor=15.0,
                                    setup_decoupled_multiplane_lens_model_output=None,
-                                   magnification_method=0):
-    """
-    """
+                                   magnification_method='CIRCULAR_APERTURE'):
+
     if setup_decoupled_multiplane_lens_model_output is None:
         lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free, z_source, z_split, cosmo_bkg = \
             setup_lens_model(lens_model_init, kwargs_lens_init, index_lens_split)
@@ -138,25 +78,48 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
          kwargs_lens_free, z_source, z_split, cosmo_bkg) = setup_decoupled_multiplane_lens_model_output
     magnifications = []
     flux_arrays = []
-
     grid_x_large, grid_y_large, interp_points_large, npix_large = setup_grids(grid_size,
                                                                               grid_resolution,
                                                                               0.0, 0.0)
     grid_x_large = grid_x_large.ravel()
     grid_y_large = grid_y_large.ravel()
-    if magnification_method == 0:
-        grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
-        r_step = grid_size / grid_increment_factor
+
     for (x_img, y_img) in zip(x_image, y_image):
-        if magnification_method == 1:
-            mag, flux_array = mag_finite_single_image_v2(source_model, kwargs_source, lens_model_fixed,
+
+        if magnification_method == 'ADAPTIVE':
+            mag, flux_array = mag_finite_single_image_adaptive(source_model, kwargs_source, lens_model_fixed,
                                                          lens_model_free, kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
                                                          z_split, z_source, cosmo_bkg, x_img, y_img, grid_resolution,
                                                          grid_size,
                                                          z_split, z_source)
             magnifications.append(mag)
-            flux_arrays.append(flux_array)
-        elif magnification_method == 0:
+            flux_arrays.append(flux_array.T)
+
+        elif magnification_method in ['CIRCULAR_APERTURE', 'ELLIPTICAL_APERTURE']:
+            if magnification_method == 'ELLIPTICAL_APERTURE':
+                try:
+                    ext = LensModelExtensions(lens_model_full)
+                    w1, w2, v11, v12, v21, v22 = ext.hessian_eigenvectors(
+                        x_img, y_img, kwargs_lens
+                    )
+                    _v = [np.array([v11, v12]), np.array([v21, v22])]
+                    _w = [abs(w1), abs(w2)]
+                    idx = int(np.argmax(_w))
+                    v = _v[idx]
+                    rotation_angle = np.arctan(v[1] / v[0]) - np.pi / 2
+                    grid_x, grid_y = util.rotate(grid_x_large, grid_y_large,
+                                                 rotation_angle)
+                    sort = np.argsort(_w)
+                    q_eigenvalue = _w[sort[0]] / _w[sort[1]]
+                    q = max(0.1, q_eigenvalue)
+                    grid_r = np.hypot(grid_x, grid_y / q).ravel()
+                except:
+                    print('q eigenvalue not defined; computing image magnifications on a circular grid.')
+                    grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
+            else:
+                grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
+
+            r_step = grid_size / grid_increment_factor
             mag, flux_array = mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_model_free,
                                                       kwargs_lens_fixed,
                                                       kwargs_lens_free, kwargs_lens, z_split, z_source,
@@ -165,11 +128,12 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
             magnifications.append(mag)
             flux_arrays.append(flux_array.reshape(npix_large, npix_large))
         else:
-            raise Exception('magnification method must be 0 or 1')
+            raise Exception('magnification_method must be either CIRCULAR_APERTURE, ELLIPTICAL_APERTURE, or ADAPTIVE. '
+                            'You specified magnification_method '+str(magnification_method))
 
     return np.array(magnifications), flux_arrays
 
-def mag_finite_single_image_v2(source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
+def mag_finite_single_image_adaptive(source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
                             kwargs_lens_free, kwargs_lens, z_split, z_source,
                             cosmo_bkg, x_image, y_image, grid_resolution, grid_size_max,
                                zlens, zsource, intial_resolution_reduction_factor=4,flux_threshold_factor=100,
