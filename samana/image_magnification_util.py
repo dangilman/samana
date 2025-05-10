@@ -136,8 +136,8 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
 def mag_finite_single_image_adaptive(source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
                             kwargs_lens_free, kwargs_lens, z_split, z_source,
                             cosmo_bkg, x_image, y_image, grid_resolution, grid_size_max,
-                               zlens, zsource, intial_resolution_reduction_factor=4,flux_threshold_factor=100,
-                               distance_factor=20):
+                               zlens, zsource, intial_resolution_reduction_factor=4,flux_threshold_factor=200,
+                               distance_factor=50):
     """
 
     """

@@ -198,6 +198,8 @@ class EPLModelBase(object):
         _, q_mass = ellipticity2phi_q(e1, e2)
         e1, e2 = kwargs_lens_light[0]['e1'], kwargs_lens_light[0]['e2']
         _, q_light = ellipticity2phi_q(e1, e2)
+        # if q_mass < 0.75:
+        #     return -1e10
         if q_mass < q_light - 0.1:
             return -1e10
         elif q_mass < 0.4:

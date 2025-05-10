@@ -140,6 +140,9 @@ def compute_likelihoods(output_class,
         weights_image_data = np.exp(-0.5 * logL_normalized_diff**2)
     else:
         weights_image_data = np.ones_like(logL_image_data)
+
+    print('total samples: ', weights_image_data.shape[0])
+    print('effective sample size after imaging data likelihood: ', np.sum(weights_image_data))
     sim = deepcopy(output_class)
     params = np.empty((sim.parameters.shape[0], len(param_names)))
     if dm_param_names is None:
@@ -187,7 +190,8 @@ def compute_likelihoods(output_class,
                                                                             fluxes=fluxes)
     joint_weights = flux_ratio_likelihood_weights * weights_image_data
     joint_weights = joint_weights / np.max(joint_weights)
-    print('effective sample size: ', np.sum(joint_weights))
+    print('effective sample from only flux ratio likelihood: ', np.sum(flux_ratio_likelihood_weights))
+    print('effective sample size after flux ratio likelihood: ', np.sum(joint_weights))
     pdf_imgdata_fr = DensitySamples(params_out,
                                     param_names=param_names,
                                     weights=flux_ratio_likelihood_weights * weights_image_data,
