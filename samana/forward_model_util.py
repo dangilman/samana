@@ -185,12 +185,14 @@ def sample_prior(kwargs_prior):
                 mean, standard_dev = kwargs_prior[param_name][1], kwargs_prior[param_name][2]
                 sample = np.random.normal(mean, standard_dev)
             elif prior_type == 'TRUNC-HALF-GAUSS':
-                mean, standard_dev, max_value = kwargs_prior[param_name][1], kwargs_prior[param_name][2], \
-                kwargs_prior[param_name][3]
+                mean, standard_dev, min_value, max_value = kwargs_prior[param_name][1], kwargs_prior[param_name][2], \
+                kwargs_prior[param_name][3], kwargs_prior[param_name][4]
                 ##truncation is defined in terms of standard_deviations
                 max_sig_units = (max_value - mean) / standard_dev
-                random_draw = abs(truncnorm.rvs(-max_sig_units, max_sig_units, scale=standard_dev))
-                sample = mean + random_draw
+                min_sig_units = (min_value - mean) / standard_dev
+                random_draw = truncnorm.rvs(min_sig_units, max_sig_units, loc=mean, scale=standard_dev)
+                #random_draw = abs(truncnorm.rvs(-max_sig_units, max_sig_units, scale=standard_dev))
+                sample = random_draw
             else:
                 raise Exception('only UNIFORM, GAUSSIAN, and FIXED priors currently implemented')
             if joint_multipole_prior_used and param_name in ['a1_a', 'a3_a', 'a4_a', 'delta_phi_m3', 'delta_phi_m3', 'delta_phi_m3']:
