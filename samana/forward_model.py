@@ -366,6 +366,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
             if verbose:
                 print('final data readout...')
         if readout_sampling_rate and write_sampling_rate:
+            acceptance_rate_counter = 0 # reset here to continue reading out sample rate on future iterations
             with open(filename_sampling_rate, 'w') as f:
                 f.write(str(np.round(sampling_rate, 2)) + ' ')
                 f.write('\n')
@@ -767,17 +768,15 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             print('imaging data likelihood (without custom mask): ', logL_imaging_data_no_custom_mask)
             print('imaging data likelihood (with custom mask): ', logL_imaging_data)
     else:
-
         if split_image_data_reconstruction and stat < tolerance:
-            tabulated_lens_model = FixedLensModel(data_class, lens_model, kwargs_solution,
-                                                  data_class.kwargs_numerics['supersampling_factor'],
-                                                  image_data_grid_resolution_rescale)
+            tabulated_lens_model = FixedLensModel(
+                kwargs_model, data_class.kwargs_data, data_class.kwargs_psf, data_class.kwargs_numerics, kwargs_solution
+            )
             kwargs_model_lightfit = model_class.setup_kwargs_model(decoupled_multiplane=False)[0]
             kwargs_model_lightfit['lens_model_list'] = ['TABULATED_DEFLECTIONS']
             kwargs_model_lightfit['multi_plane'] = False
             kwargs_constraints_light_fit = {'num_point_source_list': [len(data_class.x_image)],
-                                            'point_source_offset': True,
-                                            # 'joint_source_with_point_source': [[0, 0]]
+                                            'point_source_offset': True
                                             }
             kwargs_likelihood_lightfit = deepcopy(kwargs_likelihood)
             kwargs_likelihood_lightfit['prior_lens'] = None
@@ -804,7 +803,6 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             if verbose:
                 print('result of light fitting: ', kwargs_result)
             bic = fitting_sequence_light.bic
-            # logL_imaging_data = fitting_sequence.best_fit_likelihood()
             image_model = create_im_sim(data_class.kwargs_data_joint['multi_band_list'],
                                         data_class.kwargs_data_joint['multi_band_type'],
                                         kwargs_model_lightfit,
@@ -817,8 +815,6 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                                         kwargs_result['kwargs_source'],
                                                                         kwargs_result['kwargs_lens_light'],
                                                                         kwargs_result['kwargs_ps'],
-                                                                        kwargs_extinction=kwargs_result[
-                                                                            'kwargs_extinction'],
                                                                         kwargs_special=kwargs_result['kwargs_special'],
                                                                         source_marg=False,
                                                                         linear_prior=None,

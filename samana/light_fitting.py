@@ -1,12 +1,12 @@
 """
 Fit lens and source light profiles at a fixed lens model
 """
-from lenstronomy.ImSim.Numerics.grid import RegularGrid
 import numpy as np
-from scipy.interpolate import RegularGridInterpolator
+from scipy.interpolate import LinearNDInterpolator
 from copy import deepcopy
-import os
 import pickle
+from lenstronomy.Util.class_creator import create_class_instances, create_image_model
+
 
 def setup_light_reconstruction(output_class_filename,
                                measured_flux_ratios,
@@ -63,36 +63,29 @@ def setup_params_light_fitting(kwargs_params, source_x, source_y):
     kwargs_params_out['source_model'][2] = source_params_fixed
     return kwargs_params_out
 
+
 class FixedLensModel(object):
     """
-
+    Fixed mapping from a coordinate on the image plane to the source plane
     """
-    def __init__(self, data_class, lens_model, kwargs_lens, super_sample_factor, image_data_grid_resolution_rescale):
+
+    def __init__(self, kwargs_model, kwargs_data, kwargs_psf, kwargs_numerics, kwargs_lens):
         """
 
-        :param data_class:
-        :param lens_model:
+        :param kwargs_model:
+        :param kwargs_data:
+        :param kwargs_psf:
+        :param kwargs_numerics:
         :param kwargs_lens:
-        :param super_sample_factor:
-        :param image_data_grid_resolution_rescale: rescales the imaging data grid resolution; a number > 0
-        means lower resolution
         """
-        nx, ny = data_class.kwargs_data['image_data'].shape
-        nx = int(nx)
-        ny = int(ny)
-        if image_data_grid_resolution_rescale < 1:
-            raise Exception('image data resolution rescaling must be an integer >= 1')
-        super_sample_factor = int(super_sample_factor * image_data_grid_resolution_rescale)
-        deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size = data_class.coordinate_properties
-        grid = RegularGrid(nx, ny, transform_pix2angle, ra_at_xy_0, dec_at_xy_0, super_sample_factor)
-        ra_coords, dec_coords = grid.coordinates_evaluate
-        _ra_coords = np.linspace(np.min(ra_coords), np.max(ra_coords), nx)
-        _dec_coords = np.linspace(np.min(dec_coords), np.max(dec_coords), ny)
-        ra_coords, dec_coords = np.meshgrid(_ra_coords, _dec_coords)
-        alpha_x, alpha_y = lens_model.alpha(ra_coords.ravel(), dec_coords.ravel(), kwargs_lens)
-        points = (ra_coords[0, :], dec_coords[:, 0])
-        self._interp_x = RegularGridInterpolator(points, alpha_x.reshape(nx, ny), bounds_error=False, fill_value=None)
-        self._interp_y = RegularGridInterpolator(points, alpha_y.reshape(nx, ny), bounds_error=False, fill_value=None)
+        nx, ny = kwargs_data['image_data'].shape
+        lens_model = create_class_instances(**kwargs_model)[0]
+        image_model = create_image_model(kwargs_data, kwargs_psf, kwargs_numerics, kwargs_model)
+        ra_grid, dec_grid = image_model.Data.coordinate_grid(nx, ny)
+        alpha_x, alpha_y = lens_model.alpha(ra_grid.ravel(), dec_grid.ravel(), kwargs_lens)
+        points = (ra_grid.ravel(), dec_grid.ravel())
+        self._interp_x = LinearNDInterpolator(points, alpha_x)
+        self._interp_y = LinearNDInterpolator(points, alpha_y)
 
     def __call__(self, x, y, *args, **kwargs):
         """
@@ -103,7 +96,7 @@ class FixedLensModel(object):
         :param kwargs:
         :return:
         """
-        point = (y, x)
+        point = (x, y)
         alpha_x = self._interp_x(point)
         alpha_y = self._interp_y(point)
         if isinstance(x, float) or isinstance(x, int) and isinstance(y, float) or isinstance(y, int):
