@@ -366,7 +366,6 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
             if verbose:
                 print('final data readout...')
         if readout_sampling_rate and write_sampling_rate:
-            acceptance_rate_counter = 0 # reset here to continue reading out sample rate on future iterations
             with open(filename_sampling_rate, 'w') as f:
                 f.write(str(np.round(sampling_rate, 2)) + ' ')
                 f.write('\n')
