@@ -641,7 +641,10 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                  simplex_n_iterations=800
                                                  )
             if minimize_method == 'COBYQA_import':
-                from cobyqa import minimize as minimize_method
+                try:
+                    from cobyqa import minimize as minimize_method
+                except:
+                    raise Exception('cobyqa not installed, install cobyqa first: "pip install cobyqa"')
             kwargs_solution, _ = opt.optimize(50, 50, verbose=verbose, seed=seed,
                                                   minimize_method=minimize_method)
             kwargs_multiplane_model = opt.kwargs_multiplane_model
