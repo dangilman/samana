@@ -35,7 +35,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   filter_subhalo_kwargs=None,
                   custom_preset_model_function=None,
                   run_initial_PSO=False,
-                  scipy_minimize_method='Nelder-Mead',
+                  scipy_minimize_method='BFGS',
                   use_JAXstronomy=False,
                   split_image_data_reconstruction=False,
                   magnification_method='CIRCULAR_APERTURE',
@@ -638,10 +638,12 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                  param_class,
                                                  particle_swarm=run_initial_PSO,
                                                  tol_simplex_func=1e-9,
-                                                 simplex_n_iterations=500
+                                                 simplex_n_iterations=800
                                                  )
+            if minimize_method == 'COBYQA_import':
+                from cobyqa import minimize as minimize_method
             kwargs_solution, _ = opt.optimize(50, 50, verbose=verbose, seed=seed,
-                                              minimize_method=minimize_method)
+                                                  minimize_method=minimize_method)
             kwargs_multiplane_model = opt.kwargs_multiplane_model
         else:
             kwargs_lens_init = kwargs_lens_align + kwargs_halos
@@ -658,8 +660,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                             z_lens,
                                             data_class.z_source,
                                             param_class,
-                                            tol_simplex_func=1e-5,
-                                            simplex_n_iterations=500,
+                                            tol_simplex_func=1e-6,
+                                            simplex_n_iterations=600,
                                             particle_swarm=run_initial_PSO)
             kwargs_solution, _ = opt.optimize(50, 50, verbose=verbose, seed=seed)
             kwargs_multiplane_model = opt.kwargs_multiplane_model
@@ -689,7 +691,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     if verbose and use_imaging_data:
         print('recovered source position: ', source_x, source_y)
     # verify that the lens equation is satisfied to high precision
-    source_plane_image_solution = check_lens_equation_solution(source_x, source_y, tolerance=0.001)
+    source_plane_image_solution = check_lens_equation_solution(source_x, source_y, tolerance=0.0001)
     if source_plane_image_solution > 1:
         # reject this lens model on the basis of not satisfying lens equation
         if verbose:

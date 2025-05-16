@@ -71,12 +71,12 @@ class Output(object):
 
         flux_ratios_summed = np.sum(self.flux_ratios, axis=1)
         inds_keep = np.where(np.isfinite(flux_ratios_summed))[0]
-        return self._subsample(inds_keep)
+        return self.down_select(inds_keep)
 
     def clean_repeated_seeds(self):
 
         _, index = np.unique(self.seed, return_index=True)
-        return self._subsample(index)
+        return self.down_select(index)
 
     @classmethod
     def from_raw_output(cls, output_path, job_index_min, job_index_max, fitting_kwargs_list=None,
@@ -342,7 +342,7 @@ class Output(object):
         else:
             return self._macromodel_samples_dict
 
-    def _subsample(self, inds_keep):
+    def down_select(self, inds_keep):
         """
         :param inds_keep:
         :return:
@@ -389,7 +389,7 @@ class Output(object):
                 inds_keep = np.where(image_data_logL <= logL_threshold)[0]
             else:
                 inds_keep = np.where(image_data_logL >= logL_threshold)[0]
-        return self._subsample(inds_keep)
+        return self.down_select(inds_keep)
 
     def cut_on_S_statistic(self, keep_best_N=None, S_statistic_cut=None, select_worst=False):
         """
@@ -413,7 +413,7 @@ class Output(object):
                 inds_keep = np.where(self.flux_ratio_summary_statistic <= S_statistic_cut)[0]
         else:
             raise Exception('must specify keep_best_N, percentile_cut, or S_statistic_cut')
-        return self._subsample(inds_keep)
+        return self.down_select(inds_keep)
 
     def cut_on_flux_ratio_likelihood(self, keep_best_N=None, percentile_cut=None, likelihood_cut=None):
         """
@@ -433,7 +433,7 @@ class Output(object):
             inds_keep = np.where(self.flux_ratio_likelihood <= likelihood_cut)[0]
         else:
             raise Exception('must specify keep_best_N, percentile_cut, or likelihood_cut')
-        return self._subsample(inds_keep)
+        return self.down_select(inds_keep)
 
     def plot_joint_statistics(self, ax=None, s_max=0.1, logLlower=None, **kwargs_plot):
 

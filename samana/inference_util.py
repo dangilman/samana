@@ -131,15 +131,23 @@ def compute_likelihoods(output_class,
                         dm_param_names=None,
                         uncertainty_on_ratios=False):
 
+    if n_keep is None and n_bootstraps > 0:
+        raise ValueError('when using a flux ratio likelihood specified '
+                         'through n_keep=None, n_bootstraps must be set to 0')
+
     param_ranges_dm = [param_ranges_dict[param_name] for param_name in param_names]
     # first down-select on imaging data likelihood
     logL_image_data = output_class.image_data_logL
-    if image_data_logL_sigma is not None:
-        max_logL = np.max(logL_image_data)
-        logL_normalized_diff = (logL_image_data - max_logL) / image_data_logL_sigma
-        weights_image_data = np.exp(-0.5 * logL_normalized_diff**2)
-    else:
-        weights_image_data = np.ones_like(logL_image_data)
+    weights_image_data = np.array([])
+    for index_bootstrap in range(0, n_bootstraps+1):
+
+        if image_data_logL_sigma is not None:
+            max_logL = np.max(logL_image_data)
+            logL_normalized_diff = (logL_image_data - max_logL) / image_data_logL_sigma
+            image_data_weight = np.exp(-0.5 * logL_normalized_diff**2)
+        else:
+            image_data_weight = np.ones_like(logL_image_data)
+        weights_image_data = np.append(weights_image_data, image_data_weight)
 
     print('total samples: ', weights_image_data.shape[0])
     print('effective sample size after imaging data likelihood: ', np.sum(weights_image_data))
@@ -156,7 +164,7 @@ def compute_likelihoods(output_class,
     # now we compute the imaging data likelihood only
     pdf_imgdata = DensitySamples(params,
                                  param_names=param_names,
-                                 weights=weights_image_data,
+                                 weights=image_data_weight,
                                  param_ranges=param_ranges_dm,
                                  use_kde=use_kde,
                                  nbins=nbins,
