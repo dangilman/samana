@@ -234,7 +234,7 @@ class WFI2033NircamModelEPLM3M4ShearObservedConvention(_WFI2033ModelNircamBase):
              'a1_a': 0.01, 'delta_phi_m1': 0.1,'a3_a': 0.0, 'delta_phi_m3': -0.08915130660163478, 'a4_a': 0.0, 'delta_phi_m4': 1.5213918804074946},
             {'gamma1': -0.0029842967957686463, 'gamma2': 0.213368145715242, 'ra_0': 0.0, 'dec_0': 0.0},
             {'theta_E': 0.07669619849915402, 'center_x': self.gx1, 'center_y': self.gy1},
-            {'theta_E': 0.6, 'center_x': self.gx2, 'center_y': self.gy2}
+            {'theta_E': 0.7, 'center_x': self.gx2, 'center_y': self.gy2}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens,
                                self._data.z_lens, 0.745]

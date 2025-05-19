@@ -137,7 +137,7 @@ def mag_finite_single_image_adaptive(source_model, kwargs_source, lens_model_fix
                             kwargs_lens_free, kwargs_lens, z_split, z_source,
                             cosmo_bkg, x_image, y_image, grid_resolution, grid_size_max,
                                zlens, zsource, intial_resolution_reduction_factor=4,flux_threshold_factor=200,
-                               distance_factor=50):
+                               distance_factor=30):
     """
 
     """

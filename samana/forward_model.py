@@ -8,7 +8,7 @@ from lenstronomy.Util.class_creator import create_im_sim
 from lenstronomy.LensModel.QuadOptimizer.optimizer import Optimizer
 from samana.image_magnification_util import setup_gaussian_source
 from samana.param_managers import auto_param_class
-from samana.light_fitting import FixedLensModel, setup_params_light_fitting
+from samana.light_fitting import FixedLensModel, setup_params_light_fitting, setup_constraints_light_fitting
 from copy import deepcopy
 from multiprocessing.pool import Pool
 import os
@@ -35,7 +35,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   filter_subhalo_kwargs=None,
                   custom_preset_model_function=None,
                   run_initial_PSO=False,
-                  scipy_minimize_method='BFGS',
+                  scipy_minimize_method='COBYQA_import',
                   use_JAXstronomy=False,
                   split_image_data_reconstruction=False,
                   magnification_method='CIRCULAR_APERTURE',
@@ -735,7 +735,9 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     if verbose:
         print('computed magnifications in '+str(np.round(tend - t0, 1))+' seconds')
         print('magnifications: ', magnifications)
-        print('flux ratios: ', magnifications[1:]/magnifications[0])
+        print('flux ratios data: ', np.array(data_class.magnifications)[1:] / data_class.magnifications[0])
+        print('flux ratios model: ', magnifications[1:] / magnifications[0])
+        print('statistic: ', stat)
         print(kwargs_solution)
         print('\n')
         print(macromodel_samples_fixed_dict)
@@ -773,26 +775,26 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             print('imaging data likelihood (with custom mask): ', logL_imaging_data)
     else:
         if split_image_data_reconstruction and stat < tolerance:
-            tabulated_lens_model = FixedLensModel(
+            tabulated_lens_model = FixedLensModel.from_kwargs(
                 kwargs_model, data_class.kwargs_data, data_class.kwargs_psf, data_class.kwargs_numerics, kwargs_solution
             )
             kwargs_model_lightfit = model_class.setup_kwargs_model(decoupled_multiplane=False)[0]
             kwargs_model_lightfit['lens_model_list'] = ['TABULATED_DEFLECTIONS']
             kwargs_model_lightfit['multi_plane'] = False
-            kwargs_constraints_light_fit = {'num_point_source_list': [len(data_class.x_image)],
-                                            'point_source_offset': True
-                                            }
             kwargs_likelihood_lightfit = deepcopy(kwargs_likelihood)
             kwargs_likelihood_lightfit['prior_lens'] = None
             kwargs_likelihood_lightfit['custom_logL_addition'] = None
             kwargs_model_lightfit['lens_profile_kwargs_list'] = [{'custom_class': tabulated_lens_model}]
             kwargs_model_lightfit['point_source_model_list'] = ['UNLENSED']
             kwargs_params_lightfit = setup_params_light_fitting(kwargs_params,
+                                                                kwargs_constraints,
+                                                                kwargs_solution,
                                                                 np.mean(source_x),
                                                                 np.mean(source_y))
+            kwargs_constraints_lightfit = setup_constraints_light_fitting(kwargs_constraints)
             fitting_sequence_light = FittingSequence(data_class.kwargs_data_joint,
                                                kwargs_model_lightfit,
-                                               kwargs_constraints_light_fit,
+                                               kwargs_constraints_lightfit,
                                                kwargs_likelihood_lightfit,
                                                kwargs_params_lightfit,
                                                mpi=False,
@@ -829,10 +831,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             logL_imaging_data = -1000
 
     if verbose:
-        print('flux ratios data: ', np.array(data_class.magnifications)[1:]/data_class.magnifications[0])
-        print('flux ratios model: ', magnifications[1:]/magnifications[0])
-        print('statistic: ', stat)
-        if use_imaging_data:
+        if use_imaging_data or split_image_data_reconstruction:
             print('BIC: ', bic)
 
     if use_imaging_data:

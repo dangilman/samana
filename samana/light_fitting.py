@@ -7,6 +7,17 @@ from copy import deepcopy
 import pickle
 from lenstronomy.Util.class_creator import create_class_instances, create_image_model
 
+def setup_constraints_light_fitting(kwargs_constraints):
+
+    kwargs_constraints_light_fitting = {'num_point_source_list': [4]}
+    if 'point_source_offset' in list(kwargs_constraints.keys()):
+        kwargs_constraints_light_fitting['point_source_offset'] = kwargs_constraints['point_source_offset']
+    if 'joint_source_with_source' in list(kwargs_constraints.keys()):
+        kwargs_constraints_light_fitting['joint_source_with_source'] = kwargs_constraints['joint_source_with_source']
+    if 'joint_lens_light_with_lens_light' in list(kwargs_constraints.keys()):
+        kwargs_constraints_light_fitting['joint_lens_light_with_lens_light'] = (
+            kwargs_constraints)['joint_lens_light_with_lens_light']
+    return kwargs_constraints_light_fitting
 
 def setup_light_reconstruction(output_class_filename,
                                measured_flux_ratios,
@@ -40,7 +51,7 @@ def setup_light_reconstruction(output_class_filename,
         print('best seeds: ', seed_array_best)
     return seed_array_best, seed_array_baseline
 
-def setup_params_light_fitting(kwargs_params, source_x, source_y):
+def setup_params_light_fitting(kwargs_params, kwargs_constraints, kwargs_lens, source_x, source_y):
     """
 
     :param kwargs_params:
@@ -50,10 +61,7 @@ def setup_params_light_fitting(kwargs_params, source_x, source_y):
     """
     kwargs_params_out = deepcopy(kwargs_params)
     kwargs_params_out['lens_model'] = [[{}], [{}], [{}], [{}], [{}]]
-    # fix the source light centroids to (source_x, source_y)
     source_params = kwargs_params['source_model']
-    # [kwargs_source_init, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source,
-    #                          kwargs_upper_source]
     source_params_fixed = deepcopy(source_params[2])
     source_params_init = source_params[0]
     for i, kwargs_source in enumerate(source_params_init):
@@ -61,6 +69,18 @@ def setup_params_light_fitting(kwargs_params, source_x, source_y):
             source_params_fixed[i]['center_x'] = source_x
             source_params_fixed[i]['center_y'] = source_y
     kwargs_params_out['source_model'][2] = source_params_fixed
+
+    lens_light_params = kwargs_params['lens_light_model']
+    lens_light_params_fixed = deepcopy(lens_light_params[2])
+    if 'joint_lens_with_light' in list(kwargs_constraints.keys()):
+        for prior in kwargs_constraints['joint_lens_with_light']:
+            i_light, k_lens, kw_list = prior[0], prior[1], prior[2]
+            assert kw_list[0] == 'center_x' and kw_list[1] == 'center_y'
+            center_x_light, center_y_light = kwargs_lens[k_lens]['center_x'], kwargs_lens[k_lens]['center_y']
+            lens_light_params_fixed[i_light]['center_x'] = center_x_light
+            lens_light_params_fixed[i_light]['center_y'] = center_y_light
+    kwargs_params_out['lens_light_model'][2] = lens_light_params_fixed
+
     return kwargs_params_out
 
 
@@ -69,7 +89,21 @@ class FixedLensModel(object):
     Fixed mapping from a coordinate on the image plane to the source plane
     """
 
-    def __init__(self, kwargs_model, kwargs_data, kwargs_psf, kwargs_numerics, kwargs_lens):
+    def __init__(self, ra_grid, dec_grid, lens_model, kwargs_lens):
+        """
+
+        :param ra_grid:
+        :param dec_grid:
+        :param lens_model:
+        :param kwargs_lens:
+        """
+        alpha_x, alpha_y = lens_model.alpha(ra_grid.ravel(), dec_grid.ravel(), kwargs_lens)
+        points = (ra_grid.ravel(), dec_grid.ravel())
+        self._interp_x = LinearNDInterpolator(points, alpha_x)
+        self._interp_y = LinearNDInterpolator(points, alpha_y)
+
+    @classmethod
+    def from_kwargs(cls, kwargs_model, kwargs_data, kwargs_psf, kwargs_numerics, kwargs_lens):
         """
 
         :param kwargs_model:
@@ -77,15 +111,13 @@ class FixedLensModel(object):
         :param kwargs_psf:
         :param kwargs_numerics:
         :param kwargs_lens:
+        :return:
         """
         nx, ny = kwargs_data['image_data'].shape
         lens_model = create_class_instances(**kwargs_model)[0]
         image_model = create_image_model(kwargs_data, kwargs_psf, kwargs_numerics, kwargs_model)
         ra_grid, dec_grid = image_model.Data.coordinate_grid(nx, ny)
-        alpha_x, alpha_y = lens_model.alpha(ra_grid.ravel(), dec_grid.ravel(), kwargs_lens)
-        points = (ra_grid.ravel(), dec_grid.ravel())
-        self._interp_x = LinearNDInterpolator(points, alpha_x)
-        self._interp_y = LinearNDInterpolator(points, alpha_y)
+        return FixedLensModel(ra_grid, dec_grid, lens_model, kwargs_lens)
 
     def __call__(self, x, y, *args, **kwargs):
         """

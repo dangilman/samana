@@ -127,6 +127,8 @@ class J0405ModelEPLM3M4Shear(_J0405ModelBase):
              'a1_a': 0.0, 'delta_phi_m1': 0.0, 'delta_phi_m3': 0.23873998055526482, 'a4_a': 0.0, 'delta_phi_m4': 1.435590596290228},
             {'gamma1': 0.031022886724143328, 'gamma2': 0.023670148586850015, 'ra_0': 0.0, 'dec_0': 0.0}
         ]
+        kwargs_lens_macro[0]['e1'] = 0.2
+        kwargs_lens_macro[0]['e2'] = 0.05
         redshift_list_macro = [self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1]
         if kwargs_lens_macro_init is not None:
