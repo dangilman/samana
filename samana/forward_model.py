@@ -39,7 +39,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   use_JAXstronomy=False,
                   split_image_data_reconstruction=False,
                   magnification_method='CIRCULAR_APERTURE',
-                  no_mag=False):
+                  tolerance_source_reconstruction=None):
     """
     Top-level function for forward modeling strong lenses with substructure. This function makes repeated calls to
     the forward_model_single_iteration routine below, and outputs the results to text files. Lens modeling and dark matter
@@ -105,7 +105,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
      the image position
      - ADAPTIVE: estimates the shape of the image from a low-resolution calculation, then performs a high-resolution
      ray-tracing calculation around pixels identified in the low-resolution calculation
-    :param no_mag: bool; if True, does not compute image magnifications
+    :param tolerance_source_reconstruction: the tolerance on the summary statistic that triggers the reconstruction of
+    the source and lens light when split_image_data_reconstruction=True
     :return:
     """
 
@@ -229,7 +230,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              use_JAXstronomy,
                              split_image_data_reconstruction,
                              magnification_method,
-                             no_mag))
+                             tolerance_source_reconstruction))
 
             pool = Pool(num_threads)
             output = pool.starmap(forward_model_single_iteration, args)
@@ -304,7 +305,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 use_JAXstronomy,
                                                 split_image_data_reconstruction,
                                                 magnification_method,
-                                                no_mag)
+                                                tolerance_source_reconstruction)
 
             seed_counter += 1
             acceptance_rate_counter += 1
@@ -445,7 +446,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            use_JAXstronomy=False,
                            split_image_data_reconstruction=False,
                            magnification_method=None,
-                           no_mag=False):
+                           tolerance_source_reconstruction=None):
     """
 
     :param data_class:
@@ -457,8 +458,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     :param log_mlow_mass_sheets:
     :param rescale_grid_size:
     :param rescale_grid_resolution:
-    :param image_data_grid_resolution_rescale: rescales the resolution of the imaging data, a number > 1 means
-    higher resolution
+    :param image_data_grid_resolution_rescale:
     :param verbose:
     :param seed:
     :param n_pso_particles:
@@ -474,9 +474,16 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     :param kappa_scale_subhalos:
     :param log10_bound_mass_cut:
     :param tolerance:
+    :param filter_subhalo_kwargs:
+    :param macromodel_readout_function:
     :param return_realization:
+    :param custom_preset_model_function:
+    :param run_initial_PSO:
+    :param minimize_method:
     :param use_JAXstronomy:
     :param split_image_data_reconstruction:
+    :param magnification_method:
+    :param tolerance_source_reconstruction:
     :return:
     """
     # set the random seed for reproducibility
@@ -712,10 +719,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         if use_JAXstronomy:
             # JAXstronomy will be slower here due to smaller array sizes
             setup_decoupled_multiplane_lens_model_output = None
-        if no_mag:
-            magnifications, images = np.array([1.0]*4), [np.zeros((10,10))]*4
-        else:
-            magnifications, images = model_class.image_magnification_gaussian(source_model_quasar,
+        magnifications, images = model_class.image_magnification_gaussian(source_model_quasar,
                                                                               kwargs_source,
                                                                               lens_model_init,
                                                                               kwargs_lens_init,
@@ -774,7 +778,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             print('imaging data likelihood (without custom mask): ', logL_imaging_data_no_custom_mask)
             print('imaging data likelihood (with custom mask): ', logL_imaging_data)
     else:
-        if split_image_data_reconstruction and stat < tolerance:
+        if split_image_data_reconstruction and stat < tolerance_source_reconstruction:
             tabulated_lens_model = FixedLensModel.from_kwargs(
                 kwargs_model, data_class.kwargs_data, data_class.kwargs_psf, data_class.kwargs_numerics, kwargs_solution
             )
@@ -827,8 +831,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                                         check_positive_flux=False)[0]
 
         else:
-            bic = -1000
-            logL_imaging_data = -1000
+            bic = 1
+            logL_imaging_data = 1
 
     if verbose:
         if use_imaging_data or split_image_data_reconstruction:

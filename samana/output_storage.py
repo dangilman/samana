@@ -24,7 +24,7 @@ class Output(object):
         self.fitting_kwargs_list = fitting_kwargs_list
         if parameters is not None:
             self.seed = parameters[:, -1]
-            self.image_data_logL = parameters[:, -2]
+            self.image_data_logL = parameters[:, -3]
             if flux_ratio_likelihood is None:
                 self._flux_ratio_likelihood = deepcopy(parameters[:, -3])
             else:
