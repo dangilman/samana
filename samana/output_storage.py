@@ -24,7 +24,6 @@ class Output(object):
         self.fitting_kwargs_list = fitting_kwargs_list
         if parameters is not None:
             self.seed = parameters[:, -1]
-            self.image_data_logL = parameters[:, -3]
             if flux_ratio_likelihood is None:
                 self._flux_ratio_likelihood = deepcopy(parameters[:, -3])
             else:
@@ -35,7 +34,6 @@ class Output(object):
                 self._flux_ratio_stat = flux_ratio_summary_statistic
         else:
             self.seed = None
-            self.image_data_logL = None
             self._flux_ratio_likelihood = flux_ratio_likelihood
             self._flux_ratio_stat = flux_ratio_summary_statistic
         self._param_dict = None
@@ -47,8 +45,10 @@ class Output(object):
                 self._param_dict = {}
                 for i, name in enumerate(param_names):
                     self._param_dict[name] = parameters[:, i]
+                self.image_data_logL = self._param_dict['logL_image_data']
             else:
                 self._param_dict = {}
+                self.image_data_logL = None
         self._macromodel_samples_dict = None
         if macromodel_sample_names is not None:
             if macromodel_samples is not None:
@@ -370,7 +370,7 @@ class Output(object):
             a4 = self._macromodel_samples_dict['a4_a']
             w = np.exp(-0.5 * a3 ** 2 / 0.005 ** 2) * np.exp(-0.5 * a4 ** 2 / 0.01 ** 2)
             logL_a3a4 = np.log(w)
-            image_data_logL = self.image_data_logL - logL_a3a4
+            image_data_logL = self.param_dict['log'] - logL_a3a4
         else:
             image_data_logL = self.image_data_logL
 

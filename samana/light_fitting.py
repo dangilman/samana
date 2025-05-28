@@ -80,9 +80,7 @@ def setup_params_light_fitting(kwargs_params, kwargs_constraints, kwargs_lens, s
             lens_light_params_fixed[i_light]['center_x'] = center_x_light
             lens_light_params_fixed[i_light]['center_y'] = center_y_light
     kwargs_params_out['lens_light_model'][2] = lens_light_params_fixed
-
     return kwargs_params_out
-
 
 class FixedLensModel(object):
     """

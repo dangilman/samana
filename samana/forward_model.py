@@ -645,7 +645,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                  param_class,
                                                  particle_swarm=run_initial_PSO,
                                                  tol_simplex_func=1e-9,
-                                                 simplex_n_iterations=800
+                                                 simplex_n_iterations=800,
+                                                 tol_source=1e-6,
                                                  )
             if minimize_method == 'COBYQA_import':
                 try:
@@ -771,7 +772,9 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                 source_marg=False,
                 linear_prior=None,
                 check_positive_flux=False)[0]
-
+        kwargs_model_plot = {'multi_band_list': data_class.kwargs_data_joint['multi_band_list'],
+                             'kwargs_model': kwargs_model,
+                             'kwargs_params': kwargs_result}
         if verbose:
             logL_imaging_data_no_custom_mask = fitting_sequence.likelihoodModule.image_likelihood.logL(**kwargs_result)[
                 0]
@@ -780,10 +783,14 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     else:
         if split_image_data_reconstruction and stat < tolerance_source_reconstruction:
             tabulated_lens_model = FixedLensModel.from_kwargs(
-                kwargs_model, data_class.kwargs_data, data_class.kwargs_psf, data_class.kwargs_numerics, kwargs_solution
+                kwargs_model,
+                data_class.kwargs_data,
+                data_class.kwargs_psf,
+                data_class.kwargs_numerics, kwargs_solution
             )
             kwargs_model_lightfit = model_class.setup_kwargs_model(decoupled_multiplane=False)[0]
             kwargs_model_lightfit['lens_model_list'] = ['TABULATED_DEFLECTIONS']
+            del kwargs_model_lightfit['lens_redshift_list']
             kwargs_model_lightfit['multi_plane'] = False
             kwargs_likelihood_lightfit = deepcopy(kwargs_likelihood)
             kwargs_likelihood_lightfit['prior_lens'] = None
@@ -796,7 +803,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                                 np.mean(source_x),
                                                                 np.mean(source_y))
             kwargs_constraints_lightfit = setup_constraints_light_fitting(kwargs_constraints)
-            fitting_sequence_light = FittingSequence(data_class.kwargs_data_joint,
+            fitting_sequence = FittingSequence(data_class.kwargs_data_joint,
                                                kwargs_model_lightfit,
                                                kwargs_constraints_lightfit,
                                                kwargs_likelihood_lightfit,
@@ -808,11 +815,9 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                     ['PSO', {'sigma_scale': 1., 'n_particles': n_pso_particles, 'n_iterations': n_pso_iterations,
                              'threadCount': num_threads}]
                 ]
-            chain_list = fitting_sequence_light.fit_sequence(fitting_kwargs_list)
-            kwargs_result = fitting_sequence_light.best_fit()
-            if verbose:
-                print('result of light fitting: ', kwargs_result)
-            bic = fitting_sequence_light.bic
+            chain_list = fitting_sequence.fit_sequence(fitting_kwargs_list)
+            kwargs_result = fitting_sequence.best_fit()
+            bic = fitting_sequence.bic
             image_model = create_im_sim(data_class.kwargs_data_joint['multi_band_list'],
                                         data_class.kwargs_data_joint['multi_band_type'],
                                         kwargs_model_lightfit,
@@ -829,6 +834,9 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                                         source_marg=False,
                                                                         linear_prior=None,
                                                                         check_positive_flux=False)[0]
+            if verbose:
+                print('result of light fitting: ', kwargs_result)
+                print('logL image data: ', logL_imaging_data)
 
         else:
             bic = 1
@@ -840,8 +848,13 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
 
     if use_imaging_data:
         kwargs_model_plot = {'multi_band_list': data_class.kwargs_data_joint['multi_band_list'],
-                         'kwargs_model': kwargs_model,
-                         'kwargs_params': kwargs_result}
+                             'kwargs_model': kwargs_model,
+                             'kwargs_params': kwargs_result}
+    elif split_image_data_reconstruction and stat < tolerance_source_reconstruction:
+        kwargs_model = deepcopy(kwargs_model_lightfit)
+        kwargs_model_plot = {'multi_band_list': data_class.kwargs_data_joint['multi_band_list'],
+                             'kwargs_model': kwargs_model,
+                             'kwargs_params': kwargs_result}
     else:
         fitting_sequence = FittingSequence(data_class.kwargs_data_joint,
                                            kwargs_model,
@@ -856,7 +869,6 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                              'kwargs_params': kwargs_result}
 
     if test_mode:
-
         from lenstronomy.Plots.model_plot import ModelPlot
         from lenstronomy.Plots import chain_plot
         import matplotlib.pyplot as plt
