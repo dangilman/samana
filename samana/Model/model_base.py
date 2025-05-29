@@ -24,14 +24,15 @@ class EPLModelBase(object):
                                  kwargs_lens_init,
                                  macromodel_samples_fixed_dict):
         return None
-        # param_class = EPLMultipole134FreeShear(kwargs_lens_init,
-        #                                                     macromodel_samples_fixed_dict['a1_a'],
-        #                                                     macromodel_samples_fixed_dict['a4_a'],
-        #                                                     macromodel_samples_fixed_dict['a3_a'],
-        #                                                     macromodel_samples_fixed_dict['delta_phi_m1'],
-        #                                                     macromodel_samples_fixed_dict['delta_phi_m3'],
-        #                                                     macromodel_samples_fixed_dict['delta_phi_m4'])
-        # return param_class
+
+    def set_fixed_q(self, q):
+        """
+        Set the fixed axis ratio to be used by the solver
+        :param q: axis ratio b/a
+        :return:
+        """
+        raise Exception('the model class for this system does not support image data '
+                        'reconstruction with a fixed axis ratio!')
 
     @property
     def beta_min(self):
@@ -413,9 +414,21 @@ class EPLModelBase(object):
     def kwargs_params(self, kwargs_lens_macro_init=None,
                       delta_x_image=None,
                       delta_y_image=None,
-                      macromodel_samples_fixed=None):
+                      macromodel_samples_fixed=None,
+                      fixed_lens_model=False,
+                      kwargs_lens_fixed=None):
 
-        _, _, _, lens_params = self.setup_lens_model(kwargs_lens_macro_init, macromodel_samples_fixed)
+        lens_model_list_macro, _, index_lens_split, lens_params = self.setup_lens_model(kwargs_lens_macro_init,
+                                                     macromodel_samples_fixed)
+        if fixed_lens_model:
+            index_shear = lens_model_list_macro.index('SHEAR')
+            kwargs_lens_fixed[index_shear]['ra_0'] = 0
+            kwargs_lens_fixed[index_shear]['dec_0'] = 0
+            lens_params[0] = lens_params[0][0:len(index_lens_split)]
+            lens_params[1] = lens_params[1][0:len(index_lens_split)]
+            lens_params[2] = kwargs_lens_fixed[0:len(index_lens_split)]
+            lens_params[3] = lens_params[3][0:len(index_lens_split)]
+            lens_params[4] = lens_params[4][0:len(index_lens_split)]
         _, source_params = self.setup_source_light_model()
         lens_light_model_list, lens_light_params = self.setup_lens_light_model()
         _, ps_params = self.setup_point_source_model()

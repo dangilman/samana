@@ -272,3 +272,58 @@ def auto_param_class(lens_model_list_macro, kwargs_lens_init, macromodel_samples
         )
     return param_class
 
+class FixedAxisRatioSolver(object):
+    """
+    This custom class translates between dictionaries and vectors of numbers that get passed to a solver. Here we solve
+    for a portion of the lens model parameters while fixing the axis ratio q.
+
+    Any custom class must have the three methods in this class, with the same call signatures
+    """
+    def __init__(self, q):
+        """
+        here q is the axis ratio we want to keep fixed in the lens model
+        """
+        self._q = q
+
+    def update_kwargs(self, x, kwargs_list):
+        """
+        update the keyword arguments with the vector of numbers passed from the scipy method
+        """
+        phi_q = x[5]
+        # this step enforces the constant axis ratio q
+        e1, e2 = phi_q2_ellipticity(phi_q, self._q)
+        kwargs_list[0]["e1"] = e1
+        kwargs_list[0]["e2"] = e2
+        [theta_E, gamma1, gamma2, center_x, center_y, _] = x
+        kwargs_list[0]["theta_E"] = theta_E
+        kwargs_list[1]["gamma1"] = gamma1
+        kwargs_list[1]["gamma2"] = gamma2
+        kwargs_list[0]["center_x"] = center_x
+        kwargs_list[0]["center_y"] = center_y
+        return kwargs_list
+
+    def extract_array(self, kwargs_list):
+        """
+        translate the keyword arguments into the vector of numbers to be solved for; the inverse of update_kwargs
+        """
+        _e1 = kwargs_list[0]["e1"]
+        _e2 = kwargs_list[0]["e2"]
+        phi_q, _ = ellipticity2phi_q(_e1, _e2)
+        center_x = kwargs_list[0]["center_x"]
+        center_y = kwargs_list[0]["center_y"]
+        theta_E = kwargs_list[0]["theta_E"]
+        gamma1 = kwargs_list[1]["gamma1"]
+        gamma2 = kwargs_list[1]["gamma2"]
+        x = [theta_E, center_x, center_y, gamma1, gamma2, phi_q]
+        return x
+
+    def add_fixed_lens(self, kwargs_fixed_lens_list, kwargs_lens_init):
+        """
+        updates the kwargs_fixed dictionary with parameters being solved for
+        """
+        kwargs_fixed_lens_list[0]["theta_E"] = kwargs_lens_init[0]["theta_E"]
+        kwargs_fixed_lens_list[0]["center_x"] = kwargs_lens_init[0]["center_x"]
+        kwargs_fixed_lens_list[0]["center_y"] = kwargs_lens_init[0]["center_y"]
+        kwargs_fixed_lens_list[1]["gamma1"] = kwargs_lens_init[1]["gamma1"]
+        kwargs_fixed_lens_list[1]["gamma2"] = kwargs_lens_init[1]["gamma2"]
+        return kwargs_fixed_lens_list

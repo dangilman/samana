@@ -380,6 +380,9 @@ def quick_setup(lens_ID):
     elif lens_ID == 'WFI2033':
         from samana.Data.wfi2033 import WFI2033_NIRCAM as data_class
         from samana.Model.wfi2033_model_nircam import WFI2033NircamModelEPLM3M4Shear as model_class
+    elif lens_ID == 'WFI2033_FIXEDQ':
+        from samana.Data.wfi2033 import WFI2033_NIRCAM as data_class
+        from samana.Model.wfi2033_model_nircam import WFI2033NircamModelEPLM3M4ShearFixedQ as model_class
     elif lens_ID == 'WGD2038':
         from samana.Data.wgd2038 import WGD2038_HST as data_class
         from samana.Model.wgd2038_model import WGD2038ModelEPLM3M4Shear as model_class

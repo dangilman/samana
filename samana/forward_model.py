@@ -8,7 +8,6 @@ from lenstronomy.Util.class_creator import create_im_sim
 from lenstronomy.LensModel.QuadOptimizer.optimizer import Optimizer
 from samana.image_magnification_util import setup_gaussian_source
 from samana.param_managers import auto_param_class
-from samana.light_fitting import FixedLensModel, setup_params_light_fitting, setup_constraints_light_fitting
 from copy import deepcopy
 from multiprocessing.pool import Pool
 import os
@@ -220,7 +219,6 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              fixed_realization,
                              kappa_scale_subhalos,
                              log10_bound_mass_cut,
-                             tolerance,
                              filter_subhalo_kwargs,
                              macromodel_readout_function,
                              return_realization,
@@ -295,7 +293,6 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 use_imaging_data, fitting_sequence_kwargs, test_mode,
                                                 use_decoupled_multiplane_approximation, fixed_realization,
                                                 kappa_scale_subhalos, log10_bound_mass_cut,
-                                                tolerance,
                                                 filter_subhalo_kwargs,
                                                 macromodel_readout_function,
                                                 return_realization,
@@ -436,7 +433,6 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            fixed_realization=None,
                            kappa_scale_subhalos=1.0,
                            log10_bound_mass_cut=None,
-                           tolerance=np.inf,
                            filter_subhalo_kwargs=None,
                            macromodel_readout_function=None,
                            return_realization=False,
@@ -473,7 +469,6 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     :param fixed_realization:
     :param kappa_scale_subhalos:
     :param log10_bound_mass_cut:
-    :param tolerance:
     :param filter_subhalo_kwargs:
     :param macromodel_readout_function:
     :param return_realization:
@@ -587,10 +582,11 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         y_image=data_class.y_image,
         use_JAXstronomy=use_JAXstronomy
     ))
+    if 'q' in param_names_macro_fixed and use_imaging_data:
+        model_class.set_fixed_q(macromodel_samples_fixed_dict['q'])
     kwargs_constraints = model_class.kwargs_constraints
     kwargs_likelihood = model_class.kwargs_likelihood
     kwargs_params = split_kwargs_params(kwargs_params, index_lens_split)
-
     if astrometric_uncertainty:
         kwargs_constraints['point_source_offset'] = True
     else:
@@ -772,9 +768,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                 source_marg=False,
                 linear_prior=None,
                 check_positive_flux=False)[0]
-        kwargs_model_plot = {'multi_band_list': data_class.kwargs_data_joint['multi_band_list'],
-                             'kwargs_model': kwargs_model,
-                             'kwargs_params': kwargs_result}
+
         if verbose:
             logL_imaging_data_no_custom_mask = fitting_sequence.likelihoodModule.image_likelihood.logL(**kwargs_result)[
                 0]
@@ -782,34 +776,21 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             print('imaging data likelihood (with custom mask): ', logL_imaging_data)
     else:
         if split_image_data_reconstruction and stat < tolerance_source_reconstruction:
-            tabulated_lens_model = FixedLensModel.from_kwargs(
-                kwargs_model,
-                data_class.kwargs_data,
-                data_class.kwargs_psf,
-                data_class.kwargs_numerics, kwargs_solution
-            )
-            kwargs_model_lightfit = model_class.setup_kwargs_model(decoupled_multiplane=False)[0]
-            kwargs_model_lightfit['lens_model_list'] = ['TABULATED_DEFLECTIONS']
-            del kwargs_model_lightfit['lens_redshift_list']
-            kwargs_model_lightfit['multi_plane'] = False
-            kwargs_likelihood_lightfit = deepcopy(kwargs_likelihood)
-            kwargs_likelihood_lightfit['prior_lens'] = None
-            kwargs_likelihood_lightfit['custom_logL_addition'] = None
-            kwargs_model_lightfit['lens_profile_kwargs_list'] = [{'custom_class': tabulated_lens_model}]
-            kwargs_model_lightfit['point_source_model_list'] = ['UNLENSED']
-            kwargs_params_lightfit = setup_params_light_fitting(kwargs_params,
-                                                                kwargs_constraints,
-                                                                kwargs_solution,
-                                                                np.mean(source_x),
-                                                                np.mean(source_y))
-            kwargs_constraints_lightfit = setup_constraints_light_fitting(kwargs_constraints)
+
+            kwargs_params = model_class.kwargs_params(kwargs_lens_macro_init=kwargs_solution,
+                                                      delta_x_image=-delta_x_image,
+                                                      delta_y_image=-delta_y_image,
+                                                      macromodel_samples_fixed=macromodel_samples_fixed_dict,
+                                                      fixed_lens_model=True,
+                                                      kwargs_lens_fixed=kwargs_solution)
+            kwargs_likelihood['prior_lens'] = None
+            kwargs_likelihood['custom_logL_addition'] = None
             fitting_sequence = FittingSequence(data_class.kwargs_data_joint,
-                                               kwargs_model_lightfit,
-                                               kwargs_constraints_lightfit,
-                                               kwargs_likelihood_lightfit,
-                                               kwargs_params_lightfit,
-                                               mpi=False,
-                                               verbose=verbose)
+                                               kwargs_model,
+                                               kwargs_constraints,
+                                               kwargs_likelihood,
+                                               kwargs_params,
+                                               mpi=False, verbose=verbose)
             if fitting_kwargs_list is None:
                 fitting_kwargs_list = [
                     ['PSO', {'sigma_scale': 1., 'n_particles': n_pso_particles, 'n_iterations': n_pso_iterations,
@@ -820,7 +801,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             bic = fitting_sequence.bic
             image_model = create_im_sim(data_class.kwargs_data_joint['multi_band_list'],
                                         data_class.kwargs_data_joint['multi_band_type'],
-                                        kwargs_model_lightfit,
+                                        kwargs_model,
                                         bands_compute=None,
                                         image_likelihood_mask_list=[data_class.likelihood_mask_imaging_weights],
                                         band_index=0,
@@ -851,7 +832,6 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                              'kwargs_model': kwargs_model,
                              'kwargs_params': kwargs_result}
     elif split_image_data_reconstruction and stat < tolerance_source_reconstruction:
-        kwargs_model = deepcopy(kwargs_model_lightfit)
         kwargs_model_plot = {'multi_band_list': data_class.kwargs_data_joint['multi_band_list'],
                              'kwargs_model': kwargs_model,
                              'kwargs_params': kwargs_result}
