@@ -267,8 +267,8 @@ def numerics_setup(lens_ID):
         rescale_grid_res = 2.
         rescale_grid_size = 1.0
     elif lens_ID == 'RXJ1131':
-        rescale_grid_res = 2.
-        rescale_grid_size = 2.0
+        rescale_grid_res = 2.0
+        rescale_grid_size = 2.5
     elif lens_ID == 'WFI2033':
         rescale_grid_res = 2.
         rescale_grid_size = 1.0
