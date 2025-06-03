@@ -7,6 +7,7 @@ import h5py
 def output_to_hdf5(output_path, job_name, job_index_min, job_index_max, write_path, print_missing_files=False):
 
     param_names = None
+    macromodel_sample_names = None
     init = True
     for i in range(job_index_min, job_index_max + 1):
 

@@ -53,15 +53,8 @@ def calculate_flux_ratio_likelihood(params, flux_ratios, measured_flux_ratios,
 
     params_out = deepcopy(params)
     flux_ratio_logL = compute_fluxratio_logL(flux_ratios, measured_flux_ratios, measurement_uncertainties)
-    ndof = 0
-    for sigma_i in measurement_uncertainties:
-        if sigma_i > 0:
-            ndof += 1
-    reduced_chi2 = -2 * flux_ratio_logL / ndof
     importance_weights = np.exp(flux_ratio_logL)
     normalized_weights = importance_weights / np.max(importance_weights)
-    print('effective sample size: ', np.sum(normalized_weights))
-    print('number of good fits (reduced chi^2 < 1): ', np.sum(reduced_chi2 < 1))
     return params_out, normalized_weights
 
 def downselect_fluxratio_summary_stats(params, flux_ratios, measured_flux_ratios,
@@ -144,14 +137,16 @@ def compute_likelihoods(output_class,
 
         if bootstrap_index == 0:
             print('total samples: ', logL_image_data.shape[0])
-            print('effective sample size after imaging data likelihood: ', np.sum(weights_image_data)/(n_bootstraps+1))
+            if image_data_logL_sigma is not None:
+                print('effective sample size after imaging data likelihood: ', np.sum(weights_image_data)/(n_bootstraps+1))
         sim = deepcopy(output_class)
         params = np.empty((sim.parameters.shape[0], len(param_names)))
         random_seeds = np.squeeze(sim.parameter_array(['seed']))
         accepted_seeds = np.append(accepted_seeds, random_seeds)
         if dm_param_names is None:
             dm_param_names = ['log10_sigma_sub', 'log_mc',
-                              'LOS_normalization', 'shmf_log_slope','z_lens','log_m_host','source_size_pc']
+                              'LOS_normalization', 'shmf_log_slope','z_lens','log_m_host','source_size_pc',
+                              'summary_statistic']
         for i, parameter_name in enumerate(param_names):
             if parameter_name in dm_param_names:
                 params[:, i] = np.squeeze(sim.parameter_array([parameter_name]))
@@ -175,6 +170,7 @@ def compute_likelihoods(output_class,
                                                                              flux_ratios,
                                                                              measured_flux_ratios,
                                                                              measurement_uncertainties)
+            print('effective sample size from flux ratio likelihood: ', np.sum(flux_ratio_likelihood_weights))
 
         else:
             if uncertainty_on_ratios is False:
@@ -213,7 +209,12 @@ def compute_likelihoods(output_class,
             imaging_data_fluxratio_likelihood += IndependentLikelihoods([pdf_imgdata_fr])
 
     normalized_joint_weights = _joint_weights / np.max(_joint_weights)
-    print('effective sample size: ', np.sum(normalized_joint_weights)/(n_bootstraps+1))
-    print('number of repeated index out of '+str(len(accepted_seeds))+' samples: ',  str(len(accepted_seeds) - len(np.unique(accepted_seeds))))
+    if image_data_logL_sigma is not None:
+        print('effective sample size using imaging+flux ratio likelihood: ', np.sum(normalized_joint_weights)/(n_bootstraps+1))
+    else:
+        print('effective sample size flux ratios: ',
+              np.sum(normalized_joint_weights) / (n_bootstraps + 1))
+    # if n_bootstraps>0 and n_keep is not None:
+    #     print('number of repeated index out of '+str(len(accepted_seeds))+' samples: ',  str(len(accepted_seeds) - len(np.unique(accepted_seeds))))
     likelihood_joint = imaging_data_fluxratio_likelihood / imaging_data_likelihood
     return imaging_data_likelihood, imaging_data_fluxratio_likelihood, likelihood_joint, (params_out, normalized_joint_weights)
