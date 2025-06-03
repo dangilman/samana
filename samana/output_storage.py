@@ -63,8 +63,10 @@ def output_to_hdf5(output_path, job_name, job_index_min, job_index_max, write_pa
     dset_1 = h.create_dataset('parameters', data=parameters)
     dset_2 = h.create_dataset('magnifications', data=magnifications)
     dset_3 = h.create_dataset('macromodel_samples', data=macromodel_samples)
-    dset_4 = h.create_dataset('param_names', data=param_names)
-    dset_5 = h.create_dataset('macromodel_sample_names', data=macromodel_sample_names)
+    dset_4 = h.create_dataset('param_names', data=param_names,
+                              dtype=h5py.string_dtype())
+    dset_5 = h.create_dataset('macromodel_sample_names', data=macromodel_sample_names,
+                              dtype=h5py.string_dtype())
 
 class Output(object):
 
@@ -149,40 +151,16 @@ class Output(object):
         :return: an instance of the output class
         """
 
-        folder = output_path + '/job_' + str(i_start) + '/'
-        if macromodel_sample_names is None:
-            assert folder is not None, ('if macromodel_sample_names is None, must provide output_path and i_start to '
-                                        'search text files for this information')
-            try:
-                with open(folder + 'macromodel_samples.txt', 'r') as f:
-                    macromodel_sample_names = f.readlines(1)[0].split()
-                f.close()
-            except:
-                raise Exception('the macromodel samples file '+folder+'macromodel_samples.txt'+' does not exist')
-
-        if param_names is None:
-            assert folder is not None, ('if param_names is None, must provide output_path and i_start to '
-                                        'search text files for this information')
-            try:
-                with open(folder + 'parameters.txt', 'r') as f:
-                    param_names = f.readlines(1)[0].split()
-                f.close()
-            except:
-                raise Exception('the parameter file '+folder+'parameters.txt'+' does not exist')
-
         import h5py
         with h5py.File(filename, "r") as f:
-
             parameters = np.array(f['parameters'])
             magnifications = np.array(f['magnifications'])
             macromodel_samples = np.array(f['macromodel_samples'])
+            param_names = f['param_names']
+            macromodel_sample_names = f['macromodel_sample_names']
 
-            # Print all root level object names (aka keys)
-            # these can be group or dataset names
-            print("Keys: %s" % f.keys())
-            # get first object name/key; may or may NOT be a group
-            a_group_key = list(f.keys())[0]
         fitting_kwargs_list = None
+
         return Output(parameters, magnifications, macromodel_samples, fitting_kwargs_list,
                   param_names, macromodel_sample_names)
 
