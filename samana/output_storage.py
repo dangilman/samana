@@ -156,8 +156,8 @@ class Output(object):
             parameters = np.array(f['parameters'])
             magnifications = np.array(f['magnifications'])
             macromodel_samples = np.array(f['macromodel_samples'])
-            _param_names = f['param_names']
-            _macromodel_sample_names = f['macromodel_sample_names']
+            _param_names = list(f['param_names'])
+            _macromodel_sample_names = list(f['macromodel_sample_names'])
         param_names = [name.decode("utf-8") for name in _param_names]
         macromodel_sample_names = [name.decode("utf-8") for name in _macromodel_sample_names]
         fitting_kwargs_list = None
