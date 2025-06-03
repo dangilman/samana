@@ -2,6 +2,68 @@ import numpy as np
 from lenstronomy.Util.param_util import shear_cartesian2polar
 from lenstronomy.Util.param_util import ellipticity2phi_q
 from copy import deepcopy
+import h5py
+
+def output_to_hdf5(output_path, job_name, job_index_min, job_index_max, write_path, print_missing_files=False):
+
+    param_names = None
+    init = True
+    for i in range(job_index_min, job_index_max + 1):
+
+        folder = output_path + job_name+ '/job_' + str(i) + '/'
+        try:
+            params = np.loadtxt(folder + 'parameters.txt', skiprows=1)
+        except:
+            if print_missing_files:
+                print('params file ' + folder + 'parameters.txt not found... ')
+            continue
+        try:
+            fluxes = np.loadtxt(folder + 'fluxes.txt')
+        except:
+            if print_missing_files:
+                print('fluxes file ' + folder + 'fluxes.txt not found... ')
+            continue
+        try:
+            macrosamples = np.loadtxt(folder + 'macromodel_samples.txt', skiprows=1)
+        except:
+            if print_missing_files:
+                print('macromodel samples file ' + folder + 'macromodel_samples.txt not found... ')
+            continue
+        # check the arrays are all the same length
+        size_params = params.shape[0]
+        size_fluxes = fluxes.shape[0]
+        size_macro = macrosamples.shape[0]
+        if size_params != size_fluxes:
+            print('parameters and fluxes have different shape for ' + folder)
+            continue
+        if size_params != size_macro:
+            print('parameters and macromodel samples have different shape for ' + folder)
+            continue
+        if param_names is None:
+            with open(folder + 'parameters.txt', 'r') as f:
+                param_names = f.readlines(1)[0].split()
+            f.close()
+        if macromodel_sample_names is None:
+            with open(folder + 'macromodel_samples.txt', 'r') as f:
+                macromodel_sample_names = f.readlines(1)[0].split()
+            f.close()
+        if init:
+            parameters = params
+            magnifications = fluxes
+            macromodel_samples = macrosamples
+            init = False
+        else:
+            parameters = np.vstack((parameters, params))
+            magnifications = np.vstack((magnifications, fluxes))
+            macromodel_samples = np.vstack((macromodel_samples, macrosamples))
+    print('compiled ' + str(parameters.shape[0]) + ' realizations.')
+    mode = 'w'
+    h = h5py.File(write_path + job_name + '_output.hdf5', mode)
+    dset_1 = h.create_dataset('parameters', data=parameters)
+    dset_2 = h.create_dataset('magnifications', data=magnifications)
+    dset_3 = h.create_dataset('macromodel_samples', data=macromodel_samples)
+    dset_4 = h.create_dataset('param_names', data=param_names)
+    dset_5 = h.create_dataset('macromodel_sample_names', data=macromodel_sample_names)
 
 class Output(object):
 
@@ -77,6 +139,51 @@ class Output(object):
 
         _, index = np.unique(self.seed, return_index=True)
         return self.down_select(index)
+
+    @classmethod
+    def from_hdf5(cls, filename):
+        """
+
+        :param filename: a string that specifies the path to hdf5 file
+        :return: an instance of the output class
+        """
+
+        folder = output_path + '/job_' + str(i_start) + '/'
+        if macromodel_sample_names is None:
+            assert folder is not None, ('if macromodel_sample_names is None, must provide output_path and i_start to '
+                                        'search text files for this information')
+            try:
+                with open(folder + 'macromodel_samples.txt', 'r') as f:
+                    macromodel_sample_names = f.readlines(1)[0].split()
+                f.close()
+            except:
+                raise Exception('the macromodel samples file '+folder+'macromodel_samples.txt'+' does not exist')
+
+        if param_names is None:
+            assert folder is not None, ('if param_names is None, must provide output_path and i_start to '
+                                        'search text files for this information')
+            try:
+                with open(folder + 'parameters.txt', 'r') as f:
+                    param_names = f.readlines(1)[0].split()
+                f.close()
+            except:
+                raise Exception('the parameter file '+folder+'parameters.txt'+' does not exist')
+
+        import h5py
+        with h5py.File(filename, "r") as f:
+
+            parameters = np.array(f['parameters'])
+            magnifications = np.array(f['magnifications'])
+            macromodel_samples = np.array(f['macromodel_samples'])
+
+            # Print all root level object names (aka keys)
+            # these can be group or dataset names
+            print("Keys: %s" % f.keys())
+            # get first object name/key; may or may NOT be a group
+            a_group_key = list(f.keys())[0]
+        fitting_kwargs_list = None
+        return Output(parameters, magnifications, macromodel_samples, fitting_kwargs_list,
+                  param_names, macromodel_sample_names)
 
     @classmethod
     def from_raw_output(cls, output_path, job_index_min, job_index_max, fitting_kwargs_list=None,
