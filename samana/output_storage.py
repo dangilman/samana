@@ -64,9 +64,9 @@ def output_to_hdf5(output_path, job_name, job_index_min, job_index_max, write_pa
     dset_2 = h.create_dataset('magnifications', data=magnifications)
     dset_3 = h.create_dataset('macromodel_samples', data=macromodel_samples)
     dset_4 = h.create_dataset('param_names', data=param_names,
-                              dtype='S12')
+                              dtype='S16')
     dset_5 = h.create_dataset('macromodel_sample_names', data=macromodel_sample_names,
-                              dtype='S12')
+                              dtype='S16')
 
 class Output(object):
 
@@ -156,9 +156,10 @@ class Output(object):
             parameters = np.array(f['parameters'])
             magnifications = np.array(f['magnifications'])
             macromodel_samples = np.array(f['macromodel_samples'])
-            param_names = f['param_names']
-            macromodel_sample_names = f['macromodel_sample_names']
-
+            _param_names = f['param_names']
+            _macromodel_sample_names = f['macromodel_sample_names']
+        param_names = [name.decode("utf-8") for name in _param_names]
+        macromodel_sample_names = [name.decode("utf-8") for name in _macromodel_sample_names]
         fitting_kwargs_list = None
 
         return Output(parameters, magnifications, macromodel_samples, fitting_kwargs_list,
