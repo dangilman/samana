@@ -64,9 +64,9 @@ def output_to_hdf5(output_path, job_name, job_index_min, job_index_max, write_pa
     dset_2 = h.create_dataset('magnifications', data=magnifications)
     dset_3 = h.create_dataset('macromodel_samples', data=macromodel_samples)
     dset_4 = h.create_dataset('param_names', data=param_names,
-                              dtype='S16')
+                              dtype='S20')
     dset_5 = h.create_dataset('macromodel_sample_names', data=macromodel_sample_names,
-                              dtype='S16')
+                              dtype='S20')
 
 class Output(object):
 
