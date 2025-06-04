@@ -144,7 +144,24 @@ class Output(object):
         return self.down_select(index)
 
     @classmethod
-    def from_hdf5(cls, filename):
+    def from_hdf5(self, filename_list):
+        """
+        Make an output class from a filename or a list of filenames that specify the locations of hdf5 files
+        :param filename_list: a list of strings with paths to the files
+        :return: an instance of the Output class
+        """
+        if not isinstance(filename_list, list):
+            filename_list = [filename_list]
+        for i, filename in enumerate(filename_list):
+            if i > 0:
+                _output = Output.from_hdf5(filename)
+                output = output.join(_output)
+            else:
+                output = Output.from_hdf5(filename)
+        return output
+
+    @classmethod
+    def from_single_hdf5(cls, filename):
         """
 
         :param filename: a string that specifies the path to hdf5 file
@@ -233,8 +250,7 @@ class Output(object):
         macromodel_sample_names = output1._macromodel_sample_names
         flux_ratio_summary_statistic = np.append(output1.flux_ratio_summary_statistic,
                                                  output2.flux_ratio_summary_statistic)
-        flux_ratio_likelihood = np.append(output1.flux_ratio_likelihood,
-                                          output2.flux_ratio_likelihood)
+        flux_ratio_likelihood = None
         return Output(params, mags, macro_samples, None, param_names, macromodel_sample_names,
                       flux_ratio_summary_statistic, flux_ratio_likelihood)
 

@@ -24,7 +24,7 @@ def compute_fluxratio_summarystat(f, measured_flux_ratios, measurement_uncertain
         perturbed_flux_ratio = perturbed_fluxes[:, 1:] / perturbed_fluxes[:, 0, np.newaxis]
         perturbed_flux_ratio = perturbed_flux_ratio[:, keep_index_list]
         sigmas = [1.0] * perturbed_flux_ratio.shape[1]
-    stat = np.sqrt(-2 * compute_fluxratio_logL(perturbed_flux_ratio, measured_flux_ratios[keep_index_list], sigmas))
+    stat = np.sqrt(-2 * compute_fluxratio_logL(perturbed_flux_ratio, measured_flux_ratios[keep_index_list], sigmas)[0])
     return stat
 
 def compute_logfluxratio_summarystat(flux_ratios, measured_flux_ratios, measurement_uncertainties):
@@ -42,24 +42,26 @@ def compute_logfluxratio_summarystat(flux_ratios, measured_flux_ratios, measurem
 
 def compute_fluxratio_logL(flux_ratios, measured_flux_ratios, measurement_uncertainties):
     fr_logL = 0
+    S = 0
     for i in range(0, len(measured_flux_ratios)):
         if measurement_uncertainties[i] == -1:
             continue
+        S += (flux_ratios[:, i] - measured_flux_ratios[i])**2
         fr_logL += -0.5 * (flux_ratios[:, i] - measured_flux_ratios[i]) ** 2 / measurement_uncertainties[i] ** 2
-    return fr_logL
+    return fr_logL, np.sqrt(S)
 
 def calculate_flux_ratio_likelihood(params, flux_ratios, measured_flux_ratios,
                                     measurement_uncertainties):
 
     params_out = deepcopy(params)
-    flux_ratio_logL = compute_fluxratio_logL(flux_ratios, measured_flux_ratios, measurement_uncertainties)
+    flux_ratio_logL, S_statistic = compute_fluxratio_logL(flux_ratios, measured_flux_ratios, measurement_uncertainties)
     importance_weights = np.exp(flux_ratio_logL)
     normalized_weights = importance_weights / np.max(importance_weights)
-    return params_out, normalized_weights
+    return params_out, normalized_weights, S_statistic
 
 def downselect_fluxratio_summary_stats(params, flux_ratios, measured_flux_ratios,
                                        measurement_uncertainties, n_keep,
-                                       n_bootstraps, uncertainty_on_ratios,
+                                       uncertainty_on_ratios,
                                        keep_index_list, fluxes=None):
 
     kept_index_list = []
@@ -80,27 +82,8 @@ def downselect_fluxratio_summary_stats(params, flux_ratios, measured_flux_ratios
     best_inds = np.argsort(fluxratio_summary_statistic)[0:n_keep]
     normalized_weights[best_inds] = 1.0
     kept_index_list += list(best_inds)
-    for n in range(0, n_bootstraps):
-        _normalized_weights = np.zeros(flux_ratios.shape[0])
-        if uncertainty_on_ratios:
-            _fluxratio_summary_statistic = compute_fluxratio_summarystat(flux_ratios,
-                                                                         measured_flux_ratios,
-                                                                         measurement_uncertainties,
-                                                                         uncertainty_on_ratios,
-                                                                         keep_index_list)
-        else:
-            _fluxratio_summary_statistic = compute_fluxratio_summarystat(fluxes,
-                                                                         measured_flux_ratios,
-                                                                         measurement_uncertainties,
-                                                                         uncertainty_on_ratios,
-                                                                         keep_index_list)
-        _best_inds = np.argsort(_fluxratio_summary_statistic)[0:n_keep]
-        _normalized_weights[_best_inds] = 1.0
-        params_out = np.vstack((params_out, deepcopy(params)))
-        normalized_weights = np.append(normalized_weights, _normalized_weights)
-        kept_index_list += list(_best_inds)
     normalized_weights /= np.max(normalized_weights)
-    return params_out, normalized_weights
+    return params_out, normalized_weights, fluxratio_summary_statistic[best_inds]
 
 def compute_likelihoods(output_class,
                         image_data_logL_sigma,
@@ -166,7 +149,7 @@ def compute_likelihoods(output_class,
         if n_keep is None:
             if uncertainty_on_ratios is False:
                 raise Exception('cannot use a flux ratio likelihood with uncertainties on fluxes')
-            _params_out, flux_ratio_likelihood_weights = calculate_flux_ratio_likelihood(params,
+            _params_out, flux_ratio_likelihood_weights, _S_statistic = calculate_flux_ratio_likelihood(params,
                                                                              flux_ratios,
                                                                              measured_flux_ratios,
                                                                              measurement_uncertainties)
@@ -179,12 +162,11 @@ def compute_likelihoods(output_class,
                 fluxes = m / norm[:, np.newaxis]
             else:
                 fluxes = None
-            _params_out, flux_ratio_likelihood_weights = downselect_fluxratio_summary_stats(params,
+            _params_out, flux_ratio_likelihood_weights, _S_statistic = downselect_fluxratio_summary_stats(params,
                                                                             flux_ratios,
                                                                             measured_flux_ratios,
                                                                             measurement_uncertainties,
                                                                             n_keep,
-                                                                            0,
                                                                             uncertainty_on_ratios,
                                                                              keep_index_list,
                                                                                 fluxes=fluxes)
@@ -202,18 +184,26 @@ def compute_likelihoods(output_class,
             joint_weights = _joint_weights
             imaging_data_likelihood = IndependentLikelihoods([pdf_imgdata])
             imaging_data_fluxratio_likelihood = IndependentLikelihoods([pdf_imgdata_fr])
+            S_statistic = _S_statistic
         else:
             params_out = np.vstack((params_out, _params_out))
             joint_weights = np.append(joint_weights, _joint_weights)
             imaging_data_likelihood += IndependentLikelihoods([pdf_imgdata])
             imaging_data_fluxratio_likelihood += IndependentLikelihoods([pdf_imgdata_fr])
+            S_statistic = np.append(S_statistic, _S_statistic)
 
-    normalized_joint_weights = _joint_weights / np.max(_joint_weights)
+    normalized_joint_weights = joint_weights / np.max(joint_weights)
+    if n_keep is not None:
+        print('median/worst of S_statistic distribution: ', np.median(S_statistic), np.max(S_statistic))
     if image_data_logL_sigma is not None:
         print('effective sample size using imaging+flux ratio likelihood: ', np.sum(normalized_joint_weights)/(n_bootstraps+1))
     else:
-        print('effective sample size flux ratios: ',
-              np.sum(normalized_joint_weights) / (n_bootstraps + 1))
+        if n_keep is not None:
+            print('effective sample size flux ratios: ',
+              np.sum(normalized_joint_weights > 0))
+        else:
+            print('effective sample size flux ratios: ',
+              np.sum(normalized_joint_weights))
     # if n_bootstraps>0 and n_keep is not None:
     #     print('number of repeated index out of '+str(len(accepted_seeds))+' samples: ',  str(len(accepted_seeds) - len(np.unique(accepted_seeds))))
     likelihood_joint = imaging_data_fluxratio_likelihood / imaging_data_likelihood

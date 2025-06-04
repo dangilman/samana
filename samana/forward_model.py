@@ -642,7 +642,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                  particle_swarm=run_initial_PSO,
                                                  tol_simplex_func=1e-9,
                                                  simplex_n_iterations=800,
-                                                 tol_source=1e-6,
+                                                 tol_source=1e-7,
                                                  )
             if minimize_method == 'COBYQA_import':
                 try:
