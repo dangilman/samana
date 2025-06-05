@@ -144,41 +144,35 @@ class Output(object):
         return self.down_select(index)
 
     @classmethod
-    def from_hdf5(self, filename_list):
-        """
-        Make an output class from a filename or a list of filenames that specify the locations of hdf5 files
-        :param filename_list: a list of strings with paths to the files
-        :return: an instance of the Output class
-        """
-        if not isinstance(filename_list, list):
-            filename_list = [filename_list]
-        for i, filename in enumerate(filename_list):
-            if i > 0:
-                _output = Output.from_hdf5(filename)
-                output = output.join(_output)
-            else:
-                output = Output.from_hdf5(filename)
-        return output
-
-    @classmethod
-    def from_single_hdf5(cls, filename):
+    def from_hdf5(cls, filename_list):
         """
 
         :param filename: a string that specifies the path to hdf5 file
         :return: an instance of the output class
         """
-
         import h5py
-        with h5py.File(filename, "r") as f:
-            parameters = np.array(f['parameters'])
-            magnifications = np.array(f['magnifications'])
-            macromodel_samples = np.array(f['macromodel_samples'])
-            _param_names = list(f['param_names'])
-            _macromodel_sample_names = list(f['macromodel_sample_names'])
-        param_names = [name.decode("utf-8") for name in _param_names]
-        macromodel_sample_names = [name.decode("utf-8") for name in _macromodel_sample_names]
+        if not isinstance(filename_list, list):
+            filename_list = [filename_list]
+        for i, filename in enumerate(filename_list):
+            print(i)
+            with h5py.File(filename, "r") as f:
+                params = np.array(f['parameters'])
+                mags = np.array(f['magnifications'])
+                macro_samples = np.array(f['macromodel_samples'])
+                param_names = list(f['param_names'])
+                macromodel_sample_names = list(f['macromodel_sample_names'])
+            if i==0:
+                parameters = params
+                magnifications = mags
+                macromodel_samples = macro_samples
+            else:
+                parameters = np.vstack((parameters, params))
+                magnifications = np.vstack((magnifications, mags))
+                macromodel_samples = np.vstack((macromodel_samples, macro_samples))
+            print(parameters.shape)
+        param_names = [name.decode("utf-8") for name in param_names]
+        macromodel_sample_names = [name.decode("utf-8") for name in macromodel_sample_names]
         fitting_kwargs_list = None
-
         return Output(parameters, magnifications, macromodel_samples, fitting_kwargs_list,
                   param_names, macromodel_sample_names)
 
