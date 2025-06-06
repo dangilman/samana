@@ -4,6 +4,8 @@ from lenstronomy.Util.param_util import ellipticity2phi_q
 from copy import deepcopy
 import h5py
 
+
+
 def output_to_hdf5(output_path, job_name, job_index_min, job_index_max, write_path, print_missing_files=False):
 
     param_names = None
@@ -456,6 +458,24 @@ class Output(object):
                       flux_ratio_summary_statistic=flux_ratio_summary_statistic,
                       flux_ratio_likelihood=flux_ratio_likelihood)
 
+    def write_class_to_hdf5(self, output_path):
+        parameters = self.parameters
+        magnifications = self.image_magnifications
+        macromodel_samples = self.macromodel_samples
+        param_names = self._param_names
+        macromodel_sample_names = self._macromodel_sample_names
+
+        mode = 'w'
+
+        h = h5py.File(output_path, mode)
+        dset_1 = h.create_dataset('parameters', data=parameters)
+        dset_2 = h.create_dataset('magnifications', data=magnifications)
+        dset_3 = h.create_dataset('macromodel_samples', data=macromodel_samples)
+        dset_4 = h.create_dataset('param_names', data=param_names,
+                                  dtype='S20')
+        dset_5 = h.create_dataset('macromodel_sample_names', data=macromodel_sample_names,
+                                  dtype='S20')
+
     def cut_on_image_data(self, percentile_cut, logL_threshold=None, select_worst=False, undo_prior=False):
         """
 
@@ -609,4 +629,5 @@ def compile_flux_ratios(output_path, job_index_min, job_index_max,
     y[:, 0] = logL
     y[:, 1] = random_seeds
     return y
+
 
