@@ -8,30 +8,24 @@ def compute_fluxratio_summarystat(f, measured_flux_ratios, measurement_uncertain
 
     perturbed_flux_ratio = np.empty((f.shape[0], len(keep_index_list)))
     sigmas = []
-    if measurement_uncertainties is not None:
-        if uncertainty_on_ratios:
-            for i in keep_index_list:
-                if measurement_uncertainties[i] == -1:
-                    perturbed_flux_ratio[:, i] = 0.0
-                    sigmas.append(-1)
-                else:
-                    sigmas.append(1.0)
-                    perturbed_flux_ratio[:, i] = np.random.normal(f[:, i],
-                                                                  measurement_uncertainties[i])
-        else:
-            perturbed_fluxes = np.random.normal(f,
-                                                measurement_uncertainties)
-            perturbed_flux_ratio = perturbed_fluxes[:, 1:] / perturbed_fluxes[:, 0, np.newaxis]
-            perturbed_flux_ratio = perturbed_flux_ratio[:, keep_index_list]
-            sigmas = [1.0] * perturbed_flux_ratio.shape[1]
+
+    if uncertainty_on_ratios:
+        for i in keep_index_list:
+            if measurement_uncertainties[i] == -1:
+                perturbed_flux_ratio[:, i] = 0.0
+                sigmas.append(-1)
+            else:
+                sigmas.append(1.0)
+                perturbed_flux_ratio[:, i] = np.random.normal(f[:, i],
+                                                              measurement_uncertainties[i])
     else:
-        if uncertainty_on_ratios:
-            perturbed_flux_ratio = f
-        else:
-            perturbed_flux_ratio = f[:, 1:] / f[:, 0, np.newaxis]
-        sigmas = [1.0] * np.sum(keep_index_list)
+        perturbed_fluxes = np.random.normal(f,
+                                            measurement_uncertainties)
+        perturbed_flux_ratio = perturbed_fluxes[:, 1:] / perturbed_fluxes[:, 0, np.newaxis]
+        perturbed_flux_ratio = perturbed_flux_ratio[:, keep_index_list]
+        sigmas = [1.0] * perturbed_flux_ratio.shape[1]
     stat = np.sqrt(-2 * compute_fluxratio_logL(perturbed_flux_ratio, measured_flux_ratios[keep_index_list], sigmas)[0])
-    return stat
+    return stat / max(measured_flux_ratios)
 
 def compute_logfluxratio_summarystat(flux_ratios, measured_flux_ratios, measurement_uncertainties):
 
@@ -54,12 +48,11 @@ def compute_fluxratio_logL(flux_ratios, measured_flux_ratios, measurement_uncert
             continue
         S += (flux_ratios[:, i] - measured_flux_ratios[i])**2
         fr_logL += -0.5 * (flux_ratios[:, i] - measured_flux_ratios[i]) ** 2 / measurement_uncertainties[i] ** 2
-    return fr_logL, np.sqrt(S)
+    return fr_logL, np.sqrt(S) / max(measured_flux_ratios)
 
 def calculate_flux_ratio_likelihood(params, flux_ratios, measured_flux_ratios,
                                     measurement_uncertainties):
-    assert measurement_uncertainties is not None, ('when computing a flux ratio likelihood, must '
-                                                   'specify measurement uncertainties on each flux ratio')
+
     params_out = deepcopy(params)
     flux_ratio_logL, S_statistic = compute_fluxratio_logL(flux_ratios, measured_flux_ratios, measurement_uncertainties)
     importance_weights = np.exp(flux_ratio_logL)
@@ -69,9 +62,7 @@ def calculate_flux_ratio_likelihood(params, flux_ratios, measured_flux_ratios,
 def downselect_fluxratio_summary_stats(params, flux_ratios, measured_flux_ratios,
                                        measurement_uncertainties, n_keep,
                                        uncertainty_on_ratios,
-                                       keep_index_list,
-                                       fluxes=None,
-                                       S_statistic_tolerance=None):
+                                       keep_index_list, fluxes=None):
 
     kept_index_list = []
     params_out = deepcopy(params)
@@ -88,11 +79,7 @@ def downselect_fluxratio_summary_stats(params, flux_ratios, measured_flux_ratios
                                                                     measurement_uncertainties,
                                                                     uncertainty_on_ratios,
                                                                     keep_index_list)
-    if S_statistic_tolerance is not None:
-        best_inds = np.where(fluxratio_summary_statistic < S_statistic_tolerance)[0]
-        print(str(len(best_inds)) +' samples with S-statistic below threshold: ', S_statistic_tolerance)
-    else:
-        best_inds = np.argsort(fluxratio_summary_statistic)[0:n_keep]
+    best_inds = np.argsort(fluxratio_summary_statistic)[0:n_keep]
     normalized_weights[best_inds] = 1.0
     kept_index_list += list(best_inds)
     normalized_weights /= np.max(normalized_weights)
@@ -111,8 +98,7 @@ def compute_likelihoods(output_class,
                         n_bootstraps=0,
                         bandwidth_scale=0.75,
                         dm_param_names=None,
-                        uncertainty_on_ratios=False,
-                        S_statistic_tolerance=None):
+                        uncertainty_on_ratios=False):
 
     if n_keep is None and n_bootstraps > 0:
         raise ValueError('when using a flux ratio likelihood specified '
@@ -161,9 +147,6 @@ def compute_likelihoods(output_class,
         # now compute the flux ratio likelihood
         flux_ratios = sim.flux_ratios
         if n_keep is None:
-            if S_statistic_tolerance is not None:
-                raise Exception('when n_keep is None, '
-                                'S_statistic_tolerance should not be specified')
             if uncertainty_on_ratios is False:
                 raise Exception('cannot use a flux ratio likelihood with uncertainties on fluxes')
             _params_out, flux_ratio_likelihood_weights, _S_statistic = calculate_flux_ratio_likelihood(params,
@@ -185,9 +168,8 @@ def compute_likelihoods(output_class,
                                                                             measurement_uncertainties,
                                                                             n_keep,
                                                                             uncertainty_on_ratios,
-                                                                            keep_index_list,
-                                                                            fluxes=fluxes,
-                                                                            S_statistic_tolerance=S_statistic_tolerance)
+                                                                             keep_index_list,
+                                                                                fluxes=fluxes)
         _joint_weights = flux_ratio_likelihood_weights * weights_image_data
         pdf_imgdata_fr = DensitySamples(_params_out,
                                         param_names=param_names,
