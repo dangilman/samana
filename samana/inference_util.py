@@ -62,7 +62,9 @@ def calculate_flux_ratio_likelihood(params, flux_ratios, measured_flux_ratios,
 def downselect_fluxratio_summary_stats(params, flux_ratios, measured_flux_ratios,
                                        measurement_uncertainties, n_keep,
                                        uncertainty_on_ratios,
-                                       keep_index_list, fluxes=None):
+                                       keep_index_list,
+                                       fluxes=None,
+                                       S_statistic_tolerance=None):
 
     kept_index_list = []
     params_out = deepcopy(params)
@@ -79,7 +81,10 @@ def downselect_fluxratio_summary_stats(params, flux_ratios, measured_flux_ratios
                                                                     measurement_uncertainties,
                                                                     uncertainty_on_ratios,
                                                                     keep_index_list)
-    best_inds = np.argsort(fluxratio_summary_statistic)[0:n_keep]
+    if S_statistic_tolerance is not None:
+        best_inds = np.where(fluxratio_summary_statistic < S_statistic_tolerance)[0]
+    else:
+        best_inds = np.argsort(fluxratio_summary_statistic)[0:n_keep]
     normalized_weights[best_inds] = 1.0
     kept_index_list += list(best_inds)
     normalized_weights /= np.max(normalized_weights)
@@ -92,13 +97,15 @@ def compute_likelihoods(output_class,
                         param_names,
                         param_ranges_dict,
                         keep_index_list,
+                        percentile_cut_image_data=None,
                         use_kde=False,
                         nbins=5,
                         n_keep=None,
                         n_bootstraps=0,
                         bandwidth_scale=0.75,
                         dm_param_names=None,
-                        uncertainty_on_ratios=False):
+                        uncertainty_on_ratios=False,
+                        S_statistic_tolerance=None):
 
     if n_keep is None and n_bootstraps > 0:
         raise ValueError('when using a flux ratio likelihood specified '
@@ -112,9 +119,17 @@ def compute_likelihoods(output_class,
         # first down-select on imaging data likelihood
         logL_image_data = output_class.param_dict['logL_image_data']
         if image_data_logL_sigma is not None:
+            assert percentile_cut_image_data is None, ('image_data_logL_sigma and percentile_cut_image_data should not '
+                                                       'both be specified')
             max_logL = np.max(logL_image_data)
             logL_normalized_diff = (logL_image_data - max_logL) / image_data_logL_sigma
             weights_image_data = np.exp(-0.5 * logL_normalized_diff ** 2)
+        elif percentile_cut_image_data is not None:
+            weights_image_data = np.zeros_like(logL_image_data)
+            inds_sorted = np.argsort(logL_image_data)
+            idx_cut = int(len(logL_image_data) * (100 - percentile_cut_image_data) / 100)
+            logL_cut = logL_image_data[inds_sorted][idx_cut]
+            weights_image_data[np.where(logL_image_data > logL_cut)] = 1
         else:
             weights_image_data = np.ones_like(logL_image_data)
 
@@ -169,7 +184,8 @@ def compute_likelihoods(output_class,
                                                                             n_keep,
                                                                             uncertainty_on_ratios,
                                                                              keep_index_list,
-                                                                                fluxes=fluxes)
+                                                                            fluxes=fluxes,
+                                                                            S_statistic_tolerance=S_statistic_tolerance)
         _joint_weights = flux_ratio_likelihood_weights * weights_image_data
         pdf_imgdata_fr = DensitySamples(_params_out,
                                         param_names=param_names,
