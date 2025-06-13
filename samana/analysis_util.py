@@ -1,7 +1,27 @@
 import numpy as np
 from trikde.pdfs import IndependentLikelihoods, DensitySamples
-from samana.output_storage import Output
 from copy import deepcopy
+
+def default_rendering_area(lens_ID=None,
+                           data_class=None,
+                           model_class=None,
+                           opening_angle_factor=6.0):
+    """
+
+    :param lens_ID:
+    :param data_class:
+    :param model_class:
+    :param opening_angle_factor:
+    :return:
+    """
+    if data_class is None or model_class is None:
+        _data_class, _model_class = quick_setup(lens_ID)
+        model = _model_class(_data_class())
+    else:
+        # note that data class must be instantiated when passed in
+        model = model_class(data_class)
+    thetaE = model.setup_lens_model()[-1][0][0]['theta_E']
+    return opening_angle_factor * thetaE
 
 def numerics_setup(lens_ID):
     """
