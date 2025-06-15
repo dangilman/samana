@@ -309,7 +309,7 @@ class Output(object):
         stat = 0
         for i in range(0, 3):
             stat += (measured_flux_ratios[i] - modeled_flux_ratios[:,i])**2
-        self._flux_ratio_stat = np.sqrt(stat)
+        self._flux_ratio_stat = np.sqrt(stat)/measured_flux_ratios.max()
         if verbose:
             print('SUMMARY STATISTIC THRESHOLDS: ')
             print('S = 0.02: ', np.sum(self._flux_ratio_stat < 0.02))
