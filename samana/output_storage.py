@@ -156,7 +156,6 @@ class Output(object):
         if not isinstance(filename_list, list):
             filename_list = [filename_list]
         for i, filename in enumerate(filename_list):
-            print(i)
             with h5py.File(filename, "r") as f:
                 params = np.array(f['parameters'])
                 mags = np.array(f['magnifications'])
@@ -171,7 +170,6 @@ class Output(object):
                 parameters = np.vstack((parameters, params))
                 magnifications = np.vstack((magnifications, mags))
                 macromodel_samples = np.vstack((macromodel_samples, macro_samples))
-            print(parameters.shape)
         param_names = [name.decode("utf-8") for name in param_names]
         macromodel_sample_names = [name.decode("utf-8") for name in macromodel_sample_names]
         fitting_kwargs_list = None
@@ -309,7 +307,7 @@ class Output(object):
         stat = 0
         for i in range(0, 3):
             stat += (measured_flux_ratios[i] - modeled_flux_ratios[:,i])**2
-        self._flux_ratio_stat = np.sqrt(stat)
+        self._flux_ratio_stat = np.sqrt(stat)/measured_flux_ratios.max()
         if verbose:
             print('SUMMARY STATISTIC THRESHOLDS: ')
             print('S = 0.02: ', np.sum(self._flux_ratio_stat < 0.02))
