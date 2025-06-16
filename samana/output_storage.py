@@ -62,11 +62,11 @@ def output_to_hdf5(output_path, job_name, job_index_min, job_index_max,
     mode = 'w'
     summary_stat = parameters[:, -4]
     inds_keep = np.where(summary_stat < S_max)[0]
-    print('compiled ' + str(len(inds_keep)) + ' realizations.')
+    print('compiled '+str(len(summary_stat))+' realizations')
     h = h5py.File(write_path + job_name + '_output.hdf5', mode)
-    dset_1 = h.create_dataset('parameters', data=parameters[:, inds_keep])
-    dset_2 = h.create_dataset('magnifications', data=magnifications[:, inds_keep])
-    dset_3 = h.create_dataset('macromodel_samples', data=macromodel_samples[:, inds_keep])
+    dset_1 = h.create_dataset('parameters', data=parameters[inds_keep, :])
+    dset_2 = h.create_dataset('magnifications', data=magnifications[inds_keep, :])
+    dset_3 = h.create_dataset('macromodel_samples', data=macromodel_samples[inds_keep, :])
     dset_4 = h.create_dataset('param_names', data=param_names,
                               dtype='S20')
     dset_5 = h.create_dataset('macromodel_sample_names', data=macromodel_sample_names,
