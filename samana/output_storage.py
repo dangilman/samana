@@ -62,7 +62,7 @@ def output_to_hdf5(output_path, job_name, job_index_min, job_index_max,
     mode = 'w'
     summary_stat = parameters[:, -4]
     inds_keep = np.where(summary_stat < S_max)[0]
-    print('compiled '+str(len(summary_stat))+' realizations')
+    print('compiled '+str(len(inds_keep))+' realizations')
     h = h5py.File(write_path + job_name + '_output.hdf5', mode)
     dset_1 = h.create_dataset('parameters', data=parameters[inds_keep, :])
     dset_2 = h.create_dataset('magnifications', data=magnifications[inds_keep, :])
