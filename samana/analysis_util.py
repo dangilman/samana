@@ -134,6 +134,87 @@ def numerics_setup(lens_ID):
         raise Exception('lens ID '+str(lens_ID)+' not recognized!')
     return rescale_grid_size, rescale_grid_res
 
+def satellite_galaxy_priors(lens_ID):
+
+    if lens_ID == 'H1413':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.4, 0.2],
+            'satellite_1_x': ['GAUSSIAN', 1.715, 0.05],
+            'satellite_1_y': ['GAUSSIAN', 3.650, 0.05]
+        }
+    elif lens_ID == 'HE0435':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.37, 0.05],
+            'satellite_1_x': ['GAUSSIAN', -0.0830, 0.05],
+            'satellite_1_y': ['GAUSSIAN', 3.8549, 0.05]
+        }
+    elif lens_ID == 'J0607':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.1, 0.1],
+            'satellite_1_x': ['GAUSSIAN', 1.22, 0.05],
+            'satellite_1_y': ['GAUSSIAN', 0.24, 0.05]
+        }
+    elif lens_ID == 'J0659':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.25, 0.2],
+            'satellite_1_x': ['GAUSSIAN', 0.35, 0.05],
+            'satellite_1_y': ['GAUSSIAN', 1.55, 0.05]
+        }
+    elif lens_ID == 'J1042':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.1, 0.1],
+            'satellite_1_x': ['GAUSSIAN', 1.782, 0.05],
+            'satellite_1_y': ['GAUSSIAN', -0.317, 0.05]
+        }
+    elif lens_ID == 'MG0414':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.1, 0.1],
+            'satellite_1_x': ['GAUSSIAN', -0.61, 0.05],
+            'satellite_1_y': ['GAUSSIAN', 1.325, 0.05]
+        }
+    elif lens_ID == 'PSJ1606':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.15, 0.1],
+            'satellite_1_x': ['GAUSSIAN', -0.28, 0.05],
+            'satellite_1_y': ['GAUSSIAN', -1.24, 0.05]
+        }
+    elif lens_ID == 'RXJ0911':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.25, 0.15],
+            'satellite_1_x': ['GAUSSIAN', -0.767, 0.05],
+            'satellite_1_y': ['GAUSSIAN', 0.657, 0.05]
+        }
+    elif lens_ID == 'RXJ1131':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.3, 0.2],
+            'satellite_1_x': ['GAUSSIAN', -0.328, 0.05],
+            'satellite_1_y': ['GAUSSIAN', 0.700, 0.05]
+        }
+    elif lens_ID == 'WFI2033':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.05, 0.1],
+            'satellite_1_x': ['GAUSSIAN', 0.273217, 0.05],
+            'satellite_1_y': ['GAUSSIAN', 2.00444, 0.05],
+            'satellite_2_theta_E': ['GAUSSIAN', 0.9, 0.1],
+                'satellite_2_x': ['GAUSSIAN', -3.52, 0.1],
+                'satellite_2_y': ['GAUSSIAN', 0.033, 0.1]
+        }
+    elif lens_ID == 'M1134':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.4, 0.2],
+            'satellite_1_x': ['GAUSSIAN', 3.127565, 0.05],
+            'satellite_1_y': ['GAUSSIAN', -3.93903, 0.05]
+        }
+    elif lens_ID == 'J0248':
+        satellite_prior = {
+            'satellite_1_theta_E': ['GAUSSIAN', 0.08, 0.04],
+            'satellite_1_x': ['GAUSSIAN', 0.99, 0.05],
+            'satellite_1_y': ['GAUSSIAN', -1.46, 0.05]
+        }
+    else:
+        satellite_prior = {}
+    return satellite_prior
+
 def quick_setup(lens_ID):
 
     if lens_ID == 'B1422':
