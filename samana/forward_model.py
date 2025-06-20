@@ -644,13 +644,32 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                  simplex_n_iterations=800,
                                                  tol_source=1e-7,
                                                  )
-            if minimize_method == 'COBYQA_import':
-                try:
-                    from cobyqa import minimize as minimize_method
-                except:
-                    raise Exception('cobyqa not installed, install cobyqa first: "pip install cobyqa"')
-            kwargs_solution, _ = opt.optimize(50, 50, verbose=verbose, seed=seed,
-                                                  minimize_method=minimize_method)
+            if minimize_method == 'FSOLVE':
+                if verbose:
+                    print('using root finding with FSOLVE... ')
+                from lenstronomy.LensModel.Solver.solver import Solver4Point
+                from samana.param_managers import FixedAxisRatioSolver
+                param_class_fixed_q = FixedAxisRatioSolver(macromodel_samples_fixed_dict['q'])
+                solver = Solver4Point(opt.ray_shooting_class,
+                                      solver_type="CUSTOM",
+                                      parameter_module=param_class_fixed_q)
+                kwargs_solution, _ = solver.constraint_lensmodel(data_class.x_image,
+                                                              data_class.y_image,
+                                                              opt._param_class.kwargs_lens)
+
+            else:
+                if minimize_method == 'COBYQA_import':
+                    method_name = 'COBYQA'
+                    try:
+                        from cobyqa import minimize as minimize_method
+                    except:
+                        raise Exception('cobyqa not installed, install cobyqa first: "pip install cobyqa"')
+                else:
+                    method_name = minimize_method
+                if verbose:
+                    print('using optimization routine '+str(method_name))
+                kwargs_solution, _ = opt.optimize(50, 50, verbose=verbose, seed=seed,
+                                                      minimize_method=minimize_method)
             kwargs_multiplane_model = opt.kwargs_multiplane_model
         else:
             kwargs_lens_init = kwargs_lens_align + kwargs_halos

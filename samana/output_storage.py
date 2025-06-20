@@ -5,8 +5,8 @@ from copy import deepcopy
 import h5py
 
 
-
-def output_to_hdf5(output_path, job_name, job_index_min, job_index_max, write_path, print_missing_files=False):
+def output_to_hdf5(output_path, job_name, job_index_min, job_index_max,
+                   write_path, print_missing_files=False, S_max=np.inf):
 
     param_names = None
     macromodel_sample_names = None
@@ -59,12 +59,14 @@ def output_to_hdf5(output_path, job_name, job_index_min, job_index_max, write_pa
             parameters = np.vstack((parameters, params))
             magnifications = np.vstack((magnifications, fluxes))
             macromodel_samples = np.vstack((macromodel_samples, macrosamples))
-    print('compiled ' + str(parameters.shape[0]) + ' realizations.')
     mode = 'w'
+    summary_stat = parameters[:, -4]
+    inds_keep = np.where(summary_stat < S_max)[0]
+    print('compiled '+str(len(inds_keep))+' realizations')
     h = h5py.File(write_path + job_name + '_output.hdf5', mode)
-    dset_1 = h.create_dataset('parameters', data=parameters)
-    dset_2 = h.create_dataset('magnifications', data=magnifications)
-    dset_3 = h.create_dataset('macromodel_samples', data=macromodel_samples)
+    dset_1 = h.create_dataset('parameters', data=parameters[inds_keep, :])
+    dset_2 = h.create_dataset('magnifications', data=magnifications[inds_keep, :])
+    dset_3 = h.create_dataset('macromodel_samples', data=macromodel_samples[inds_keep, :])
     dset_4 = h.create_dataset('param_names', data=param_names,
                               dtype='S20')
     dset_5 = h.create_dataset('macromodel_sample_names', data=macromodel_sample_names,
@@ -156,7 +158,6 @@ class Output(object):
         if not isinstance(filename_list, list):
             filename_list = [filename_list]
         for i, filename in enumerate(filename_list):
-            print(i)
             with h5py.File(filename, "r") as f:
                 params = np.array(f['parameters'])
                 mags = np.array(f['magnifications'])
@@ -171,7 +172,6 @@ class Output(object):
                 parameters = np.vstack((parameters, params))
                 magnifications = np.vstack((magnifications, mags))
                 macromodel_samples = np.vstack((macromodel_samples, macro_samples))
-            print(parameters.shape)
         param_names = [name.decode("utf-8") for name in param_names]
         macromodel_sample_names = [name.decode("utf-8") for name in macromodel_sample_names]
         fitting_kwargs_list = None
