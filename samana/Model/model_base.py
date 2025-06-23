@@ -303,7 +303,7 @@ class EPLModelBase(object):
                            redshift_list_halos=None, kwargs_halos=None, kwargs_lens_macro_init=None,
                            grid_resolution=0.05, verbose=False, macromodel_samples_fixed=None,
                            observed_convention_index=None, astropy_cosmo=None, x_image=None, y_image=None,
-                           use_JAXstronomy=False):
+                           use_JAXstronomy=False, decoupled_multiplane_grid_type='GRID'):
 
         lens_model_list_macro, redshift_list_macro, _, lens_model_params = self.setup_lens_model(
             kwargs_lens_macro_init,
@@ -384,7 +384,8 @@ class EPLModelBase(object):
                 macromodel_samples_fixed,
                 astropy_cosmo,
                 scale_window_size=1.0,
-                use_JAXstronomy=use_JAXstronomy)
+                use_JAXstronomy=use_JAXstronomy,
+                decoupled_multiplane_grid_type=decoupled_multiplane_grid_type)
             if verbose:
                 print('done.')
             kwargs_model['kwargs_multiplane_model'] = kwargs_decoupled_class_setup['kwargs_multiplane_model']
@@ -444,11 +445,10 @@ class EPLModelBase(object):
     def _setup_decoupled_multiplane_model(self, lens_model_list_halos, redshift_list_halos, kwargs_halos,
                                          kwargs_macro_init=None, grid_resolution=0.05,
                                           macromodel_samples_fixed=None, astropy_cosmo=None,
-                                          scale_window_size=1.25, use_JAXstronomy=False):
+                                          scale_window_size=1.25, use_JAXstronomy=False,
+                                          do_decoupled_multiplane_raytracing=True,
+                                          decoupled_multiplane_grid_type='GRID'):
 
-        deltaPix, _, _, _, window_size = self._data.coordinate_properties
-        grid_size = window_size * scale_window_size
-        x_grid, y_grid, interp_points, npix = setup_grids(grid_size, grid_resolution)
         lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params = \
             self.setup_lens_model(kwargs_macro_init, macromodel_samples_fixed)
         kwargs_lens_macro = lens_model_params[0]
@@ -474,15 +474,26 @@ class EPLModelBase(object):
             setup_lens_model(lens_model_init, kwargs_lens_init, index_lens_split, use_jax_bool_list)
         (lens_model_fixed, lens_model_free, kwargs_lens_fixed,
          kwargs_lens_free, z_source, z_split, cosmo_bkg) = setup_decoupled_multiplane_lens_model_output
-        xD, yD, alpha_x_foreground, alpha_y_foreground, alpha_beta_subx, alpha_beta_suby = coordinates_and_deflections(
-            lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
-            x_grid, y_grid, z_split, z_source, cosmo_bkg)
-        coordinate_type = "GRID"
-        kwargs_class_setup = decoupled_multiplane_class_setup(lens_model_free, xD, yD, alpha_x_foreground, \
-                                         alpha_y_foreground, alpha_beta_subx, \
-                                         alpha_beta_suby, z_split, \
-                                         coordinate_type=coordinate_type, \
-                                         interp_points=interp_points)
+        if do_decoupled_multiplane_raytracing:
+            if decoupled_multiplane_grid_type == 'GRID':
+                deltaPix, _, _, _, window_size = self._data.coordinate_properties
+                grid_size = window_size * scale_window_size
+                x_grid, y_grid, interp_points, npix = setup_grids(grid_size, grid_resolution)
+            elif decoupled_multiplane_grid_type == 'POINT':
+                x_grid, y_grid = 0., 0. # this doesn't matter
+                interp_points = (0.0, 0.0)
+            else:
+                raise ValueError('Unknown decoupled_multiplane_grid_type '+str(decoupled_multiplane_grid_type))
+            xD, yD, alpha_x_foreground, alpha_y_foreground, alpha_beta_subx, alpha_beta_suby = coordinates_and_deflections(
+                lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
+                x_grid, y_grid, z_split, z_source, cosmo_bkg)
+            kwargs_class_setup = decoupled_multiplane_class_setup(lens_model_free, xD, yD, alpha_x_foreground, \
+                                             alpha_y_foreground, alpha_beta_subx, \
+                                             alpha_beta_suby, z_split, \
+                                             coordinate_type=decoupled_multiplane_grid_type, \
+                                             interp_points=interp_points)
+        else:
+            kwargs_class_setup = None
         return kwargs_class_setup, lens_model_init, kwargs_lens_init, index_lens_split, setup_decoupled_multiplane_lens_model_output
 
     def setup_lens_model(self, *args, **kwargs):
