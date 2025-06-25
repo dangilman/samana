@@ -144,7 +144,9 @@ def compute_likelihoods(output_class,
         if dm_param_names is None:
             dm_param_names = ['log10_sigma_sub', 'log_mc',
                               'LOS_normalization', 'shmf_log_slope','z_lens','log_m_host','source_size_pc',
-                              'summary_statistic']
+                              'summary_statistic', 'f_low', 'f_high', 'x_core_halo',
+                              'log10_sigma_eff_mlow', 'log10_sigma_eff_8_mh', 'log10_subhalo_time_s',
+                              ]
         for i, parameter_name in enumerate(param_names):
             if parameter_name in dm_param_names:
                 params[:, i] = np.squeeze(sim.parameter_array([parameter_name]))

@@ -303,7 +303,8 @@ class EPLModelBase(object):
                            redshift_list_halos=None, kwargs_halos=None, kwargs_lens_macro_init=None,
                            grid_resolution=0.05, verbose=False, macromodel_samples_fixed=None,
                            observed_convention_index=None, astropy_cosmo=None, x_image=None, y_image=None,
-                           use_JAXstronomy=False, decoupled_multiplane_grid_type='GRID'):
+                           use_JAXstronomy=False, decoupled_multiplane_grid_type='GRID',
+                           scale_window_size=1.0):
 
         lens_model_list_macro, redshift_list_macro, _, lens_model_params = self.setup_lens_model(
             kwargs_lens_macro_init,
@@ -383,7 +384,7 @@ class EPLModelBase(object):
                 grid_resolution,
                 macromodel_samples_fixed,
                 astropy_cosmo,
-                scale_window_size=1.0,
+                scale_window_size=scale_window_size,
                 use_JAXstronomy=use_JAXstronomy,
                 decoupled_multiplane_grid_type=decoupled_multiplane_grid_type)
             if verbose:

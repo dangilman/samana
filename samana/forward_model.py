@@ -442,7 +442,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            use_JAXstronomy=False,
                            split_image_data_reconstruction=False,
                            magnification_method=None,
-                           tolerance_source_reconstruction=None):
+                           tolerance_source_reconstruction=None,
+                           scale_window_size_decoupled_multiplane=1.0):
     """
 
     :param data_class:
@@ -479,6 +480,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     :param split_image_data_reconstruction:
     :param magnification_method:
     :param tolerance_source_reconstruction:
+    :param scale_window_size_decoupled_multiplane:
     :return:
     """
     # set the random seed for reproducibility
@@ -585,7 +587,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             x_image=data_class.x_image,
             y_image=data_class.y_image,
             use_JAXstronomy=use_JAXstronomy,
-            decoupled_multiplane_grid_type=decoupled_multiplane_grid_type
+            decoupled_multiplane_grid_type=decoupled_multiplane_grid_type,
+            scale_window_size=scale_window_size_decoupled_multiplane
         ))
     if 'q' in param_names_macro_fixed and use_imaging_data:
         model_class.set_fixed_q(macromodel_samples_fixed_dict['q'])
@@ -817,7 +820,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                     x_image=data_class.x_image,
                     y_image=data_class.y_image,
                     use_JAXstronomy=use_JAXstronomy,
-                    decoupled_multiplane_grid_type='GRID'
+                    decoupled_multiplane_grid_type='GRID',
+                    scale_window_size=scale_window_size_decoupled_multiplane
                 ))
             kwargs_params = model_class.kwargs_params(kwargs_lens_macro_init=kwargs_solution,
                                                       delta_x_image=-delta_x_image,
