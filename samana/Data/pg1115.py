@@ -282,4 +282,3 @@ class PG1115_HST_AstrometricOffsets(_PG1115):
         transform_pix2angle = np.array([[-4.99994518e-02, 5.74056003e-07],
                                         [5.75227714e-07, 4.99999995e-02]])
         return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
-
