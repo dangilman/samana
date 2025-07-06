@@ -112,7 +112,8 @@ class _WFI2033ModelNircamBase(EPLModelBase):
             {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 0.2732+0.3, 'center_y': 2.00444+0.3},
             {'R_sersic': 10, 'n_sersic':10, 'center_x': -3.6842+0.25, 'center_y': 0.125+0.25}]
         kwargs_lens_light_fixed = [{}, {} ,{}, {}]
-        add_uniform_light = True
+        add_uniform_light = False
+        print('WARNING: NOT ADDING UNIFORM LENS LIGHT SUBTRACTION!!!')
         if add_uniform_light:
             kwargs_uniform, kwargs_uniform_sigma, kwargs_uniform_fixed, \
             kwargs_uniform_lower, kwargs_uniform_upper = self.add_uniform_lens_light(60)

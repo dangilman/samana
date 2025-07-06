@@ -18,10 +18,6 @@ class _M1134ModelBase(EPLModelBase):
            kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
         return kwargs_constraints
 
-    @property
-    def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2]]
-
     def setup_source_light_model(self):
 
         source_model_list = ['SERSIC_ELLIPSE']
@@ -133,7 +129,7 @@ class M1134ModelEPLM3M4ShearSatellite(_M1134ModelBase):
 
     @property
     def prior_lens(self):
-        return [[2, 'theta_E', 0.15, 0.05]]
+        return None
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
