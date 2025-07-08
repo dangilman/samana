@@ -56,14 +56,19 @@ class _WFI2033(ImagingDataBase):
 
     @property
     def kwargs_numerics(self):
+        if self._psf_supersampling_convolution:
+            point_source_supersampling_factor = 3
+        else:
+            point_source_supersampling_factor = 1
         kwargs_numerics = {
             'supersampling_factor': int(self._supersample_factor),
-            'supersampling_convolution': self._psf_supersampling_convolution,  # try with True
-            'point_source_supersampling_factor': 1}
+            'supersampling_convolution': self._psf_supersampling_convolution,
+            'point_source_supersampling_factor': point_source_supersampling_factor}
         return kwargs_numerics
 
     @property
     def kwargs_psf(self):
+        #point_source_supersampling_factor = self.kwargs_numerics['point_source_supersampling_factor']
         kwargs_psf = {'psf_type': 'PIXEL',
                       'kernel_point_source': self._psf_estimate_init / np.sum(self._psf_estimate_init),
                       'psf_variance_map': self._psf_error_map_init,
@@ -183,5 +188,5 @@ class WFI2033_NIRCAM(_WFI2033):
         ra_at_xy_0 = -0.702918917521
         dec_at_xy_0 = -3.185012902609803
         transform_pix2angle = np.array([[-0.01654499,  0.02591725],
- [ 0.02592996,  0.01653688]])
+                [ 0.02592996,  0.01653688]])
         return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
