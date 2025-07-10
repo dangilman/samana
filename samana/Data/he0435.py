@@ -5,8 +5,8 @@ import numpy as np
 class _HE0435(ImagingDataBase):
 
     def __init__(self, x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
-                 uncertainty_in_fluxes, supersample_factor, image_data_filter, psf_model, psf_error_map,
-                 supersampling_convolution=False, mask_quasar_images_for_logL=True):
+                 uncertainty_in_fluxes, supersample_factor, image_data_filter,
+                 mask_quasar_images_for_logL=True):
 
         self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
         z_lens = 0.45
@@ -14,16 +14,24 @@ class _HE0435(ImagingDataBase):
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
         self._filter = image_data_filter
-        self._supersampling_convolution = supersampling_convolution
         if self._filter == 'f814w':
-            from samana.Data.ImageData.he0435_814w import image_data
+            from samana.Data.ImageData.he0435_814w import image_data, psf_error_map, psf_model
             self._psf_estimate_init = psf_model
             self._psf_error_map_init = psf_error_map
             self._image_data = image_data
+        elif self._filter == 'f555w':
+            from samana.Data.ImageData.he0435_f555W import image_data as image_data_f555w
+            from samana.Data.ImageData.he0435_f555W import psf_model as psf_model_f555w
+            from samana.Data.ImageData.he0435_f555W import psf_error_map as psf_error_map_f555w
+            self._psf_estimate_init = psf_model_f555w
+            self._psf_error_map_init = psf_error_map_f555w
+            self._image_data = image_data_f555w
         elif self._filter == 'jwst_nircam':
             from samana.Data.ImageData.he0435_f115W import image_data as image_data_nircam
-            self._psf_estimate_init = psf_model
-            self._psf_error_map_init = psf_error_map
+            from samana.Data.ImageData.he0435_f115W import psf_model as psf_model_nircam
+            from samana.Data.ImageData.he0435_f115W import psf_error_map as psf_error_map_nircam
+            self._psf_estimate_init = psf_model_nircam
+            self._psf_error_map_init = psf_error_map_nircam
             self._image_data = image_data_nircam
         else:
             raise Exception('filter '+str(image_data_filter)+' not recognized.')
@@ -69,6 +77,13 @@ class _HE0435(ImagingDataBase):
                            'dec_at_xy_0': dec_at_xy_0,
                            'transform_pix2angle': transform_pix2angle,
                            'image_data': self._image_data}
+        elif self._filter == 'f555w':
+            kwargs_data = {'background_rms': 0.007946,
+                           'exposure_time': 2030.0,
+                           'ra_at_xy_0': ra_at_xy_0,
+                           'dec_at_xy_0': dec_at_xy_0,
+                           'transform_pix2angle': transform_pix2angle,
+                           'image_data': self._image_data}
         elif self._filter == 'jwst_nircam':
             kwargs_data = {'background_rms': 0.01539,
                            'exposure_time': 1803.776,
@@ -77,19 +92,15 @@ class _HE0435(ImagingDataBase):
                            'transform_pix2angle': transform_pix2angle,
                            'image_data': self._image_data}
         else:
-            raise Exception('filter must be either f814w or jwst_nircam')
+            raise Exception('filter must be either f814w or f555w')
         return kwargs_data
 
     @property
     def kwargs_numerics(self):
-        if self._supersampling_convolution:
-            point_source_supersampling_factor = 3
-        else:
-            point_source_supersampling_factor = 1
         kwargs_numerics = {
             'supersampling_factor': int(self._supersample_factor),
-            'supersampling_convolution': self._supersampling_convolution,  # try with True
-            'point_source_supersampling_factor': point_source_supersampling_factor}
+            'supersampling_convolution': False,  # try with True
+            'point_source_supersampling_factor': 1}
         return kwargs_numerics
 
     @property
@@ -110,6 +121,14 @@ class _HE0435(ImagingDataBase):
             dec_at_xy_0 = -2.74962
             transform_pix2angle = np.array([[-5.00058809e-02, -6.76934349e-06],
                                             [-6.75231528e-06,  4.99999709e-02]])
+            return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
+        elif self._filter == 'f555w':
+            deltaPix = 0.05
+            window_size = 110 * deltaPix
+            ra_at_xy_0 = 2.750695
+            dec_at_xy_0 = -2.74962
+            transform_pix2angle = np.array([[-5.00058808e-02, -6.76926675e-06],
+                                            [-6.75236526e-06,  4.99999710e-02]])
             return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
         elif self._filter == 'jwst_nircam':
             deltaPix = 0.031228
@@ -145,21 +164,19 @@ class HE0435_HST(_HE0435):
         # y_shifts = np.array([0.12, 0.026, -0.08, -0.038])
         # x_image += x_shifts
         # y_image += y_shifts
-        from samana.Data.ImageData.he0435_814w import psf_error_map, psf_model
+
         magnifications = [0.96, 0.976, 1.0, 0.65]
         image_position_uncertainties = [0.005] * 4
         flux_uncertainties = [0.05, 0.049, 0.048, 0.056]
         uncertainty_in_fluxes = True
         super(HE0435_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties,
                                           flux_uncertainties, uncertainty_in_fluxes=uncertainty_in_fluxes,
-                                         supersample_factor=supersample_factor,
-                                         image_data_filter=image_data_filter,
-                                         psf_model=psf_model, psf_error_map=psf_error_map)
+                                         supersample_factor=supersample_factor, image_data_filter=image_data_filter)
 
 class HE0435_NIRCAM(_HE0435):
     gx = -0.0
     gy = 4.4
-    def __init__(self, supersample_factor=1.0, psf_type='PSF_STARRED_INIT', supersampling_convolution=False):
+    def __init__(self, supersample_factor=1.0):
         """
 
         :param image_position_uncertainties: list of astrometric uncertainties for each image
@@ -181,23 +198,9 @@ class HE0435_NIRCAM(_HE0435):
         image_position_uncertainties = [0.005] * 4 # increased from 5
         flux_uncertainties = [0.05, 0.049, 0.048, 0.056]
         uncertainty_in_fluxes = True
-        if psf_type == 'PSF_STARRED_RECONSTRUCTION':
-            from samana.Data.ImageData.nircam_psf_models import psf_model_starred_reconstruction as psf_model
-            from samana.Data.ImageData.nircam_psf_models import (
-                psf_model_starred_reconstruction_error_map as psf_error_map)
-        elif psf_type == 'PSF_STARRED_INIT':
-            from samana.Data.ImageData.nircam_psf_models import psf_starred_init as psf_model
-            from samana.Data.ImageData.nircam_psf_models import (
-                psf_model_starred_reconstruction_error_map as psf_error_map)
-        else:
-            raise ValueError('psf_type must be PSF_STARRED_RECONSTRUCTION or PSF_STARRED_INIT')
         super(HE0435_NIRCAM, self).__init__(x_image, y_image, magnifications, image_position_uncertainties,
                                                        flux_uncertainties, uncertainty_in_fluxes=uncertainty_in_fluxes,
-                                                       supersample_factor=supersample_factor,
-                                                        image_data_filter=image_data_filter,
-                                                        psf_model=psf_model,
-                                                        psf_error_map=psf_error_map,
-                                                        supersampling_convolution=supersampling_convolution)
+                                                       supersample_factor=supersample_factor, image_data_filter=image_data_filter)
 
     def likelihood_masks(self, x_image=None, y_image=None):
         deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size = self.coordinate_properties
@@ -205,9 +208,7 @@ class HE0435_NIRCAM(_HE0435):
         _y = np.linspace(-window_size / 2, window_size / 2, self._image_data.shape[1])
         _xx, _yy = np.meshgrid(_x, _y)
         likelihood_mask = np.ones_like(_xx)
-        s = 2.1 # default
-        #s = 3
-        inds = np.where(np.sqrt(_xx ** 2 + _yy ** 2) >= window_size / s)
+        inds = np.where(np.sqrt(_xx ** 2 + _yy ** 2) >= window_size / 2.1)
         likelihood_mask[inds] = 0.0
 
         if self._mask_quasar_images_for_logL:
