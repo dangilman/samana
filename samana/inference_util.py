@@ -50,11 +50,40 @@ def compute_fluxratio_logL(flux_ratios, measured_flux_ratios, measurement_uncert
         fr_logL += -0.5 * (flux_ratios[:, i] - measured_flux_ratios[i]) ** 2 / measurement_uncertainties[i] ** 2
     return fr_logL, np.sqrt(S) / max(measured_flux_ratios)
 
+
+#####
+def compute_fluxratio_logL_cov(flux_ratios, measured_flux_ratios, measurement_uncertainties, keep_index_list):
+    S = 0
+
+    fr_logL = multivariate_normal.logpdf(flux_ratios, mean=measured_flux_ratios, cov=measurement_uncertainties)  # shape (n_sets,)
+
+    for ind in keep_index_list:
+            S += (flux_ratios[:, ind] - measured_flux_ratios[ind])**2
+
+    return fr_logL, np.sqrt(S) / max(measured_flux_ratios)
+
+
+    ##flux_ratios is an array of ixn i is the number of samples n is the number of flux ratios
+
+
+
+
+    for i in range(0, len(measured_flux_ratios)):
+        if measurement_uncertainties[i] == -1:
+            continue
+        S += (flux_ratios[:, i] - measured_flux_ratios[i])**2
+        fr_logL += -0.5 * (flux_ratios[:, i] - measured_flux_ratios[i]) ** 2 / measurement_uncertainties[i] ** 2
+    return fr_logL, np.sqrt(S) / max(measured_flux_ratios)
+
 def calculate_flux_ratio_likelihood(params, flux_ratios, measured_flux_ratios,
-                                    measurement_uncertainties):
+                                    measurement_uncertainties, keep_index_list=None):
 
     params_out = deepcopy(params)
-    flux_ratio_logL, S_statistic = compute_fluxratio_logL(flux_ratios, measured_flux_ratios, measurement_uncertainties)
+    if measurement_uncertainties.ndim == 1:
+        flux_ratio_logL, S_statistic = compute_fluxratio_logL(flux_ratios, measured_flux_ratios, measurement_uncertainties)
+    if measurement_uncertainties.ndim == 2:
+        flux_ratio_logL, S_statistic = compute_fluxratio_logL_cov(flux_ratios, measured_flux_ratios, measurement_uncertainties, keep_index_list)
+
     importance_weights = np.exp(flux_ratio_logL)
     normalized_weights = importance_weights / np.max(importance_weights)
     return params_out, normalized_weights, S_statistic
@@ -129,30 +158,56 @@ def compute_likelihoods(output_class,
     joint_weights = np.array([])
     accepted_seeds = np.array([])
 
+    ##this doens't need to be in the for-loop I don't think.
+    param_ranges_dm = [param_ranges_dict[param_name] for param_name in param_names]
+    # first down-select on imaging data likelihood
+    logL_image_data = output_class.param_dict['logL_image_data']
+    use_imaging_boolean = False
+    if image_data_logL_sigma is not None:
+        assert percentile_cut_image_data is None, ('image_data_logL_sigma and percentile_cut_image_data should not '
+                                                   'both be specified')
+        max_logL = np.max(logL_image_data)
+        logL_normalized_diff = (logL_image_data - max_logL) / image_data_logL_sigma
+        weights_image_data = np.exp(-0.5 * logL_normalized_diff ** 2)
+        use_imaging_boolean = True
+    elif percentile_cut_image_data is not None:
+        weights_image_data = np.zeros_like(logL_image_data)
+        inds_sorted = np.argsort(logL_image_data)
+        idx_cut = int(len(logL_image_data) * (100 - percentile_cut_image_data) / 100)
+        logL_cut = logL_image_data[inds_sorted][idx_cut]
+        weights_image_data[np.where(logL_image_data > logL_cut)] = 1
+        use_imaging_boolean = True
+    else:
+        weights_image_data = np.ones_like(logL_image_data)
+
+
+    ##we always need this
+    for i, parameter_name in enumerate(param_names):
+        if parameter_name in dm_param_names:
+            params[:, i] = np.squeeze(sim.parameter_array([parameter_name]))
+        else:
+            params[: ,i] = np.squeeze(sim.macromodel_parameter_array([parameter_name]))
+        # now we compute the imaging data likelihood only
+
+    # we only need this with imaging data.
+    pdf_imgdata = None
+
+    if use_imaging_boolean:
+            pdf_imgdata = DensitySamples(params,
+                                     param_names=param_names,
+                                     weights=weights_image_data,
+                                     param_ranges=param_ranges_dm,
+                                     **kwargs_kde)
+
     for bootstrap_index in range(0, n_bootstraps+1):
 
-        param_ranges_dm = [param_ranges_dict[param_name] for param_name in param_names]
-        # first down-select on imaging data likelihood
-        logL_image_data = output_class.param_dict['logL_image_data']
-        if image_data_logL_sigma is not None:
-            assert percentile_cut_image_data is None, ('image_data_logL_sigma and percentile_cut_image_data should not '
-                                                       'both be specified')
-            max_logL = np.max(logL_image_data)
-            logL_normalized_diff = (logL_image_data - max_logL) / image_data_logL_sigma
-            weights_image_data = np.exp(-0.5 * logL_normalized_diff ** 2)
-        elif percentile_cut_image_data is not None:
-            weights_image_data = np.zeros_like(logL_image_data)
-            inds_sorted = np.argsort(logL_image_data)
-            idx_cut = int(len(logL_image_data) * (100 - percentile_cut_image_data) / 100)
-            logL_cut = logL_image_data[inds_sorted][idx_cut]
-            weights_image_data[np.where(logL_image_data > logL_cut)] = 1
-        else:
-            weights_image_data = np.ones_like(logL_image_data)
+
 
         if bootstrap_index == 0:
-            print('total samples: ', logL_image_data.shape[0])
-            if image_data_logL_sigma is not None:
-                print('effective sample size after imaging data likelihood: ', np.sum(weights_image_data)/(n_bootstraps+1))
+            if use_imaging_boolean:
+                print('total samples: ', logL_image_data.shape[0])
+                if image_data_logL_sigma is not None:
+                    print('effective sample size after imaging data likelihood: ', np.sum(weights_image_data)/(n_bootstraps+1))
         sim = deepcopy(output_class)
         params = np.empty((sim.parameters.shape[0], len(param_names)))
         random_seeds = np.squeeze(sim.parameter_array(['seed']))
@@ -163,17 +218,6 @@ def compute_likelihoods(output_class,
                               'summary_statistic', 'f_low', 'f_high', 'x_core_halo',
                               'log10_sigma_eff_mlow', 'log10_sigma_eff_8_mh', 'log10_subhalo_time_s',
                               ]
-        for i, parameter_name in enumerate(param_names):
-            if parameter_name in dm_param_names:
-                params[:, i] = np.squeeze(sim.parameter_array([parameter_name]))
-            else:
-                params[: ,i] = np.squeeze(sim.macromodel_parameter_array([parameter_name]))
-        # now we compute the imaging data likelihood only
-        pdf_imgdata = DensitySamples(params,
-                                     param_names=param_names,
-                                     weights=weights_image_data,
-                                     param_ranges=param_ranges_dm,
-                                     **kwargs_kde)
 
         # now compute the flux ratio likelihood
         flux_ratios = sim.flux_ratios
@@ -202,7 +246,12 @@ def compute_likelihoods(output_class,
                                                                              keep_index_list,
                                                                             fluxes=fluxes,
                                                                             S_statistic_tolerance=S_statistic_tolerance)
-        _joint_weights = flux_ratio_likelihood_weights * weights_image_data
+        _joint_weights=None
+        if use_imaging_boolean:
+            _joint_weights = flux_ratio_likelihood_weights * weights_image_data
+        else:
+            _joint_weights=flux_ratio_likelihood_weights
+
         pdf_imgdata_fr = DensitySamples(_params_out,
                                         param_names=param_names,
                                         weights=_joint_weights/np.max(_joint_weights),
@@ -210,16 +259,22 @@ def compute_likelihoods(output_class,
                                         **kwargs_kde
                                         )
         # now compute the final pdf
+
         if bootstrap_index == 0:
             params_out = _params_out
             joint_weights = _joint_weights
-            imaging_data_likelihood = IndependentLikelihoods([pdf_imgdata])
-            imaging_data_fluxratio_likelihood = IndependentLikelihoods([pdf_imgdata_fr])
+            if use_imaging_boolean:
+                imaging_data_likelihood = IndependentLikelihoods([pdf_imgdata])
+                imaging_data_fluxratio_likelihood = IndependentLikelihoods([pdf_imgdata_fr])
+            else:
+                imaging_data_likelihood = None
+                imaging_data_fluxratio_likelihood = IndependentLikelihoods([pdf_imgdata_fr])
             S_statistic = _S_statistic
         else:
             params_out = np.vstack((params_out, _params_out))
             joint_weights = np.append(joint_weights, _joint_weights)
-            imaging_data_likelihood += IndependentLikelihoods([pdf_imgdata])
+            if use_imaging_boolean:
+                imaging_data_likelihood += IndependentLikelihoods([pdf_imgdata])
             imaging_data_fluxratio_likelihood += IndependentLikelihoods([pdf_imgdata_fr])
             S_statistic = np.append(S_statistic, _S_statistic)
 
@@ -237,5 +292,7 @@ def compute_likelihoods(output_class,
               np.sum(normalized_joint_weights))
     # if n_bootstraps>0 and n_keep is not None:
     #     print('number of repeated index out of '+str(len(accepted_seeds))+' samples: ',  str(len(accepted_seeds) - len(np.unique(accepted_seeds))))
-    likelihood_joint = imaging_data_fluxratio_likelihood / imaging_data_likelihood
+    if use_imaging_boolean:
+        likelihood_joint = imaging_data_fluxratio_likelihood / imaging_data_likelihood
+    ##if using flux ratios, use imaging_data_fluxratio_likelihood variable.
     return imaging_data_likelihood, imaging_data_fluxratio_likelihood, likelihood_joint, (params_out, normalized_joint_weights)
