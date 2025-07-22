@@ -128,6 +128,15 @@ class Output(object):
             else:
                 self._macromodel_samples_dict = None
 
+    def cut_high_mags(self, mag_max):
+        """
+        Remove elements where any one of the four image magnifications exceeds mag_max
+        :param max_magnification: maximum magnification allowed
+        :return:
+        """
+        inds_keep = np.where(~np.any(self.image_magnifications>mag_max, axis=1))[0]
+        return self.down_select(inds_keep)
+
     def clean(self):
         """
         This method removes elements corresponding to np.nan flux ratios, and elements that correspond to a repeated

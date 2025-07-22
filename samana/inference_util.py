@@ -94,19 +94,35 @@ def compute_likelihoods(output_class,
                         image_data_logL_sigma,
                         measured_flux_ratios,
                         measurement_uncertainties,
+                        uncertainty_on_ratios,
                         param_names,
                         param_ranges_dict,
                         keep_index_list,
                         percentile_cut_image_data=None,
-                        use_kde=False,
-                        nbins=5,
                         n_keep=None,
                         n_bootstraps=0,
-                        bandwidth_scale=0.75,
                         dm_param_names=None,
-                        uncertainty_on_ratios=False,
-                        S_statistic_tolerance=None):
+                        S_statistic_tolerance=None,
+                        kwargs_kde={}
+                        ):
+    """
 
+    :param output_class:
+    :param image_data_logL_sigma:
+    :param measured_flux_ratios:
+    :param measurement_uncertainties:
+    :param uncertainty_on_ratios:
+    :param param_names:
+    :param param_ranges_dict:
+    :param keep_index_list:
+    :param percentile_cut_image_data:
+    :param n_keep:
+    :param n_bootstraps:
+    :param dm_param_names:
+    :param S_statistic_tolerance:
+    :param kwargs_kde:
+    :return:
+    """
     if n_keep is None and n_bootstraps > 0:
         raise ValueError('when using a flux ratio likelihood specified '
                          'through n_keep=None, n_bootstraps must be set to 0')
@@ -144,7 +160,9 @@ def compute_likelihoods(output_class,
         if dm_param_names is None:
             dm_param_names = ['log10_sigma_sub', 'log_mc',
                               'LOS_normalization', 'shmf_log_slope','z_lens','log_m_host','source_size_pc',
-                              'summary_statistic']
+                              'summary_statistic', 'f_low', 'f_high', 'x_core_halo',
+                              'log10_sigma_eff_mlow', 'log10_sigma_eff_8_mh', 'log10_subhalo_time_s',
+                              ]
         for i, parameter_name in enumerate(param_names):
             if parameter_name in dm_param_names:
                 params[:, i] = np.squeeze(sim.parameter_array([parameter_name]))
@@ -155,9 +173,7 @@ def compute_likelihoods(output_class,
                                      param_names=param_names,
                                      weights=weights_image_data,
                                      param_ranges=param_ranges_dm,
-                                     use_kde=use_kde,
-                                     nbins=nbins,
-                                     bandwidth_scale=bandwidth_scale)
+                                     **kwargs_kde)
 
         # now compute the flux ratio likelihood
         flux_ratios = sim.flux_ratios
@@ -191,9 +207,8 @@ def compute_likelihoods(output_class,
                                         param_names=param_names,
                                         weights=_joint_weights/np.max(_joint_weights),
                                         param_ranges=param_ranges_dm,
-                                        use_kde=use_kde,
-                                        nbins=nbins,
-                                        bandwidth_scale=bandwidth_scale)
+                                        **kwargs_kde
+                                        )
         # now compute the final pdf
         if bootstrap_index == 0:
             params_out = _params_out

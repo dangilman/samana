@@ -6,7 +6,7 @@ class _WFI2033(ImagingDataBase):
 
     def __init__(self, x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
                  uncertainty_in_fluxes, supersample_factor=1.0, image_data=None, psf_model=None, psf_error_map=None,
-                 mask_quasar_images_for_logL=True):
+                 noise_map=None, mask_quasar_images_for_logL=True):
 
         self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
         z_lens = 0.66
@@ -15,6 +15,7 @@ class _WFI2033(ImagingDataBase):
         keep_flux_ratio_index = [0, 1, 2]
         self._psf_estimate_init = psf_model
         self._psf_error_map_init = psf_error_map
+        self._noise_map = noise_map
         self._image_data = image_data
         self._supersample_factor = supersample_factor
         image_band = [self.kwargs_data, self.kwargs_psf, self.kwargs_numerics]
@@ -55,14 +56,19 @@ class _WFI2033(ImagingDataBase):
 
     @property
     def kwargs_numerics(self):
+        if self._psf_supersampling_convolution:
+            point_source_supersampling_factor = 3
+        else:
+            point_source_supersampling_factor = 1
         kwargs_numerics = {
             'supersampling_factor': int(self._supersample_factor),
-            'supersampling_convolution': False,  # try with True
-            'point_source_supersampling_factor': 1}
+            'supersampling_convolution': self._psf_supersampling_convolution,
+            'point_source_supersampling_factor': point_source_supersampling_factor}
         return kwargs_numerics
 
     @property
     def kwargs_psf(self):
+        #point_source_supersampling_factor = self.kwargs_numerics['point_source_supersampling_factor']
         kwargs_psf = {'psf_type': 'PIXEL',
                       'kernel_point_source': self._psf_estimate_init / np.sum(self._psf_estimate_init),
                       'psf_variance_map': self._psf_error_map_init,
@@ -90,7 +96,7 @@ class WFI2033_HST(_WFI2033):
         y_shifts = -0.04 - 0.01
         x_image += x_shifts
         y_image += y_shifts
-
+        self._psf_supersampling_convolution = False
         from samana.Data.ImageData.wfi2033_814w import image_data, psf_error_map, psf_model
         magnifications = [1.,   0.65, 0.5,  0.53]
         image_position_uncertainties = [0.005] * 4
@@ -123,24 +129,36 @@ class WFI2033_HST(_WFI2033):
 
 class WFI2033_NIRCAM(_WFI2033):
 
-    def __init__(self, supersample_factor=1.0):
+    def __init__(self, supersample_factor=1.0, psf_type='PSF_STARRED_RECONSTRUCTION',
+                 psf_supersampling_convolution=False):
         """
 
-        :param image_position_uncertainties: list of astrometric uncertainties for each image
-        i.e. [0.003, 0.003, 0.003, 0.003]
-        :param flux_uncertainties: list of flux ratio uncertainties in percentage, or None if these are handled
-        post-processing
-        :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
-        :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
+        :param supersample_factor:
+        :param psf_type:
+        :param psf_supersampling_convolution:
         """
 
         x_image = np.array([-0.71107849, 0.00229477, 1.48697986, -0.62619614])
         y_image = np.array([0.91023049, 1.02759605, -0.34851774, -0.6293088])
-        horizontal_shift = 0.0
-        vertical_shift = 0.0
+        # horizontal_shift = 0.0
+        # vertical_shift = 0.0
+        # with devon data
+        horizontal_shift = -0.053
+        vertical_shift = 0.033
         x_image += horizontal_shift
         y_image += vertical_shift
-        from samana.Data.ImageData.wfi2033_f115W import image_data, psf_error_map, psf_model
+        from samana.Data.ImageData.wfi2033_f115W import image_data, noise_map
+        if psf_type == 'PSF_STARRED_RECONSTRUCTION':
+            from samana.Data.ImageData.nircam_psf_models import psf_model_starred_reconstruction as psf_model
+            from samana.Data.ImageData.nircam_psf_models import (
+                psf_model_starred_reconstruction_error_map as psf_error_map)
+        elif psf_type == 'PSF_STARRED_INIT':
+            from samana.Data.ImageData.nircam_psf_models import psf_starred_init as psf_model
+            from samana.Data.ImageData.nircam_psf_models import (
+                psf_model_starred_reconstruction_error_map as psf_error_map)
+        else:
+            raise ValueError('psf_type must be PSF_STARRED_RECONSTRUCTION or PSF_STARRED_INIT')
+        self._psf_supersampling_convolution = psf_supersampling_convolution
         image_data_background_subtracted = image_data - 0.
         magnifications = [1.,   0.65, 0.5,  0.53]
         image_position_uncertainties = [0.005] * 4
@@ -148,25 +166,27 @@ class WFI2033_NIRCAM(_WFI2033):
         uncertainty_in_fluxes = True
         super(WFI2033_NIRCAM, self).__init__(x_image, y_image, magnifications, image_position_uncertainties,
                                           flux_uncertainties, uncertainty_in_fluxes,
-                                         supersample_factor, image_data_background_subtracted, psf_model, psf_error_map)
+                                         supersample_factor, image_data_background_subtracted, psf_model, psf_error_map,
+                                             noise_map)
 
     @property
     def kwargs_data(self):
         _, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, _ = self.coordinate_properties
-        kwargs_data = {'background_rms': 0.01376,
-                       'exposure_time': 1803.776,
+        kwargs_data = {'background_rms': None,
+                       'exposure_time': None,
                        'ra_at_xy_0': ra_at_xy_0,
                        'dec_at_xy_0': dec_at_xy_0,
                        'transform_pix2angle': transform_pix2angle,
-                       'image_data': self._image_data}
+                       'image_data': self._image_data,
+                       'noise_map': self._noise_map}
         return kwargs_data
 
     @property
     def coordinate_properties(self):
         deltaPix = 0.03122
-        window_size = 160 * deltaPix
-        ra_at_xy_0 = -0.710316
-        dec_at_xy_0 = -3.46049
-        transform_pix2angle = np.array([[-0.01718861,  0.02606757],
-                                                        [ 0.02606757,  0.01718861]])
+        window_size = 150 * deltaPix
+        ra_at_xy_0 = -0.702918917521
+        dec_at_xy_0 = -3.185012902609803
+        transform_pix2angle = np.array([[-0.01654499,  0.02591725],
+                [ 0.02592996,  0.01653688]])
         return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size

@@ -18,10 +18,6 @@ class _M1134ModelBase(EPLModelBase):
            kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
         return kwargs_constraints
 
-    @property
-    def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2]]
-
     def setup_source_light_model(self):
 
         source_model_list = ['SERSIC_ELLIPSE']
@@ -133,7 +129,7 @@ class M1134ModelEPLM3M4ShearSatellite(_M1134ModelBase):
 
     @property
     def prior_lens(self):
-        return [[2, 'theta_E', 0.15, 0.05]]
+        return None
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
@@ -145,16 +141,16 @@ class M1134ModelEPLM3M4ShearSatellite(_M1134ModelBase):
                  'a1_a': 0.0, 'delta_phi_m1': 0.0946244679093586, 'a3_a': 0.0, 'delta_phi_m3': -0.5205287918514736,
                  'a4_a': 0.0, 'delta_phi_m4': 0.7240750564861568},
                 {'gamma1': -0.001539234313987411, 'gamma2': 0.3660613471494284, 'ra_0': 0.0, 'dec_0': 0.0},
-                {'theta_E': 0.23750596785356515, 'center_x': 3.3841857914879068, 'center_y': -3.998138778021614}
+                {'theta_E': 0.1, 'center_x': 3.3841857914879068, 'center_y': -3.998138778021614}
             ]
         elif self._data.band == 'MIRI560W':
             kwargs_lens_macro = [
-                {'theta_E': 1.2128051442284533, 'gamma': 2.3417510269959703, 'e1': -0.07613658453691555,
-                 'e2': -0.04677832515324652, 'center_x': -0.05029154884342433, 'center_y': 0.07887971250297662,
-                 'a1_a': 0.0, 'delta_phi_m1': 0.18167336876426537, 'a3_a': 0.0, 'delta_phi_m3': -0.03053852529246417,
-                 'a4_a': 0.0, 'delta_phi_m4': 0.7978670578128553},
-                {'gamma1': 0.0006014103799520669, 'gamma2': 0.4273562498399638, 'ra_0': 0.0, 'dec_0': 0.0},
-                {'theta_E': 0.035528174387371776, 'center_x': 3.3548647214696916, 'center_y': -3.9578092339596487}
+                {'theta_E': 1.1977973522694216, 'gamma': 2.1811804820363756, 'e1': -0.049259366198138886,
+                 'e2': 0.03393966515095142, 'center_x': 0.01310572691186353, 'center_y': -0.040971570963843316,
+                 'a1_a': 0.0, 'delta_phi_m1': 0.0946244679093586, 'a3_a': 0.0, 'delta_phi_m3': -0.5205287918514736,
+                 'a4_a': 0.0, 'delta_phi_m4': 0.7240750564861568},
+                {'gamma1': -0.001539234313987411, 'gamma2': 0.3660613471494284, 'ra_0': 0.0, 'dec_0': 0.0},
+                {'theta_E': 0.1, 'center_x': 3.3841857914879068, 'center_y': -3.998138778021614}
             ]
         if self.z_satellite is None:
             z_satellite = self._data.z_lens

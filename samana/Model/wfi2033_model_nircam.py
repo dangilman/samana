@@ -26,9 +26,9 @@ class _WFI2033ModelNircamBase(EPLModelBase):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': -4.2172017403304665, 'R_sersic': 1.4072048028204784, 'n_sersic': 1.9472450764190539,
-             'e1': 0.008038756473571228, 'e2': 0.0706953392676213, 'center_x': -0.7440302190692125,
-             'center_y': 0.11167600073774643}
+            {'amp': -6.480064692809521, 'R_sersic': 0.9553143696244061, 'n_sersic': 0.8399156121224464,
+             'e1': -0.03757389106203387, 'e2': 0.1325327354650878, 'center_x': -0.6539482386077969,
+             'center_y': -0.017628777046964382}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.1, 'n_sersic': 0.5, 'e1': 0.1, 'e2': 0.1, 'center_x': 1.0,
                                 'center_y': 1.0}]
@@ -56,6 +56,27 @@ class _WFI2033ModelNircamBase(EPLModelBase):
                          kwargs_upper_source]
 
         return source_model_list, source_params
+    #
+    # def add_shapelets_lens(self, n_max):
+    #     """
+    #     Here we fix beta ~ 0.08
+    #     :param n_max:
+    #     :return:
+    #     """
+    #     n_max = int(n_max)
+    #     source_model_list = ['SHAPELETS']
+    #     beta_lower_bound = 0.06
+    #     beta_upper_bound = 0.1
+    #     beta_sigma = 2.0 * beta_lower_bound
+    #     beta_init = 3.0 * beta_lower_bound
+    #     kwargs_source_init = [{'amp': 1.0, 'beta': beta_init, 'center_x': 0.0, 'center_y': 0.0,
+    #                             'n_max': n_max}]
+    #     kwargs_source_sigma = [{'amp': 10.0, 'beta': beta_sigma, 'center_x': 0.1, 'center_y': 0.1, 'n_max': 1}]
+    #     kwargs_lower_source = [{'amp': 10.0, 'beta': beta_lower_bound, 'center_x': -0.2, 'center_y': -0.2, 'n_max': 0}]
+    #     kwargs_upper_source = [{'amp': 10.0, 'beta': beta_upper_bound, 'center_x': 0.2, 'center_y': 0.2, 'n_max': n_max + 1}]
+    #     kwargs_source_fixed = [{'n_max': n_max}]
+    #     return source_model_list, kwargs_source_init, kwargs_source_sigma, \
+    #            kwargs_source_fixed, kwargs_lower_source, kwargs_upper_source
 
     def setup_lens_light_model(self):
 
@@ -64,16 +85,16 @@ class _WFI2033ModelNircamBase(EPLModelBase):
                                  'SERSIC',
                                  'SERSIC']
         kwargs_lens_light_init = [
-            {'amp': 14.367596437761906, 'R_sersic': 2.4446239259884908, 'n_sersic': 4.52750478994104,
-             'e1': -0.3261215351821478, 'e2': 0.11359000754780076, 'center_x': 0.03628615325086386,
-             'center_y': -0.037257014675854905},
-            {'amp': 482.19262607326374, 'R_sersic': 0.42935963846539227, 'n_sersic': 2.215942829809199,
-             'e1': 0.07410165465513978, 'e2': 0.09055838026648412, 'center_x': 0.03628615325086386,
-             'center_y': -0.037257014675854905},
-            {'amp': 10752.43019065742, 'R_sersic': 0.02406909577122646, 'n_sersic': 2.8475827251302825,
-             'center_x': 0.27996727180682557, 'center_y': 2.0044560444528003},
-            {'amp': 12.2627078822764, 'R_sersic': 2.331743953299096, 'n_sersic': 3.6452704216864427,
-             'center_x': -3.584537539932441, 'center_y': 0.10774749984573875}
+            {'amp': 45.12991487626987, 'R_sersic': 2.585014860911036, 'n_sersic': 3.833788528555177,
+             'e1': -0.13214747768783427, 'e2': 0.14162871359840715, 'center_x': -0.007027939355085939,
+             'center_y': 0.00023195049536191997},
+            {'amp': 2454.3939753026434, 'R_sersic': 0.09701263451025438, 'n_sersic': 3.673793158438429,
+             'e1': -0.011360160342285229, 'e2': 0.10625977774348269, 'center_x': -0.007027939355085939,
+             'center_y': 0.00023195049536191997},
+            {'amp': 12362.217363128877, 'R_sersic': 0.02204367014637297, 'n_sersic': 2.9000162494130053,
+             'center_x': 0.23850365135651908, 'center_y': 2.0486099940367724},
+            {'amp': 15.293544377293621, 'R_sersic': 2.2255092276598734, 'n_sersic': 3.363971228734671,
+             'center_x': -3.5484989729122516, 'center_y': 0.16753003165282}
         ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.5, 'n_sersic': 0.5, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.05, 'center_y': 0.05},
@@ -140,15 +161,14 @@ class WFI2033NircamModelEPLM3M4Shear(_WFI2033ModelNircamBase):
                              'prior_lens': self.prior_lens,
                              'source_position_tolerance': 0.0001,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
-                             'astrometric_likelihood': True,
-                             #'custom_logL_addition': self.shear_prior
+                             'astrometric_likelihood': True
                              }
         return kwargs_likelihood
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4', 'SHEAR', 'SIS', 'SIS']
-        # used in forward modeling v1
+        # used in forward modeling before swithcing to exact dataset from https://arxiv.org/pdf/2503.00099
         # kwargs_lens_macro = [
         #     {'theta_E': 1.0534360481718583, 'gamma': 2.171762510566768, 'e1': 0.1020681308697495, 'e2': -0.1443852511147689,
         #      'center_x': 0.10864691301522046, 'center_y': -0.027685070187009064,
@@ -159,12 +179,12 @@ class WFI2033NircamModelEPLM3M4Shear(_WFI2033ModelNircamBase):
         #     {'theta_E': 0.5004528970016093, 'center_x': -3.596830704357751, 'center_y': -0.21494848752766837}
         # ]
         kwargs_lens_macro = [
-            {'theta_E': 1.0321027224447663, 'gamma': 2.072978345285635, 'e1': -0.035056879216832815,
-             'e2': 0.14118073989452923, 'center_x': 0.015104732586054595, 'center_y': -0.02997087202454787, 'a1_a': 0.0,
-             'delta_phi_m1': 0.0, 'a3_a': 0.0, 'delta_phi_m3': 0.0, 'a4_a': 0.0, 'delta_phi_m4': 0.0},
-            {'gamma1': 0.15628116029629033, 'gamma2': -0.04746184092482805, 'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.07471026075145329, 'center_x': 0.2821279374833845, 'center_y': 2.0055514296524075},
-            {'theta_E': 0.7682870829485742, 'center_x': -3.7280301576075505, 'center_y': -0.3672325791192176}
+            {'theta_E': 1.0140790106976274, 'gamma': 1.8705312654746549, 'e1': -0.0467082787555793,
+             'e2': 0.10796984573471909, 'center_x': -0.022432523430405006, 'center_y': -0.004210965016325727,
+             'a1_a': 0.0, 'delta_phi_m1': 0.0, 'a3_a': 0.0, 'delta_phi_m3': 0.0, 'a4_a': 0.0, 'delta_phi_m4': 0.0},
+            {'gamma1': 0.13236433794126734, 'gamma2': -0.02229694844946458, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.052837846356017376, 'center_x': 0.23850365135651908, 'center_y': 2.0486099940367724},
+            {'theta_E': 0.8044480530004041, 'center_x': -3.72289481865213, 'center_y': -0.41425281668886754}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens,
                                self._data.z_lens, 0.745]
