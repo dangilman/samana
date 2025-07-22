@@ -50,11 +50,40 @@ def compute_fluxratio_logL(flux_ratios, measured_flux_ratios, measurement_uncert
         fr_logL += -0.5 * (flux_ratios[:, i] - measured_flux_ratios[i]) ** 2 / measurement_uncertainties[i] ** 2
     return fr_logL, np.sqrt(S) / max(measured_flux_ratios)
 
+
+#####
+def compute_fluxratio_logL_cov(flux_ratios, measured_flux_ratios, measurement_uncertainties, keep_index_list):
+    S = 0
+
+    fr_logL = multivariate_normal.logpdf(flux_ratios, mean=measured_flux_ratios, cov=measurement_uncertainties)  # shape (n_sets,)
+
+    for ind in keep_index_list:
+            S += (flux_ratios[:, ind] - measured_flux_ratios[ind])**2
+
+    return fr_logL, np.sqrt(S) / max(measured_flux_ratios)
+
+
+    ##flux_ratios is an array of ixn i is the number of samples n is the number of flux ratios
+
+
+
+
+    for i in range(0, len(measured_flux_ratios)):
+        if measurement_uncertainties[i] == -1:
+            continue
+        S += (flux_ratios[:, i] - measured_flux_ratios[i])**2
+        fr_logL += -0.5 * (flux_ratios[:, i] - measured_flux_ratios[i]) ** 2 / measurement_uncertainties[i] ** 2
+    return fr_logL, np.sqrt(S) / max(measured_flux_ratios)
+
 def calculate_flux_ratio_likelihood(params, flux_ratios, measured_flux_ratios,
-                                    measurement_uncertainties):
+                                    measurement_uncertainties, keep_index_list=None):
 
     params_out = deepcopy(params)
-    flux_ratio_logL, S_statistic = compute_fluxratio_logL(flux_ratios, measured_flux_ratios, measurement_uncertainties)
+    if measurement_uncertainties.ndim == 1:
+        flux_ratio_logL, S_statistic = compute_fluxratio_logL(flux_ratios, measured_flux_ratios, measurement_uncertainties)
+    if measurement_uncertainties.ndim == 2:
+        flux_ratio_logL, S_statistic = compute_fluxratio_logL_cov(flux_ratios, measured_flux_ratios, measurement_uncertainties, keep_index_list)
+
     importance_weights = np.exp(flux_ratio_logL)
     normalized_weights = importance_weights / np.max(importance_weights)
     return params_out, normalized_weights, S_statistic
@@ -162,6 +191,7 @@ def compute_likelihoods(output_class,
 
     # we only need this with imaging data.
     pdf_imgdata = None
+
     if use_imaging_boolean:
             pdf_imgdata = DensitySamples(params,
                                      param_names=param_names,
