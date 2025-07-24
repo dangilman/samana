@@ -55,9 +55,9 @@ def compute_fluxratio_logL(flux_ratios, measured_flux_ratios, measurement_uncert
 def compute_fluxratio_logL_cov(flux_ratios, measured_flux_ratios, measurement_uncertainties, keep_index_list):
 
     S = 0
-    fr_logL = multivariate_normal.logpdf(flux_ratios,
-                                         mean=measured_flux_ratios,
-                                         cov=measurement_uncertainties)
+    df = flux_ratios - measured_flux_ratios
+    inverse_cov = np.linalg.inv(measurement_uncertainties)
+    fr_logL = np.sum(-0.5 * np.matmul(df, inverse_cov) ** 2, axis=-1)
     for ind in keep_index_list:
             S += (flux_ratios[:, ind] - measured_flux_ratios[ind])**2
     return fr_logL, np.sqrt(S) / max(measured_flux_ratios)
