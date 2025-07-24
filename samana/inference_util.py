@@ -57,7 +57,7 @@ def compute_fluxratio_logL_cov(flux_ratios, measured_flux_ratios, measurement_un
     S = 0
     df = flux_ratios - measured_flux_ratios
     df = df[:, keep_index_list]
-    inverse_cov = np.linalg.inv(measurement_uncertainties * np.eye(len(measurement_uncertainties)))
+    inverse_cov = np.linalg.inv(measurement_uncertainties)
     fr_logL = np.sum(-0.5 * np.matmul(df, inverse_cov) ** 2, axis=-1)
     for ind in keep_index_list:
             S += (flux_ratios[:, ind] - measured_flux_ratios[ind])**2
