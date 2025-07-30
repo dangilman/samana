@@ -90,16 +90,28 @@ class _J1042(ImagingDataBase):
             inds = np.where(dr2 <= mask_radius ** 2)
             likelihood_mask[inds] = 0.0
 
-        if self._mask_quasar_images_for_logL:
-            likelihood_mask_imaging_weights = self.quasar_image_mask(
-                likelihood_mask,
-                x_image,
-                y_image,
-                self._image_data.shape, radius_arcsec=0.25
-            )
-            return likelihood_mask, likelihood_mask_imaging_weights
+            if self._mask_quasar_images_for_logL:
+                likelihood_mask_imaging_weights = self.quasar_image_mask(
+                    likelihood_mask,
+                    x_image,
+                    y_image,
+                    self._image_data.shape, radius_arcsec=0.2
+                )
+                return likelihood_mask, likelihood_mask_imaging_weights
+            else:
+                return likelihood_mask, likelihood_mask
+
         else:
-            return likelihood_mask, likelihood_mask
+            if self._mask_quasar_images_for_logL:
+                likelihood_mask_imaging_weights = self.quasar_image_mask(
+                    likelihood_mask,
+                    x_image,
+                    y_image,
+                    self._image_data.shape, radius_arcsec=0.25
+                )
+                return likelihood_mask, likelihood_mask_imaging_weights
+            else:
+                return likelihood_mask, likelihood_mask
 
     @property
     def coordinate_properties(self):
