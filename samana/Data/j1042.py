@@ -84,6 +84,12 @@ class _J1042(ImagingDataBase):
             inds = np.where(dr2 <= mask_radius ** 2)
             likelihood_mask[inds] = 0.0
 
+            galx, galy = 0.0, 0.0
+            mask_radius = 0.25
+            dr2 = (_xx - galx) ** 2 + (_yy - galy) ** 2
+            inds = np.where(dr2 <= mask_radius ** 2)
+            likelihood_mask[inds] = 0.0
+
         if self._mask_quasar_images_for_logL:
             likelihood_mask_imaging_weights = self.quasar_image_mask(
                 likelihood_mask,
