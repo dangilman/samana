@@ -174,8 +174,12 @@ class HE0435_HST(_HE0435):
                                          supersample_factor=supersample_factor, image_data_filter=image_data_filter)
 
 class HE0435_NIRCAM(_HE0435):
-    gx = -0.0
-    gy = 4.4
+
+    # observed coordinates
+    # -2.45, -3.6
+    # physical coordinates from lens model
+    gx = -2.45
+    gy = -3.6
     def __init__(self, supersample_factor=1.0):
         """
 

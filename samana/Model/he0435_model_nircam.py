@@ -23,8 +23,9 @@ class _HE0435NircamModelBase(EPLModelBase):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 1, 'R_sersic': 0.3892257693980378, 'n_sersic': 4.915919454978656, 'e1': 0.46046081501195335,
-             'e2': -0.049815847984719, 'center_x': -0.01680259927818816, 'center_y': 0.45620002662567777}
+            {'amp': 41.93581406013049, 'R_sersic': 0.4172499189574654, 'n_sersic': 4.910837184608617,
+             'e1': 0.45478937839035055, 'e2': -0.0608866497521153, 'center_x': -0.14678718678420577,
+             'center_y': -0.14931162043863702}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.1, 'n_sersic': 0.5, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.05,
                                 'center_y': 0.05}]
@@ -88,8 +89,8 @@ class _HE0435NircamModelBase(EPLModelBase):
 
 class HE0435ModelNircamEPLM1M3M4Shear(_HE0435NircamModelBase):
 
-    gx_phys = -0.0863
-    gy_phys = 3.8705
+    gx_phys = -1.82
+    gy_phys = -3.09
 
     @property
     def macromodel_readout_function(self):
@@ -103,12 +104,12 @@ class HE0435ModelNircamEPLM1M3M4Shear(_HE0435NircamModelBase):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS']
         kwargs_lens_macro = [
-            {'theta_E': 1.1859958448585592, 'gamma': 2.1860320927735675, 'e1': -0.12026304094434084,
-             'e2': -0.05631509779061331, 'center_x': 0.014479699221285936, 'center_y': 0.038594387027429906,
-             'a1_a': 0.0, 'delta_phi_m1': 0.017926600918483446, 'a3_a': 0.0, 'delta_phi_m3': 0.010539231046425691,
-             'a4_a': 0.0, 'delta_phi_m4': -0.048583081835370065},
-            {'gamma1': 0.027329524566610502, 'gamma2': 0.02828855432756749, 'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.3444866200135506, 'center_x': -0.0875237607444984, 'center_y': 3.8820688903177105}
+            {'theta_E': 1.1867706147476293, 'gamma': 2.2509955547335396, 'e1': -0.11585039820631118,
+             'e2': -0.05971715525093999, 'center_x': 0.020668536627685426, 'center_y': 0.04274439485435772, 'a1_a': 0.0,
+             'delta_phi_m1': 0.05157145536290328, 'a3_a': 0.0, 'delta_phi_m3': 0.07896001268401007, 'a4_a': 0.0,
+             'delta_phi_m4': -0.33601875762082783},
+            {'gamma1': 0.04812456296487067, 'gamma2': 0.04638746729302123, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.31577441117835725, 'center_x': -1.8331799956624266, 'center_y': -3.0505306900867226}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens,
                                0.78]
@@ -140,14 +141,16 @@ class HE0435ModelNircamEPLM1M3M4Shear(_HE0435NircamModelBase):
 
         return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
 
-
 class HE0435ModelNircamEPLM1M3M4ShearObservedConvention(_HE0435NircamModelBase):
+
+    gx = -2.45
+    gy = -3.6
 
     @property
     def prior_lens(self):
-        return [[2, 'center_x', self._data.gx, 0.2],
-                [2, 'center_y', self._data.gy, 0.2],
-                [2, 'theta_E', 0.25, 0.1]
+        return [[2, 'center_x', self.gx, 0.1],
+                [2, 'center_y', self.gy, 0.1],
+                [2, 'theta_E', 0.3, 0.1]
                 ]
 
     @property
@@ -164,7 +167,7 @@ class HE0435ModelNircamEPLM1M3M4ShearObservedConvention(_HE0435NircamModelBase):
              'a1_a': 0.0, 'delta_phi_m1': 0.0,
              'delta_phi_m3': -0.34686333286833254, 'a4_a': 0.0, 'delta_phi_m4': -0.03780246745368501},
             {'gamma1': 0.030183980671845585, 'gamma2': 0.03001601588630484, 'ra_0': 0.0, 'dec_0': 0.0},
-            {'theta_E': 0.36940399665014434, 'center_x': self._data.gx, 'center_y': self._data.gy}
+            {'theta_E': 0.36940399665014434, 'center_x': self.gx, 'center_y': self.gy}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens,
                                0.78]
