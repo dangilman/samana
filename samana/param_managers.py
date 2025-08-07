@@ -191,7 +191,7 @@ class EPLMultipole134LensMassPrior(EPLMultipole134):
         self._sigmaxy = sigma_xy
         self._q = q
         self._gamma_ext = gamma_ext
-        super(EPLMultipole134LensMassPrior, self).__init__(kwargs_lens_init, a1a_init, a4a_init, a3a_init,
+        super(EPLMultipole134LensMassPrior, self).__init__(kwargs_lens_init, a1a_init, a3a_init, a4a_init,
                  delta_phi_m1, delta_phi_m3, delta_phi_m4, q, gamma_ext)
 
     def param_chi_square_penalty(self, args, q_min=0.1):
@@ -258,6 +258,8 @@ def auto_param_class(lens_model_list_macro, kwargs_lens_init, macromodel_samples
             fixed_q,
             fixed_gamma_ext
         )
+        print(param_class)
+        a=input('continue')
     else:
         param_class = EPLMultipole134(
             kwargs_lens_init,

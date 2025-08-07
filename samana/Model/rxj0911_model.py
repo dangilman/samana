@@ -1,6 +1,5 @@
 from samana.Model.model_base import EPLModelBase
 import numpy as np
-from samana.param_managers import EPLMultipole134LensMassPrior
 from samana.forward_model_util import macromodel_readout_function_eplshear_satellite
 
 

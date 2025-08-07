@@ -38,7 +38,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   use_JAXstronomy=False,
                   split_image_data_reconstruction=False,
                   magnification_method='CIRCULAR_APERTURE',
-                  tolerance_source_reconstruction=None):
+                  tolerance_source_reconstruction=None,
+                  return_astrometric_rejections=False):
     """
     Top-level function for forward modeling strong lenses with substructure. This function makes repeated calls to
     the forward_model_single_iteration routine below, and outputs the results to text files. Lens modeling and dark matter
@@ -106,6 +107,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
      ray-tracing calculation around pixels identified in the low-resolution calculation
     :param tolerance_source_reconstruction: the tolerance on the summary statistic that triggers the reconstruction of
     the source and lens light when split_image_data_reconstruction=True
+    :param return_astrometric_rejections: if True, will return the macromodel parameters that produced a lens model that
+    doesn't fit the image positions; if False, these solutions will be rejected and not saved as output
     :return:
     """
 
@@ -203,6 +206,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
         if parallelize:
             args = []
             for cpu_index in range(0, num_threads):
+                scale_window_size_decoupled_multiplane = 1
                 args.append((data_class, model, preset_model_name,
                              kwargs_sample_realization,
                              kwargs_sample_source,
@@ -228,7 +232,9 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              use_JAXstronomy,
                              split_image_data_reconstruction,
                              magnification_method,
-                             tolerance_source_reconstruction))
+                             tolerance_source_reconstruction,
+                             scale_window_size_decoupled_multiplane,
+                             return_astrometric_rejections))
 
             pool = Pool(num_threads)
             output = pool.starmap(forward_model_single_iteration, args)
@@ -283,6 +289,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                         print('N remaining: ', n_keep - n_kept)
 
         else:
+            scale_window_size_decoupled_multiplane = 1
             magnifications, images, realization_samples, source_samples, macromodel_samples, macromodel_samples_fixed, \
             logL_imaging_data, fitting_sequence, stat, bic, param_names_realization, param_names_source, param_names_macro, \
             param_names_macro_fixed, _, _, _, source_plane_image_solution = forward_model_single_iteration(data_class, model, preset_model_name, kwargs_sample_realization,
@@ -302,7 +309,9 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 use_JAXstronomy,
                                                 split_image_data_reconstruction,
                                                 magnification_method,
-                                                tolerance_source_reconstruction)
+                                                tolerance_source_reconstruction,
+                                                scale_window_size_decoupled_multiplane,
+                                                return_astrometric_rejections)
 
             seed_counter += 1
             acceptance_rate_counter += 1
@@ -443,7 +452,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            split_image_data_reconstruction=False,
                            magnification_method=None,
                            tolerance_source_reconstruction=None,
-                           scale_window_size_decoupled_multiplane=1.0):
+                           scale_window_size_decoupled_multiplane=1.0,
+                           return_astrometric_rejections=False):
     """
 
     :param data_class:
@@ -481,6 +491,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     :param magnification_method:
     :param tolerance_source_reconstruction:
     :param scale_window_size_decoupled_multiplane:
+    :param return_astrometric_rejections:
     :return:
     """
     # set the random seed for reproducibility
@@ -717,6 +728,10 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                cosmo=astropy_cosmo,
                                z_source=kwargs_model['z_source'])
 
+    if macromodel_readout_function is None:
+        macromodel_readout_function = model_class.macromodel_readout_function
+    samples_macromodel, param_names_macro = macromodel_readout_function(kwargs_solution,
+                                       macromodel_samples_fixed_dict)
     source_x, source_y = lens_model.ray_shooting(data_class.x_image,
                                                  data_class.y_image,
                                                  kwargs_solution)
@@ -728,12 +743,32 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         print('recovered source position: ', source_x, source_y)
     # verify that the lens equation is satisfied to high precision
     source_plane_image_solution = check_lens_equation_solution(source_x, source_y, tolerance=0.0001)
+    output_vector_none = [None] * 18
+    return_sampling_distribution = False
+    if return_astrometric_rejections or return_sampling_distribution:
+        if source_plane_image_solution > 1 or return_sampling_distribution:
+            magnifications = np.array([1.0] * 4)
+            images = None
+            fitting_sequence = None
+            logL_imaging_data = 1
+            stat = -1
+            bic = 1
+            kwargs_model_plot = {}
+            output_vector = (magnifications, images, realization_samples, source_samples, samples_macromodel,
+                             samples_macromodel_fixed, \
+                             logL_imaging_data, fitting_sequence, \
+                             stat, bic, realization_param_names, \
+                             source_param_names, param_names_macro, \
+                             param_names_macro_fixed, kwargs_model_plot, lens_model, kwargs_solution,
+                             source_plane_image_solution)
+            return output_vector
+        else:
+            return output_vector_none
     if source_plane_image_solution > 1:
         # reject this lens model on the basis of not satisfying lens equation
         if verbose:
             print('rejecting lens model on the basis of not satisfying the lens equation')
-        output_vector = [None] * 18
-        return output_vector
+        return output_vector_none
     else:
         if verbose:
             print('computing image magnifications...')
@@ -771,12 +806,6 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         print(kwargs_solution)
         print('\n')
         print(macromodel_samples_fixed_dict)
-
-    if macromodel_readout_function is None:
-        macromodel_readout_function = model_class.macromodel_readout_function
-
-    samples_macromodel, param_names_macro = macromodel_readout_function(kwargs_solution,
-                                       macromodel_samples_fixed_dict)
 
     if use_imaging_data:
         bic = fitting_sequence.bic
