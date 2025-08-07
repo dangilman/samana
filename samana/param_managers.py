@@ -258,8 +258,6 @@ def auto_param_class(lens_model_list_macro, kwargs_lens_init, macromodel_samples
             fixed_q,
             fixed_gamma_ext
         )
-        print(param_class)
-        a=input('continue')
     else:
         param_class = EPLMultipole134(
             kwargs_lens_init,

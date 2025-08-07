@@ -505,8 +505,6 @@ def macromodel_readout_function_eplshear_satellite(kwargs_solution, samples_fixe
     shear_main = kwargs_solution[1]
     satellite_main = kwargs_solution[2]
     samples_macromodel = []
-    print(kwargs_solution)
-    a=input('continue')
     param_names_epl = ['theta_E', 'center_x', 'center_y', 'e1', 'e2', 'gamma', 'a1_a', 'a3_a', 'a4_a',
                        'delta_phi_m1', 'delta_phi_m3', 'delta_phi_m4']
     param_names_shear = ['gamma1', 'gamma2']
