@@ -137,6 +137,19 @@ class EPLModelBase(object):
         kwargs_source_fixed = [{}]
         return source_model_list, kwargs_source, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source, kwargs_upper_source
 
+    def sersic_source_clump(self, center_x, center_y, R_sersic, n_sersic=3.0):
+
+        source_model_list = ['SERSIC']
+        kwargs_source = [{'amp': 1.0, 'n_sersic': n_sersic, 'R_sersic': R_sersic, 'center_x': center_x, 'center_y': center_y}]
+        kwargs_source_sigma = [
+            {'amp': 10.0, 'n_sersic': 0.5, 'R_sersic': 0.1, 'center_x': 0.01, 'center_y': 0.01}]
+        kwargs_lower_source = [
+            {'amp': 0.00001, 'n_sersic': 1, 'R_sersic': 0.01, 'center_x': center_x - 0.05, 'center_y': center_y - 0.05}]
+        kwargs_upper_source = [
+            {'amp': 100, 'n_sersic': 6.0, 'R_sersic': 1.0, 'center_x': center_x + 0.05, 'center_y': center_y + 0.05}]
+        kwargs_source_fixed = [{}]
+        return source_model_list, kwargs_source, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source, kwargs_upper_source
+
     @property
     def population_gamma_prior(self):
         return []
