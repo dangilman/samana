@@ -123,7 +123,8 @@ def compute_likelihoods(output_class,
                         kwargs_kde_image_data=None,
                         minimum_effective_sample_size=0,
                         increase_sigma_logL=None,
-                        increase_sigma_fr=None
+                        increase_sigma_fr=None,
+                        reweight_joint_likelihood=False
                         ):
     """
 
@@ -141,6 +142,11 @@ def compute_likelihoods(output_class,
     :param dm_param_names:
     :param S_statistic_tolerance:
     :param kwargs_kde:
+    :param kwargs_kde_image_data:
+    :param minimum_effective_sample_size:
+    :param increase_sigma_logL:
+    :param increase_sigma_fr:
+    :param reweight_joint_likelihood:
     :return:
     """
     if dm_param_names is None:
@@ -254,28 +260,45 @@ def compute_likelihoods(output_class,
             print('effective sample size using imaging+flux ratio likelihood: ',
                   np.sum(normalized_joint_weights) / (n_bootstraps + 1))
             if increase_sigma_fr:
-                scale_fluxratio_covariance_matrix += 0.1
+                scale_fluxratio_covariance_matrix += 0.05
                 print('repeating calculation with scaling of '
                       'flux-ratio cov matrix: ', scale_fluxratio_covariance_matrix)
             if increase_sigma_logL:
-                scale_sigma_logL += 0.1
+                scale_sigma_logL += 0.05
                 print('repeating calculation with scaling of '
                       'image data logL: ', scale_sigma_logL)
             if np.logical_and(increase_sigma_logL is False,  increase_sigma_fr is False):
                 raise Exception('if a minimum_effective_sample_size is specified, must identify whether to increase '
                                 'imaging data uncertainties, flux ratio uncertainties, or both')
             continue
-        pdf_imgdata_fr = DensitySamples(params_out,
-                                        param_names=param_names,
-                                        weights=normalized_joint_weights,
-                                        param_ranges=param_ranges_dm,
-                                        **kwargs_kde
-                                        )
-        imaging_data_fluxratio_likelihood = IndependentLikelihoods([pdf_imgdata_fr])
+
         if no_image_data:
             imaging_data_likelihood = None
         else:
             imaging_data_likelihood = IndependentLikelihoods([pdf_imgdata])
+
+        if reweight_joint_likelihood and imaging_data_likelihood is not None:
+            from trikde.pdfs import InterpolatedLikelihood
+            inds_keep = np.where(normalized_joint_weights > 1e-4)[0]
+            params_out = params_out[inds_keep,:]
+            normalized_joint_weights = normalized_joint_weights[inds_keep]
+            interp_likelihood = InterpolatedLikelihood(imaging_data_likelihood,
+                                                       param_names,
+                                                       param_ranges_dm,
+                                                       extrapolate=True)
+            sample_imaging_weights = np.array([float(interp_likelihood(params_out[n,:]))
+                                               for n in range(0, params_out.shape[0])])
+            sample_imaging_weights = 1/sample_imaging_weights
+        else:
+            sample_imaging_weights = 1.0
+
+        pdf_imgdata_fr = DensitySamples(params_out,
+                                        param_names=param_names,
+                                        weights=normalized_joint_weights * sample_imaging_weights,
+                                        param_ranges=param_ranges_dm,
+                                        **kwargs_kde
+                                        )
+        imaging_data_fluxratio_likelihood = IndependentLikelihoods([pdf_imgdata_fr])
         if n_keep is not None:
             print('median/worst of S_statistic distribution: ', np.median(S_statistic), np.max(S_statistic))
         if image_data_logL_sigma is not None:
