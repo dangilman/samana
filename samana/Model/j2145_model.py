@@ -1,6 +1,6 @@
 from samana.Model.model_base import EPLModelBase
 import numpy as np
-from samana.forward_model_util import macromodel_readout_function_eplshear_satellite
+from samana.forward_model_util import macromodel_readout_function_eplshear_satellite, macromodel_readout_function_2033
 import pickle
 
 
@@ -197,7 +197,7 @@ class J2145ModelEPLM3M4ShearSatellite(_J2145):
                              {'theta_E': 0.1, 'center_x': 0.05, 'center_y': 0.05},
                              {'theta_E': 0.1, 'center_x': 0.05, 'center_y': 0.05}
                              ]
-        kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}, {}]
+        kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}, {}, {}]
         kwargs_lower_lens = [
             {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.6, 'a4_a': -0.1,
              'a1_a': -0.1, 'delta_phi_m1': -np.pi, 'a3_a': -0.1, 'delta_phi_m3': -np.pi / 6,
