@@ -169,11 +169,11 @@ class J2145ModelEPLM3M4ShearSatellite(_J2145):
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
-        lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS']
+        lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS', 'SIS']
         sat_x = self._data.x_image[0] + self._data.sat1_x_wrt0
         sat_y = self._data.y_image[0] + self._data.sat1_y_wrt0
-        # sat_x2 = self._data.x_image[0] + self._data.sat2_x_wrt0
-        # sat_y2 = self._data.y_image[0] + self._data.sat2_y_wrt0
+        sat_x2 = self._data.x_image[0] + self._data.sat2_x_wrt0
+        sat_y2 = self._data.y_image[0] + self._data.sat2_y_wrt0
         kwargs_lens_macro = [
             {'theta_E': 0.9985879870024106, 'gamma': 2.05, 'e1': -0.035261127487310716, 'e2': 0.011588120038880656,
              'center_x': -0.18418458630048956, 'center_y': 0.21737688338539365, 'a1_a': 0.0,
@@ -181,10 +181,10 @@ class J2145ModelEPLM3M4ShearSatellite(_J2145):
              'delta_phi_m4': 0.31883685774623705},
             {'gamma1': 0.052477788068817734, 'gamma2': 0.147380730485384, 'ra_0': 0.0, 'dec_0': 0.0},
             {'theta_E': 0.45, 'center_x': sat_x, 'center_y': sat_y},
-            #{'theta_E': 0.22, 'center_x': sat_x2, 'center_y': sat_y2}
+            {'theta_E': 0.22, 'center_x': sat_x2, 'center_y': sat_y2}
         ]
-        redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
-        index_lens_split = [0, 1, 2]
+        redshift_list_macro = [self._data.z_lens] * len(kwargs_lens_macro)
+        index_lens_split = [0, 1, 2, 3]
         if kwargs_lens_macro_init is not None:
             for i in range(0, len(kwargs_lens_macro_init)):
                 for param_name in kwargs_lens_macro_init[i].keys():
@@ -195,7 +195,7 @@ class J2145ModelEPLM3M4ShearSatellite(_J2145):
                               'delta_phi_m3': np.pi / 12, 'delta_phi_m4': np.pi / 16},
                              {'gamma1': 0.1, 'gamma2': 0.1},
                              {'theta_E': 0.1, 'center_x': 0.05, 'center_y': 0.05},
-                             #{'theta_E': 0.1, 'center_x': 0.05, 'center_y': 0.05}
+                             {'theta_E': 0.1, 'center_x': 0.05, 'center_y': 0.05}
                              ]
         kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}, {}]
         kwargs_lower_lens = [
@@ -204,14 +204,14 @@ class J2145ModelEPLM3M4ShearSatellite(_J2145):
              'delta_phi_m4': -np.pi / 8},
             {'gamma1': -0.5, 'gamma2': -0.5},
             {'theta_E': 0.0, 'center_x': sat_x - 0.2, 'center_y': sat_y - 0.2},
-            #{'theta_E': 0.0, 'center_x': sat_x2 - 0.2, 'center_y': sat_y2 - 0.2}
+            {'theta_E': 0.0, 'center_x': sat_x2 - 0.2, 'center_y': sat_y2 - 0.2}
         ]
         kwargs_upper_lens = [
             {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.4, 'a4_a': 0.1,
              'a1_a': 0.1, 'delta_phi_m1': np.pi, 'a3_a': 0.1, 'delta_phi_m3': np.pi / 6, 'delta_phi_m4': np.pi / 8},
             {'gamma1': 0.5, 'gamma2': 0.5},
             {'theta_E': 3.0, 'center_x': sat_x + 0.2, 'center_y': sat_y + 0.2},
-            #{'theta_E': 3.0, 'center_x': sat_x2 + 0.2, 'center_y': sat_y2 + 0.2}
+            {'theta_E': 3.0, 'center_x': sat_x2 + 0.2, 'center_y': sat_y2 + 0.2}
         ]
         kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
                                                                              kwargs_lens_init, macromodel_samples_fixed)
