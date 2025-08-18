@@ -165,7 +165,7 @@ class J2145ModelEPLM3M4ShearSatellite(_J2145):
 
     @property
     def macromodel_readout_function(self):
-        return macromodel_readout_function_eplshear_satellite
+        return macromodel_readout_function_2033
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
