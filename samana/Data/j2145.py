@@ -166,6 +166,8 @@ class J2145_HST(_J2145):
     sat1_y_wrt0 = 0.00
     sat2_x_wrt0 = -5.2
     sat2_y_wrt0 = 0.5
+    sat3_x_wrt0 = -0.54
+    sat3_y_wrt0 = -0.78
     def __init__(self, supersample_factor=1):
         """
 
@@ -202,6 +204,8 @@ class J2145_HST_WIDEFIELD(_J2145):
     sat1_y_wrt0 = 0.00
     sat2_x_wrt0 = -5.2
     sat2_y_wrt0 = 0.5
+    sat3_x_wrt0 = -0.54
+    sat3_y_wrt0 = -0.78
     def __init__(self, supersample_factor=1):
         """
 
@@ -237,6 +241,8 @@ class J2145_MIRI(_J2145):
     sat1_y_wrt0 = 0.00
     sat2_x_wrt0 = -5.2
     sat2_y_wrt0 = 0.5
+    sat3_x_wrt0 = -0.54
+    sat3_y_wrt0 = -0.78
     def __init__(self, supersample_factor=1):
         """
 
