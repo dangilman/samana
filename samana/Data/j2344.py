@@ -139,3 +139,40 @@ class J2344_MIRI(_J2344):
                                          supersample_factor,
                                          image_data_type)
 
+class J2344_MIRI_NEWPOS(_J2344):
+
+    def __init__(self, supersample_factor=1):
+        """
+
+        :param image_position_uncertainties: list of astrometric uncertainties for each image
+        i.e. [0.003, 0.003, 0.003, 0.003]
+        :param flux_uncertainties: list of flux ratio uncertainties in percentage, or None if these are handled
+        post-processing
+        :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
+        :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
+        """
+
+        x_image = np.array([-0.41950206, 0.17051697, 0.46399316, -0.17500807])
+        y_image = np.array([0.13005771, 0.47974816, -0.19611058, -0.53369529])
+        delta_x = np.array([0.0, -0.005, -0.007, -0.003])
+        delta_y = np.array([0.0, -0.001, 0.003, 0.003])
+        x_image += delta_x
+        y_image += delta_y
+        horizontal_shift = 0.005
+        vertical_shift = 0.0
+        x_image += horizontal_shift
+        y_image += vertical_shift
+        image_position_uncertainties = [0.005] * 4  # 5 arcsec
+        flux_uncertainties = None
+        uncertainty_in_fluxes = False
+        magnifications = np.array([1.0] * 4)
+        image_data_type = 'MIRI540W'
+        super(J2344_MIRI_NEWPOS, self).__init__(x_image,
+                                         y_image,
+                                         magnifications,
+                                         image_position_uncertainties,
+                                         flux_uncertainties,
+                                         uncertainty_in_fluxes,
+                                         supersample_factor,
+                                         image_data_type)
+
