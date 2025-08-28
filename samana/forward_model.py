@@ -8,6 +8,7 @@ from lenstronomy.Util.class_creator import create_im_sim
 from lenstronomy.LensModel.QuadOptimizer.optimizer import Optimizer
 from samana.image_magnification_util import setup_gaussian_source
 from samana.param_managers import auto_param_class
+from scipy.stats import multivariate_normal
 from copy import deepcopy
 from multiprocessing.pool import Pool
 import os
@@ -39,6 +40,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   split_image_data_reconstruction=False,
                   magnification_method='CIRCULAR_APERTURE',
                   tolerance_source_reconstruction=None,
+                  fr_logL_source_reconstruction=None,
                   return_astrometric_rejections=False):
     """
     Top-level function for forward modeling strong lenses with substructure. This function makes repeated calls to
@@ -107,6 +109,9 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
      ray-tracing calculation around pixels identified in the low-resolution calculation
     :param tolerance_source_reconstruction: the tolerance on the summary statistic that triggers the reconstruction of
     the source and lens light when split_image_data_reconstruction=True
+    :param fr_logL_source_reconstruction: the same functionality as tolerance source_reconstruction, but triggers
+    the reconstruction of the imaging data based on the flux ratio likelihood. If specified, fr_logL_source_reconstruction
+    should be abs(log_likelihood), which triggers the source light modeling if abs(logL) < fr_logL_source_reconstruction
     :param return_astrometric_rejections: if True, will return the macromodel parameters that produced a lens model that
     doesn't fit the image positions; if False, these solutions will be rejected and not saved as output
     :return:
@@ -233,6 +238,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              split_image_data_reconstruction,
                              magnification_method,
                              tolerance_source_reconstruction,
+                             fr_logL_source_reconstruction,
                              scale_window_size_decoupled_multiplane,
                              return_astrometric_rejections))
 
@@ -310,6 +316,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 split_image_data_reconstruction,
                                                 magnification_method,
                                                 tolerance_source_reconstruction,
+                                                fr_logL_source_reconstruction,
                                                 scale_window_size_decoupled_multiplane,
                                                 return_astrometric_rejections)
 
@@ -452,6 +459,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            split_image_data_reconstruction=False,
                            magnification_method=None,
                            tolerance_source_reconstruction=None,
+                           fr_logL_source_reconstruction=None,
                            scale_window_size_decoupled_multiplane=1.0,
                            return_astrometric_rejections=False):
     """
@@ -490,6 +498,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     :param split_image_data_reconstruction:
     :param magnification_method:
     :param tolerance_source_reconstruction:
+    :param fr_logL_source_reconstruction:
     :param scale_window_size_decoupled_multiplane:
     :param return_astrometric_rejections:
     :return:
@@ -833,7 +842,40 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             print('imaging data likelihood (without custom mask): ', logL_imaging_data_no_custom_mask)
             print('imaging data likelihood (with custom mask): ', logL_imaging_data)
     else:
-        if split_image_data_reconstruction and stat < tolerance_source_reconstruction:
+        if tolerance_source_reconstruction is not None:
+            assert fr_logL_source_reconstruction is None, ('If tolerance_source_reconstruction is specified, '
+                                                        'then fr_logL_source_reconstruction must not also be'
+                                                           'specified')
+            if verbose: print('triggering image data modeling with a flux ratio summary statistic tolerance of '
+                              +str(tolerance_source_reconstruction))
+            if stat < tolerance_source_reconstruction:
+                reconstruct_image_data = True
+            else:
+                reconstruct_image_data = False
+        elif fr_logL_source_reconstruction is not None:
+            assert fr_logL_source_reconstruction > 0, ('The flux ratio logL triggering the source reconstruction should be'
+                                                       '>0')
+            if verbose: print('triggering image data modeling with a flux ratio log-likelihood tolerance of '
+                              +str(fr_logL_source_reconstruction))
+            _flux_ratio_logL = multivariate_normal.logpdf(np.array(flux_ratios),
+                                   mean=np.array(flux_ratios_data),
+                                   cov=data_class.flux_ratio_covariance_matrix)
+            _flux_ratio_logL_norm = multivariate_normal.logpdf(np.array(flux_ratios_data),
+                                   mean=np.array(flux_ratios_data),
+                                   cov=data_class.flux_ratio_covariance_matrix)
+            _flux_ratio_logL = multivariate_normal.logpdf(flux_ratios,
+                                                          mean=flux_ratios_data,
+                                                          cov=data_class.flux_ratio_covariance_matrix)
+
+            flux_ratio_logL = _flux_ratio_logL - _flux_ratio_logL_norm
+            if verbose: print('flux ratio logL: ', flux_ratio_logL)
+            if flux_ratio_logL > -1*fr_logL_source_reconstruction:
+                reconstruct_image_data = True
+            else:
+                reconstruct_image_data = False
+        else:
+            reconstruct_image_data = False
+        if split_image_data_reconstruction and reconstruct_image_data:
             image_data_grids_computed = True
             kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split, setup_decoupled_multiplane_lens_model_output = (
                 model_class.setup_kwargs_model(
@@ -906,7 +948,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         kwargs_model_plot = {'multi_band_list': data_class.kwargs_data_joint['multi_band_list'],
                              'kwargs_model': kwargs_model,
                              'kwargs_params': kwargs_result}
-    elif split_image_data_reconstruction and stat < tolerance_source_reconstruction:
+    elif split_image_data_reconstruction and reconstruct_image_data:
         kwargs_model_plot = {'multi_band_list': data_class.kwargs_data_joint['multi_band_list'],
                              'kwargs_model': kwargs_model,
                              'kwargs_params': kwargs_result}
