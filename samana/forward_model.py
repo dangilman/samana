@@ -846,7 +846,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             assert fr_logL_source_reconstruction is None, ('If tolerance_source_reconstruction is specified, '
                                                         'then fr_logL_source_reconstruction must not also be'
                                                            'specified')
-            if verbose: print('triggering image data modeling with a flux ratio summary statistic tolerance of '
+            if verbose and split_image_data_reconstruction: print('triggering image data modeling with a flux ratio summary statistic tolerance of '
                               +str(tolerance_source_reconstruction))
             if stat < tolerance_source_reconstruction:
                 reconstruct_image_data = True

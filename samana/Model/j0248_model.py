@@ -19,7 +19,7 @@ class _J0248ModelBase(EPLModelBase):
 
     @property
     def prior_lens(self):
-        return [[0, 'gamma', 2.0, 0.2]]
+        return None
 
     def setup_source_light_model(self):
 
@@ -91,7 +91,7 @@ class _J0248ModelBase(EPLModelBase):
                              'source_position_tolerance': 0.00001,
                              'source_position_likelihood': True,
                              'prior_lens': self.prior_lens,
-                             'custom_logL_addition': self.axis_ratio_prior_with_light,
+                             #'custom_logL_addition': self.axis_ratio_prior_with_light,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True
                              }
