@@ -6,13 +6,15 @@ import h5py
 
 
 def output_to_hdf5(output_path, job_name, job_index_min, job_index_max,
-                   write_path, print_missing_files=False, S_max=np.inf):
+                   write_path, print_missing_files=False, S_max=np.inf,
+                   print_progress=False):
 
     param_names = None
     macromodel_sample_names = None
     init = True
     for i in range(job_index_min, job_index_max + 1):
-
+        if print_progress and i % 100 == 0:
+            print('working on output folder ', i+'... ')
         folder = output_path + job_name+ '/job_' + str(i) + '/'
         try:
             params = np.loadtxt(folder + 'parameters.txt', skiprows=1)
