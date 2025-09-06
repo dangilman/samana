@@ -10,7 +10,7 @@ def compute_fluxratio_summarystat(f, measured_flux_ratios, measurement_uncertain
     perturbed_flux_ratio = np.empty((f.shape[0], len(keep_index_list)))
     sigmas = []
     if measurement_uncertainties.ndim == 2:
-        measurement_uncertainties = [measurement_uncertainties[i,i] for i in keep_index_list]
+        measurement_uncertainties = [measurement_uncertainties[i,i] ** 0.5 for i in keep_index_list]
     if uncertainty_on_ratios:
         for i in keep_index_list:
             if measurement_uncertainties[i] == -1:

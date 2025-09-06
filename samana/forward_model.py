@@ -41,7 +41,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   magnification_method='CIRCULAR_APERTURE',
                   tolerance_source_reconstruction=None,
                   fr_logL_source_reconstruction=None,
-                  return_astrometric_rejections=False):
+                  return_astrometric_rejections=False,
+                  background_shifting=True):
     """
     Top-level function for forward modeling strong lenses with substructure. This function makes repeated calls to
     the forward_model_single_iteration routine below, and outputs the results to text files. Lens modeling and dark matter
@@ -114,6 +115,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     should be abs(log_likelihood), which triggers the source light modeling if abs(logL) < fr_logL_source_reconstruction
     :param return_astrometric_rejections: if True, will return the macromodel parameters that produced a lens model that
     doesn't fit the image positions; if False, these solutions will be rejected and not saved as output
+    :param background_shifting: toggles the shifting of background halos to align with the direction to the source
     :return:
     """
 
@@ -240,7 +242,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              tolerance_source_reconstruction,
                              fr_logL_source_reconstruction,
                              scale_window_size_decoupled_multiplane,
-                             return_astrometric_rejections))
+                             return_astrometric_rejections,
+                             background_shifting))
 
             pool = Pool(num_threads)
             output = pool.starmap(forward_model_single_iteration, args)
@@ -318,7 +321,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 tolerance_source_reconstruction,
                                                 fr_logL_source_reconstruction,
                                                 scale_window_size_decoupled_multiplane,
-                                                return_astrometric_rejections)
+                                                return_astrometric_rejections,
+                                                background_shifting)
 
             seed_counter += 1
             acceptance_rate_counter += 1
@@ -461,7 +465,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            tolerance_source_reconstruction=None,
                            fr_logL_source_reconstruction=None,
                            scale_window_size_decoupled_multiplane=1.0,
-                           return_astrometric_rejections=False):
+                           return_astrometric_rejections=False,
+                           background_shifting=True):
     """
 
     :param data_class:
@@ -567,12 +572,16 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     else:
         if verbose:
             print('realization has ' + str(len(realization_init.halos)) + ' halos...')
-        realization, ray_align_x, ray_align_y, _, _ = align_realization(realization_init, kwargs_model_align['lens_model_list'],
+        if background_shifting:
+            realization, ray_align_x, ray_align_y, _, _ = align_realization(realization_init,
+                                                        kwargs_model_align['lens_model_list'],
                                                         kwargs_model_align['lens_redshift_list'],
                                                         kwargs_lens_align,
                                                         data_class.x_image,
                                                         data_class.y_image,
                                                         astropy_cosmo)
+        else:
+            realization = realization_init
         if filter_subhalo_kwargs is not None:
             realization = realization.filter_subhalos(**filter_subhalo_kwargs)
             if verbose:
@@ -1046,9 +1055,12 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         fig = plt.figure()
         fig.set_size_inches(12, 12)
         ax = plt.axes(projection='3d')
-        realization.plot(ax,
-                         ray_interp_x_list=ray_align_x,
-                         ray_interp_y_list=ray_align_y)
+        if background_shifting:
+            realization.plot(ax,
+                             ray_interp_x_list=ray_align_x,
+                             ray_interp_y_list=ray_align_y)
+        else:
+            realization.plot(ax)
         plt.show()
         a=input('continue?')
 
