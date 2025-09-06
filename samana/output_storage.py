@@ -14,7 +14,7 @@ def output_to_hdf5(output_path, job_name, job_index_min, job_index_max,
     init = True
     for i in range(job_index_min, job_index_max + 1):
         if print_progress and i % 100 == 0:
-            print('working on output folder ', i+'... ')
+            print('working on output folder ', str(i)+'... ')
         folder = output_path + job_name+ '/job_' + str(i) + '/'
         try:
             params = np.loadtxt(folder + 'parameters.txt', skiprows=1)
