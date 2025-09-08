@@ -1,4 +1,4 @@
-CODE_VERSION = '1.2.1'
+CODE_VERSION = '1.3.1'
 
 def check_code_version(required_version):
     assert required_version == CODE_VERSION
