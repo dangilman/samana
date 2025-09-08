@@ -249,7 +249,7 @@ def quick_setup(lens_ID):
         from samana.Model.j0659_model import J0659ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J1042':
         from samana.Data.j1042 import J1042_HST_160W as data_class
-        from samana.Model.j1042_model import J1042ModelEPLM3M4Shear as model_class
+        from samana.Model.j1042_model import J1042ModelEPLM3M4Shear2src as model_class
     elif lens_ID == 'J1042_814W':
         from samana.Data.j1042 import J1042_HST_814W as data_class
         from samana.Model.j1042_model import J1042ModelEPLM3M4Shear as model_class
