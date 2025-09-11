@@ -553,13 +553,15 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         print(macromodel_samples_fixed_dict)
 
     astropy_cosmo = realization_init.lens_cosmo.cosmo.astropy
+    # generate a macromodel that satisfies the lens equation for the perturbed image positions
     kwargs_model_align, _, kwargs_lens_macro_init, _, _ = model_class.setup_kwargs_model(
         decoupled_multiplane=False,
         kwargs_lens_macro_init=None,
         macromodel_samples_fixed=macromodel_samples_fixed_dict,
         astropy_cosmo=astropy_cosmo,
         x_image=data_class.x_image,
-        y_image=data_class.y_image)
+        y_image=data_class.y_image,
+        verbose=verbose)
     kwargs_params = model_class.kwargs_params(kwargs_lens_macro_init=kwargs_lens_macro_init,
                                               delta_x_image=-delta_x_image,
                                               delta_y_image=-delta_y_image,
@@ -572,6 +574,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         if verbose:
             print('realization has ' + str(len(realization_init.halos)) + ' halos...')
         if background_shifting:
+            # shift halos such that they are symmetric around the center of the lensing volume
             realization, ray_align_x, ray_align_y, _, _ = align_realization(realization_init,
                                                         kwargs_model_align['lens_model_list'],
                                                         kwargs_model_align['lens_redshift_list'],
@@ -612,8 +615,6 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             verbose=verbose,
             macromodel_samples_fixed=macromodel_samples_fixed_dict,
             astropy_cosmo=astropy_cosmo,
-            x_image=data_class.x_image,
-            y_image=data_class.y_image,
             use_JAXstronomy=use_JAXstronomy,
             decoupled_multiplane_grid_type=decoupled_multiplane_grid_type,
             scale_window_size=scale_window_size_decoupled_multiplane
@@ -670,6 +671,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                            macromodel_samples_fixed_dict)
             else:
                 param_class = param_class_4pointsolver
+            # we use the macromodel parameters that satisfy the lens equation to set up the decopuled multiplane approx.
+            # inside the class
             kwargs_lens_init = kwargs_lens_align + kwargs_lens_init[len(kwargs_lens_align):]
             opt = Optimizer.decoupled_multiplane(data_class.x_image,
                                                  data_class.y_image,
@@ -795,7 +798,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         grid_size = rescale_grid_size * auto_raytracing_grid_size(source_dict['source_size_pc'])
         grid_resolution = rescale_grid_resolution * auto_raytracing_grid_resolution(source_dict['source_size_pc'])
 
-        #setup_decoupled_multiplane_lens_model_output = None
+        # we pass in setup_decoupled_multiplane_lens_model_output, the decoupled multiplane parameters
+        # computed for the proposed macromodel in setup_kwargs_model
         magnifications, images = model_class.image_magnification_gaussian(source_model_quasar,
                                                                               kwargs_source,
                                                                               lens_model_init,

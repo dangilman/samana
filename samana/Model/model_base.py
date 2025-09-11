@@ -364,7 +364,14 @@ class EPLModelBase(object):
                                               z_source=self._data.z_source,
                                               multi_plane=True)
             from lenstronomy.LensModel.Solver.solver4point import Solver4Point
-            solver = Solver4Point(lens_model_init_macro, solver_type='PROFILE_SHEAR')
+            if 'q' in list(macromodel_samples_fixed.keys()):
+                from samana.param_managers import FixedAxisRatioSolver
+                solver_type = 'CUSTOM'
+                solver_class = FixedAxisRatioSolver(macromodel_samples_fixed['q'])
+            else:
+                solver_type = 'PROFILE_SHEAR'
+                solver_class = None
+            solver = Solver4Point(lens_model_init_macro, solver_type=solver_type, parameter_module=solver_class)
             kwargs_lens_macro, tol_source = solver.constraint_lensmodel(x_image, y_image, kwargs_lens_macro)
             if verbose:
                 print('found solution for the macromodel: ', kwargs_lens_macro)
