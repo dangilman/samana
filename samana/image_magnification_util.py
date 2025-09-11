@@ -309,7 +309,36 @@ def decoupled_multiplane_rayshooting(grid_r, r_min, r_max, inds_compute,
                                      z_split, z_source, cosmo_bkg, xD, yD, alpha_x_foreground, alpha_y_foreground,
                                      alpha_x_background, alpha_y_background, Td, kwargs_lens, reduced_to_phys,
                                      Ts, Tds):
-
+    """
+    Ray propagation and image flux calculation with the decoupled multiplane formalism
+    :param grid_r:
+    :param r_min:
+    :param r_max:
+    :param inds_compute:
+    :param grid_x_large:
+    :param grid_y_large:
+    :param x_image:
+    :param y_image:
+    :param lens_model_fixed:
+    :param lens_model_free:
+    :param kwargs_lens_fixed:
+    :param kwargs_lens_free:
+    :param z_split:
+    :param z_source:
+    :param cosmo_bkg:
+    :param xD:
+    :param yD:
+    :param alpha_x_foreground:
+    :param alpha_y_foreground:
+    :param alpha_x_background:
+    :param alpha_y_background:
+    :param Td:
+    :param kwargs_lens:
+    :param reduced_to_phys:
+    :param Ts:
+    :param Tds:
+    :return:
+    """
     # select new coordinates to ray-trace through
     inds_compute, inds_outside_r, inds_computed = _inds_compute_grid(grid_r, r_min, r_max, inds_compute)
     x_points_temp = grid_x_large[inds_compute] + x_image
@@ -355,7 +384,28 @@ def mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_
                             cosmo_bkg, x_image, y_image, grid_x_large, grid_y_large,
                             grid_r, r_step, grid_resolution, grid_size_max, zlens, zsource):
     """
-
+    Compute the magnification of a single lensed image with the decoupled multiplane formalism
+    :param source_model:
+    :param kwargs_source:
+    :param lens_model_fixed:
+    :param lens_model_free:
+    :param kwargs_lens_fixed:
+    :param kwargs_lens_free:
+    :param kwargs_lens:
+    :param z_split:
+    :param z_source:
+    :param cosmo_bkg:
+    :param x_image:
+    :param y_image:
+    :param grid_x_large:
+    :param grid_y_large:
+    :param grid_r:
+    :param r_step:
+    :param grid_resolution:
+    :param grid_size_max:
+    :param zlens:
+    :param zsource:
+    :return:
     """
     # initalize flux array
     flux_array = np.zeros(len(grid_x_large))
@@ -374,27 +424,6 @@ def mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_
     Ts = cosmo_bkg.T_xy(0, zsource)
     Tds = cosmo_bkg.T_xy(zlens, zsource)
     reduced_to_phys = cosmo_bkg.d_xy(0, zsource) / cosmo_bkg.d_xy(zlens, zsource)
-    #flux_array_test = np.zeros(len(grid_x_large))
-    # r_step_min = grid_x_large[1]-grid_x_large[0]
-    # print(r_step_min)
-    # sx, sy, _, _ = decoupled_multiplane_rayshooting(grid_r, r_min, r_min + r_step_min,
-    #                                                 inds_compute,
-    #                                                 grid_x_large, grid_y_large,
-    #                                                 x_image, y_image,
-    #                                                 lens_model_fixed,
-    #                                                 lens_model_free,
-    #                                                 kwargs_lens_fixed,
-    #                                                 kwargs_lens_free,
-    #                                                 z_split, z_source, cosmo_bkg,
-    #                                                 xD, yD, alpha_x_foreground,
-    #                                                 alpha_y_foreground,
-    #                                                 alpha_x_background,
-    #                                                 alpha_y_background, Td,
-    #                                                 kwargs_lens, reduced_to_phys,
-    #                                                 Ts, Tds)
-    # print('sourcex: ', np.mean(sx))
-    # print('sourcey: ', np.mean(sy))
-    # a = input('continue')
 
     while True:
 
@@ -404,52 +433,10 @@ def mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_
                                      z_split, z_source, cosmo_bkg, xD, yD, alpha_x_foreground, alpha_y_foreground,
                                      alpha_x_background, alpha_y_background, Td, kwargs_lens, reduced_to_phys,
                                      Ts, Tds)
-        #
-        # # select new coordinates to ray-trace through
-        # inds_compute, inds_outside_r, inds_computed = _inds_compute_grid(grid_r, r_min, r_max, inds_compute)
-        # x_points_temp = grid_x_large[inds_compute] + x_image
-        # y_points_temp = grid_y_large[inds_compute] + y_image
-        #
-        # # compute lensing stuff at these coordinates
-        # _xD, _yD, _alpha_x_foreground, _alpha_y_foreground, _alpha_x_background, _alpha_y_background = \
-        #     coordinates_and_deflections(lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
-        #                                 x_points_temp, y_points_temp, z_split, z_source, cosmo_bkg)
-        # # update the master grids with the new information
-        # xD[inds_compute] = _xD
-        # yD[inds_compute] = _yD
-        # alpha_x_foreground[inds_compute] = _alpha_x_foreground
-        # alpha_y_foreground[inds_compute] = _alpha_y_foreground
-        # alpha_x_background[inds_compute] = _alpha_x_background
-        # alpha_y_background[inds_compute] = _alpha_y_background
-        #
-        # # ray trace to source plane
-        # x = xD[inds_computed]
-        # y = yD[inds_computed]
-        # # compute the deflection angles from the main deflector
-        # deflection_x_main, deflection_y_main = lens_model_free.alpha(
-        #     x / Td, y / Td, kwargs_lens
-        # )
-        # deflection_x_main *= reduced_to_phys
-        # deflection_y_main *= reduced_to_phys
-        #
-        # # add the main deflector to the deflection field
-        # alpha_x = alpha_x_foreground[inds_computed] - deflection_x_main
-        # alpha_y = alpha_y_foreground[inds_computed] - deflection_y_main
-        #
-        # # combine deflections
-        # alpha_background_x = alpha_x + alpha_x_background[inds_computed]
-        # alpha_background_y = alpha_y + alpha_y_background[inds_computed]
-        #
-        # # ray propagation to the source plane with the small angle approximation
-        # beta_x = x / Ts + alpha_background_x * Tds / Ts
-        # beta_y = y / Ts + alpha_background_y * Tds / Ts
-        #
+
         sb = source_model.surface_brightness(beta_x, beta_y, kwargs_source)
         flux_array[inds_computed] = sb
         flux_array[inds_outside_r] = 0.0
-
-        #flux_array_test[inds_computed] = 1.0
-        #flux_array_test[inds_outside_r] = 0.0
 
         magnification_temp = np.sum(flux_array) * grid_resolution ** 2
         diff = (

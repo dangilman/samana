@@ -552,11 +552,10 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         print('FIXED MACROMODEL SAMPLES: ')
         print(macromodel_samples_fixed_dict)
 
-    kwargs_lens_macro_init = None
     astropy_cosmo = realization_init.lens_cosmo.cosmo.astropy
-    kwargs_model_align, _, _, _, _ = model_class.setup_kwargs_model(
+    kwargs_model_align, _, kwargs_lens_macro_init, _, _ = model_class.setup_kwargs_model(
         decoupled_multiplane=False,
-        kwargs_lens_macro_init=kwargs_lens_macro_init,
+        kwargs_lens_macro_init=None,
         macromodel_samples_fixed=macromodel_samples_fixed_dict,
         astropy_cosmo=astropy_cosmo,
         x_image=data_class.x_image,
@@ -796,7 +795,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         grid_size = rescale_grid_size * auto_raytracing_grid_size(source_dict['source_size_pc'])
         grid_resolution = rescale_grid_resolution * auto_raytracing_grid_resolution(source_dict['source_size_pc'])
 
-        setup_decoupled_multiplane_lens_model_output = None
+        #setup_decoupled_multiplane_lens_model_output = None
         magnifications, images = model_class.image_magnification_gaussian(source_model_quasar,
                                                                               kwargs_source,
                                                                               lens_model_init,
