@@ -36,6 +36,14 @@ class _J1251(ImagingDataBase):
         likelihood_mask = np.ones_like(_xx)
         inds = np.where(np.sqrt(_xx ** 2 + _yy ** 2) >= window_size / 2)
         likelihood_mask[inds] = 0.0
+
+        x_main = -0.0105
+        y_main = -0.0094
+        r_main = 0.3
+        _xx, _yy = np.meshgrid(_x - x_main, _y - y_main)
+        inds_main_deflector = np.where(np.sqrt(_xx ** 2 + _yy ** 2) < r_main / 2)
+        likelihood_mask[inds_main_deflector] = 0.0
+
         if self._mask_quasar_images_for_logL:
             likelihood_mask_imaging_weights = self.quasar_image_mask(
                 likelihood_mask,

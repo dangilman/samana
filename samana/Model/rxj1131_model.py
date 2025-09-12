@@ -123,7 +123,6 @@ class _RXJ1131ModelBase(EPLModelBase):
             kwargs_lower_lens_light += kwargs_uniform_lower
             kwargs_upper_lens_light += kwargs_uniform_upper
 
-
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]
 

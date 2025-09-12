@@ -57,7 +57,8 @@ class _J1251ModelBase(EPLModelBase):
              'center_y': -0.009475560243213634}
         ]
         kwargs_lens_light_sigma = [
-            {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
+            {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}
+        ]
         kwargs_lower_lens_light = [
             {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10.0, 'center_y': -10.0}]
         kwargs_upper_lens_light = [
@@ -74,7 +75,6 @@ class _J1251ModelBase(EPLModelBase):
             kwargs_lens_light_fixed += kwargs_uniform_fixed
             kwargs_lower_lens_light += kwargs_uniform_lower
             kwargs_upper_lens_light += kwargs_uniform_upper
-
 
         lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed, kwargs_lower_lens_light,
                              kwargs_upper_lens_light]

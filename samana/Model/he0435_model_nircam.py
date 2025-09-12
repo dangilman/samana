@@ -3,7 +3,6 @@ import numpy as np
 from samana.forward_model_util import macromodel_readout_function_0435
 
 
-
 class _HE0435NircamModelBase(EPLModelBase):
 
     @property
