@@ -8,12 +8,13 @@ class _J0803(ImagingDataBase):
                  mask_quasar_images_for_logL=True):
 
         self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
-        z_lens = 1.2
+        # z_lens = 1.2
+        z_lens = 0.5  # fiducial
         z_source = 2.97
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
         if image_data_type == 'HST814W':
-            raise Exception('not HST imaging avaialble for this system')
+            raise Exception('no HST imaging avaialble for this system')
 
         elif image_data_type == 'MIRI540W':
             from samana.Data.ImageData.j0803_MIRI540W import psf_model, image_data, noise_map
