@@ -9,7 +9,8 @@ class _DESJ0405(ImagingDataBase):
                  mask_quasar_images_for_logL=True):
 
         self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
-        z_lens = 0.85 #photo-z
+        #z_lens = 0.85 #photo-z
+        z_lens = 0.5
         z_source = 1.70
 
         # we use all three flux ratios to constrain the model
