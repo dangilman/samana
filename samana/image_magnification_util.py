@@ -65,11 +65,28 @@ def perturbed_fluxes_from_fluxes(fluxes, flux_measurement_uncertainties_percenta
 
 def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image,
                                    lens_model_init, kwargs_lens_init, kwargs_lens, index_lens_split,
-                                   grid_size, grid_resolution, lens_model_full,
+                                   grid_size_list, grid_resolution, lens_model_full,
                                    grid_increment_factor=15.0,
                                    setup_decoupled_multiplane_lens_model_output=None,
                                    magnification_method='CIRCULAR_APERTURE'):
+    """
 
+    :param source_model:
+    :param kwargs_source:
+    :param x_image:
+    :param y_image:
+    :param lens_model_init:
+    :param kwargs_lens_init:
+    :param kwargs_lens:
+    :param index_lens_split:
+    :param grid_size_list:
+    :param grid_resolution:
+    :param lens_model_full:
+    :param grid_increment_factor:
+    :param setup_decoupled_multiplane_lens_model_output:
+    :param magnification_method:
+    :return:
+    """
     if setup_decoupled_multiplane_lens_model_output is None:
         lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free, z_source, z_split, cosmo_bkg = \
             setup_lens_model(lens_model_init, kwargs_lens_init, index_lens_split)
@@ -78,19 +95,20 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
          kwargs_lens_free, z_source, z_split, cosmo_bkg) = setup_decoupled_multiplane_lens_model_output
     magnifications = []
     flux_arrays = []
-    grid_x_large, grid_y_large, interp_points_large, npix_large = setup_grids(grid_size,
-                                                                              grid_resolution,
-                                                                              0.0, 0.0)
-    grid_x_large = grid_x_large.ravel()
-    grid_y_large = grid_y_large.ravel()
 
-    for (x_img, y_img) in zip(x_image, y_image):
+    for j, (x_img, y_img) in enumerate(zip(x_image, y_image)):
+
+        grid_x_large, grid_y_large, interp_points_large, npix_large = setup_grids(grid_size_list[j],
+                                                                                  grid_resolution,
+                                                                                  0.0, 0.0)
+        grid_x_large = grid_x_large.ravel()
+        grid_y_large = grid_y_large.ravel()
 
         if magnification_method == 'ADAPTIVE':
             mag, flux_array = mag_finite_single_image_adaptive(source_model, kwargs_source, lens_model_fixed,
                                                          lens_model_free, kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
                                                          z_split, z_source, cosmo_bkg, x_img, y_img, grid_resolution,
-                                                         grid_size,
+                                                         grid_size_list[j],
                                                          z_split, z_source)
             magnifications.append(mag)
             flux_arrays.append(flux_array.T)
@@ -119,12 +137,12 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
             else:
                 grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
 
-            r_step = grid_size / grid_increment_factor
+            r_step = grid_size_list[j] / grid_increment_factor
             mag, flux_array = mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_model_free,
                                                       kwargs_lens_fixed,
                                                       kwargs_lens_free, kwargs_lens, z_split, z_source,
                                                       cosmo_bkg, x_img, y_img, grid_x_large, grid_y_large,
-                                                      grid_r, r_step, grid_resolution, grid_size, z_split, z_source)
+                                                      grid_r, r_step, grid_resolution, grid_size_list[j], z_split, z_source)
             magnifications.append(mag)
             flux_arrays.append(flux_array.reshape(npix_large, npix_large))
         else:

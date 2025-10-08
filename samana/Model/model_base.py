@@ -298,16 +298,29 @@ class EPLModelBase(object):
         return kwargs_lens_fixed, kwargs_lens_init
 
     def image_magnification_gaussian(self, source_model_quasar, kwargs_source, lens_model_init, kwargs_lens_init,
-                            kwargs_lens, grid_size, grid_resolution, lens_model,
+                            kwargs_lens, grid_size_list, grid_resolution, lens_model,
                                      setup_decoupled_multiplane_lens_model_output=None,
                                      magnification_method='CIRCULAR_APERTURE'):
+        """
 
+        :param source_model_quasar:
+        :param kwargs_source:
+        :param lens_model_init:
+        :param kwargs_lens_init:
+        :param kwargs_lens:
+        :param grid_size_list:
+        :param grid_resolution:
+        :param lens_model:
+        :param setup_decoupled_multiplane_lens_model_output:
+        :param magnification_method:
+        :return:
+        """
         _, _, index_lens_split, _ = self.setup_lens_model()
         mags = magnification_finite_decoupled(source_model_quasar, kwargs_source,
                                               self._data.x_image, self._data.y_image,
                                               lens_model_init, kwargs_lens_init,
                                               kwargs_lens, index_lens_split,
-                                              grid_size, grid_resolution, lens_model,
+                                              grid_size_list, grid_resolution, lens_model,
                                               setup_decoupled_multiplane_lens_model_output=setup_decoupled_multiplane_lens_model_output,
                                               magnification_method=magnification_method)
         return mags

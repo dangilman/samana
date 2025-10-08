@@ -4,43 +4,119 @@ from scipy.stats import multivariate_normal
 from samana.output_storage import Output
 from copy import deepcopy
 
+
+class WeightFunction(object):
+
+    def __init__(self, data, param_names_macro, use_kde=False, nbins=10):
+
+        params, w = data[:, 0:len(param_names_macro)], data[:, -1]
+        self.param_names_macro = param_names_macro
+        boundary_order = 0
+        pdf_posterior = DensitySamples(params, param_names_macro, weights=w,
+                                       nbins=nbins, use_kde=use_kde, boundary_order=boundary_order)
+        like_posterior = IndependentLikelihoods([pdf_posterior])
+        self.kde_posterior = InterpolatedLikelihood(like_posterior,
+                                                    param_names_macro,
+                                                    pdf_posterior.param_ranges,
+                                                    extrapolate=True,
+                                                    fill_value=0)
+
+        pdf_prior = DensitySamples(params, param_names_macro, weights=None,
+                                   nbins=nbins, use_kde=use_kde, boundary_order=boundary_order)
+        like_prior = IndependentLikelihoods([pdf_prior])
+        self.kde_prior = InterpolatedLikelihood(like_prior,
+                                                param_names_macro,
+                                                pdf_posterior.param_ranges,
+                                                extrapolate=True,
+                                                fill_value=0)
+        inds = np.where(self.kde_prior.density > 0)
+        ratio = self.kde_posterior.density[inds] / self.kde_prior.density[inds]
+        self._norm = np.max(ratio)
+
+    def call_point(self, x, parallel=True, n_cpu=10, relative=False):
+
+        if parallel and isinstance(x, np.ndarray):
+            weights_prior = self.kde_prior(x, parallel, n_cpu)
+            weights_posterior = self.kde_posterior(x, parallel, n_cpu)
+            condition = np.logical_and(weights_prior > 0, weights_posterior > 0)
+            inds = np.where(condition)[0]
+            weights = np.zeros_like(weights_prior)
+            weights[inds] = weights_posterior[inds] / weights_prior[inds]
+            if relative:
+                return weights / self._norm
+            else:
+                return weights
+        else:
+            num = self.kde_posterior(x)
+            denom = self.kde_prior(x)
+            if num == 0:
+                return 0
+            if denom == 0:
+                return 0
+            y = np.squeeze(num / denom)
+            if relative:
+                return y / self._norm
+            else:
+                return y
+
+    def __call__(self, output_class, parallel=True, n_cpu=10, relative=False):
+
+        x = np.squeeze(output_class.macromodel_parameter_array(self.param_names_macro))
+        return self.call_point(x, parallel, n_cpu, relative)
+
+def select_best_samples(sim, measured_flux_ratios, flux_ratio_cov, keep_index_list, tol_fr_logL=-5):
+    fr_logL = multivariate_normal.logpdf(sim.flux_ratios[:, keep_index_list],
+                                         mean=measured_flux_ratios[keep_index_list],
+                                         cov=flux_ratio_cov)
+    fr_logL_ref = multivariate_normal.logpdf(measured_flux_ratios[keep_index_list],
+                                             mean=measured_flux_ratios[keep_index_list],
+                                             cov=flux_ratio_cov)
+    fr_logL -= fr_logL_ref
+    inds = np.where(fr_logL > tol_fr_logL)[0]
+    return sim.down_select(inds)
+
+
+def rescale_flux_uncertainties(measured_flux_ratios, covariance_matrix, minimum_uncertainty):
+    eigenvalues = np.linalg.eig(covariance_matrix)[0]
+    uncertainty_from_eigenvalues = 100 * np.sqrt(eigenvalues) / measured_flux_ratios
+    most_precise = np.min(uncertainty_from_eigenvalues)
+    if most_precise < minimum_uncertainty:
+        return minimum_uncertainty / most_precise
+    else:
+        return 1.0
+
 def compute_fluxratio_summarystat(f, measured_flux_ratios, measurement_uncertainties,
                                   uncertainty_on_ratios, keep_index_list):
 
-    perturbed_flux_ratio = np.empty((f.shape[0], len(keep_index_list)))
-    sigmas = []
     if measurement_uncertainties.ndim == 2:
-        measurement_uncertainties = [measurement_uncertainties[i,i] ** 0.5 for i in keep_index_list]
-    if uncertainty_on_ratios:
-        for i in keep_index_list:
-            if measurement_uncertainties[i] == -1:
-                perturbed_flux_ratio[:, i] = 0.0
-                sigmas.append(-1)
-            else:
-                sigmas.append(1.0)
-                perturbed_flux_ratio[:, i] = np.random.normal(f[:, i],
-                                                              measurement_uncertainties[i])
-    else:
-        perturbed_fluxes = np.random.normal(f,
-                                            measurement_uncertainties)
-        perturbed_flux_ratio = perturbed_fluxes[:, 1:] / perturbed_fluxes[:, 0, np.newaxis]
-        perturbed_flux_ratio = perturbed_flux_ratio[:, keep_index_list]
+        dfr = multivariate_normal.rvs(mean=np.zeros(f.shape[1]),
+                                      cov=measurement_uncertainties,
+                                      size=f.shape[0])
+        perturbed_flux_ratio = f + dfr
         sigmas = [1.0] * perturbed_flux_ratio.shape[1]
-    stat = np.sqrt(-2 * compute_fluxratio_logL(perturbed_flux_ratio, measured_flux_ratios[keep_index_list], sigmas, None)[0])
-    return stat / max(measured_flux_ratios)
-
-def compute_logfluxratio_summarystat(flux_ratios, measured_flux_ratios, measurement_uncertainties):
-
-    perturbed_flux_ratio = np.empty_like(flux_ratios)
-    for i in range(0, 3):
-        if measurement_uncertainties[i] == 10 or measurement_uncertainties[i]==-1:
-            perturbed_flux_ratio[:, i] = measured_flux_ratios[i]
+    else:
+        perturbed_flux_ratio = np.empty((f.shape[0], len(keep_index_list)))
+        sigmas = []
+        if uncertainty_on_ratios:
+            for i in keep_index_list:
+                if measurement_uncertainties[i] == -1:
+                    perturbed_flux_ratio[:, i] = 0.0
+                    sigmas.append(-1)
+                else:
+                    sigmas.append(1.0)
+                    perturbed_flux_ratio[:, i] = np.random.normal(f[:, i],
+                                                                  measurement_uncertainties[i])
         else:
-            perturbed_flux_ratio[:, i] = np.random.normal(flux_ratios[:, i],
-                                                          measurement_uncertainties[i])
-    df = np.log(perturbed_flux_ratio) - np.log(measured_flux_ratios)
-    stat = np.sqrt(np.sum(df**2, axis=1))
-    return stat
+            perturbed_fluxes = np.random.normal(f,
+                                                measurement_uncertainties)
+            perturbed_flux_ratio = perturbed_fluxes[:, 1:] / perturbed_fluxes[:, 0, np.newaxis]
+            perturbed_flux_ratio = perturbed_flux_ratio[:, keep_index_list]
+            sigmas = [1.0] * perturbed_flux_ratio.shape[1]
+    stat = np.sqrt(-2 * compute_fluxratio_logL(perturbed_flux_ratio,
+                                               measured_flux_ratios[keep_index_list],
+                                               sigmas,
+                                               None)[0])
+    return stat / max(measured_flux_ratios)
 
 def compute_fluxratio_logL(flux_ratios, measured_flux_ratios, measurement_uncertainties, keep_index_list):
 
@@ -59,6 +135,10 @@ def compute_fluxratio_logL_cov(flux_ratios, measured_flux_ratios, measurement_un
     fr_logL = multivariate_normal.logpdf(flux_ratios[:,keep_index_list],
                                    mean=measured_flux_ratios[keep_index_list],
                                    cov=measurement_uncertainties)
+    fr_logL_ref = multivariate_normal.logpdf(measured_flux_ratios[keep_index_list],
+                                         mean=measured_flux_ratios[keep_index_list],
+                                         cov=measurement_uncertainties)
+    fr_logL -= fr_logL_ref
     for ind in keep_index_list:
             S += (flux_ratios[:, ind] - measured_flux_ratios[ind])**2
     return fr_logL, np.sqrt(S) / max(measured_flux_ratios)
@@ -122,9 +202,11 @@ def compute_likelihoods(output_class,
                         kwargs_kde={},
                         kwargs_kde_image_data=None,
                         minimum_effective_sample_size=0,
-                        increase_sigma_logL=None,
-                        increase_sigma_fr=None,
-                        reweight_joint_likelihood=False
+                        increase_sigma_logL=False,
+                        increase_sigma_fr=False,
+                        reweight_joint_likelihood=False,
+                        macromodel_weight_function=None,
+                        minimum_effective_sample_size_image_data=None,
                         ):
     """
 
@@ -166,7 +248,10 @@ def compute_likelihoods(output_class,
     effective_sample_size = -1
     scale_fluxratio_covariance_matrix = 1.0
     scale_sigma_logL = 1.0
-
+    if macromodel_weight_function is not None:
+        macromodel_weights = macromodel_weight_function(output_class)
+    else:
+        macromodel_weights = 1.0
     while effective_sample_size < minimum_effective_sample_size:
         for bootstrap_index in range(0, n_bootstraps+1):
             sim = deepcopy(output_class)
@@ -185,8 +270,28 @@ def compute_likelihoods(output_class,
                     assert percentile_cut_image_data is None, ('image_data_logL_sigma and percentile_cut_image_data should not '
                                                                'both be specified')
                     max_logL = np.max(logL_image_data)
-                    logL_normalized_diff = (logL_image_data - max_logL) / (image_data_logL_sigma * scale_sigma_logL)
-                    weights_image_data = np.exp(-0.5 * logL_normalized_diff ** 2)
+                    if minimum_effective_sample_size_image_data is not None:
+                        if increase_sigma_logL is True: raise ValueError('increase_sigma_logL and'
+                                                                 ' minimum_effective_sample_size_image_data '
+                                                                 'should not both be specified')
+                        while True:
+                            logL_normalized_diff = (logL_image_data - max_logL) / (
+                                    image_data_logL_sigma * scale_sigma_logL)
+                            weights_image_data = np.exp(-0.5 * logL_normalized_diff ** 2)
+                            neff = np.sum(weights_image_data)
+                            if neff >= minimum_effective_sample_size_image_data:
+                                break
+                            scale_sigma_logL += 0.25
+
+                        if scale_sigma_logL > 1:
+                            print('choosing image_data_logL_sigma= '+str(np.round(image_data_logL_sigma * scale_sigma_logL,2))+
+                              ' yields neff = '+str(minimum_effective_sample_size_image_data))
+                        else:
+                            print('using  sigma_logL=' + str(image_data_logL_sigma) +
+                                  ' yields neff = ' + str(minimum_effective_sample_size_image_data))
+                    else:
+                        logL_normalized_diff = (logL_image_data - max_logL) / (image_data_logL_sigma * scale_sigma_logL)
+                        weights_image_data = np.exp(-0.5 * logL_normalized_diff ** 2)
                 elif percentile_cut_image_data is not None:
                     weights_image_data = np.zeros_like(logL_image_data)
                     inds_sorted = np.argsort(logL_image_data)
@@ -205,7 +310,7 @@ def compute_likelihoods(output_class,
                 else:
                     pdf_imgdata = DensitySamples(params,
                                              param_names=param_names,
-                                             weights=weights_image_data,
+                                             weights=macromodel_weights*weights_image_data,
                                              param_ranges=param_ranges_dm,
                                              **kwargs_kde_image_data)
 
@@ -243,7 +348,7 @@ def compute_likelihoods(output_class,
                                                                                 fluxes=fluxes,
                                                                                 S_statistic_tolerance=S_statistic_tolerance)
 
-            _joint_weights = flux_ratio_likelihood_weights * weights_image_data
+            _joint_weights = macromodel_weights * flux_ratio_likelihood_weights * weights_image_data
             if params_out is None:
                 params_out = _params_out
                 joint_weights = _joint_weights
@@ -279,7 +384,7 @@ def compute_likelihoods(output_class,
 
         if reweight_joint_likelihood and imaging_data_likelihood is not None:
             from trikde.pdfs import InterpolatedLikelihood
-            inds_keep = np.where(normalized_joint_weights > 1e-4)[0]
+            inds_keep = np.where(normalized_joint_weights > 1e-10)[0]
             params_out = params_out[inds_keep,:]
             normalized_joint_weights = normalized_joint_weights[inds_keep]
             interp_likelihood = InterpolatedLikelihood(imaging_data_likelihood,
@@ -291,7 +396,6 @@ def compute_likelihoods(output_class,
             sample_imaging_weights = 1/sample_imaging_weights
         else:
             sample_imaging_weights = 1.0
-
         pdf_imgdata_fr = DensitySamples(params_out,
                                         param_names=param_names,
                                         weights=normalized_joint_weights * sample_imaging_weights,

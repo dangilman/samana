@@ -795,9 +795,15 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         source_model_quasar, kwargs_source = setup_gaussian_source(source_dict['source_size_pc'],
                                                                    np.mean(source_x), np.mean(source_y),
                                                                    astropy_cosmo, data_class.z_source)
-        grid_size = rescale_grid_size * auto_raytracing_grid_size(source_dict['source_size_pc'])
+        grid_size_base = auto_raytracing_grid_size(source_dict['source_size_pc'])
         grid_resolution = rescale_grid_resolution * auto_raytracing_grid_resolution(source_dict['source_size_pc'])
-
+        if isinstance(rescale_grid_size, list) or isinstance(rescale_grid_size, np.ndarray):
+            assert len(rescale_grid_size) == len(data_class.x_image)
+            grid_size_list = []
+            for rescale_size in rescale_grid_size:
+                grid_size_list.append(rescale_size * grid_size_base)
+        else:
+            grid_size_list = [rescale_grid_size * grid_size_base] * len(data_class.x_image)
         # we pass in setup_decoupled_multiplane_lens_model_output, the decoupled multiplane parameters
         # computed for the proposed macromodel in setup_kwargs_model
         magnifications, images = model_class.image_magnification_gaussian(source_model_quasar,
@@ -805,14 +811,15 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                                               lens_model_init,
                                                                               kwargs_lens_init,
                                                                               kwargs_solution,
-                                                                              grid_size,
+                                                                              grid_size_list,
                                                                               grid_resolution,
                                                                               lens_model,
                                                                               setup_decoupled_multiplane_lens_model_output,
                                                                               magnification_method=magnification_method)
+        flux_uncertainty = None
         stat, flux_ratios, flux_ratios_data = flux_ratio_summary_statistic(data_class.magnifications,
                                                                                magnifications,
-                                                                               data_class.flux_uncertainty,
+                                                                                flux_uncertainty,
                                                                                data_class.keep_flux_ratio_index,
                                                                                data_class.uncertainty_in_fluxes)
 
@@ -874,10 +881,6 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             _flux_ratio_logL_norm = multivariate_normal.logpdf(np.array(flux_ratios_data),
                                    mean=np.array(flux_ratios_data),
                                    cov=data_class.flux_ratio_covariance_matrix)
-            _flux_ratio_logL = multivariate_normal.logpdf(flux_ratios,
-                                                          mean=flux_ratios_data,
-                                                          cov=data_class.flux_ratio_covariance_matrix)
-
             flux_ratio_logL = _flux_ratio_logL - _flux_ratio_logL_norm
             if verbose: print('flux ratio logL: ', flux_ratio_logL)
             if flux_ratio_logL > -1*fr_logL_source_reconstruction:
@@ -911,6 +914,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                       macromodel_samples_fixed=macromodel_samples_fixed_dict,
                                                       fixed_lens_model=True,
                                                       kwargs_lens_fixed=kwargs_solution)
+
             kwargs_likelihood['prior_lens'] = None
             kwargs_likelihood['custom_logL_addition'] = None
             fitting_sequence = FittingSequence(data_class.kwargs_data_joint,
