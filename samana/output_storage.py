@@ -4,11 +4,67 @@ from lenstronomy.Util.param_util import ellipticity2phi_q
 from copy import deepcopy
 import h5py
 
+def output_to_hdf5_parallel(output_path, job_name, job_index_min, job_index_max,
+                   write_path, n_cpu=10, S_max=np.inf):
+    """
+
+    :param output_path:
+    :param job_name:
+    :param job_index_min:
+    :param job_index_max:
+    :param write_path:
+    :param S_max:
+    :return:
+    """
+    from multiprocessing.pool import Pool
+    n_jobs = int((job_index_max - job_index_min + 1) / n_cpu)
+    print_missing_files = False
+    print_progress = False
+    return_arrays = True
+    arg_list = []
+    for n in range(0, n_cpu):
+        job_index_min = int(n * n_jobs)
+        job_index_max = int((n+1) * n_jobs)
+        arg = (output_path, job_name, job_index_min, job_index_max, write_path, print_missing_files,
+               S_max, print_progress, return_arrays)
+        arg_list.append(arg)
+    with Pool(processes=n_cpu) as pool:
+        arrays = pool.starmap(output_to_hdf5, arg_list)
+    for index, arr in enumerate(arrays):
+        if index == 0:
+            (parameters, magnifications, macromodel_samples, param_names, macromodel_sample_names) = arr
+        else:
+            (_parameters, _magnifications, _macromodel_samples, _, _) = arr
+            parameters = np.vstack((parameters, _parameters))
+            magnifications = np.vstack((magnifications, _magnifications))
+            macromodel_samples = np.vstack((macromodel_samples, _macromodel_samples))
+    mode = 'w'
+    print('compiled ' + str(magnifications.shape[0]) + ' realizations')
+    h = h5py.File(write_path + job_name + '_output.hdf5', mode)
+    dset_1 = h.create_dataset('parameters', data=parameters)
+    dset_2 = h.create_dataset('magnifications', data=magnifications)
+    dset_3 = h.create_dataset('macromodel_samples', data=macromodel_samples)
+    dset_4 = h.create_dataset('param_names', data=param_names,
+                              dtype='S20')
+    dset_5 = h.create_dataset('macromodel_sample_names', data=macromodel_sample_names,
+                              dtype='S20')
 
 def output_to_hdf5(output_path, job_name, job_index_min, job_index_max,
                    write_path, print_missing_files=False, S_max=np.inf,
-                   print_progress=False):
+                   print_progress=False, return_arrays=False):
+    """
 
+    :param output_path:
+    :param job_name:
+    :param job_index_min:
+    :param job_index_max:
+    :param write_path:
+    :param print_missing_files:
+    :param S_max:
+    :param print_progress:
+    :param return_arrays:
+    :return:
+    """
     param_names = None
     macromodel_sample_names = None
     init = True
@@ -61,9 +117,11 @@ def output_to_hdf5(output_path, job_name, job_index_min, job_index_max,
             parameters = np.vstack((parameters, params))
             magnifications = np.vstack((magnifications, fluxes))
             macromodel_samples = np.vstack((macromodel_samples, macrosamples))
-    mode = 'w'
     summary_stat = parameters[:, -4]
     inds_keep = np.where(summary_stat < S_max)[0]
+    if return_arrays:
+        return parameters[inds_keep,:], magnifications[inds_keep, :], macromodel_samples[inds_keep, :], param_names, macromodel_sample_names
+    mode = 'w'
     print('compiled '+str(len(inds_keep))+' realizations')
     h = h5py.File(write_path + job_name + '_output.hdf5', mode)
     dset_1 = h.create_dataset('parameters', data=parameters[inds_keep, :])

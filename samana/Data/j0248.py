@@ -14,6 +14,7 @@ class _J0248(ImagingDataBase):
         z_source = 2.44
         # we use all three flux ratios to constrain the model
         keep_flux_ratio_index = [0, 1, 2]
+        self._image_data_type = image_data_type
         if image_data_type == 'HST814W':
             from samana.Data.ImageData.j0248_f814W import psf_model, psf_error_map, image_data
             self._psf_estimate_init = psf_model
@@ -79,6 +80,15 @@ class _J0248(ImagingDataBase):
         likelihood_mask = np.ones_like(_xx)
         inds = np.where(np.sqrt(_xx ** 2 + _yy ** 2) >= window_size / 2)
         likelihood_mask[inds] = 0.0
+
+        if self._image_data_type == 'HST814W':
+            x_main = -0.0239
+            y_main = 0.060
+            r_main = 0.4
+            _xx, _yy = np.meshgrid(_x - x_main, _y - y_main)
+            inds_main_deflector = np.where(np.sqrt(_xx ** 2 + _yy ** 2) < r_main / 2)
+            likelihood_mask[inds_main_deflector] = 0.0
+
         if self._mask_quasar_images_for_logL:
             likelihood_mask_imaging_weights = self.quasar_image_mask(
                 likelihood_mask,

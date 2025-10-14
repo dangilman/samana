@@ -64,6 +64,14 @@ class ImagingDataBase(object):
     def z_lens(self):
         return self._z_lens
 
+    def set_z_lens(self, z_lens):
+        """
+        Override the lens redshift from class initialization
+        :param zlens: new lens redshift
+        :return:
+        """
+        self._z_lens = z_lens
+
     def perturb_image_positions(self, delta_x_image=None, delta_y_image=None):
         if delta_x_image is None:
             delta_x_image = np.random.normal(0.0, self.image_position_uncertainty)
