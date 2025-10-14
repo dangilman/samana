@@ -143,8 +143,9 @@ class J0248_HST(_J0248):
         :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
         :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
         """
-        x_image = np.array([ 0.3827822 , -0.52452975, -0.66897894,  0.33092538])
-        y_image = np.array([ 0.62079534,  0.65874007, -0.17619568, -0.78839384])
+        reorder = [3,2,1,0] # so that HST and MIRI image positions are in same order
+        x_image = np.array([ 0.3827822 , -0.52452975, -0.66897894,  0.33092538])[reorder]
+        y_image = np.array([ 0.62079534,  0.65874007, -0.17619568, -0.78839384])[reorder]
         horizontal_shift = 0.0
         vertical_shift = 0.0
         x_image += horizontal_shift
