@@ -316,17 +316,22 @@ def compute_likelihoods(output_class,
 
             # now compute the flux ratio likelihood
             flux_ratios = sim.flux_ratios
-            if n_keep is None:
+            if n_keep is None or n_keep == -1:
                 if uncertainty_on_ratios is False:
                     raise Exception('cannot use a flux ratio likelihood with uncertainties on fluxes')
-                flux_ratio_uncertainties = measurement_uncertainties * scale_fluxratio_covariance_matrix
-                _params_out, flux_ratio_likelihood_weights, _S_statistic = calculate_flux_ratio_likelihood(params,
+                if n_keep == -1:
+                    _params_out = deepcopy(params)
+                    flux_ratio_likelihood_weights = np.ones(_params_out.shape[0])
+                    _S_statistic = np.ones(_params_out.shape[0])
+                else:
+                    flux_ratio_uncertainties = measurement_uncertainties * scale_fluxratio_covariance_matrix
+                    _params_out, flux_ratio_likelihood_weights, _S_statistic = calculate_flux_ratio_likelihood(params,
                                                                                  flux_ratios,
                                                                                  measured_flux_ratios,
                                                                                  flux_ratio_uncertainties,
                                                                                  keep_index_list)
-                print('effective sample size from flux ratio likelihood: ',
-                      np.sum(flux_ratio_likelihood_weights))
+                    print('effective sample size from flux ratio likelihood: ',
+                        np.sum(flux_ratio_likelihood_weights))
 
             else:
                 if uncertainty_on_ratios is False:
