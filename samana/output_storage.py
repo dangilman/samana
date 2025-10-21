@@ -45,9 +45,9 @@ def output_to_hdf5_parallel(output_path, job_name, job_index_min, job_index_max,
     dset_2 = h.create_dataset('magnifications', data=magnifications)
     dset_3 = h.create_dataset('macromodel_samples', data=macromodel_samples)
     dset_4 = h.create_dataset('param_names', data=param_names,
-                              dtype='S20')
+                              dtype='S30')
     dset_5 = h.create_dataset('macromodel_sample_names', data=macromodel_sample_names,
-                              dtype='S20')
+                              dtype='S30')
 
 def output_to_hdf5(output_path, job_name, job_index_min, job_index_max,
                    write_path, print_missing_files=False, S_max=np.inf,
@@ -128,9 +128,9 @@ def output_to_hdf5(output_path, job_name, job_index_min, job_index_max,
     dset_2 = h.create_dataset('magnifications', data=magnifications[inds_keep, :])
     dset_3 = h.create_dataset('macromodel_samples', data=macromodel_samples[inds_keep, :])
     dset_4 = h.create_dataset('param_names', data=param_names,
-                              dtype='S20')
+                              dtype='S30')
     dset_5 = h.create_dataset('macromodel_sample_names', data=macromodel_sample_names,
-                              dtype='S20')
+                              dtype='S30')
 
 class Output(object):
 
