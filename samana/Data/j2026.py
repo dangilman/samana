@@ -34,7 +34,7 @@ class J2026(_J2026):
         # mags HST: check image ordering
         # m = [1.0, 0.75, 0.31, 0.28]
         # flux_uncertainties = [0.02, 0.02/0.75, 0.02/0.31, 0.01/0.28]
-
+        z_lens = 0.5 # fiducial
         image_position_uncertainties = [0.005] * 4 # 5 marcsec
         flux_uncertainties = None
         magnifications = np.array([1.0] * 4)
@@ -42,7 +42,7 @@ class J2026(_J2026):
                                           uncertainty_in_fluxes=False, z_lens=z_lens)
 
     def redshift_sampling(self):
-        return True
+        return False
 
     def sample_z_lens(self):
         z_lens = np.random.uniform(0.2, 1.0)
