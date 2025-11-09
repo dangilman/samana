@@ -1,68 +1,7 @@
 import numpy as np
 from trikde.pdfs import IndependentLikelihoods, DensitySamples
 from scipy.stats import multivariate_normal
-from samana.output_storage import Output
 from copy import deepcopy
-
-
-class WeightFunction(object):
-
-    def __init__(self, data, param_names_macro, use_kde=False, nbins=10):
-
-        params, w = data[:, 0:len(param_names_macro)], data[:, -1]
-        self.param_names_macro = param_names_macro
-        boundary_order = 0
-        pdf_posterior = DensitySamples(params, param_names_macro, weights=w,
-                                       nbins=nbins, use_kde=use_kde, boundary_order=boundary_order)
-        like_posterior = IndependentLikelihoods([pdf_posterior])
-        self.kde_posterior = InterpolatedLikelihood(like_posterior,
-                                                    param_names_macro,
-                                                    pdf_posterior.param_ranges,
-                                                    extrapolate=True,
-                                                    fill_value=0)
-
-        pdf_prior = DensitySamples(params, param_names_macro, weights=None,
-                                   nbins=nbins, use_kde=use_kde, boundary_order=boundary_order)
-        like_prior = IndependentLikelihoods([pdf_prior])
-        self.kde_prior = InterpolatedLikelihood(like_prior,
-                                                param_names_macro,
-                                                pdf_posterior.param_ranges,
-                                                extrapolate=True,
-                                                fill_value=0)
-        inds = np.where(self.kde_prior.density > 0)
-        ratio = self.kde_posterior.density[inds] / self.kde_prior.density[inds]
-        self._norm = np.max(ratio)
-
-    def call_point(self, x, parallel=True, n_cpu=10, relative=False):
-
-        if parallel and isinstance(x, np.ndarray):
-            weights_prior = self.kde_prior(x, parallel, n_cpu)
-            weights_posterior = self.kde_posterior(x, parallel, n_cpu)
-            condition = np.logical_and(weights_prior > 0, weights_posterior > 0)
-            inds = np.where(condition)[0]
-            weights = np.zeros_like(weights_prior)
-            weights[inds] = weights_posterior[inds] / weights_prior[inds]
-            if relative:
-                return weights / self._norm
-            else:
-                return weights
-        else:
-            num = self.kde_posterior(x)
-            denom = self.kde_prior(x)
-            if num == 0:
-                return 0
-            if denom == 0:
-                return 0
-            y = np.squeeze(num / denom)
-            if relative:
-                return y / self._norm
-            else:
-                return y
-
-    def __call__(self, output_class, parallel=True, n_cpu=10, relative=False):
-
-        x = np.squeeze(output_class.macromodel_parameter_array(self.param_names_macro))
-        return self.call_point(x, parallel, n_cpu, relative)
 
 def select_best_samples(sim, measured_flux_ratios, flux_ratio_cov, keep_index_list, tol_fr_logL=-5):
     fr_logL = multivariate_normal.logpdf(sim.flux_ratios[:, keep_index_list],
