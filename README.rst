@@ -4,7 +4,7 @@ samana
 
 This is a code repository meant to facilitate easy access to galaxy-scale strong lens data. 
 
-.. image:: https://github.com/dangilman/samana/blob/main/mosaic_figure.pdf
+.. image:: https://github.com/dangilman/samana/blob/main/mosaic_figure.jpeg
         :target: https://github.com/dangilman/samana/blob/main/mosaic_figure
 
 Features
