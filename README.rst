@@ -15,7 +15,7 @@ Notebooks that do lens modeling for 24 systems can be found in notebooks/baselin
 
 This repository also includes functions and methods used for forward modeling quad lenses with dark matter substructure. The functionality is inside the "forward_model.py" file. An example script that shows how to run a dark matter inference with the data stored in this repo can be found in /notebooks/JWST_DM_survey_IV/example_lauch_script_0435.py. 
 
-The scripts used for the analysis presented in the JWST lensed quasar DM survey papers III and IV can also be found in the JWST_DM_survey_IV directory. 
+The scripts used for the analysis presented in the JWST lensed quasar DM survey papers III and IV can also be found in the ./notebooks/jwst_DM_survey_IV directory. 
 
 Credits
 -------
