@@ -870,9 +870,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                 reconstruct_image_data = True
             else:
                 reconstruct_image_data = False
-        elif fr_logL_source_reconstruction is not None:
-            assert fr_logL_source_reconstruction > 0, ('The flux ratio logL triggering the source reconstruction should be'
-                                                       '>0')
+        elif fr_logL_source_reconstruction is not None and fr_logL_source_reconstruction > 0:
             if verbose: print('triggering image data modeling with a flux ratio log-likelihood tolerance of '
                               +str(fr_logL_source_reconstruction))
             _flux_ratio_logL = multivariate_normal.logpdf(np.array(flux_ratios),
