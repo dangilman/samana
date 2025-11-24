@@ -19,7 +19,7 @@ The scripts used for the analysis presented in the JWST lensed quasar DM survey 
 
 Credits
 -------
-When using this repository, please cite JWST lensed quasar DM survey IV, Gilman et al. (2025)
+When using this repository, please cite JWST lensed quasar DM survey IV `Gilman et al. (2025) <https://ui.adsabs.harvard.edu/abs/2025arXiv251107513G/abstract>`_ 
 
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
 
@@ -27,4 +27,5 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
 
 * Free software: MIT license
+
 
