@@ -90,7 +90,7 @@ def numerics_setup(lens_ID):
         rescale_grid_size = 4.0
     elif lens_ID in ['PG1115', 'PG1115_NIRCAM']:
         rescale_grid_res = 1.5
-        rescale_grid_size = 2.5
+        rescale_grid_size = [1., 1., 3.0, 3.0]
     elif lens_ID == 'PSJ0147':
         rescale_grid_res = 1.5
         rescale_grid_size = 2.5
@@ -114,7 +114,7 @@ def numerics_setup(lens_ID):
         rescale_grid_size = 3.0
     elif lens_ID == 'MG0414':
         rescale_grid_res = 1.5
-        rescale_grid_size = 2.0
+        rescale_grid_size = [2.5, 2.5, 1.2, 1.2]
     elif lens_ID in ['M1134', 'M1134_MIRI']:
         rescale_grid_res = 1.5
         rescale_grid_size = 1.0
