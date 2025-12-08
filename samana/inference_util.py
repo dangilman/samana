@@ -175,6 +175,7 @@ def compute_likelihoods(output_class,
                           'LOS_normalization', 'shmf_log_slope', 'z_lens', 'log_m_host', 'source_size_pc',
                           'summary_statistic', 'f_low', 'f_high', 'x_core_halo',
                           'log10_sigma_eff_mlow', 'log10_sigma_eff_8_mh', 'log10_subhalo_time_s',
+                          'log10_pbh_mass_fraction', 'logM_pbh'
                           ]
     if n_keep is None and n_bootstraps > 0:
         raise ValueError('when using a flux ratio likelihood specified '
