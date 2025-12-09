@@ -466,7 +466,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            fr_logL_source_reconstruction=None,
                            scale_window_size_decoupled_multiplane=1.0,
                            return_astrometric_rejections=False,
-                           background_shifting=True):
+                           background_shifting=True,
+                           log_mhigh_mass_sheets=10.7):
     """
 
     :param data_class:
@@ -597,7 +598,9 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     if return_realization:
         return realization
     lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
-        kwargs_mass_sheet={'log_mlow_sheets': log_mlow_mass_sheets, 'kappa_scale_subhalos': kappa_scale_subhalos})
+        kwargs_mass_sheet={'log_mlow_sheets': log_mlow_mass_sheets,
+                           'log_mhigh_sheets': log_mhigh_mass_sheets,
+                           'kappa_scale_subhalos': kappa_scale_subhalos})
     astropy_cosmo = realization.lens_cosmo.cosmo.astropy
     grid_resolution_image_data = pixel_size / image_data_grid_resolution_rescale
     if use_imaging_data:

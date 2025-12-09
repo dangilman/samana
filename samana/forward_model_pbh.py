@@ -565,7 +565,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
 
     astropy_cosmo = realization_init.lens_cosmo.cosmo.astropy
     # generate a macromodel that satisfies the lens equation for the perturbed image positions
-    kwargs_model_align, lens_model_init_macro, kwargs_lens_macro_init, _, _ = model_class.setup_kwargs_model(
+    kwargs_model_align, _, kwargs_lens_macro_init, _, _ = model_class.setup_kwargs_model(
         decoupled_multiplane=False,
         kwargs_lens_macro_init=None,
         macromodel_samples_fixed=macromodel_samples_fixed_dict,
@@ -580,13 +580,13 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     pixel_size = data_class.coordinate_properties[0] / data_class.kwargs_numerics['supersampling_factor']
     kwargs_lens_align = kwargs_params['lens_model'][0]
     if preset_realization:
-        realization = realization_init
+        _realization = realization_init
     else:
         if verbose:
             print('realization has ' + str(len(realization_init.halos)) + ' halos...')
         if background_shifting:
             # shift halos such that they are symmetric around the center of the lensing volume
-            realization, ray_align_x, ray_align_y, _, _ = align_realization(realization_init,
+            _realization, ray_align_x, ray_align_y, _, _ = align_realization(realization_init,
                                                         kwargs_model_align['lens_model_list'],
                                                         kwargs_model_align['lens_redshift_list'],
                                                         kwargs_lens_align,
@@ -594,46 +594,66 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                         data_class.y_image,
                                                         astropy_cosmo)
         else:
-            realization = realization_init
+            _realization = realization_init
         if filter_subhalo_kwargs is not None:
-            realization = realization.filter_subhalos(**filter_subhalo_kwargs)
+            _realization = _realization.filter_subhalos(**filter_subhalo_kwargs)
             if verbose:
-                print('realization has ' + str(len(realization.halos)) + ' halos after '
+                print('realization has ' + str(len(_realization.halos)) + ' halos after '
                             'downselecting on subhalo mass/position...')
         if log10_bound_mass_cut is not None:
-            realization = realization.filter_bound_mass(10 ** log10_bound_mass_cut)
+            _realization = _realization.filter_bound_mass(10 ** log10_bound_mass_cut)
             if verbose:
-                print('realization has ' + str(len(realization.halos)) + ' halos after cut on '
+                print('realization has ' + str(len(_realization.halos)) + ' halos after cut on '
                              'bound mass above 10^'+str(log10_bound_mass_cut)+'... ')
-    if return_realization:
-        return realization
-    ######################### add pbh ####################
-    ext = RealizationExtensions(realization)
-    r_max = max(kwargs_pbh['rmax_pbh'] * np.sqrt(10**kwargs_pbh['logM_pbh'] / 10 ** 5), 0.05)
-    r_max_arcsec = [r_max] * len(data_class.x_image)
-    ray_interp_x, ray_interp_y = interpolate_ray_paths(data_class.x_image,
-                                                        data_class.y_image,
-                                                       lens_model_init_macro,
-                                                       kwargs_lens_macro_init,
-                                                       data_class.z_source)
-    realization = ext.add_primordial_black_holes(kwargs_pbh['pbh_mass_fraction'],
-                                         kwargs_pbh['logM_pbh'],
-                                         kwargs_pbh['mass_fraction_in_halos'],
-                                         ray_interp_x,
-                                         ray_interp_y,
-                                         r_max_arcsec,
-                                         arcsec_per_pixel=0.005,
-                                         rescale_normalizations=True)
-    ########################################################
-    lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
+
+    _lens_model_list_halos, _redshift_list_halos, _kwargs_halos, _ = _realization.lensing_quantities(
         kwargs_mass_sheet={'log_mlow_sheets': log_mlow_mass_sheets,
                            'kappa_scale_subhalos': kappa_scale_subhalos})
-    astropy_cosmo = realization.lens_cosmo.cosmo.astropy
+    astropy_cosmo = _realization.lens_cosmo.cosmo.astropy
     grid_resolution_image_data = pixel_size / image_data_grid_resolution_rescale
     if use_imaging_data:
         decoupled_multiplane_grid_type = 'GRID'
     else:
         decoupled_multiplane_grid_type = 'POINT'
+    ######################### add pbh ####################
+    kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split, setup_decoupled_multiplane_lens_model_output = (
+        model_class.setup_kwargs_model(
+            decoupled_multiplane=False,
+            lens_model_list_halos=_lens_model_list_halos,
+            kwargs_lens_macro_init=kwargs_lens_macro_init,
+            grid_resolution=grid_resolution_image_data,
+            redshift_list_halos=list(_redshift_list_halos),
+            kwargs_halos=_kwargs_halos,
+            verbose=verbose,
+            macromodel_samples_fixed=macromodel_samples_fixed_dict,
+            astropy_cosmo=astropy_cosmo,
+            decoupled_multiplane_grid_type='POINT'
+        ))
+    ext = RealizationExtensions(_realization)
+    r_max = max(kwargs_pbh['rmax_pbh'] * np.sqrt(10 ** kwargs_pbh['logM_pbh'] / 10 ** 5), 0.02)
+    if verbose:
+        print('r_max_pbh: ' + str(r_max))
+    r_max_arcsec = [r_max] * len(data_class.x_image)
+    ray_interp_x, ray_interp_y = interpolate_ray_paths(data_class.x_image,
+                                                       data_class.y_image,
+                                                       lens_model_init,
+                                                       kwargs_lens_init,
+                                                       data_class.z_source)
+    realization = ext.add_primordial_black_holes(kwargs_pbh['pbh_mass_fraction'],
+                                                 kwargs_pbh['logM_pbh'],
+                                                 kwargs_pbh['mass_fraction_in_halos'],
+                                                 ray_interp_x,
+                                                 ray_interp_y,
+                                                 r_max_arcsec,
+                                                 arcsec_per_pixel=0.005,
+                                                 rescale_normalizations=True)
+    print('number of PBH: ', len(realization.halos) - len(_realization.halos))
+    if return_realization:
+        return realization
+    lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
+        kwargs_mass_sheet={'log_mlow_sheets': log_mlow_mass_sheets,
+                           'kappa_scale_subhalos': kappa_scale_subhalos})
+    ########################################################
     kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split, setup_decoupled_multiplane_lens_model_output = (
         model_class.setup_kwargs_model(
             decoupled_multiplane=use_decoupled_multiplane_approximation,
@@ -654,6 +674,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     kwargs_constraints = model_class.kwargs_constraints
     kwargs_likelihood = model_class.kwargs_likelihood
     kwargs_params = split_kwargs_params(kwargs_params, index_lens_split)
+
     if astrometric_uncertainty:
         kwargs_constraints['point_source_offset'] = True
     else:
@@ -1074,17 +1095,21 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         f.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0., hspace=0.05)
         plt.show()
 
-        fig = plt.figure()
-        fig.set_size_inches(6, 6)
-        ax = plt.subplot(111)
-        kwargs_plot = {'ax': ax,
-                       'index_macromodel': list(np.arange(0, len(kwargs_result['kwargs_lens']))),
-                       'with_critical_curves': True,
-                       'v_min': -0.075, 'v_max': 0.075,
-                       'super_sample_factor': 5,
-                       'subtract_mean': True}
-        modelPlot.substructure_plot(band_index=0, **kwargs_plot)
-        plt.show()
+        for i in range(0, len(data_class.x_image)):
+            fig = plt.figure()
+            fig.set_size_inches(6, 6)
+            ax = plt.subplot(111)
+            kwargs_plot = {'ax': ax,
+                           'index_macromodel': list(np.arange(0, len(kwargs_result['kwargs_lens']))),
+                           'with_critical_curves': True,
+                           'v_min': -0.075, 'v_max': 0.075,
+                           'super_sample_factor': 5,
+                           'subtract_mean': True,
+                           'grid_size': 0.1,
+                           'center_x': data_class.x_image[i],
+                           'center_y': data_class.y_image[i]}
+            modelPlot.substructure_plot(band_index=0, **kwargs_plot)
+            plt.show()
 
         fig = plt.figure()
         fig.set_size_inches(12, 12)
