@@ -630,7 +630,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             decoupled_multiplane_grid_type='POINT'
         ))
     ext = RealizationExtensions(_realization)
-    r_max = max(kwargs_pbh['rmax_pbh'] * np.sqrt(10 ** kwargs_pbh['logM_pbh'] / 10 ** 5), 0.02)
+    r_max = max(kwargs_pbh['rmax_pbh'] * np.sqrt(10 ** kwargs_pbh['logM_pbh'] / 10 ** 5), 0.04)
     if verbose:
         print('r_max_pbh: ' + str(r_max))
     r_max_arcsec = [r_max] * len(data_class.x_image)
