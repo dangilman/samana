@@ -22,6 +22,101 @@ def default_rendering_area(lens_ID=None,
     thetaE = model.setup_lens_model()[-1][0][0]['theta_E']
     return opening_angle_factor * thetaE
 
+def raytracing_grid_orientation(lens_ID, min_q=0.25):
+    """
+    Return the orientation and flatting for an elliptical ray tracing grid
+    :param lens_ID: lens ID e.g. J0607
+    :return: rotation angles and hessian eigenvalues
+    """
+    if lens_ID == 'J0248':
+        rotation_angle_list = np.array([-2.8, -1.21, -2.43, -0.63])
+        hessian_eigenvalue_list = np.array([0.13, 0.082, 0.091, 0.079])
+    elif lens_ID == 'J0607':
+        rotation_angle_list = np.array([-2.4, -1.15, -0.26, -1.62])
+        hessian_eigenvalue_list = np.array([0.118, 0.052, 0.014, 0.012])
+    elif lens_ID == 'B1422':
+        rotation_angle_list = np.array([-2.63, -2.29, -1.75, -0.62])
+        hessian_eigenvalue_list = np.array([0.198, 0.191, 0.343, 0.137])
+    elif lens_ID == 'H1413':
+        rotation_angle_list = np.array([-2.12, -0.39, -1.62, -0.44])
+        hessian_eigenvalue_list = np.array([0.185, 0.087, 0.173, 0.174])
+    elif lens_ID == 'J0259':
+        rotation_angle_list = np.array([-0.08, -1.85, -0.57, -1.97])
+        hessian_eigenvalue_list = np.array([0.24, 0.264, 0.255, 0.162])
+    elif lens_ID == 'J0405':
+        rotation_angle_list = np.array([-1.89, -0.6, -0.51, -2.28])
+        hessian_eigenvalue_list = np.array([0.016, 0.018, 0.013, 0.015])
+    elif lens_ID == 'HE0435':
+        rotation_angle_list = np.array([-1.08, -2.87, -1.57, -2.92])
+        hessian_eigenvalue_list = np.array([0.174, 0.139, 0.191, 0.218])
+    elif lens_ID == 'J0608':
+        rotation_angle_list = np.array([-1.59, -0.02, -2.03, -0.81])
+        hessian_eigenvalue_list = np.array([0.103, 0.491, 0.276, 0.27])
+    elif lens_ID == 'J0659':
+        rotation_angle_list = np.array([-2.05, -1.28, -0.43, -1.09])
+        hessian_eigenvalue_list = np.array([0.229, 0.452, 0.427, 0.186])
+    elif lens_ID == 'J0803':
+        rotation_angle_list = np.array([-1.69, -2.2, -1.32, -0.42])
+        hessian_eigenvalue_list = np.array([0.069, 0.102, 0.28, 0.258])
+    elif lens_ID == 'J0924':
+        rotation_angle_list = np.array([-0.27, -2.91, -1.75, -1.04])
+        hessian_eigenvalue_list = np.array([0.085, 0.216, 0.202, 0.088])
+    elif lens_ID == 'J1042':
+        rotation_angle_list = np.array([-1.52, -2.15, -0.02, -2.16])
+        hessian_eigenvalue_list = np.array([0.048, 0.048, 0.155, 0.216])
+    elif lens_ID == 'J1131':
+        rotation_angle_list = np.array([-3.02, -1.95, -0.51, -1.09])
+        hessian_eigenvalue_list = np.array([0.228, 0.16, 0.075, 0.069])
+    elif lens_ID == 'J1251':
+        rotation_angle_list = np.array([-1.94, -2.69, -1.03, -1.9])
+        hessian_eigenvalue_list = np.array([0.085, 0.123, 0.16, 0.436])
+    elif lens_ID == 'J1537':
+        rotation_angle_list = np.array([-2.02, -0.48, -2.18, -0.58])
+        hessian_eigenvalue_list = np.array([0.34, 0.276, 0.371, 0.241])
+    elif lens_ID == 'J2145':
+        rotation_angle_list = np.array([-2.42, -1.75, -2.55, -1.04])
+        hessian_eigenvalue_list = np.array([0.014, 0.01, 0.202, 0.677])
+    elif lens_ID == 'J2205':
+        rotation_angle_list = np.array([-1.44, -0.4, -1.55, -2.51])
+        hessian_eigenvalue_list = np.array([0.351, 0.228, 0.116, 0.199])
+    elif lens_ID == 'J2344':
+        rotation_angle_list = np.array([-1.91, -0.29, -1.89, -0.42])
+        hessian_eigenvalue_list = np.array([0.106, 0.136, 0.12, 0.135])
+    elif lens_ID == 'M1134':
+        rotation_angle_list = np.array([-2.89, -2.43, -1.69, -2.35])
+        hessian_eigenvalue_list = np.array([0.813, 0.588, 0.668, 0.34])
+    elif lens_ID == 'MG0414':
+        rotation_angle_list = np.array([-2.06, -1.73, -0.44, -1.21])
+        hessian_eigenvalue_list = np.array([0.092, 0.101, 0.384, 0.824])
+    elif lens_ID == 'PG1115':
+        rotation_angle_list = np.array([-0.86, -3.01, -1.68, -2.12])
+        hessian_eigenvalue_list = np.array([0.298, 0.327, 0.091, 0.096])
+    elif lens_ID == 'PSJ0147':
+        rotation_angle_list = np.array([-0.13, -0.56, -2.84, -1.69])
+        hessian_eigenvalue_list = np.array([0.058, 0.095, 0.114, 0.716])
+    elif lens_ID == 'PSJ1606':
+        rotation_angle_list = np.array([-1.24, -1.47, -3., -2.65])
+        hessian_eigenvalue_list = np.array([0.596, 0.511, 0.775, 0.574])
+    elif lens_ID == 'RXJ0911':
+        rotation_angle_list = np.array([-2.46, -1.65, -0.76, -0.7])
+        hessian_eigenvalue_list = np.array([0.335, 0.234, 0.275, 0.738])
+    elif lens_ID == 'RXJ1131':
+        rotation_angle_list = np.array([-1.82, -1.38, -2.31, -1.83])
+        hessian_eigenvalue_list = np.array([0.032, 0.057, 0.072, 0.57])
+    elif lens_ID == 'WFI2026':
+        rotation_angle_list = np.array([-2.75, -2.14, -0.18, -1.22])
+        hessian_eigenvalue_list = np.array([0.157, 0.237, 0.458, 0.535])
+    elif lens_ID == 'WFI2033':
+        rotation_angle_list = np.array([-2.65, -0.09, -1.87, -2.31])
+        hessian_eigenvalue_list = np.array([0.271, 0.314, 0.546, 0.958])
+    elif lens_ID == 'WGD2038':
+        rotation_angle_list = np.array([-1.87, -2.58, -0.52, -0.67])
+        hessian_eigenvalue_list = np.array([0.253, 0.202, 0.175, 0.364])
+    else:
+        raise ValueError('lens_ID '+str(lens_ID)+' not recognized')
+    hessian_eigenvalue_list[np.where(hessian_eigenvalue_list < min_q)[0]] = min_q
+    return rotation_angle_list, hessian_eigenvalue_list
+
 def numerics_setup(lens_ID):
     """
     Return the recommended factors by which to rescale ray tracing grids for magnification
@@ -33,7 +128,7 @@ def numerics_setup(lens_ID):
         rescale_grid_size = 1.4
         rescale_grid_res = 1.5
     elif lens_ID == 'WFI2026':
-        rescale_grid_size = 1.2
+        rescale_grid_size = [1.5, 1.5, 1.0, 1.0]
         rescale_grid_res = 1.5
     elif lens_ID == 'B2045':
         raise Exception('not yet implemented')
@@ -41,7 +136,7 @@ def numerics_setup(lens_ID):
         rescale_grid_size = 1.
         rescale_grid_res = 1.5
     elif lens_ID == 'J0248':
-        rescale_grid_size = 2.5
+        rescale_grid_size = 2.0
         rescale_grid_res = 1.5
     elif lens_ID == 'J0248_HST':
         rescale_grid_size = 2.5
@@ -87,7 +182,7 @@ def numerics_setup(lens_ID):
         rescale_grid_size = 1.5
     elif lens_ID == 'J2344':
         rescale_grid_res = 1.5
-        rescale_grid_size = 4.0
+        rescale_grid_size = 3.0
     elif lens_ID in ['PG1115', 'PG1115_NIRCAM']:
         rescale_grid_res = 1.5
         rescale_grid_size = [1., 1., 3.0, 3.0]
@@ -96,7 +191,7 @@ def numerics_setup(lens_ID):
         rescale_grid_size = 2.5
     elif lens_ID == 'PSJ1606':
         rescale_grid_res = 1.5
-        rescale_grid_size = 1.0
+        rescale_grid_size = 0.7
     elif lens_ID == 'RXJ0911':
         rescale_grid_res = 1.5
         rescale_grid_size = 1.0
@@ -110,7 +205,7 @@ def numerics_setup(lens_ID):
         rescale_grid_res = 1.5
         rescale_grid_size = 1.
     elif lens_ID == 'J0405':
-        rescale_grid_res = 1.5
+        rescale_grid_res = 1.25
         rescale_grid_size = 3.0
     elif lens_ID == 'MG0414':
         rescale_grid_res = 1.5

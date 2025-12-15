@@ -298,9 +298,11 @@ class EPLModelBase(object):
         return kwargs_lens_fixed, kwargs_lens_init
 
     def image_magnification_gaussian(self, source_model_quasar, kwargs_source, lens_model_init, kwargs_lens_init,
-                            kwargs_lens, grid_size_list, grid_resolution, lens_model,
+                            kwargs_lens, grid_size_list, grid_resolution,
                                      setup_decoupled_multiplane_lens_model_output=None,
-                                     magnification_method='CIRCULAR_APERTURE'):
+                                     magnification_method='CIRCULAR_APERTURE',
+                                     rotation_angle_list=None,
+                                     hessian_eigenvalue_list=None):
         """
 
         :param source_model_quasar:
@@ -310,7 +312,6 @@ class EPLModelBase(object):
         :param kwargs_lens:
         :param grid_size_list:
         :param grid_resolution:
-        :param lens_model:
         :param setup_decoupled_multiplane_lens_model_output:
         :param magnification_method:
         :return:
@@ -320,9 +321,11 @@ class EPLModelBase(object):
                                               self._data.x_image, self._data.y_image,
                                               lens_model_init, kwargs_lens_init,
                                               kwargs_lens, index_lens_split,
-                                              grid_size_list, grid_resolution, lens_model,
+                                              grid_size_list, grid_resolution,
                                               setup_decoupled_multiplane_lens_model_output=setup_decoupled_multiplane_lens_model_output,
-                                              magnification_method=magnification_method)
+                                              magnification_method=magnification_method,
+                                              rotation_angle_list=rotation_angle_list,
+                                              hessian_eigenvalue_list=hessian_eigenvalue_list)
         return mags
 
     def setup_kwargs_model(self, decoupled_multiplane=False, lens_model_list_halos=None,

@@ -41,6 +41,7 @@ class J2026(_J2026):
         super(J2026, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
                                           uncertainty_in_fluxes=False, z_lens=z_lens)
 
+    @property
     def redshift_sampling(self):
         return False
 

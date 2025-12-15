@@ -43,7 +43,10 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   tolerance_source_reconstruction=None,
                   fr_logL_source_reconstruction=None,
                   return_astrometric_rejections=False,
-                  background_shifting=True):
+                  background_shifting=True,
+                  rotation_angle_list=None,
+                  hessian_eigenvalue_list=None
+                  ):
     """
     Top-level function for forward modeling strong lenses with substructure. This function makes repeated calls to
     the forward_model_single_iteration routine below, and outputs the results to text files. Lens modeling and dark matter
@@ -244,7 +247,9 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              fr_logL_source_reconstruction,
                              scale_window_size_decoupled_multiplane,
                              return_astrometric_rejections,
-                             background_shifting))
+                             background_shifting,
+                             rotation_angle_list,
+                             hessian_eigenvalue_list))
 
             pool = Pool(num_threads)
             output = pool.starmap(forward_model_single_iteration, args)
@@ -323,7 +328,10 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 fr_logL_source_reconstruction,
                                                 scale_window_size_decoupled_multiplane,
                                                 return_astrometric_rejections,
-                                                background_shifting)
+                                                background_shifting,
+                                               rotation_angle_list,
+                                               hessian_eigenvalue_list
+                                               )
 
             seed_counter += 1
             acceptance_rate_counter += 1
@@ -467,7 +475,10 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            fr_logL_source_reconstruction=None,
                            scale_window_size_decoupled_multiplane=1.0,
                            return_astrometric_rejections=False,
-                           background_shifting=True):
+                           background_shifting=True,
+                           rotation_angle_list=None,
+                           hessian_eigenvalue_list=None,
+                           log_mhigh_mass_sheets=10.7):
     """
 
     :param data_class:
@@ -652,6 +663,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         return realization
     lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
         kwargs_mass_sheet={'log_mlow_sheets': log_mlow_mass_sheets,
+                           'log_mhigh_sheets': log_mhigh_mass_sheets,
                            'kappa_scale_subhalos': kappa_scale_subhalos})
     ########################################################
     kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split, setup_decoupled_multiplane_lens_model_output = (
@@ -864,9 +876,11 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                                               kwargs_solution,
                                                                               grid_size_list,
                                                                               grid_resolution,
-                                                                              lens_model,
                                                                               setup_decoupled_multiplane_lens_model_output,
-                                                                              magnification_method=magnification_method)
+                                                                              magnification_method=magnification_method,
+                                                                          rotation_angle_list=rotation_angle_list,
+                                                                          hessian_eigenvalue_list=hessian_eigenvalue_list
+                                                                            )
         flux_uncertainty = None
         stat, flux_ratios, flux_ratios_data = flux_ratio_summary_statistic(data_class.magnifications,
                                                                                magnifications,
@@ -1101,13 +1115,14 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             ax = plt.subplot(111)
             kwargs_plot = {'ax': ax,
                            'index_macromodel': list(np.arange(0, len(kwargs_result['kwargs_lens']))),
-                           'with_critical_curves': True,
-                           'v_min': -0.075, 'v_max': 0.075,
+                           'with_critical_curves': False,
+                           'v_min': -0.05, 'v_max': 0.05,
                            'super_sample_factor': 5,
                            'subtract_mean': True,
-                           'grid_size': 0.1,
+                           'grid_size': 0.15,
                            'center_x': data_class.x_image[i],
-                           'center_y': data_class.y_image[i]}
+                           'center_y': data_class.y_image[i],
+                           'plot_image_coordinates': False}
             modelPlot.substructure_plot(band_index=0, **kwargs_plot)
             plt.show()
 

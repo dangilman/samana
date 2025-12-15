@@ -65,10 +65,12 @@ def perturbed_fluxes_from_fluxes(fluxes, flux_measurement_uncertainties_percenta
 
 def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image,
                                    lens_model_init, kwargs_lens_init, kwargs_lens, index_lens_split,
-                                   grid_size_list, grid_resolution, lens_model_full,
+                                   grid_size_list, grid_resolution,
                                    grid_increment_factor=15.0,
                                    setup_decoupled_multiplane_lens_model_output=None,
-                                   magnification_method='CIRCULAR_APERTURE'):
+                                   magnification_method='CIRCULAR_APERTURE',
+                                   rotation_angle_list=None,
+                                   hessian_eigenvalue_list=None):
     """
 
     :param source_model:
@@ -81,10 +83,11 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
     :param index_lens_split:
     :param grid_size_list:
     :param grid_resolution:
-    :param lens_model_full:
     :param grid_increment_factor:
     :param setup_decoupled_multiplane_lens_model_output:
     :param magnification_method:
+    :param rotation_angle_list:
+    :param hessian_eigenvalue_list:
     :return:
     """
     if setup_decoupled_multiplane_lens_model_output is None:
@@ -115,25 +118,9 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
 
         elif magnification_method in ['CIRCULAR_APERTURE', 'ELLIPTICAL_APERTURE']:
             if magnification_method == 'ELLIPTICAL_APERTURE':
-                try:
-                    ext = LensModelExtensions(lens_model_full)
-                    w1, w2, v11, v12, v21, v22 = ext.hessian_eigenvectors(
-                        x_img, y_img, kwargs_lens
-                    )
-                    _v = [np.array([v11, v12]), np.array([v21, v22])]
-                    _w = [abs(w1), abs(w2)]
-                    idx = int(np.argmax(_w))
-                    v = _v[idx]
-                    rotation_angle = np.arctan(v[1] / v[0]) - np.pi / 2
-                    grid_x, grid_y = util.rotate(grid_x_large, grid_y_large,
-                                                 rotation_angle)
-                    sort = np.argsort(_w)
-                    q_eigenvalue = _w[sort[0]] / _w[sort[1]]
-                    q = max(0.1, q_eigenvalue)
-                    grid_r = np.hypot(grid_x, grid_y / q).ravel()
-                except:
-                    print('q eigenvalue not defined; computing image magnifications on a circular grid.')
-                    grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
+                grid_x, grid_y = util.rotate(grid_x_large, grid_y_large,
+                                             rotation_angle_list[j])
+                grid_r = np.hypot(grid_x, grid_y / hessian_eigenvalue_list[j]).ravel()
             else:
                 grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
 
@@ -158,6 +145,26 @@ def mag_finite_single_image_adaptive(source_model, kwargs_source, lens_model_fix
                                distance_factor=30):
     """
 
+    :param source_model:
+    :param kwargs_source:
+    :param lens_model_fixed:
+    :param lens_model_free:
+    :param kwargs_lens_fixed:
+    :param kwargs_lens_free:
+    :param kwargs_lens:
+    :param z_split:
+    :param z_source:
+    :param cosmo_bkg:
+    :param x_image:
+    :param y_image:
+    :param grid_resolution:
+    :param grid_size_max:
+    :param zlens:
+    :param zsource:
+    :param intial_resolution_reduction_factor:
+    :param flux_threshold_factor:
+    :param distance_factor:
+    :return:
     """
     Td = cosmo_bkg.T_xy(0, zlens)
     Ts = cosmo_bkg.T_xy(0, zsource)
@@ -226,8 +233,6 @@ def mag_finite_single_image_adaptive(source_model, kwargs_source, lens_model_fix
      x_at_radec_0, y_at_radec_0, Mpix2coord, Mcoord2pix) = (
         make_grid_with_coordtransform(numPix, deltapix))
 
-    coordinates_highres = Coordinates(Mpix2coord, ra_at_xy_0, dec_at_xy_0)
-    pixel_x_large, pixel_y_large = [], []
     inds_compute_array = np.zeros_like(grid_x_large)
     grid_r = np.hypot(grid_x_large, grid_y_large)
     bright_coords_x, bright_coords_y = bright_coords[1], bright_coords[0]

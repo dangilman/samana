@@ -1,4 +1,5 @@
 from pyHalo.preset_models import preset_model_from_name
+from pyHalo.realization_extensions import RealizationExtensions
 from samana.forward_model_util import filenames, sample_prior, align_realization, \
     flux_ratio_summary_statistic, split_kwargs_params, check_lens_equation_solution
 from lenstronomy.LensModel.lens_model import LensModel
@@ -478,7 +479,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            background_shifting=True,
                            rotation_angle_list=None,
                            hessian_eigenvalue_list=None,
-                           log_mhigh_mass_sheets=10.0,
+                           log_mhigh_mass_sheets=10.7,
                            ):
     """
 
@@ -541,9 +542,26 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
 
     model_class = model(data_class, **kwargs_model_class)
     realization_dict, realization_samples, realization_param_names = sample_prior(kwargs_sample_realization)
+    kwargs_sidm = {}
+    kwargs_sidm['log10_sigma_eff_mlow_8'] = realization_dict['log10_sigma_eff_mlow_8']
+    kwargs_sidm['log10_sigma_eff_8_mhigh'] = realization_dict['log10_sigma_eff_8_mhigh']
+    kwargs_sidm['log10_subhalo_time_scaling'] = realization_dict['log10_subhalo_time_scaling']
+    kwargs_sidm['gamma_inner'] = realization_dict['gamma_inner']
+    kwargs_sidm['scale_match_r'] = realization_dict['scale_match_r']
+    kwargs_sidm['log_slope_match'] = realization_dict['log_slope_match']
+    kwargs_sidm['mass_ranges'] = realization_dict['mass_ranges']
+    kwargs_globular_clusters = realization_dict['kwargs_globular_clusters']
+    realization_dict['add_globular_clusters'] = False
+    del realization_dict['kwargs_globular_clusters']
+    del realization_dict['log10_sigma_eff_mlow_8']
+    del realization_dict['log10_sigma_eff_8_mhigh']
+    del realization_dict['log10_subhalo_time_scaling']
+    del realization_dict['gamma_inner']
+    del realization_dict['scale_match_r']
+    del realization_dict['log_slope_match']
+    del realization_dict['mass_ranges']
     source_dict, source_samples, source_param_names = sample_prior(kwargs_sample_source)
     macromodel_samples_fixed_dict, samples_macromodel_fixed, param_names_macro_fixed = sample_prior(kwargs_sample_macro_fixed)
-
     if fixed_realization is not None:
         if verbose: print('using a precomputed dark matter realization')
         realization_init = fixed_realization
@@ -562,6 +580,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         print(source_dict)
         print('REALIZATION PARAMETERS: ')
         print(realization_dict)
+        print('SIDM PARAMETERS: ')
+        print(kwargs_sidm)
         print('FIXED MACROMODEL SAMPLES: ')
         print(macromodel_samples_fixed_dict)
 
@@ -607,6 +627,21 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             if verbose:
                 print('realization has ' + str(len(realization.halos)) + ' halos after cut on '
                              'bound mass above 10^'+str(log10_bound_mass_cut)+'... ')
+    ext = RealizationExtensions(realization)
+    log10_effective_cross_section_list = [kwargs_sidm['log10_sigma_eff_mlow_8'],
+                                          kwargs_sidm['log10_sigma_eff_8_mhigh']]
+    log10_subhalo_time_scaling = kwargs_sidm['log10_subhalo_time_scaling']
+    collapsed_halo_profile = 'CC_COMPOSITE'
+    realization = ext.toSIDM_from_cross_section(kwargs_sidm['mass_ranges'],
+                                         log10_effective_cross_section_list,
+                                         log10_subhalo_time_scaling,
+                                         evolving_SIDM_profile=False,
+                                         halo_profile=collapsed_halo_profile,
+                                         gamma_inner=kwargs_sidm['gamma_inner'],
+                                         scale_match_r=kwargs_sidm['scale_match_r'],
+                                         log_slope_match=kwargs_sidm['log_slope_match'])
+    ext = RealizationExtensions(realization)
+    realization = ext.add_globular_clusters(**kwargs_globular_clusters)
     if return_realization:
         return realization
     lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
