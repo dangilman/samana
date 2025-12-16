@@ -658,7 +658,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                  r_max_arcsec,
                                                  arcsec_per_pixel=0.005,
                                                  rescale_normalizations=True)
-    print('number of PBH: ', len(realization.halos) - len(_realization.halos))
+    if verbose:
+        print('number of PBH: ', len(realization.halos) - len(_realization.halos))
     if return_realization:
         return realization
     lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
