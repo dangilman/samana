@@ -44,7 +44,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   return_astrometric_rejections=False,
                   background_shifting=True,
                   rotation_angle_list=None,
-                  hessian_eigenvalue_list=None
+                  hessian_eigenvalue_list=None,
+                  log_mhigh_mass_sheets=10.0
                   ):
     """
     Top-level function for forward modeling strong lenses with substructure. This function makes repeated calls to
@@ -248,7 +249,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              return_astrometric_rejections,
                              background_shifting,
                              rotation_angle_list,
-                             hessian_eigenvalue_list
+                             hessian_eigenvalue_list,
+                             log_mhigh_mass_sheets
                              ))
 
             pool = Pool(num_threads)
@@ -330,7 +332,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 return_astrometric_rejections,
                                                 background_shifting,
                                                rotation_angle_list,
-                                               hessian_eigenvalue_list
+                                               hessian_eigenvalue_list,
+                                                log_mhigh_mass_sheets
                                                )
 
             seed_counter += 1
