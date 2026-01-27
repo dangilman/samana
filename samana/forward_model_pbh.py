@@ -545,10 +545,14 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     kwargs_pbh['logM_pbh'] = realization_dict['logM_pbh']
     kwargs_pbh['rmax_pbh'] = realization_dict['rmax_pbh']
     kwargs_pbh['mass_fraction_in_halos'] = realization_dict['mass_fraction_in_halos']
+    kwargs_pbh['mass_function_type'] = realization_dict['mass_function_type']
+    kwargs_pbh['logM_pbh_sigma'] = realization_dict['logM_pbh_sigma']
     del realization_dict['log10_pbh_mass_fraction']
     del realization_dict['logM_pbh']
     del realization_dict['mass_fraction_in_halos']
     del realization_dict['rmax_pbh']
+    del realization_dict['mass_function_type']
+    del realization_dict['logM_pbh_sigma']
     source_dict, source_samples, source_param_names = sample_prior(kwargs_sample_source)
     macromodel_samples_fixed_dict, samples_macromodel_fixed, param_names_macro_fixed = sample_prior(kwargs_sample_macro_fixed)
 
@@ -657,7 +661,10 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                  ray_interp_y,
                                                  r_max_arcsec,
                                                  arcsec_per_pixel=0.005,
-                                                 rescale_normalizations=True)
+                                                 rescale_normalizations=True,
+                                                 mass_function_type=kwargs_pbh['mass_function_type'],
+                                                 logM_pbh_sigma=kwargs_pbh['logM_pbh_sigma']
+                                                 )
     if verbose:
         print('number of PBH: ', len(realization.halos) - len(_realization.halos))
     if return_realization:

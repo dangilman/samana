@@ -352,12 +352,12 @@ def compute_likelihoods(output_class,
         if n_keep is not None:
             print('median/worst of S_statistic distribution: ', np.median(S_statistic), np.max(S_statistic))
         if image_data_logL_sigma is not None:
-            print('effective sample size using imaging+flux ratio likelihood: ', np.sum(normalized_joint_weights)/(n_bootstraps+1))
+            print('effective sample size: ', np.sum(normalized_joint_weights)/(n_bootstraps+1))
         else:
             if n_keep is not None:
-                print('effective sample size flux ratios: ',
+                print('effective sample size: ',
                   np.sum(normalized_joint_weights > 0))
             else:
-                print('effective sample size flux ratios: ',
+                print('effective sample size: ',
                   np.sum(normalized_joint_weights))
     return imaging_data_likelihood, imaging_data_fluxratio_likelihood, (params_out, normalized_joint_weights)
