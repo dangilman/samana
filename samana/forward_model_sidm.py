@@ -413,7 +413,13 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                         param_name_string += name + ' '
                     f.write(param_name_string + '\n')
                     write_param_names = False
-                nrows, ncols = int(parameter_array.shape[0]), int(parameter_array.shape[1])
+                try:
+                    nrows, ncols = int(parameter_array.shape[0]), int(parameter_array.shape[1])
+                except:
+                    print('PROBLEM LOADING PARAMETER FILE for job index '+str(job_index))
+                    print('parameter file contains: ')
+                    print(parameter_array)
+                    exit(1)
                 for row in range(0, nrows):
                     for col in range(0, ncols):
                         f.write(str(np.round(parameter_array[row, col], 7)) + ' ')
