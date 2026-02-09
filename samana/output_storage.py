@@ -541,9 +541,9 @@ class Output(object):
         dset_2 = h.create_dataset('magnifications', data=magnifications)
         dset_3 = h.create_dataset('macromodel_samples', data=macromodel_samples)
         dset_4 = h.create_dataset('param_names', data=param_names,
-                                  dtype='S20')
+                                  dtype='S30')
         dset_5 = h.create_dataset('macromodel_sample_names', data=macromodel_sample_names,
-                                  dtype='S20')
+                                  dtype='S30')
 
     def cut_on_image_data(self, percentile_cut, logL_threshold=None, select_worst=False, undo_prior=False):
         """

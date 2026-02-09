@@ -419,6 +419,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                     print('PROBLEM LOADING PARAMETER FILE for job index '+str(job_index))
                     print('parameter file contains: ')
                     print(parameter_array)
+                    print("shape: ", parameter_array.shape)
                     exit(1)
                 for row in range(0, nrows):
                     for col in range(0, ncols):

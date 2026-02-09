@@ -25,7 +25,8 @@ def rescale_flux_uncertainties(measured_flux_ratios, covariance_matrix, minimum_
         return 1.0
 
 def compute_fluxratio_summarystat(f, measured_flux_ratios, measurement_uncertainties,
-                                  uncertainty_on_ratios, keep_index_list):
+                                  uncertainty_on_ratios, keep_index_list,
+                                  use_log_flux_ratio=False):
 
     if measurement_uncertainties.ndim == 2:
         dfr = multivariate_normal.rvs(mean=np.zeros(f.shape[1]),
@@ -51,22 +52,35 @@ def compute_fluxratio_summarystat(f, measured_flux_ratios, measurement_uncertain
             perturbed_flux_ratio = perturbed_fluxes[:, 1:] / perturbed_fluxes[:, 0, np.newaxis]
             perturbed_flux_ratio = perturbed_flux_ratio[:, keep_index_list]
             sigmas = [1.0] * perturbed_flux_ratio.shape[1]
-    stat = np.sqrt(-2 * compute_fluxratio_logL(perturbed_flux_ratio,
-                                               measured_flux_ratios[keep_index_list],
-                                               sigmas,
-                                               None)[0])
-    return stat / max(measured_flux_ratios)
 
-def compute_fluxratio_logL(flux_ratios, measured_flux_ratios, measurement_uncertainties, keep_index_list):
+    keep_index_list = None
+    _, stat = compute_fluxratio_logL(perturbed_flux_ratio,
+                                               measured_flux_ratios,
+                                               sigmas,
+                                               keep_index_list,
+                                               use_log_flux_ratio)
+    if use_log_flux_ratio:
+        return stat
+    else:
+        return stat / max(measured_flux_ratios[keep_index_list])
+
+def compute_fluxratio_logL(flux_ratios,
+                           measured_flux_ratios,
+                           measurement_uncertainties,
+                           keep_index_list,
+                           use_log_flux_ratio=False):
 
     fr_logL = 0
     S = 0
     if keep_index_list is None:
         keep_index_list = list(np.arange(0, flux_ratios.shape[1]))
     for i in keep_index_list:
-        S += (flux_ratios[:, i] - measured_flux_ratios[i]) ** 2
+        if use_log_flux_ratio:
+            S += (np.log(flux_ratios[:, i]) - np.log(measured_flux_ratios[i])) ** 2
+        else:
+            S += (flux_ratios[:, i] - measured_flux_ratios[i]) ** 2
         fr_logL += -0.5 * (flux_ratios[:, i] - measured_flux_ratios[i]) ** 2 / measurement_uncertainties[i] ** 2
-    return fr_logL, np.sqrt(S) / max(measured_flux_ratios)
+    return fr_logL, np.sqrt(S)
 
 def compute_fluxratio_logL_cov(flux_ratios, measured_flux_ratios, measurement_uncertainties, keep_index_list):
 
@@ -80,7 +94,7 @@ def compute_fluxratio_logL_cov(flux_ratios, measured_flux_ratios, measurement_un
     fr_logL -= fr_logL_ref
     for ind in keep_index_list:
             S += (flux_ratios[:, ind] - measured_flux_ratios[ind])**2
-    return fr_logL, np.sqrt(S) / max(measured_flux_ratios)
+    return fr_logL, np.sqrt(S)
 
 def calculate_flux_ratio_likelihood(params, flux_ratios, measured_flux_ratios,
                                     measurement_uncertainties, keep_index_list):
@@ -109,13 +123,15 @@ def downselect_fluxratio_summary_stats(params, flux_ratios, measured_flux_ratios
                                                                     measured_flux_ratios,
                                                                     measurement_uncertainties,
                                                                     uncertainty_on_ratios,
-                                                                    keep_index_list)
+                                                                    keep_index_list,
+                                                                    use_log_flux_ratio=True)
     else:
         fluxratio_summary_statistic = compute_fluxratio_summarystat(fluxes,
                                                                     measured_flux_ratios,
                                                                     measurement_uncertainties,
                                                                     uncertainty_on_ratios,
-                                                                    keep_index_list)
+                                                                    keep_index_list,
+                                                                    use_log_flux_ratio=True)
     if S_statistic_tolerance is not None:
         best_inds = np.where(fluxratio_summary_statistic < S_statistic_tolerance)[0]
     else:

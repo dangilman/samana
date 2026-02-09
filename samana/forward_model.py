@@ -45,7 +45,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   background_shifting=True,
                   rotation_angle_list=None,
                   hessian_eigenvalue_list=None,
-                  log_mhigh_mass_sheets=10.0
+                  log_mhigh_mass_sheets=10.0,
+                  use_class_mass_ranges=False
                   ):
     """
     Top-level function for forward modeling strong lenses with substructure. This function makes repeated calls to
@@ -250,7 +251,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              background_shifting,
                              rotation_angle_list,
                              hessian_eigenvalue_list,
-                             log_mhigh_mass_sheets
+                             log_mhigh_mass_sheets,
+                             use_class_mass_ranges
                              ))
 
             pool = Pool(num_threads)
@@ -333,7 +335,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 background_shifting,
                                                rotation_angle_list,
                                                hessian_eigenvalue_list,
-                                                log_mhigh_mass_sheets
+                                                log_mhigh_mass_sheets,
+                                                use_class_mass_ranges
                                                )
 
             seed_counter += 1
@@ -482,6 +485,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            rotation_angle_list=None,
                            hessian_eigenvalue_list=None,
                            log_mhigh_mass_sheets=10.0,
+                           use_class_mass_ranges=False
                            ):
     """
 
@@ -612,10 +616,15 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                              'bound mass above 10^'+str(log10_bound_mass_cut)+'... ')
     if return_realization:
         return realization
+    if use_class_mass_ranges:
+        kwargs_mass_sheet = {'kappa_scale_subhalos': kappa_scale_subhalos}
+    else:
+        kwargs_mass_sheet = {'log_mlow_sheets': log_mlow_mass_sheets,
+                             'log_mhigh_sheets': log_mhigh_mass_sheets,
+                             'kappa_scale_subhalos': kappa_scale_subhalos}
     lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
-        kwargs_mass_sheet={'log_mlow_sheets': log_mlow_mass_sheets,
-                           'log_mhigh_sheets': log_mhigh_mass_sheets,
-                           'kappa_scale_subhalos': kappa_scale_subhalos})
+        use_class_mass_ranges=use_class_mass_ranges,
+        kwargs_mass_sheet=kwargs_mass_sheet)
     astropy_cosmo = realization.lens_cosmo.cosmo.astropy
     grid_resolution_image_data = pixel_size / image_data_grid_resolution_rescale
     if use_imaging_data:
