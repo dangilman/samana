@@ -193,7 +193,8 @@ def compute_likelihoods(output_class,
                           'log10_sigma_eff_mlow_8', 'log10_sigma_eff_8_mhigh', 'log10_subhalo_time_scaling',
                           'log10_pbh_mass_fraction', 'logM_pbh', 'mass_fraction_in_halos',
                           'log10_c8', 'beta', 'zeta', 'log_mlow', 'logM_pbh_sigma',
-                            'log10_norm_low', 'log10_norm_mid', 'log10_norm_high'
+                            'log10_norm_low', 'log10_norm_mid', 'log10_norm_high', 'gamma_mfunc',
+                          'log10_mc_low', 'log10_mc_high'
                           ]
     if n_keep is None and n_bootstraps > 0:
         raise ValueError('when using a flux ratio likelihood specified '

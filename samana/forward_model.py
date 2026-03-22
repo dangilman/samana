@@ -1,6 +1,6 @@
 from pyHalo.preset_models import preset_model_from_name
 from samana.forward_model_util import filenames, sample_prior, align_realization, \
-    flux_ratio_summary_statistic, split_kwargs_params, check_lens_equation_solution
+    flux_ratio_summary_statistic, split_kwargs_params, check_lens_equation_solution, interpolate_ray_paths
 from lenstronomy.LensModel.lens_model import LensModel
 from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_resolution, auto_raytracing_grid_size
 from lenstronomy.Workflow.fitting_sequence import FittingSequence
@@ -46,7 +46,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   rotation_angle_list=None,
                   hessian_eigenvalue_list=None,
                   log_mhigh_mass_sheets=10.0,
-                  use_class_mass_ranges=False
+                  use_class_mass_ranges=False,
+                  downselect_halo_mass=None
                   ):
     """
     Top-level function for forward modeling strong lenses with substructure. This function makes repeated calls to
@@ -121,6 +122,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
     :param return_astrometric_rejections: if True, will return the macromodel parameters that produced a lens model that
     doesn't fit the image positions; if False, these solutions will be rejected and not saved as output
     :param background_shifting: toggles the shifting of background halos to align with the direction to the source
+    :param downselect_halo_mass: if specified, should be a dictionary with entries aperture_radius and log10_m_min
     :return:
     """
 
@@ -252,7 +254,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              rotation_angle_list,
                              hessian_eigenvalue_list,
                              log_mhigh_mass_sheets,
-                             use_class_mass_ranges
+                             use_class_mass_ranges,
+                             downselect_halo_mass
                              ))
 
             pool = Pool(num_threads)
@@ -336,7 +339,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                rotation_angle_list,
                                                hessian_eigenvalue_list,
                                                 log_mhigh_mass_sheets,
-                                                use_class_mass_ranges
+                                                use_class_mass_ranges,
+                                                downselect_halo_mass
                                                )
 
             seed_counter += 1
@@ -485,7 +489,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            rotation_angle_list=None,
                            hessian_eigenvalue_list=None,
                            log_mhigh_mass_sheets=10.0,
-                           use_class_mass_ranges=False
+                           use_class_mass_ranges=False,
+                           downselect_halo_mass=None
                            ):
     """
 
@@ -622,9 +627,51 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         kwargs_mass_sheet = {'log_mlow_sheets': log_mlow_mass_sheets,
                              'log_mhigh_sheets': log_mhigh_mass_sheets,
                              'kappa_scale_subhalos': kappa_scale_subhalos}
+
     lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
         use_class_mass_ranges=use_class_mass_ranges,
         kwargs_mass_sheet=kwargs_mass_sheet)
+
+    if downselect_halo_mass is not None:
+        ### REMOVE LOW-MASS HALOS THAT ARE FAR FROM LENSED IMAGES
+        _, lens_model_filter, kwargs_lens_filter, _, _ = (
+            model_class.setup_kwargs_model(
+                decoupled_multiplane=False,
+                lens_model_list_halos=lens_model_list_halos,
+                kwargs_lens_macro_init=kwargs_lens_macro_init,
+                grid_resolution=None,
+                redshift_list_halos=list(redshift_list_halos),
+                kwargs_halos=kwargs_halos,
+                verbose=verbose,
+                macromodel_samples_fixed=macromodel_samples_fixed_dict,
+                astropy_cosmo=astropy_cosmo,
+                use_JAXstronomy=use_JAXstronomy,
+                decoupled_multiplane_grid_type=None,
+                scale_window_size=None
+            ))
+        ray_interp_x, ray_interp_y = interpolate_ray_paths(data_class.x_image,
+                                                           data_class.y_image,
+                                                           lens_model_filter,
+                                                           kwargs_lens_filter,
+                                                           data_class.z_source)
+        log10_min_mass_aperture = 0.0 # everything
+        realization = realization.filter(downselect_halo_mass['aperture_radius'],
+               downselect_halo_mass['aperture_radius'],
+               log10_min_mass_aperture,
+               log10_min_mass_aperture,
+               downselect_halo_mass['log10_m_min'],
+               downselect_halo_mass['log10_m_min'],
+               ray_interp_x,
+               ray_interp_y)
+        if verbose:
+            print('after downselecting on halo mass and position, num halos: ', len(realization.halos))
+        kwargs_mass_sheet = {'log_mlow_sheets': downselect_halo_mass['log10_m_min'],
+                             'log_mhigh_sheets': log_mhigh_mass_sheets,
+                             'kappa_scale_subhalos': kappa_scale_subhalos}
+        lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
+            use_class_mass_ranges=use_class_mass_ranges,
+            kwargs_mass_sheet=kwargs_mass_sheet)
+
     astropy_cosmo = realization.lens_cosmo.cosmo.astropy
     grid_resolution_image_data = pixel_size / image_data_grid_resolution_rescale
     if use_imaging_data:
