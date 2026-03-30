@@ -1,11 +1,11 @@
 from samana.Data.data_base import ImagingDataBase
 import numpy as np
-from samana.Data.ImageData.j2205_f814W import psf_model, psf_error_map, image_data
+
 
 class _J2205(ImagingDataBase):
 
     def __init__(self, x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
-                 uncertainty_in_fluxes, image_data_band, supersample_factor=1,
+                 uncertainty_in_fluxes, image_data_band, filename_image_data=None, supersample_factor=1,
                  mask_quasar_images_for_logL=True):
 
         self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
@@ -46,6 +46,27 @@ class _J2205(ImagingDataBase):
             self._exposure_time = None
             self._noise_map = noise_map
 
+        elif image_data_band == 'NIRCam':
+            if filename_image_data is not None:
+                psf_model = np.loadtxt(filename_image_data[0])
+                image_data = np.loadtxt(filename_image_data[1])
+                noise_map = np.loadtxt(filename_image_data[2])
+            else:
+                from samana.Data.ImageData.j2205_NIRCam200 import psf_model, image_data, noise_map
+            self._psf_estimate_init = psf_model
+            self._psf_error_map_init = None
+            self._image_data = image_data
+            self._psf_supersampling_factor = 3
+            self._deltaPix = 0.03122600201157359
+            self._window_size = 2.87279218
+            self._ra_at_xy_0 = -0.10350420590
+            self._dec_at_xy_0 = -2.0287322
+            self._transform_pix2angle = np.array([[-0.02092639,  0.02317648],
+                                                 [ 0.02317648,  0.02092639]])
+            self._background_rms = None
+            self._exposure_time = None
+            self._noise_map = noise_map
+
         else:
             raise Exception('image data type must be either HST814W or MIRI540W')
 
@@ -78,6 +99,13 @@ class _J2205(ImagingDataBase):
                 [bloby],
                 self._image_data.shape, radius_arcsec=0.1
             )
+        if self._image_data_band == 'NIRCam':
+            likelihood_mask = self.quasar_image_mask(
+                likelihood_mask,
+                    [0.0],
+                    [0.0],
+                    self._image_data.shape, radius_arcsec=0.25
+                )
         if self._mask_quasar_images_for_logL:
             likelihood_mask_imaging_weights = self.quasar_image_mask(
                 likelihood_mask,
@@ -153,6 +181,34 @@ class J2205_MIRI(_J2205):
                                         image_data_band='MIRI540W',
                                          uncertainty_in_fluxes=False,
                                          supersample_factor=supersample_factor,
+                                         )
+
+class J2205_NIRCAM(_J2205):
+    band = 'NIRCam'
+    def __init__(self, supersample_factor=1, filename_image_data=None):
+        """
+
+        :param image_position_uncertainties: list of astrometric uncertainties for each image
+        i.e. [0.003, 0.003, 0.003, 0.003]
+        :param flux_uncertainties: list of flux ratio uncertainties in percentage, or None if these are handled
+        post-processing
+        :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
+        :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
+        """
+        x_image = np.array([0.91248892, -0.28609039, -0.72988568, -0.43651285])
+        y_image = np.array([0.13518422, -0.59065477, 0.01386794, 0.57360261])
+        horizontal_shift = -0.007
+        vertical_shift = -0.01
+        x_image += horizontal_shift
+        y_image += vertical_shift
+        image_position_uncertainties = [0.005] * 4 # 5 arcsec
+        flux_uncertainties = None
+        magnifications = np.array([1.0] * 4)
+        super(J2205_NIRCAM, self).__init__(x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
+                                        image_data_band='NIRCam',
+                                         uncertainty_in_fluxes=False,
+                                         supersample_factor=supersample_factor,
+                                           filename_image_data=filename_image_data
                                          )
 
 

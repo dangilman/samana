@@ -45,7 +45,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   return_astrometric_rejections=False,
                   background_shifting=True,
                   rotation_angle_list=None,
-                  hessian_eigenvalue_list=None
+                  hessian_eigenvalue_list=None,
+                    downselect_halo_mass=None
                   ):
     """
     Top-level function for forward modeling strong lenses with substructure. This function makes repeated calls to
@@ -249,7 +250,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              return_astrometric_rejections,
                              background_shifting,
                              rotation_angle_list,
-                             hessian_eigenvalue_list))
+                             hessian_eigenvalue_list,
+                             downselect_halo_mass))
 
             pool = Pool(num_threads)
             output = pool.starmap(forward_model_single_iteration, args)
@@ -330,7 +332,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 return_astrometric_rejections,
                                                 background_shifting,
                                                rotation_angle_list,
-                                               hessian_eigenvalue_list
+                                               hessian_eigenvalue_list,
+                                               downselect_halo_mass
                                                )
 
             seed_counter += 1
@@ -490,7 +493,9 @@ def forward_model_single_iteration(data_class,
                            background_shifting=True,
                            rotation_angle_list=None,
                            hessian_eigenvalue_list=None,
-                           log_mhigh_mass_sheets=10.7):
+                            downselect_halo_mass=None,
+                           log_mhigh_mass_sheets=10.7
+                           ):
     """
 
     :param data_class:
@@ -627,11 +632,6 @@ def forward_model_single_iteration(data_class,
             if verbose:
                 print('realization has ' + str(len(_realization.halos)) + ' halos after '
                             'downselecting on subhalo mass/position...')
-        if log10_bound_mass_cut is not None:
-            _realization = _realization.filter_bound_mass(10 ** log10_bound_mass_cut)
-            if verbose:
-                print('realization has ' + str(len(_realization.halos)) + ' halos after cut on '
-                             'bound mass above 10^'+str(log10_bound_mass_cut)+'... ')
 
     _lens_model_list_halos, _redshift_list_halos, _kwargs_halos, _ = _realization.lensing_quantities(
         kwargs_mass_sheet={'log_mlow_sheets': log_mlow_mass_sheets,
@@ -642,6 +642,54 @@ def forward_model_single_iteration(data_class,
         decoupled_multiplane_grid_type = 'GRID'
     else:
         decoupled_multiplane_grid_type = 'POINT'
+
+    ############# DOWNSELECT ON HALO MASS/POSITION ###################
+    if downselect_halo_mass is not None:
+        ### REMOVE LOW-MASS HALOS THAT ARE FAR FROM LENSED IMAGES
+        _, lens_model_filter, kwargs_lens_filter, _, _ = (
+            model_class.setup_kwargs_model(
+                decoupled_multiplane=False,
+                lens_model_list_halos=_lens_model_list_halos,
+                kwargs_lens_macro_init=kwargs_lens_macro_init,
+                grid_resolution=None,
+                redshift_list_halos=list(_redshift_list_halos),
+                kwargs_halos=_kwargs_halos,
+                verbose=verbose,
+                macromodel_samples_fixed=macromodel_samples_fixed_dict,
+                astropy_cosmo=astropy_cosmo,
+                use_JAXstronomy=use_JAXstronomy,
+                decoupled_multiplane_grid_type=None,
+                scale_window_size=None
+            ))
+        ray_interp_x, ray_interp_y = interpolate_ray_paths(data_class.x_image,
+                                                           data_class.y_image,
+                                                           lens_model_filter,
+                                                           kwargs_lens_filter,
+                                                           data_class.z_source)
+        log10_min_mass_aperture = 0.0 # everything
+        _realization = _realization.filter(downselect_halo_mass['aperture_radius'],
+               downselect_halo_mass['aperture_radius'],
+               log10_min_mass_aperture,
+               log10_min_mass_aperture,
+               downselect_halo_mass['log10_m_min'],
+               downselect_halo_mass['log10_m_min'],
+               ray_interp_x,
+               ray_interp_y)
+        if verbose:
+            print('after downselecting on halo mass and position, num halos: ', len(_realization.halos))
+        kwargs_mass_sheet = {'log_mlow_sheets': downselect_halo_mass['log10_m_min'],
+                             'log_mhigh_sheets': log_mhigh_mass_sheets,
+                             'kappa_scale_subhalos': kappa_scale_subhalos}
+        _lens_model_list_halos, _redshift_list_halos, _kwargs_halos, _ = _realization.lensing_quantities(
+            kwargs_mass_sheet=kwargs_mass_sheet)
+
+    if log10_bound_mass_cut is not None:
+        _realization = _realization.filter_bound_mass(10 ** log10_bound_mass_cut)
+        if verbose:
+            print('realization has ' + str(len(_realization.halos)) + ' halos after cut on '
+                                                                      'bound mass above 10^' + str(
+                log10_bound_mass_cut) + '... ')
+
     ######################### add pbh ####################
     kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split, setup_decoupled_multiplane_lens_model_output = (
         model_class.setup_kwargs_model(

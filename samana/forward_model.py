@@ -614,11 +614,6 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             if verbose:
                 print('realization has ' + str(len(realization.halos)) + ' halos after '
                             'downselecting on subhalo mass/position...')
-        if log10_bound_mass_cut is not None:
-            realization = realization.filter_bound_mass(10 ** log10_bound_mass_cut)
-            if verbose:
-                print('realization has ' + str(len(realization.halos)) + ' halos after cut on '
-                             'bound mass above 10^'+str(log10_bound_mass_cut)+'... ')
     if return_realization:
         return realization
     if use_class_mass_ranges:
@@ -671,6 +666,13 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
             use_class_mass_ranges=use_class_mass_ranges,
             kwargs_mass_sheet=kwargs_mass_sheet)
+
+    if log10_bound_mass_cut is not None and preset_realization is None:
+        realization = realization.filter_bound_mass(10 ** log10_bound_mass_cut)
+        if verbose:
+            print('realization has ' + str(len(realization.halos)) + ' halos after cut on '
+                                                                     'bound mass above 10^' + str(
+                log10_bound_mass_cut) + '... ')
 
     astropy_cosmo = realization.lens_cosmo.cosmo.astropy
     grid_resolution_image_data = pixel_size / image_data_grid_resolution_rescale

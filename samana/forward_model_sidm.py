@@ -46,7 +46,7 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   background_shifting=True,
                   rotation_angle_list=None,
                   hessian_eigenvalue_list=None,
-                    downselect_halo_mass=None
+                downselect_halo_mass=None
                   ):
     """
     Top-level function for forward modeling strong lenses with substructure. This function makes repeated calls to
