@@ -649,15 +649,11 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                            lens_model_filter,
                                                            kwargs_lens_filter,
                                                            data_class.z_source)
-        log10_min_mass_aperture = 0.0 # everything
-        realization = realization.filter(downselect_halo_mass['aperture_radius'],
-               downselect_halo_mass['aperture_radius'],
-               log10_min_mass_aperture,
-               log10_min_mass_aperture,
-               downselect_halo_mass['log10_m_min'],
-               downselect_halo_mass['log10_m_min'],
-               ray_interp_x,
-               ray_interp_y)
+        realization = realization.filter(
+            downselect_halo_mass['aperture_radius'],
+            downselect_halo_mass['log10_m_min'],
+            ray_interp_x,
+            ray_interp_y)
         if verbose:
             print('after downselecting on halo mass and position, num halos: ', len(realization.halos))
         kwargs_mass_sheet = {'log_mlow_sheets': downselect_halo_mass['log10_m_min'],

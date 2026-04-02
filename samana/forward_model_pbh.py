@@ -666,12 +666,8 @@ def forward_model_single_iteration(data_class,
                                                            lens_model_filter,
                                                            kwargs_lens_filter,
                                                            data_class.z_source)
-        log10_min_mass_aperture = 0.0 # everything
-        _realization = _realization.filter(downselect_halo_mass['aperture_radius'],
-               downselect_halo_mass['aperture_radius'],
-               log10_min_mass_aperture,
-               log10_min_mass_aperture,
-               downselect_halo_mass['log10_m_min'],
+        _realization = _realization.filter(
+            downselect_halo_mass['aperture_radius'],
                downselect_halo_mass['log10_m_min'],
                ray_interp_x,
                ray_interp_y)
