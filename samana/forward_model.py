@@ -623,12 +623,11 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                              'log_mhigh_sheets': log_mhigh_mass_sheets,
                              'kappa_scale_subhalos': kappa_scale_subhalos}
 
-    lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
-        use_class_mass_ranges=use_class_mass_ranges,
-        kwargs_mass_sheet=kwargs_mass_sheet)
-
     if downselect_halo_mass is not None:
         ### REMOVE LOW-MASS HALOS THAT ARE FAR FROM LENSED IMAGES
+        lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
+            use_class_mass_ranges=use_class_mass_ranges,
+            kwargs_mass_sheet=kwargs_mass_sheet)
         _, lens_model_filter, kwargs_lens_filter, _, _ = (
             model_class.setup_kwargs_model(
                 decoupled_multiplane=False,
@@ -659,17 +658,24 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         kwargs_mass_sheet = {'log_mlow_sheets': downselect_halo_mass['log10_m_min'],
                              'log_mhigh_sheets': log_mhigh_mass_sheets,
                              'kappa_scale_subhalos': kappa_scale_subhalos}
-        lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
-            use_class_mass_ranges=use_class_mass_ranges,
-            kwargs_mass_sheet=kwargs_mass_sheet)
-
-    if log10_bound_mass_cut is not None and preset_realization is None:
+        use_class_mass_ranges = False
+        if log10_bound_mass_cut is not None and preset_realization is None:
+            realization = realization.filter_bound_mass(10 ** log10_bound_mass_cut)
+            if verbose:
+                print('realization has ' + str(len(realization.halos)) + ' halos after cut on '
+                                                                         'bound mass above 10^' + str(
+                    log10_bound_mass_cut) + '... ')
+    elif log10_bound_mass_cut is not None:
         realization = realization.filter_bound_mass(10 ** log10_bound_mass_cut)
         if verbose:
             print('realization has ' + str(len(realization.halos)) + ' halos after cut on '
                                                                      'bound mass above 10^' + str(
                 log10_bound_mass_cut) + '... ')
 
+    # GET THE NEW LENS MODEL/KWARGS LIST AFTER CUTTING ON HALO MASS/POSITION/BOUND MASS
+    lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
+        use_class_mass_ranges=use_class_mass_ranges,
+        kwargs_mass_sheet=kwargs_mass_sheet)
     astropy_cosmo = realization.lens_cosmo.cosmo.astropy
     grid_resolution_image_data = pixel_size / image_data_grid_resolution_rescale
     if use_imaging_data:

@@ -633,9 +633,9 @@ def forward_model_single_iteration(data_class,
                 print('realization has ' + str(len(_realization.halos)) + ' halos after '
                             'downselecting on subhalo mass/position...')
 
-    _lens_model_list_halos, _redshift_list_halos, _kwargs_halos, _ = _realization.lensing_quantities(
-        kwargs_mass_sheet={'log_mlow_sheets': log_mlow_mass_sheets,
-                           'kappa_scale_subhalos': kappa_scale_subhalos})
+    kwargs_mass_sheet = {'log_mlow_sheets': log_mlow_mass_sheets,
+                         'log_mhigh_sheets': log_mhigh_mass_sheets,
+                        'kappa_scale_subhalos': kappa_scale_subhalos}
     astropy_cosmo = _realization.lens_cosmo.cosmo.astropy
     grid_resolution_image_data = pixel_size / image_data_grid_resolution_rescale
     if use_imaging_data:
@@ -646,6 +646,8 @@ def forward_model_single_iteration(data_class,
     ############# DOWNSELECT ON HALO MASS/POSITION ###################
     if downselect_halo_mass is not None:
         ### REMOVE LOW-MASS HALOS THAT ARE FAR FROM LENSED IMAGES
+        _lens_model_list_halos, _redshift_list_halos, _kwargs_halos, _ = _realization.lensing_quantities(
+            kwargs_mass_sheet=kwargs_mass_sheet)
         _, lens_model_filter, kwargs_lens_filter, _, _ = (
             model_class.setup_kwargs_model(
                 decoupled_multiplane=False,
@@ -676,15 +678,22 @@ def forward_model_single_iteration(data_class,
         kwargs_mass_sheet = {'log_mlow_sheets': downselect_halo_mass['log10_m_min'],
                              'log_mhigh_sheets': log_mhigh_mass_sheets,
                              'kappa_scale_subhalos': kappa_scale_subhalos}
+        if log10_bound_mass_cut is not None:
+            _realization = _realization.filter_bound_mass(10 ** log10_bound_mass_cut)
+            if verbose:
+                print('realization has ' + str(len(_realization.halos)) + ' halos after cut on '
+                                                                          'bound mass above 10^' + str(
+                    log10_bound_mass_cut) + '... ')
         _lens_model_list_halos, _redshift_list_halos, _kwargs_halos, _ = _realization.lensing_quantities(
             kwargs_mass_sheet=kwargs_mass_sheet)
-
-    if log10_bound_mass_cut is not None:
+    elif log10_bound_mass_cut is not None:
         _realization = _realization.filter_bound_mass(10 ** log10_bound_mass_cut)
         if verbose:
             print('realization has ' + str(len(_realization.halos)) + ' halos after cut on '
                                                                       'bound mass above 10^' + str(
                 log10_bound_mass_cut) + '... ')
+        _lens_model_list_halos, _redshift_list_halos, _kwargs_halos, _ = _realization.lensing_quantities(
+            kwargs_mass_sheet=kwargs_mass_sheet)
 
     ######################### add pbh ####################
     kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split, setup_decoupled_multiplane_lens_model_output = (
@@ -726,9 +735,7 @@ def forward_model_single_iteration(data_class,
     if return_realization:
         return realization
     lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
-        kwargs_mass_sheet={'log_mlow_sheets': log_mlow_mass_sheets,
-                           'log_mhigh_sheets': log_mhigh_mass_sheets,
-                           'kappa_scale_subhalos': kappa_scale_subhalos})
+        kwargs_mass_sheet=kwargs_mass_sheet)
     ########################################################
     kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split, setup_decoupled_multiplane_lens_model_output = (
         model_class.setup_kwargs_model(
