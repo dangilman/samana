@@ -47,7 +47,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   hessian_eigenvalue_list=None,
                   log_mhigh_mass_sheets=10.0,
                   use_class_mass_ranges=False,
-                  downselect_halo_mass=None
+                  downselect_halo_mass=None,
+                  subtract_exact_sheets=False
                   ):
     """
     Top-level function for forward modeling strong lenses with substructure. This function makes repeated calls to
@@ -255,7 +256,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              hessian_eigenvalue_list,
                              log_mhigh_mass_sheets,
                              use_class_mass_ranges,
-                             downselect_halo_mass
+                             downselect_halo_mass,
+                             subtract_exact_sheets
                              ))
 
             pool = Pool(num_threads)
@@ -340,7 +342,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                hessian_eigenvalue_list,
                                                 log_mhigh_mass_sheets,
                                                 use_class_mass_ranges,
-                                                downselect_halo_mass
+                                                downselect_halo_mass,
+                                                subtract_exact_sheets
                                                )
 
             seed_counter += 1
@@ -490,7 +493,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            hessian_eigenvalue_list=None,
                            log_mhigh_mass_sheets=10.0,
                            use_class_mass_ranges=False,
-                           downselect_halo_mass=None
+                           downselect_halo_mass=None,
+                            subtract_exact_sheets=False
                            ):
     """
 
@@ -621,13 +625,15 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     else:
         kwargs_mass_sheet = {'log_mlow_sheets': log_mlow_mass_sheets,
                              'log_mhigh_sheets': log_mhigh_mass_sheets,
-                             'kappa_scale_subhalos': kappa_scale_subhalos}
-
+                             'kappa_scale_subhalos': kappa_scale_subhalos,
+                             'subtract_exact_sheets': subtract_exact_sheets}
+    ray_interp_x, ray_interp_y = None, None
     if downselect_halo_mass is not None:
         ### REMOVE LOW-MASS HALOS THAT ARE FAR FROM LENSED IMAGES
         lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
             use_class_mass_ranges=use_class_mass_ranges,
             kwargs_mass_sheet=kwargs_mass_sheet)
+
         _, lens_model_filter, kwargs_lens_filter, _, _ = (
             model_class.setup_kwargs_model(
                 decoupled_multiplane=False,
@@ -649,15 +655,16 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                                            kwargs_lens_filter,
                                                            data_class.z_source)
         realization = realization.filter(
-            downselect_halo_mass['aperture_radius'],
-            downselect_halo_mass['log10_m_min'],
-            ray_interp_x,
-            ray_interp_y)
+            interpolated_x_angle=ray_interp_x,
+            interpolated_y_angle=ray_interp_y,
+            **downselect_halo_mass
+        )
         if verbose:
             print('after downselecting on halo mass and position, num halos: ', len(realization.halos))
-        kwargs_mass_sheet = {'log_mlow_sheets': downselect_halo_mass['log10_m_min'],
+        kwargs_mass_sheet = {'log_mlow_sheets': downselect_halo_mass['log10_mass_allowed_global'],
                              'log_mhigh_sheets': log_mhigh_mass_sheets,
-                             'kappa_scale_subhalos': kappa_scale_subhalos}
+                             'kappa_scale_subhalos': kappa_scale_subhalos,
+                             'subtract_exact_sheets': subtract_exact_sheets}
         use_class_mass_ranges = False
         if log10_bound_mass_cut is not None and preset_realization is None:
             realization = realization.filter_bound_mass(10 ** log10_bound_mass_cut)
@@ -1131,7 +1138,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                        'with_critical_curves': True,
                        'v_min': -0.075, 'v_max': 0.075,
                        'super_sample_factor': 5,
-                       'subtract_mean': True}
+                       'subtract_mean': False}
         modelPlot.substructure_plot(band_index=0, **kwargs_plot)
         plt.show()
 
@@ -1139,7 +1146,12 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         fig.set_size_inches(12, 12)
         ax = plt.axes(projection='3d')
         if background_shifting:
-            realization.plot(ax,
+            if ray_interp_x is not None:
+                realization.plot(ax,
+                                 ray_interp_x_list=ray_interp_x,
+                                 ray_interp_y_list=ray_interp_y)
+            else:
+                realization.plot(ax,
                              ray_interp_x_list=ray_align_x,
                              ray_interp_y_list=ray_align_y)
         else:

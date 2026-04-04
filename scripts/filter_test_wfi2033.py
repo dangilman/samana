@@ -11,9 +11,11 @@ from copy import deepcopy
 try:
     out_path = os.getenv('SCRATCH') + '/'  # replace this with whatever directory you want to output files
     job_index = int(sys.argv[1])
+    test_mode = False
 except:
     out_path = os.getcwd()
     job_index = 1
+    test_mode = True
 
 lens_ID = 'WFI2033'
 data_class, model_class = quick_setup(lens_ID)
@@ -57,55 +59,21 @@ kwargs_sample_macro_fixed = {
         'q': ['TRUNC-HALF-GAUSS', 0.80, 0.2,0.65, 0.999]
     }
 use_imaging_data = False
-n_keep = 4
+n_keep = 20
 tolerance = np.inf
 verbose = True
 random_seed_init = None
 n_pso_particles = 10
 n_pso_iterations = 5
-log10_bound_mass_cut = 4.0
+log10_bound_mass_cut = 4.7
 kwargs_model_class = {'shapelets_order': 10} # source complexity
-test_mode = True
 num_threads = 1
 magnification_method = 'ELLIPTICAL_APERTURE'
 if out_path is None:
     out_path = os.getcwd()
 
-output_path = out_path + '/wfi2033_no_filtering/'
+output_path = out_path + '/wfi2033_nofiltering/'
 downselect_halo_mass = None
-forward_model(output_path, job_index, n_keep, data_class, model_class, preset_model_name_cdm,
-                  kwargs_sample_realization_cdm, kwargs_sample_source, kwargs_sample_macro_fixed,
-               tolerance, random_seed_init=random_seed_init,
-              rescale_grid_resolution=1.2,
-              rescale_grid_size=1.5,
-              kwargs_model_class=kwargs_model_class,
-              verbose=verbose, n_pso_particles=n_pso_particles,
-              n_pso_iterations=n_pso_iterations, num_threads=num_threads,
-              test_mode=test_mode, use_imaging_data=use_imaging_data,
-              log10_bound_mass_cut=log10_bound_mass_cut,
-                  filter_subhalo_kwargs=filter_subhalo_kwargs,
-              fr_logL_source_reconstruction=0.0,
-              downselect_halo_mass=downselect_halo_mass)
-
-
-output_path = out_path + '/wfi2033_filtering_1/'
-downselect_halo_mass = {'aperture_radius': 0.25, 'log10_m_min': 7.0}
-forward_model(output_path, job_index, n_keep, data_class, model_class, preset_model_name_cdm,
-                  kwargs_sample_realization_cdm, kwargs_sample_source, kwargs_sample_macro_fixed,
-               tolerance, random_seed_init=random_seed_init,
-              rescale_grid_resolution=1.2,
-              rescale_grid_size=1.5,
-              kwargs_model_class=kwargs_model_class,
-              verbose=verbose, n_pso_particles=n_pso_particles,
-              n_pso_iterations=n_pso_iterations, num_threads=num_threads,
-              test_mode=test_mode, use_imaging_data=use_imaging_data,
-              log10_bound_mass_cut=log10_bound_mass_cut,
-                  filter_subhalo_kwargs=filter_subhalo_kwargs,
-              fr_logL_source_reconstruction=0.0,
-              downselect_halo_mass=downselect_halo_mass)
-
-output_path = out_path + '/wfi2033_filtering_2/'
-downselect_halo_mass = {'aperture_radius': 0.25, 'log10_m_min': 7.5}
 forward_model(output_path, job_index, n_keep, data_class, model_class, preset_model_name_cdm,
                   kwargs_sample_realization_cdm, kwargs_sample_source, kwargs_sample_macro_fixed,
                tolerance, random_seed_init=random_seed_init,
@@ -122,4 +90,53 @@ forward_model(output_path, job_index, n_keep, data_class, model_class, preset_mo
               hessian_eigenvalue_list=hessian_eigenvalue_list,
               magnification_method=magnification_method,
               rotation_angle_list=rotation_angle_list,
+              log_mhigh_mass_sheets=10.7
+              )
+
+output_path = out_path + '/wfi2033_filtering_1/'
+downselect_halo_mass = {'aperture_radius': 0.2,
+                            'log10_mass_allowed_global': 6.7,
+                            'aperture_units': 'ANGLES',
+                            'geometric_weighting': True}
+forward_model(output_path, job_index, n_keep, data_class, model_class, preset_model_name_cdm,
+                  kwargs_sample_realization_cdm, kwargs_sample_source, kwargs_sample_macro_fixed,
+               tolerance, random_seed_init=random_seed_init,
+              rescale_grid_resolution=1.2,
+              rescale_grid_size=1.5,
+              kwargs_model_class=kwargs_model_class,
+              verbose=verbose, n_pso_particles=n_pso_particles,
+              n_pso_iterations=n_pso_iterations, num_threads=num_threads,
+              test_mode=test_mode, use_imaging_data=use_imaging_data,
+              log10_bound_mass_cut=log10_bound_mass_cut,
+                  filter_subhalo_kwargs=filter_subhalo_kwargs,
+              fr_logL_source_reconstruction=0.0,
+              downselect_halo_mass=downselect_halo_mass,
+              hessian_eigenvalue_list=hessian_eigenvalue_list,
+              magnification_method=magnification_method,
+              rotation_angle_list=rotation_angle_list,
+                log_mhigh_mass_sheets=10.7
+              )
+
+output_path = out_path + '/wfi2033_filtering_2/'
+downselect_halo_mass = {'aperture_radius': 0.25,
+                            'log10_mass_allowed_global': 7.0,
+                            'aperture_units': 'ANGLES',
+                            'geometric_weighting': True}
+forward_model(output_path, job_index, n_keep, data_class, model_class, preset_model_name_cdm,
+                  kwargs_sample_realization_cdm, kwargs_sample_source, kwargs_sample_macro_fixed,
+               tolerance, random_seed_init=random_seed_init,
+              rescale_grid_resolution=1.2,
+              rescale_grid_size=1.5,
+              kwargs_model_class=kwargs_model_class,
+              verbose=verbose, n_pso_particles=n_pso_particles,
+              n_pso_iterations=n_pso_iterations, num_threads=num_threads,
+              test_mode=test_mode, use_imaging_data=use_imaging_data,
+              log10_bound_mass_cut=log10_bound_mass_cut,
+                  filter_subhalo_kwargs=filter_subhalo_kwargs,
+              fr_logL_source_reconstruction=0.0,
+              downselect_halo_mass=downselect_halo_mass,
+              hessian_eigenvalue_list=hessian_eigenvalue_list,
+              magnification_method=magnification_method,
+              rotation_angle_list=rotation_angle_list,
+                log_mhigh_mass_sheets=10.7
               )
