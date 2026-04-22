@@ -637,6 +637,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         kwargs_mass_sheet = {'log_mlow_sheets': log_mlow_mass_sheets,
                              'log_mhigh_sheets': log_mhigh_mass_sheets,
                              'kappa_scale_subhalos': kappa_scale_subhalos}
+        ray_interp_x, ray_interp_y = None, None
         if downselect_halo_mass is not None:
             ### REMOVE LOW-MASS HALOS THAT ARE FAR FROM LENSED IMAGES
             lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
@@ -667,7 +668,9 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                 downselect_halo_mass['aperture_radius'],
                 downselect_halo_mass['log10_m_min'],
                 ray_interp_x,
-                ray_interp_y)
+                ray_interp_y,
+
+            )
             if verbose:
                 print('after downselecting on halo mass and position, num halos: ', len(realization.halos))
             if log10_bound_mass_cut is not None:
@@ -1167,9 +1170,14 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         fig.set_size_inches(12, 12)
         ax = plt.axes(projection='3d')
         if background_shifting:
-            realization.plot(ax,
-                             ray_interp_x_list=ray_align_x,
-                             ray_interp_y_list=ray_align_y)
+            if ray_interp_x is not None:
+                realization.plot(ax,
+                                 ray_interp_x_list=ray_interp_x,
+                                 ray_interp_y_list=ray_interp_y)
+            else:
+                realization.plot(ax,
+                                 ray_interp_x_list=ray_align_x,
+                                 ray_interp_y_list=ray_align_y)
         else:
             realization.plot(ax)
         plt.show()
