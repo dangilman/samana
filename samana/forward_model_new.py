@@ -226,7 +226,7 @@ def forward_model(output_path,
         # this keeps track of how many realizations were analyzed, and resets after each readout (set by readout_steps)
         # The purpose of this counter is to keep track of the acceptance rate
         iteration_counter += 1
-        if magnifications is not None and stat < tolerance:
+        if magnifications is not None and np.any(stat < tolerance):
             # If the statistic is less than the tolerance threshold, we keep the parameters
             accepted_realizations_counter += 1
             n_kept += 1
@@ -440,7 +440,9 @@ def forward_model_single_iteration(data_class,
 
     realization_init = dark_matter_model_class(z_lens,
                                           data_class.z_source,
-                                          realization_dict)
+                                          realization_dict,
+                                               )
+
     if return_realization:
         return realization_init
     realization_init, ray_align_x, ray_align_y, _, _ = align_realization(realization_init,
@@ -455,7 +457,12 @@ def forward_model_single_iteration(data_class,
     realization, kwargs_mass_sheet_correction = dark_matter_model_class.process_halos(
         data_class.x_image,
         data_class.y_image,
-        realization_init)
+        realization_init,
+        verbose=verbose)
+    # perform additional operations on realization after operations in process halos
+    realization = dark_matter_model_class.halo_modifications(
+        realization, realization_dict
+    )
     # add globular clusters
     realization = dark_matter_model_class.add_globular_clusters(
         realization,
@@ -574,7 +581,7 @@ def forward_model_single_iteration(data_class,
                     method_name = minimize_method
                 if verbose:
                     print('using optimization routine '+str(method_name))
-                kwargs_solution, _ = opt.optimize(50, 50, verbose=verbose, seed=seed,
+                kwargs_solution, [_sourcex, _sourcey] = opt.optimize(50, 50, verbose=verbose, seed=seed,
                                                       minimize_method=minimize_method)
             kwargs_multiplane_model = opt.kwargs_multiplane_model
         else:
@@ -620,6 +627,7 @@ def forward_model_single_iteration(data_class,
     source_x, source_y = lens_model.ray_shooting(data_class.x_image,
                                                  data_class.y_image,
                                                  kwargs_solution)
+
     if verbose:
         print('\n')
         print('kwargs solution: ', kwargs_solution)
@@ -659,17 +667,25 @@ def forward_model_single_iteration(data_class,
             print('computing image magnifications...')
 
         magnifications, images, stat, flux_ratios, flux_ratios_data = magnification_class(
-            source_dict, source_x, source_y, astropy_cosmo, data_class, model_class,
+            source_dict, source_x, source_y, data_class, model_class,
             lens_model_init, kwargs_lens_init, kwargs_solution, setup_decoupled_multiplane_lens_model_output
                                                      )
 
     tend = time()
     if verbose:
         print('computed magnifications in '+str(np.round(tend - t0, 1))+' seconds')
-        print('magnifications: ', magnifications)
         print('flux ratios data: ', np.array(data_class.magnifications)[1:] / data_class.magnifications[0])
-        print('flux ratios model: ', magnifications[1:] / magnifications[0])
-        print('statistic: ', stat)
+        if len(magnifications) > 4:
+            print('magnifications (1): ', magnifications[0:4])
+            print('flux ratios model (1): ', magnifications[0:4] / magnifications[0])
+            print('statistic (1): ', stat[0])
+            print('magnifications (2): ', magnifications[4:])
+            print('flux ratios model (2): ', magnifications[4:] / magnifications[4])
+            print('statistic (2): ', stat[1])
+        else:
+            print('magnifications: ', magnifications)
+            print('flux ratios model: ', magnifications[1:] / magnifications[0])
+            print('statistic: ', stat)
         print(kwargs_solution)
         print('\n')
         print(macromodel_samples_fixed_dict)

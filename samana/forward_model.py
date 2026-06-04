@@ -794,7 +794,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                     method_name = minimize_method
                 if verbose:
                     print('using optimization routine '+str(method_name))
-                kwargs_solution, _ = opt.optimize(50, 50, verbose=verbose, seed=seed,
+                kwargs_solution, [_sourcex, _sourcey] = opt.optimize(50, 50, verbose=verbose, seed=seed,
                                                       minimize_method=minimize_method)
             kwargs_multiplane_model = opt.kwargs_multiplane_model
         else:
@@ -840,6 +840,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     source_x, source_y = lens_model.ray_shooting(data_class.x_image,
                                                  data_class.y_image,
                                                  kwargs_solution)
+
     if verbose:
         print('\n')
         print('kwargs solution: ', kwargs_solution)

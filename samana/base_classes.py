@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from samana.image_magnification_util import setup_gaussian_source
 from samana.forward_model_util import flux_ratio_summary_statistic
 from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_size, auto_raytracing_grid_resolution
@@ -12,6 +14,16 @@ class DarkMatterBaseClass(object):
         astropy_cosmo: an instance of Astropy cosmology
         """
         self.astropy_cosmo = astropy_cosmo
+
+    def halo_modifications(self, realization, realization_dict):
+        """
+        Perform additional modifications on halo properties after process halos
+        This method defaults to doing nothing, as it is often not used
+        :param realization: an instance of SingleRealization
+        :param realization_dict: keyword arguments for the DM model
+        :return: realization
+        """
+        return realization
 
     def process_halos(self, realization):
         """
@@ -87,12 +99,12 @@ class SingleGaussianMagnification(object):
         self.rotation_angle_list = rotation_angle_list
         self.hessian_eigenvalue_list = hessian_eigenvalue_list
 
-    def __call__(self, source_dict, source_x, source_y, astropy_cosmo, data_class, model_class,
+    def __call__(self, source_dict, source_x, source_y, data_class, model_class,
                  lens_model_init, kwargs_lens_init, kwargs_solution, setup_decoupled_multiplane_lens_model_output):
 
         source_model_quasar, kwargs_source = setup_gaussian_source(source_dict['source_size_pc'],
                                                                    np.mean(source_x), np.mean(source_y),
-                                                                   astropy_cosmo, data_class.z_source)
+                                                                   self.astropy_cosmo, data_class.z_source)
         grid_size_base = auto_raytracing_grid_size(source_dict['source_size_pc'])
         grid_resolution = self.rescale_grid_resolution * auto_raytracing_grid_resolution(source_dict['source_size_pc'])
         if isinstance(self.rescale_grid_size, list) or isinstance(self.rescale_grid_size, np.ndarray):
@@ -123,7 +135,71 @@ class SingleGaussianMagnification(object):
                                                                                data_class.uncertainty_in_fluxes)
         return magnifications, images, stat, flux_ratios, flux_ratios_data
 
+class DoubleGaussianMagnification(object):
+    """Compute the magnification of a lensed quasar image for a quad lens for two different
+    source sizes at the same position in the source plane"""
 
+    def __init__(self, astropy_cosmo,
+                 rescale_grid_size,
+                 rescale_grid_resolution,
+                 magnification_method,
+                 rotation_angle_list,
+                 hessian_eigenvalue_list):
+        """
+
+        :param astropy_cosmo:
+        :param rescale_grid_size:
+        :param rescale_grid_resolution:
+        :param magnification_method:
+        :param rotation_angle_list:
+        :param hessian_eigenvalue_list:
+        """
+        self.astropy_cosmo = astropy_cosmo
+        self.rescale_grid_size = rescale_grid_size
+        self.rescale_grid_resolution = rescale_grid_resolution
+        self.magnification_method = magnification_method
+        self.rotation_angle_list = rotation_angle_list
+        self.hessian_eigenvalue_list = hessian_eigenvalue_list
+        self._single_source_magnification = SingleGaussianMagnification(astropy_cosmo,
+                 rescale_grid_size,
+                 rescale_grid_resolution,
+                 magnification_method,
+                 rotation_angle_list,
+                 hessian_eigenvalue_list)
+
+    def __call__(self, source_dict, source_x, source_y, data_class, model_class,
+                 lens_model_init, kwargs_lens_init, kwargs_solution, setup_decoupled_multiplane_lens_model_output):
+
+        source_dict_copy_1 = deepcopy(source_dict)
+        source_dict_copy_2 = deepcopy(source_dict)
+        source_dict_copy_1['source_size_pc'] = source_dict['source_size_pc_1']
+        source_dict_copy_2['source_size_pc'] = source_dict['source_size_pc_2']
+
+        mags_1, images_1, stat_1, flux_ratios_1, flux_ratios_data = self._single_source_magnification(source_dict_copy_1,
+                                                                                                        source_x,
+                                                                                                        source_y,
+                                                                                                        data_class,
+                                                                                                        model_class,
+                                                                                                        lens_model_init,
+                                                                                                        kwargs_lens_init,
+                                                                                                        kwargs_solution,
+                                                                                                        setup_decoupled_multiplane_lens_model_output)
+        mags_2, images_2, stat_2, flux_ratios_2, _ = self._single_source_magnification(
+            source_dict_copy_2,
+            source_x,
+            source_y,
+            data_class,
+            model_class,
+            lens_model_init,
+            kwargs_lens_init,
+            kwargs_solution,
+            setup_decoupled_multiplane_lens_model_output)
+
+        magnifications = np.append(mags_1, mags_2)
+        images = images_1 + images_2
+        stat = np.append(stat_1, stat_2)
+        flux_ratios = np.append(flux_ratios_1, flux_ratios_2)
+        return magnifications, images, stat, flux_ratios, flux_ratios_data
 
 
 
