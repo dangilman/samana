@@ -431,18 +431,18 @@ def forward_model_single_iteration(data_class,
         x_image=data_class.x_image,
         y_image=data_class.y_image,
         verbose=verbose)
-    # generate
+
     kwargs_params = model_class.kwargs_params(kwargs_lens_macro_init=kwargs_lens_macro_init,
                                               delta_x_image=-delta_x_image,
                                               delta_y_image=-delta_y_image,
                                               macromodel_samples_fixed=macromodel_samples_fixed_dict)
     kwargs_lens_align = kwargs_params['lens_model'][0]
 
+    # generate realization
     realization_init = dark_matter_model_class(z_lens,
                                           data_class.z_source,
                                           realization_dict,
-                                               )
-
+                                               verbose=verbose)
     if return_realization:
         return realization_init
     realization_init, ray_align_x, ray_align_y, _, _ = align_realization(realization_init,
@@ -465,11 +465,14 @@ def forward_model_single_iteration(data_class,
     )
     # add globular clusters
     realization = dark_matter_model_class.add_globular_clusters(
+        data_class.x_image,
+        data_class.y_image,
         realization,
         realization_dict)
     # GET THE NEW LENS MODEL/KWARGS LIST
     lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
         **kwargs_mass_sheet_correction)
+
     pixel_size = data_class.coordinate_properties[0] / data_class.kwargs_numerics['supersampling_factor']
     grid_resolution_image_data = pixel_size / image_data_grid_resolution_rescale
     if use_imaging_data:

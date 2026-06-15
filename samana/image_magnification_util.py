@@ -236,26 +236,29 @@ def mag_finite_single_image_adaptive(source_model, kwargs_source, lens_model_fix
     inds_compute_array = np.zeros_like(grid_x_large)
     grid_r = np.hypot(grid_x_large, grid_y_large)
     bright_coords_x, bright_coords_y = bright_coords[1], bright_coords[0]
-    for grid_index, (coord_x, coord_y, r_coord) in enumerate(zip(grid_x_large, grid_y_large, grid_r)):
-        if r_coord > grid_size_max / 2:
-            continue
-        else:
-            dx, dy = coord_x - bright_coords_x, coord_y - bright_coords_y
-            dr = np.sqrt(dx ** 2 + dy ** 2)
-            if np.any(dr <= dist):
-                inds_compute_array[grid_index] = 1
-            # for bright_coord_x, bright_coord_y in zip(bright_coords[1], bright_coords[0]):
-            #     dx, dy = coord_x - bright_coord_x, coord_y - bright_coord_y
-            #     dr = np.sqrt(dx ** 2 + dy ** 2)
-            #     if dr <= dist:
-            #         inds_compute_array[grid_index] = 1
-            #         pix_x, pix_y = coordinates_highres.map_coord2pix(coord_x, coord_y)
-            #         pixel_x_large.append(pix_x)
-            #         pixel_y_large.append(pix_y)
-            #         break
+
+    # shape: (N_highres_pixels, N_bright_coords)
+    dx = grid_x_large[:, None] - bright_coords_x[None, :]
+    dy = grid_y_large[:, None] - bright_coords_y[None, :]
+    dr = np.sqrt(dx ** 2 + dy ** 2)
+    within_radius = np.any(dr <= dist, axis=1)  # shape: (N_highres_pixels,)
+    within_bounds = grid_r <= grid_size_max / 2
+    inds_compute_highres = np.where(within_radius & within_bounds)
+
+
+    # for grid_index, (coord_x, coord_y, r_coord) in enumerate(zip(grid_x_large, grid_y_large, grid_r)):
+    #     if r_coord > grid_size_max / 2:
+    #         continue
+    #     else:
+    #         dx, dy = coord_x - bright_coords_x, coord_y - bright_coords_y
+    #         dr = np.sqrt(dx ** 2 + dy ** 2)
+    #         if np.any(dr <= dist):
+    #             inds_compute_array[grid_index] = 1
+
+
     inds_compute_array = inds_compute_array.reshape(numPix,numPix)[::-1,::-1]
     #plt.imshow(inds_compute_array, origin='upper'); plt.show()
-    inds_compute_highres = np.where(inds_compute_array.ravel()==1)
+    #inds_compute_highres = np.where(inds_compute_array.ravel()==1)
     x_points_temp = grid_x_large[inds_compute_highres] + x_image
     y_points_temp = grid_y_large[inds_compute_highres] + y_image
     # setup ray tracing info
