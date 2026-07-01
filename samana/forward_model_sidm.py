@@ -46,7 +46,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                   background_shifting=True,
                   rotation_angle_list=None,
                   hessian_eigenvalue_list=None,
-                downselect_halo_mass=None
+                downselect_halo_mass=None,
+                sidm_timescale_function=None
                   ):
     """
     Top-level function for forward modeling strong lenses with substructure. This function makes repeated calls to
@@ -252,7 +253,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                              background_shifting,
                              rotation_angle_list,
                              hessian_eigenvalue_list,
-                             downselect_halo_mass
+                             downselect_halo_mass,
+                             sidm_timescale_function
                              ))
 
             pool = Pool(num_threads)
@@ -335,7 +337,8 @@ def forward_model(output_path, job_index, n_keep, data_class, model, preset_mode
                                                 background_shifting,
                                                rotation_angle_list,
                                                hessian_eigenvalue_list,
-                                               downselect_halo_mass
+                                               downselect_halo_mass,
+                                               sidm_timescale_function
                                                )
 
             seed_counter += 1
@@ -491,7 +494,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                            rotation_angle_list=None,
                            hessian_eigenvalue_list=None,
                            downselect_halo_mass=None,
-                            log_mhigh_mass_sheets=10.7,
+                            sidm_timescale_function=None,
+                            log_mhigh_mass_sheets=10.7
                            ):
     """
 
@@ -700,7 +704,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                          halo_profile=collapsed_halo_profile,
                                          gamma_inner=kwargs_sidm['gamma_inner'],
                                          scale_match_r=kwargs_sidm['scale_match_r'],
-                                         log_slope_match=kwargs_sidm['log_slope_match'])
+                                         log_slope_match=kwargs_sidm['log_slope_match'],
+                                        sidm_timescale_function=sidm_timescale_function)
     ext = RealizationExtensions(realization)
     realization = ext.add_globular_clusters(**kwargs_globular_clusters)
     if return_realization:
