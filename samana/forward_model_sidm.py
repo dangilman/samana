@@ -1,7 +1,7 @@
 from pyHalo.preset_models import preset_model_from_name
 from pyHalo.realization_extensions import RealizationExtensions
 from samana.forward_model_util import filenames, sample_prior, align_realization, \
-    flux_ratio_summary_statistic, split_kwargs_params, check_lens_equation_solution, interpolate_ray_paths
+    flux_ratio_summary_statistic, split_kwargs_params, check_lens_equation_solution, interpolate_ray_paths, sample_globular_cluster_params
 from lenstronomy.LensModel.lens_model import LensModel
 from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_resolution, auto_raytracing_grid_size
 from lenstronomy.Workflow.fitting_sequence import FittingSequence
@@ -707,6 +707,8 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                                          log_slope_match=kwargs_sidm['log_slope_match'],
                                         sidm_timescale_function=sidm_timescale_function)
     ext = RealizationExtensions(realization)
+    kwargs_globular_clusters, gc_samples, gc_sample_names = sample_globular_cluster_params(kwargs_globular_clusters,
+                                                                                           verbose=verbose)
     realization = ext.add_globular_clusters(**kwargs_globular_clusters)
     if return_realization:
         return realization
@@ -1191,18 +1193,10 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
     if data_class.redshift_sampling:
         realization_samples = np.append(realization_samples, z_lens)
         realization_param_names += ['z_lens']
+    if len(gc_sample_names) > 0:
+        realization_samples = np.append(realization_samples, gc_samples)
+        realization_param_names += gc_sample_names
 
-    if 'HIERARCHICAL_MULTIPOLE_PRIOR' in list(kwargs_sample_macro_fixed.keys()):
-        for index, name in enumerate(param_names_macro_fixed):
-            if name == 'scale_multipole':
-                break
-        else:
-            raise Exception('you specified HIERARCHICAL_MULTIPOLE_PRIOR but the sampled macrmodel arguments dont contain'
-                            'the required keywords')
-        realization_samples = np.append(realization_samples,samples_macromodel_fixed[index])
-        realization_param_names += ['scale_multipole']
-        if verbose:
-            print('hierachical multipole scaling: ', realization_samples[-1])
     output_vector = (magnifications, images, realization_samples, source_samples, samples_macromodel, samples_macromodel_fixed, \
            logL_imaging_data, fitting_sequence, \
            stat, bic, realization_param_names, \

@@ -5,6 +5,41 @@ from lenstronomy.LensModel.lens_model import LensModel
 from copy import deepcopy
 from scipy.stats import truncnorm
 
+def sample_globular_cluster_params(kwargs_globular_cluster, verbose=False):
+    """
+    SAMPLE GLOBULAR CLUSTER KEYWORD ARGUMENTS
+    :param kwargs_globular_cluster:
+    :return:
+    """
+    kwargs_globular_cluster_out = {}
+    sample_list = []
+    sample_names = []
+    for key in kwargs_globular_cluster.keys():
+        if isinstance(kwargs_globular_cluster[key], list):
+            prior_type = kwargs_globular_cluster[key][0]
+            if prior_type == 'FIXED':
+                sample = kwargs_globular_cluster[key][1]
+                kwargs_globular_cluster_out[key] = sample
+                sample_list.append(sample)
+                sample_names.append(key)
+                continue
+            elif prior_type == 'UNIFORM':
+                param_mean, param_sigma = kwargs_globular_cluster[key][1], kwargs_globular_cluster[key][2]
+                sample = np.random.uniform(param_mean, param_sigma)
+                if key == 'log10_gc_surface_mass_density':
+                    kwargs_globular_cluster_out['gc_surface_mass_density'] = 10**sample
+                else:
+                    kwargs_globular_cluster_out[key] = sample
+                sample_list.append(sample)
+                sample_names.append(key)
+                continue
+            else:
+                raise Exception('unknown prior '+prior_type)
+        else:
+            kwargs_globular_cluster_out[key] = kwargs_globular_cluster[key]
+    if verbose:
+        print('globular cluster keywords: ', sample_list)
+    return kwargs_globular_cluster_out, np.array(sample_list), sample_names
 
 class KwargsLensSampler(object):
 
