@@ -882,18 +882,22 @@ def forward_model_single_iteration(data_class,
         f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
         modelPlot.data_plot(ax=axes[0, 0])
         modelPlot.model_plot(ax=axes[0, 1])
-        modelPlot.normalized_residual_plot(ax=axes[0, 2], v_min=-6, v_max=6)
-        modelPlot.source_plot(ax=axes[1, 0], deltaPix_source=0.01, numPix=100)
-        modelPlot.convergence_plot(ax=axes[1, 1], v_max=1)
+        modelPlot.normalized_residual_plot(ax=axes[0, 2], vmin=-6, vmax=6)
+        modelPlot.source_plot(ax=axes[1, 0], delta_pix_source=0.01, num_pix=100)
+        modelPlot.convergence_plot(ax=axes[1, 1], vmax=1)
         modelPlot.magnification_plot(ax=axes[1, 2])
 
         f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
-        modelPlot.decomposition_plot(ax=axes[0, 0], text='Lens light', lens_light_add=True, unconvolved=True)
-        modelPlot.decomposition_plot(ax=axes[1, 0], text='Lens light convolved', lens_light_add=True)
-        modelPlot.decomposition_plot(ax=axes[0, 1], text='Source light', source_add=True, unconvolved=True)
-        modelPlot.decomposition_plot(ax=axes[1, 1], text='Source light convolved', source_add=True)
-        modelPlot.decomposition_plot(ax=axes[0, 2], text='All components', source_add=True, lens_light_add=True,
+        modelPlot.decomposition_plot(ax=axes[0, 0], kwargs_title={'text': 'Lens light'}, lens_light_add=True,
                                      unconvolved=True)
+        modelPlot.decomposition_plot(ax=axes[1, 0], kwargs_title={'text': 'Lens light convolved'}, lens_light_add=True)
+        modelPlot.decomposition_plot(ax=axes[0, 1], kwargs_title={'text': 'Source light'}, source_add=True,
+                                     unconvolved=True)
+        modelPlot.decomposition_plot(ax=axes[1, 1], kwargs_title={'text': 'Source light convolved'}, source_add=True)
+        modelPlot.decomposition_plot(ax=axes[0, 2], kwargs_title={'text': 'All components'}, source_add=True,
+                                     lens_light_add=True,
+                                     unconvolved=True)
+
         try:
             modelPlot.decomposition_plot(ax=axes[1, 2], text='All components convolved', source_add=True,
                                      lens_light_add=True, point_source_add=True)
