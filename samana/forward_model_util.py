@@ -38,7 +38,7 @@ def sample_globular_cluster_params(kwargs_globular_cluster, verbose=False):
         else:
             kwargs_globular_cluster_out[key] = kwargs_globular_cluster[key]
     if verbose:
-        print('globular cluster keywords: ', sample_list)
+        print('globular cluster keywords: ', kwargs_globular_cluster_out)
     return kwargs_globular_cluster_out, np.array(sample_list), sample_names
 
 class KwargsLensSampler(object):

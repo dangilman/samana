@@ -336,41 +336,18 @@ def decoupled_multiplane_rayshooting(grid_r, r_min, r_max, inds_compute,
                                      alpha_x_background, alpha_y_background, Td, kwargs_lens, reduced_to_phys,
                                      Ts, Tds):
     """
-    Ray propagation and image flux calculation with the decoupled multiplane formalism
-    :param grid_r:
-    :param r_min:
-    :param r_max:
-    :param inds_compute:
-    :param grid_x_large:
-    :param grid_y_large:
-    :param x_image:
-    :param y_image:
-    :param lens_model_fixed:
-    :param lens_model_free:
-    :param kwargs_lens_fixed:
-    :param kwargs_lens_free:
-    :param z_split:
-    :param z_source:
-    :param cosmo_bkg:
-    :param xD:
-    :param yD:
-    :param alpha_x_foreground:
-    :param alpha_y_foreground:
-    :param alpha_x_background:
-    :param alpha_y_background:
-    :param Td:
-    :param kwargs_lens:
-    :param reduced_to_phys:
-    :param Ts:
-    :param Tds:
-    :return:
+    Ray propagation with the decoupled multiplane formalism, evaluated only at
+    the coordinates newly added in the annulus [r_min, r_max). Returns the
+    source-plane coordinates of the new points and their indices; previously
+    computed points do not change between annulus iterations, so nothing needs
+    to be re-evaluated for them.
     """
     # select new coordinates to ray-trace through
     inds_compute, inds_outside_r, inds_computed = _inds_compute_grid(grid_r, r_min, r_max, inds_compute)
     x_points_temp = grid_x_large[inds_compute] + x_image
     y_points_temp = grid_y_large[inds_compute] + y_image
 
-    # compute lensing stuff at these coordinates
+    # compute lensing stuff at the new coordinates (the expensive halo-field call)
     _xD, _yD, _alpha_x_foreground, _alpha_y_foreground, _alpha_x_background, _alpha_y_background = \
         coordinates_and_deflections(lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
                                     x_points_temp, y_points_temp, z_split, z_source, cosmo_bkg)
@@ -382,9 +359,9 @@ def decoupled_multiplane_rayshooting(grid_r, r_min, r_max, inds_compute,
     alpha_x_background[inds_compute] = _alpha_x_background
     alpha_y_background[inds_compute] = _alpha_y_background
 
-    # ray trace to source plane
-    x = xD[inds_computed]
-    y = yD[inds_computed]
+    # ray trace the NEW points to the source plane
+    x = _xD
+    y = _yD
     # compute the deflection angles from the main deflector
     deflection_x_main, deflection_y_main = lens_model_free.alpha(
         x / Td, y / Td, kwargs_lens
@@ -393,47 +370,33 @@ def decoupled_multiplane_rayshooting(grid_r, r_min, r_max, inds_compute,
     deflection_y_main *= reduced_to_phys
 
     # add the main deflector to the deflection field
-    alpha_x = alpha_x_foreground[inds_computed] - deflection_x_main
-    alpha_y = alpha_y_foreground[inds_computed] - deflection_y_main
+    alpha_x = _alpha_x_foreground - deflection_x_main
+    alpha_y = _alpha_y_foreground - deflection_y_main
 
     # combine deflections
-    alpha_background_x = alpha_x + alpha_x_background[inds_computed]
-    alpha_background_y = alpha_y + alpha_y_background[inds_computed]
+    alpha_background_x = alpha_x + _alpha_x_background
+    alpha_background_y = alpha_y + _alpha_y_background
 
     # ray propagation to the source plane with the small angle approximation
     beta_x = x / Ts + alpha_background_x * Tds / Ts
     beta_y = y / Ts + alpha_background_y * Tds / Ts
-    return beta_x, beta_y, inds_computed, inds_outside_r
+    return beta_x, beta_y, inds_compute, inds_outside_r
 
 def mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
                             kwargs_lens_free, kwargs_lens, z_split, z_source,
                             cosmo_bkg, x_image, y_image, grid_x_large, grid_y_large,
                             grid_r, r_step, grid_resolution, grid_size_max, zlens, zsource):
     """
-    Compute the magnification of a single lensed image with the decoupled multiplane formalism
-    :param source_model:
-    :param kwargs_source:
-    :param lens_model_fixed:
-    :param lens_model_free:
-    :param kwargs_lens_fixed:
-    :param kwargs_lens_free:
-    :param kwargs_lens:
-    :param z_split:
-    :param z_source:
-    :param cosmo_bkg:
-    :param x_image:
-    :param y_image:
-    :param grid_x_large:
-    :param grid_y_large:
-    :param grid_r:
-    :param r_step:
-    :param grid_resolution:
-    :param grid_size_max:
-    :param zlens:
-    :param zsource:
-    :return:
+    Compute the magnification of a single lensed image with the decoupled multiplane formalism.
+
+    Identical output to the original implementation, but each grid point is
+    propagated to the source plane and evaluated against the source light model
+    exactly once: the original recomputed the main-deflector deflection, the
+    ray propagation, and the surface brightness over ALL previously computed
+    points on every annulus iteration (O(N^2) in the number of grid points);
+    here those quantities are evaluated only for the new annulus (O(N)).
     """
-    # initalize flux array
+    # initialize flux array
     flux_array = np.zeros(len(grid_x_large))
     # setup ray tracing info
     xD = np.zeros_like(flux_array)
@@ -450,21 +413,26 @@ def mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_
     Ts = cosmo_bkg.T_xy(0, zsource)
     Tds = cosmo_bkg.T_xy(zlens, zsource)
     reduced_to_phys = cosmo_bkg.d_xy(0, zsource) / cosmo_bkg.d_xy(zlens, zsource)
+    flux_total = 0.0
 
     while True:
 
-        beta_x, beta_y, inds_computed, inds_outside_r = decoupled_multiplane_rayshooting(grid_r, r_min, r_max, inds_compute,
-                                     grid_x_large, grid_y_large, x_image, y_image,
-                                     lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
-                                     z_split, z_source, cosmo_bkg, xD, yD, alpha_x_foreground, alpha_y_foreground,
-                                     alpha_x_background, alpha_y_background, Td, kwargs_lens, reduced_to_phys,
-                                     Ts, Tds)
+        beta_x_new, beta_y_new, inds_new, _ = decoupled_multiplane_rayshooting(
+            grid_r, r_min, r_max, inds_compute,
+            grid_x_large, grid_y_large, x_image, y_image,
+            lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
+            z_split, z_source, cosmo_bkg, xD, yD, alpha_x_foreground, alpha_y_foreground,
+            alpha_x_background, alpha_y_background, Td, kwargs_lens, reduced_to_phys,
+            Ts, Tds)
 
-        sb = source_model.surface_brightness(beta_x, beta_y, kwargs_source)
-        flux_array[inds_computed] = sb
-        flux_array[inds_outside_r] = 0.0
+        # surface brightness only at the newly computed coordinates; previously
+        # computed points are unchanged because kwargs_lens / kwargs_source are
+        # constant throughout the loop
+        sb_new = source_model.surface_brightness(beta_x_new, beta_y_new, kwargs_source)
+        flux_array[inds_new] = sb_new
+        flux_total += np.sum(sb_new)
 
-        magnification_temp = np.sum(flux_array) * grid_resolution ** 2
+        magnification_temp = flux_total * grid_resolution ** 2
         diff = (
             abs(magnification_temp - magnification_last) / magnification_temp
         )

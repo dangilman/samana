@@ -1,4 +1,5 @@
 from pyHalo.preset_models import preset_model_from_name
+from pyHalo.Halos.batch_halo_util import precompute_realization
 from samana.forward_model_util import filenames, sample_prior, align_realization, \
     flux_ratio_summary_statistic, split_kwargs_params, check_lens_equation_solution, interpolate_ray_paths
 from lenstronomy.LensModel.lens_model import LensModel
@@ -627,6 +628,10 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                              'log_mhigh_sheets': log_mhigh_mass_sheets,
                              'kappa_scale_subhalos': kappa_scale_subhalos,
                              'subtract_exact_sheets': subtract_exact_sheets}
+
+    # use vectorized numpy array calculations to speed up the calculation of cached halo properties
+    precompute_realization(realization)
+
     ray_interp_x, ray_interp_y = None, None
     if downselect_halo_mass is not None:
         ### REMOVE LOW-MASS HALOS THAT ARE FAR FROM LENSED IMAGES
@@ -1100,7 +1105,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
                         xycoords='axes fraction',color='w',fontsize=12)
         plt.show()
         modelPlot = ModelPlot(data_class.kwargs_data_joint['multi_band_list'],
-                              kwargs_model, kwargs_result, arrow_size=0.02, cmap_string="gist_heat",
+                              kwargs_model, kwargs_result,
                               fast_caustic=True,
                               image_likelihood_mask_list=[data_class.likelihood_mask_imaging_weights])
         if use_imaging_data:
@@ -1110,17 +1115,20 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
         modelPlot.data_plot(ax=axes[0, 0])
         modelPlot.model_plot(ax=axes[0, 1])
-        modelPlot.normalized_residual_plot(ax=axes[0, 2], v_min=-6, v_max=6)
-        modelPlot.source_plot(ax=axes[1, 0], deltaPix_source=0.01, numPix=100)
-        modelPlot.convergence_plot(ax=axes[1, 1], v_max=1)
+        modelPlot.normalized_residual_plot(ax=axes[0, 2], vmin=-6, vmax=6)
+        modelPlot.source_plot(ax=axes[1, 0], delta_pix_source=0.01, num_pix=100)
+        modelPlot.convergence_plot(ax=axes[1, 1], vmax=1)
         modelPlot.magnification_plot(ax=axes[1, 2])
 
         f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
-        modelPlot.decomposition_plot(ax=axes[0, 0], text='Lens light', lens_light_add=True, unconvolved=True)
-        modelPlot.decomposition_plot(ax=axes[1, 0], text='Lens light convolved', lens_light_add=True)
-        modelPlot.decomposition_plot(ax=axes[0, 1], text='Source light', source_add=True, unconvolved=True)
-        modelPlot.decomposition_plot(ax=axes[1, 1], text='Source light convolved', source_add=True)
-        modelPlot.decomposition_plot(ax=axes[0, 2], text='All components', source_add=True, lens_light_add=True,
+        modelPlot.decomposition_plot(ax=axes[0, 0], kwargs_title={'text': 'Lens light'}, lens_light_add=True,
+                                     unconvolved=True)
+        modelPlot.decomposition_plot(ax=axes[1, 0], kwargs_title={'text': 'Lens light convolved'}, lens_light_add=True)
+        modelPlot.decomposition_plot(ax=axes[0, 1], kwargs_title={'text': 'Source light'}, source_add=True,
+                                     unconvolved=True)
+        modelPlot.decomposition_plot(ax=axes[1, 1], kwargs_title={'text': 'Source light convolved'}, source_add=True)
+        modelPlot.decomposition_plot(ax=axes[0, 2], kwargs_title={'text': 'All components'}, source_add=True,
+                                     lens_light_add=True,
                                      unconvolved=True)
         try:
             modelPlot.decomposition_plot(ax=axes[1, 2], text='All components convolved', source_add=True,
@@ -1137,7 +1145,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
         kwargs_plot = {'ax': ax,
                        'index_macromodel': list(np.arange(0, len(kwargs_result['kwargs_lens']))),
                        'with_critical_curves': True,
-                       'v_min': -0.075, 'v_max': 0.075,
+                       'vmin': -0.075, 'vmax': 0.075,
                        'super_sample_factor': 5,
                        'subtract_mean': False}
         modelPlot.substructure_plot(band_index=0, **kwargs_plot)

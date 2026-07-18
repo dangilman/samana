@@ -1,4 +1,5 @@
 from pyHalo.preset_models import preset_model_from_name
+from pyHalo.Halos.batch_halo_util import precompute_realization
 from pyHalo.realization_extensions import RealizationExtensions
 from samana.forward_model_util import filenames, sample_prior, align_realization, \
     flux_ratio_summary_statistic, split_kwargs_params, check_lens_equation_solution, interpolate_ray_paths, sample_globular_cluster_params
@@ -638,6 +639,10 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
             if verbose:
                 print('realization has ' + str(len(realization.halos)) + ' halos after '
                             'downselecting on subhalo mass/position...')
+
+        # use vectorized numpy array calculations to speed up the calculation of cached halo properties
+        precompute_realization(realization)
+
         kwargs_mass_sheet = {'log_mlow_sheets': log_mlow_mass_sheets,
                              'log_mhigh_sheets': log_mhigh_mass_sheets,
                              'kappa_scale_subhalos': kappa_scale_subhalos}
