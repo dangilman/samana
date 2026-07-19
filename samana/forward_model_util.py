@@ -207,6 +207,17 @@ def sample_prior(kwargs_prior):
             sample_list += [scale_multipole, a1a, a3a, a4a, delta_phi_m1, delta_phi_m3, delta_phi_m4]
             sample_names += ['scale_multipole', 'a1_a', 'a3_a', 'a4_a', 'delta_phi_m1', 'delta_phi_m3', 'delta_phi_m4']
             joint_multipole_prior_used = True
+        elif param_name == 'QGRAD_FROM_LIGHT':
+            # implement a prior on ellipticty gradients/twists based on stellar isophote measurements
+            # from Hao et al.
+            dq = np.random.normal(0.0, 0.05)
+            dq = max(min(dq, 0.15), -0.15)
+            dphi = np.random.normal(0.0, 0.1)
+            dphi = max(min(dphi, 0.2), -0.2)
+            prior_samples_dict['dq'] = dq
+            prior_samples_dict['dphi'] = dphi
+            sample_list += [dq, dphi]
+            sample_names += ['dq', 'dphi']
         else:
             prior_type = kwargs_prior[param_name][0]
             if prior_type == 'FIXED':
@@ -566,6 +577,12 @@ def macromodel_readout_function_eplshear(kwargs_solution,
     for param_name in ['gamma1', 'gamma2']:
         samples_macromodel.append(shear_main[param_name])
     param_names_macro = param_names_epl + param_names_shear
+    if 'dq' in samples_fixed_dict.keys():
+        samples_macromodel.append(samples_fixed_dict['dq'])
+        param_names_macro += ['dq']
+    if 'dphi' in samples_fixed_dict.keys():
+        samples_macromodel.append(samples_fixed_dict['dphi'])
+        param_names_macro += ['dphi']
     return np.array(samples_macromodel), param_names_macro
 
 def macromodel_readout_function_eplshear_satellite(kwargs_solution, samples_fixed_dict):
@@ -585,4 +602,10 @@ def macromodel_readout_function_eplshear_satellite(kwargs_solution, samples_fixe
     samples_macromodel.append(satellite_main['theta_E'])
     samples_macromodel.append(satellite_main['center_x'])
     samples_macromodel.append(satellite_main['center_y'])
+    if 'dq' in samples_fixed_dict.keys():
+        samples_macromodel.append(samples_fixed_dict['dq'])
+        param_names_macro += ['dq']
+    if 'dphi' in samples_fixed_dict.keys():
+        samples_macromodel.append(samples_fixed_dict['dphi'])
+        param_names_macro += ['dphi']
     return np.array(samples_macromodel), param_names_macro

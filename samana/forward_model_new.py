@@ -872,7 +872,7 @@ def forward_model_single_iteration(data_class,
                         xycoords='axes fraction',color='w',fontsize=12)
         plt.show()
         modelPlot = ModelPlot(data_class.kwargs_data_joint['multi_band_list'],
-                              kwargs_model, kwargs_result, arrow_size=0.02, cmap_string="gist_heat",
+                              kwargs_model, kwargs_result,
                               fast_caustic=True,
                               image_likelihood_mask_list=[data_class.likelihood_mask_imaging_weights])
         if use_imaging_data:
@@ -913,7 +913,7 @@ def forward_model_single_iteration(data_class,
         kwargs_plot = {'ax': ax,
                        'index_macromodel': list(np.arange(0, len(kwargs_result['kwargs_lens']))),
                        'with_critical_curves': True,
-                       'v_min': -0.075, 'v_max': 0.075,
+                       'vmin': -0.075, 'vmax': 0.075,
                        'super_sample_factor': 5,
                        'subtract_mean': False}
         modelPlot.substructure_plot(band_index=0, **kwargs_plot)

@@ -310,14 +310,20 @@ def satellite_galaxy_priors(lens_ID):
         satellite_prior = {}
     return satellite_prior
 
-def quick_setup(lens_ID):
+def quick_setup(lens_ID, use_qgrad=False):
 
     if lens_ID == 'B1422':
         from samana.Data.b1422 import B1422_HST as data_class
-        from samana.Model.b1422_model import B1422ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.b1422_model import B1422ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.b1422_model import B1422ModelEPLM3M4Shear as model_class
     elif lens_ID == 'WFI2026':
         from samana.Data.j2026 import J2026 as data_class
-        from samana.Model.j2026_model import J2026ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.j2026_model import J2026ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.j2026_model import J2026ModelEPLM3M4Shear as model_class
     elif lens_ID == 'B2045':
         from samana.Data.b2045 import B2045_MIRI as data_class
         from samana.Model.b2045_model import B2045ModelEPLM3M4Shear as model_class
@@ -326,109 +332,203 @@ def quick_setup(lens_ID):
         from samana.Model.he0435_model_nircam import HE0435ModelNircamEPLM1M3M4Shear as model_class
     elif lens_ID == 'J0248':
         from samana.Data.j0248 import J0248_MIRI as data_class
-        from samana.Model.j0248_model import J0248ModelEPLM3M4ShearSatellite as model_class
+        if use_qgrad:
+            from samana.Model.j0248_model import J0248ModelEPLM3M4ShearSatellite_Qgrad as model_class
+        else:
+            from samana.Model.j0248_model import J0248ModelEPLM3M4ShearSatellite as model_class
     elif lens_ID == 'J0248_HST':
         from samana.Data.j0248 import J0248_HST as data_class
-        from samana.Model.j0248_model import J0248ModelEPLM3M4ShearSatellite as model_class
+        if use_qgrad:
+            from samana.Model.j0248_model import J0248ModelEPLM3M4ShearSatellite_Qgrad as model_class
+        else:
+            from samana.Model.j0248_model import J0248ModelEPLM3M4ShearSatellite as model_class
     elif lens_ID == 'J0259':
         from samana.Data.j0259 import J0259_HST_F814W as data_class
-        from samana.Model.j0259_model import J0259ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.j0259_model import J0259ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.j0259_model import J0259ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J0607':
         from samana.Data.j0607 import J0607_MIRI as data_class
-        from samana.Model.j0607_model import J0607ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.j0607_model import J0607ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.j0607_model import J0607ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J0608':
         from samana.Data.j0608 import J0608_MIRI as data_class
-        from samana.Model.j0608_model import J0608ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.j0608_model import J0608ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.j0608_model import J0608ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J0659':
         from samana.Data.j0659 import J0659_MIRI as data_class
-        from samana.Model.j0659_model import J0659ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.j0659_model import J0659ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.j0659_model import J0659ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J1042':
         from samana.Data.j1042 import J1042_HST_160W as data_class
-        from samana.Model.j1042_model import J1042ModelEPLM3M4Shear2src as model_class
+        if use_qgrad:
+            from samana.Model.j1042_model import J1042ModelEPLM3M4Shear2src_Qgrad as model_class
+        else:
+            from samana.Model.j1042_model import J1042ModelEPLM3M4Shear2src as model_class
     elif lens_ID == 'J1042_814W':
         from samana.Data.j1042 import J1042_HST_814W as data_class
-        from samana.Model.j1042_model import J1042ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.j1042_model import J1042ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.j1042_model import J1042ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J1131':
         from samana.Data.j1131 import J1131_HST as data_class
-        from samana.Model.j1131_model import J1131ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.j1131_model import J1131ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.j1131_model import J1131ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J1251':
         from samana.Data.j1251 import J1251_HST as data_class
-        from samana.Model.j1251_model import J1251ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.j1251_model import J1251ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.j1251_model import J1251ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J1537':
         from samana.Data.j1537 import J1537_HST as data_class
-        from samana.Model.j1537_model import J1537ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.j1537_model import J1537ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.j1537_model import J1537ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J2205_MIRI':
         from samana.Data.j2205 import J2205_MIRI as data_class
-        from samana.Model.j2205_model import J2205ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.j2205_model import J2205ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.j2205_model import J2205ModelEPLM3M4Shear_Qgrad as model_class
     elif lens_ID == 'J2205':
         from samana.Data.j2205 import J2205_HST as data_class
-        from samana.Model.j2205_model import J2205ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.j2205_model import J2205ModelEPLM3M4Shear_NIRCam_Qgrad as model_class
+        else:
+            from samana.Model.j2205_model import J2205ModelEPLM3M4Shear_NIRCam as model_class
     elif lens_ID == 'J2344':
         from samana.Data.j2344 import J2344_MIRI as data_class
-        from samana.Model.j2344_model import J2344ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.j2344_model import J2344ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.j2344_model import J2344ModelEPLM3M4Shear as model_class
     elif lens_ID == 'MG0414':
         from samana.Data.mg0414 import MG014_MIRI as data_class
-        from samana.Model.mg0414_model import MG0414ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.mg0414_model import MG0414ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.mg0414_model import MG0414ModelEPLM3M4Shear as model_class
     elif lens_ID == 'PG1115':
         from samana.Data.pg1115 import PG1115_HST as data_class
-        from samana.Model.pg1115_model import PG1115ModelEPLM1M3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.pg1115_model import PG1115ModelEPLM1M3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.pg1115_model import PG1115ModelEPLM1M3M4Shear as model_class
     elif lens_ID == 'PG1115_NIRCAM':
         from samana.Data.pg1115 import PG1115_NIRCAM as data_class
-        from samana.Model.pg1115_model import PG1115ModelEPLM1M3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.pg1115_model import PG1115ModelEPLM1M3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.pg1115_model import PG1115ModelEPLM1M3M4Shear as model_class
     elif lens_ID == 'PSJ0147':
         from samana.Data.j0147 import J0147_MIRI as data_class
-        from samana.Model.j0147_model import J0147ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.j0147_model import J0147ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.j0147_model import J0147ModelEPLM3M4Shear as model_class
     elif lens_ID == 'PSJ1606':
         from samana.Data.psj1606 import PSJ1606_HST as data_class
-        from samana.Model.psj1606_model import PSJ1606ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.psj1606_model import PSJ1606ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.psj1606_model import PSJ1606ModelEPLM3M4Shear as model_class
     elif lens_ID == 'RXJ0911':
         from samana.Data.rxj0911 import RXJ0911_HST as data_class
-        from samana.Model.rxj0911_model import RXJ0911ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.rxj0911_model import RXJ0911ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.rxj0911_model import RXJ0911ModelEPLM3M4Shear as model_class
     elif lens_ID == 'RXJ1131':
         from samana.Data.rxj1131 import RXJ1131_HST as data_class
-        from samana.Model.rxj1131_model import RXJ1131ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.rxj1131_model import RXJ1131ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.rxj1131_model import RXJ1131ModelEPLM3M4Shear as model_class
     elif lens_ID == 'WFI2033':
         from samana.Data.wfi2033 import WFI2033_NIRCAM as data_class
-        from samana.Model.wfi2033_model_nircam import WFI2033NircamModelEPLM3M4Shear as model_class
-    elif lens_ID == 'WFI2033_FIXEDQ':
-        from samana.Data.wfi2033 import WFI2033_NIRCAM as data_class
-        from samana.Model.wfi2033_model_nircam import WFI2033NircamModelEPLM3M4ShearFixedQ as model_class
+        if use_qgrad:
+            from samana.Model.wfi2033_model_nircam import WFI2033NircamModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.wfi2033_model_nircam import WFI2033NircamModelEPLM3M4Shear as model_class
     elif lens_ID == 'WGD2038':
         from samana.Data.wgd2038 import WGD2038_HST as data_class
-        from samana.Model.wgd2038_model import WGD2038ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.wgd2038_model import WGD2038ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.wgd2038_model import WGD2038ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J0405':
         from samana.Data.j0405 import J0405_HST as data_class
-        from samana.Model.j0405_model import J0405ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.j0405_model import J0405ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.j0405_model import J0405ModelEPLM3M4Shear as model_class
     elif lens_ID == 'MG0414':
         from samana.Data.mg0414 import MG014_MIRI as data_class
-        from samana.Model.mg0414_model import MG0414ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.mg0414_model import MG0414ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.mg0414_model import MG0414ModelEPLM3M4Shear as model_class
     elif lens_ID == 'M1134':
         from samana.Data.m1134 import M1134_HST as data_class
-        from samana.Model.m1134_model import M1134ModelEPLM3M4ShearSatellite as model_class
+        if use_qgrad:
+            from samana.Model.m1134_model import M1134ModelEPLM3M4ShearSatellite_Qgrad as model_class
+        else:
+            from samana.Model.m1134_model import M1134ModelEPLM3M4ShearSatellite as model_class
     elif lens_ID == 'M1134_MIRI':
         from samana.Data.m1134 import M1134_MIRI as data_class
-        from samana.Model.m1134_model import M1134ModelEPLM3M4ShearSatellite as model_class
+        if use_qgrad:
+            from samana.Model.m1134_model import M1134ModelEPLM3M4ShearSatellite_Qgrad as model_class
+        else:
+            from samana.Model.m1134_model import M1134ModelEPLM3M4ShearSatellite as model_class
     elif lens_ID == 'J0924':
         from samana.Data.j0924 import J0924_MIRI as data_class
-        from samana.Model.j0924_model import J0924ModelEPLM1M3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.j0924_model import J0924ModelEPLM1M3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.j0924_model import J0924ModelEPLM1M3M4Shear as model_class
     elif lens_ID == 'H1413':
         from samana.Data.h1413 import H1413_MIRI as data_class
-        from samana.Model.h1413_model import H1413ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.h1413_model import H1413ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.h1413_model import H1413ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J2017':
         from samana.Data.j2017 import J2017_MIRI as data_class
-        from samana.Model.j2017_model import J2017ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.j2017_model import J2017ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.j2017_model import J2017ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J0803':
         from samana.Data.j0803 import J0803_MIRI as data_class
-        from samana.Model.j0803_model import J0803ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.j0803_model import J0803ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.j0803_model import J0803ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J2145':
         from samana.Data.j2145 import J2145_MIRI as data_class
-        from samana.Model.j2145_model import J2145ModelEPLM1M3M4ShearSatellite as model_class
+        if use_qgrad:
+            from samana.Model.j2145_model import J2145ModelEPLM1M3M4ShearSatellite_Qgrad as model_class
+        else:
+            from samana.Model.j2145_model import J2145ModelEPLM1M3M4ShearSatellite as model_class
     elif lens_ID == 'H1113':
         from samana.Data.he1113 import HE1113_MIRI as data_class
         from samana.Model.he1113_model import HE1113ModelEPLM3M4Shear as model_class
     else:
-        raise Exception('lens ID '+str(lens_ID)+' not recognized!')
+        raise Exception('lens ID ' + str(lens_ID) + ' not recognized!')
     return data_class, model_class
+
 
 def compute_fluxratio_summarystat(f, measured_flux_ratios, measurement_uncertainties,
                                   uncertainty_on_ratios, keep_index_list):

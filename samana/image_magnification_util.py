@@ -329,6 +329,7 @@ def _inds_compute_grid_v2(grid_r, r_min, r_max, inds_compute):
     inds_computed = np.append(inds_compute, inds_compute_new).astype(int)
     return inds_compute_new, inds_outside_r, inds_computed
 
+
 def decoupled_multiplane_rayshooting(grid_r, r_min, r_max, inds_compute,
                                      grid_x_large, grid_y_large, x_image, y_image,
                                      lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
@@ -388,13 +389,6 @@ def mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_
                             grid_r, r_step, grid_resolution, grid_size_max, zlens, zsource):
     """
     Compute the magnification of a single lensed image with the decoupled multiplane formalism.
-
-    Identical output to the original implementation, but each grid point is
-    propagated to the source plane and evaluated against the source light model
-    exactly once: the original recomputed the main-deflector deflection, the
-    ray propagation, and the surface brightness over ALL previously computed
-    points on every annulus iteration (O(N^2) in the number of grid points);
-    here those quantities are evaluated only for the new annulus (O(N)).
     """
     # initialize flux array
     flux_array = np.zeros(len(grid_x_large))
@@ -425,9 +419,7 @@ def mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_
             alpha_x_background, alpha_y_background, Td, kwargs_lens, reduced_to_phys,
             Ts, Tds)
 
-        # surface brightness only at the newly computed coordinates; previously
-        # computed points are unchanged because kwargs_lens / kwargs_source are
-        # constant throughout the loop
+        # surface brightness only at the newly computed coordinates
         sb_new = source_model.surface_brightness(beta_x_new, beta_y_new, kwargs_source)
         flux_array[inds_new] = sb_new
         flux_total += np.sum(sb_new)

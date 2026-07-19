@@ -1,7 +1,6 @@
 from lenstronomy.Util.param_util import shear_cartesian2polar, shear_polar2cartesian
 from lenstronomy.Util.param_util import ellipticity2phi_q, phi_q2_ellipticity
 import numpy as np
-from copy import deepcopy
 
 
 class PowerLawParamManager(object):
@@ -165,6 +164,72 @@ class EPLMultipole134(PowerLawParamManager):
         self.kwargs_lens[1] = kwargs_shear
         return self.kwargs_lens
 
+class EPLQgradMultipole134(PowerLawParamManager):
+
+    def __init__(self, kwargs_lens_init, a1a_init, a3a_init, a4a_init,
+                 delta_phi_m1, delta_phi_m3, delta_phi_m4, q=None, gamma_ext=None,
+                 dq=None, dphi=None):
+        """
+
+        :param kwargs_lens_init:
+        :param a1a_init:
+        :param a3a_init:
+        :param a4a_init:
+        :param delta_phi_m1:
+        :param delta_phi_m3:
+        :param delta_phi_m4:
+        :param q:
+        :param gamma_ext:
+        """
+
+        self._a1a_init = a1a_init
+        self._a4a_init = a4a_init
+        self._a3a_init = a3a_init
+        self._delta_phi_m1 = delta_phi_m1
+        self._delta_phi_m3 = delta_phi_m3
+        self._delta_phi_m4 = delta_phi_m4
+        self._q = q
+        self._gamma_ext = gamma_ext
+        self._dq = dq
+        self._dphi = dphi
+        super(EPLQgradMultipole134, self).__init__(kwargs_lens_init)
+
+    def param_chi_square_penalty(self, args, q_min=0.1):
+        """
+
+        :param args:
+        :param q_min:
+        :return:
+        """
+        return self.axis_ratio_penalty(args, q_min)
+
+    def args_to_kwargs(self, args):
+        (thetaE, center_x, center_y, _e1, _e2, _g1, _g2) = args
+        if self._q is None:
+            e1, e2 = _e1, _e2
+        else:
+            # enforce fixed q while sampling phi_q
+            phi_q, _ = ellipticity2phi_q(_e1, _e2)
+            e1, e2 = phi_q2_ellipticity(phi_q, self._q)
+        if self._gamma_ext is None:
+            g1, g2 = _g1, _g2
+        else:
+            phi_gamma, _ = shear_cartesian2polar(_g1, _g2)
+            g1, g2 = shear_polar2cartesian(phi_gamma, self._gamma_ext)
+        gamma = self.kwargs_lens[0]['gamma']
+        kwargs_epl = {'theta_E': thetaE, 'center_x': center_x, 'center_y': center_y,
+                      'e1': e1, 'e2': e2, 'gamma': gamma, 'dq': self._dq, 'dphi': self._dphi}
+        self.kwargs_lens[0] = kwargs_epl
+        self.kwargs_lens[0]['a1_a'] = self._a1a_init
+        self.kwargs_lens[0]['a4_a'] = self._a4a_init
+        self.kwargs_lens[0]['a3_a'] = self._a3a_init
+        self.kwargs_lens[0]['delta_phi_m1'] = self._delta_phi_m1
+        self.kwargs_lens[0]['delta_phi_m3'] = self._delta_phi_m3
+        self.kwargs_lens[0]['delta_phi_m4'] = self._delta_phi_m4
+        kwargs_shear = {'gamma1': g1, 'gamma2': g2}
+        self.kwargs_lens[1] = kwargs_shear
+        return self.kwargs_lens
+
 class EPLMultipole134LensMassPrior(EPLMultipole134):
 
     def __init__(self, kwargs_lens_init, a1a_init, a3a_init, a4a_init,
@@ -220,6 +285,61 @@ class EPLMultipole134LensMassPrior(EPLMultipole134):
         else:
             return 0.5 * dr ** 2 / self._sigmaxy ** 2
 
+class EPLQgradMultipole134LensMassPrior(EPLQgradMultipole134):
+
+    def __init__(self, kwargs_lens_init, a1a_init, a3a_init, a4a_init,
+                 delta_phi_m1, delta_phi_m3, delta_phi_m4, center_x, center_y, sigma_xy,
+                 q=None, gamma_ext=None, dq=None, dphi=None):
+        """
+        Attempts to solve the lens equation with a punishing term on the deflector mass centroid deviating from
+        (center_x, center_y) by more than sigma_xy
+
+        :param kwargs_lens_init:
+        :param a1a_init:
+        :param a3a_init:
+        :param a4a_init:
+        :param delta_phi_m1:
+        :param delta_phi_m3:
+        :param delta_phi_m4:
+        :param center_x:
+        :param center_y:
+        :param sigma_xy:
+        :param q:
+        :param gamma_ext:
+        """
+        self._center_x = center_x
+        self._center_y = center_y
+        self._sigmaxy = sigma_xy
+        self._q = q
+        self._gamma_ext = gamma_ext
+        super(EPLQgradMultipole134, self).__init__(kwargs_lens_init, a1a_init, a3a_init, a4a_init,
+                 delta_phi_m1, delta_phi_m3, delta_phi_m4, q, gamma_ext, dq, dphi)
+
+    def param_chi_square_penalty(self, args, q_min=0.1):
+        """
+
+        :param args:
+        :param q_min:
+        :return:
+        """
+        axis_ratio_pen = self.axis_ratio_penalty(args, q_min)
+        mass_centroid_pen = self.mass_centroid_penalty(args)
+        return axis_ratio_pen + mass_centroid_pen
+
+    def mass_centroid_penalty(self, args):
+        """
+        Penalizes mass centroids far away from a fixed coordinate
+        :param args: vector of lens model parameters corresponding to kwargs_lens
+        :return: penalty term
+        """
+        delta_center_x = args[1] - self._center_x
+        delta_center_y = args[2] - self._center_y
+        dr = np.hypot(delta_center_x, delta_center_y)
+        if dr > 5 * self._sigmaxy:
+            return 1e9
+        else:
+            return 0.5 * dr ** 2 / self._sigmaxy ** 2
+
 def auto_param_class(lens_model_list_macro, kwargs_lens_init, macromodel_samples_fixed_dict):
     """
 
@@ -229,7 +349,7 @@ def auto_param_class(lens_model_list_macro, kwargs_lens_init, macromodel_samples
     :return:
     """
     macromodel_samples_fixed_param_names = macromodel_samples_fixed_dict.keys()
-    assert lens_model_list_macro[0] in ['EPL_MULTIPOLE_M1M3M4_ELL', 'EPL_MULTIPOLE_M1M3M4']
+    assert lens_model_list_macro[0] in ['EPL_MULTIPOLE_M1M3M4_ELL', 'EPL_MULTIPOLE_M1M3M4', 'EPL_QGRAD_MULTIPOLE_M1M3M4']
     assert lens_model_list_macro[1] == 'SHEAR'
     if 'gamma_ext' in macromodel_samples_fixed_param_names:
         fixed_gamma_ext = macromodel_samples_fixed_dict['gamma_ext']
@@ -239,38 +359,79 @@ def auto_param_class(lens_model_list_macro, kwargs_lens_init, macromodel_samples
         fixed_q = macromodel_samples_fixed_dict['q']
     else:
         fixed_q = None
+    if 'dq' in macromodel_samples_fixed_param_names:
+        fixed_dq = macromodel_samples_fixed_dict['dq']
+    else:
+        fixed_dq = None
+    if 'dphi' in macromodel_samples_fixed_param_names:
+        fixed_dphi = macromodel_samples_fixed_dict['dphi']
+    else:
+        fixed_dphi = None
     if 'mass_centroid_x' in macromodel_samples_fixed_param_names:
         assert 'mass_centroid_y' in macromodel_samples_fixed_param_names
         assert 'sigma_xy_mass_centroid' in macromodel_samples_fixed_param_names
         mass_centroid_x = macromodel_samples_fixed_dict['mass_centroid_x']
         mass_centroid_y = macromodel_samples_fixed_dict['mass_centroid_y']
         sigma_xy_mass_centroid = macromodel_samples_fixed_dict['sigma_xy_mass_centroid']
-        param_class = EPLMultipole134LensMassPrior(
-            kwargs_lens_init,
-            macromodel_samples_fixed_dict['a1_a'],
-            macromodel_samples_fixed_dict['a3_a'],
-            macromodel_samples_fixed_dict['a4_a'],
-            macromodel_samples_fixed_dict['delta_phi_m1'],
-            macromodel_samples_fixed_dict['delta_phi_m3'],
-            macromodel_samples_fixed_dict['delta_phi_m4'],
-            mass_centroid_x,
-            mass_centroid_y,
-            sigma_xy_mass_centroid,
-            fixed_q,
-            fixed_gamma_ext
-        )
+        if lens_model_list_macro[0] == 'EPL_QGRAD_MULTIPOLE_M1M3M4':
+            param_class = EPLQgradMultipole134LensMassPrior(
+                kwargs_lens_init,
+                macromodel_samples_fixed_dict['a1_a'],
+                macromodel_samples_fixed_dict['a3_a'],
+                macromodel_samples_fixed_dict['a4_a'],
+                macromodel_samples_fixed_dict['delta_phi_m1'],
+                macromodel_samples_fixed_dict['delta_phi_m3'],
+                macromodel_samples_fixed_dict['delta_phi_m4'],
+                mass_centroid_x,
+                mass_centroid_y,
+                sigma_xy_mass_centroid,
+                fixed_q,
+                fixed_gamma_ext,
+                fixed_dq,
+                fixed_dphi
+            )
+        else:
+            param_class = EPLMultipole134LensMassPrior(
+                kwargs_lens_init,
+                macromodel_samples_fixed_dict['a1_a'],
+                macromodel_samples_fixed_dict['a3_a'],
+                macromodel_samples_fixed_dict['a4_a'],
+                macromodel_samples_fixed_dict['delta_phi_m1'],
+                macromodel_samples_fixed_dict['delta_phi_m3'],
+                macromodel_samples_fixed_dict['delta_phi_m4'],
+                mass_centroid_x,
+                mass_centroid_y,
+                sigma_xy_mass_centroid,
+                fixed_q,
+                fixed_gamma_ext
+            )
     else:
-        param_class = EPLMultipole134(
-            kwargs_lens_init,
-            macromodel_samples_fixed_dict['a1_a'],
-            macromodel_samples_fixed_dict['a3_a'],
-            macromodel_samples_fixed_dict['a4_a'],
-            macromodel_samples_fixed_dict['delta_phi_m1'],
-            macromodel_samples_fixed_dict['delta_phi_m3'],
-            macromodel_samples_fixed_dict['delta_phi_m4'],
-            fixed_q,
-            fixed_gamma_ext
-        )
+        if lens_model_list_macro[0] == 'EPL_QGRAD_MULTIPOLE_M1M3M4':
+            param_class = EPLQgradMultipole134(
+                kwargs_lens_init,
+                macromodel_samples_fixed_dict['a1_a'],
+                macromodel_samples_fixed_dict['a3_a'],
+                macromodel_samples_fixed_dict['a4_a'],
+                macromodel_samples_fixed_dict['delta_phi_m1'],
+                macromodel_samples_fixed_dict['delta_phi_m3'],
+                macromodel_samples_fixed_dict['delta_phi_m4'],
+                fixed_q,
+                fixed_gamma_ext,
+                fixed_dq,
+                fixed_dphi
+            )
+        else:
+            param_class = EPLMultipole134(
+                kwargs_lens_init,
+                macromodel_samples_fixed_dict['a1_a'],
+                macromodel_samples_fixed_dict['a3_a'],
+                macromodel_samples_fixed_dict['a4_a'],
+                macromodel_samples_fixed_dict['delta_phi_m1'],
+                macromodel_samples_fixed_dict['delta_phi_m3'],
+                macromodel_samples_fixed_dict['delta_phi_m4'],
+                fixed_q,
+                fixed_gamma_ext
+            )
     return param_class
 
 class FixedAxisRatioSolver(object):
