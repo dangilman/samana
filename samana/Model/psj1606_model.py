@@ -139,3 +139,43 @@ class PSJ1606ModelEPLM3M4Shear(_PSJ1606ModelBase):
         lens_model_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_lens_fixed, kwargs_lower_lens,
                              kwargs_upper_lens]
         return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
+
+
+class PSJ1606ModelEPLM3M4Shear_Qgrad(PSJ1606ModelEPLM3M4Shear):
+
+    def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
+
+        lens_model_list_macro = ['EPL_QGRAD_MULTIPOLE_M1M3M4', 'SHEAR', 'SIS']
+        kwargs_lens_macro = [
+            {'dq': 0.0, 'dphi': 0.0, 'theta_E': 0.6721044430197943, 'gamma': 1.9364928280249465, 'e1': -0.13488767165531232,
+             'e2': -0.04224523945300751, 'center_x': 0.013946930634280586, 'center_y': -0.06912566333097787,
+             'a1_a': 0.0, 'delta_phi_m1': 0.0,'a3_a': 0.0, 'delta_phi_m3': 0.4896359685414309, 'a4_a': 0.0, 'delta_phi_m4': -0.041116926982999305},
+            {'gamma1': 0.06370735243817782, 'gamma2': 0.12175825528023806, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.0871026401584615, 'center_x': -0.2786378009782961, 'center_y': -1.2375726039851485}
+        ]
+        redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
+        index_lens_split = [0, 1, 2]
+        if kwargs_lens_macro_init is not None:
+            for i in range(0, len(kwargs_lens_macro_init)):
+                for param_name in kwargs_lens_macro_init[i].keys():
+                    kwargs_lens_macro[i][param_name] = kwargs_lens_macro_init[i][param_name]
+        kwargs_lens_init = kwargs_lens_macro
+        kwargs_lens_sigma = [{'dq': 0.05, 'dphi': 0.05, 'theta_E': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'e1': 0.2, 'e2': 0.2, 'gamma': 0.1,
+                              'a1_a': 0.01, 'delta_phi_m1': 0.1,'a4_a': 0.01, 'a3_a': 0.005, 'delta_phi_m3': np.pi/12, 'delta_phi_m4': np.pi/16},
+                             {'gamma1': 0.05, 'gamma2': 0.05}, {'theta_E': 0.05, 'center_x': 0.05, 'center_y': 0.05}]
+        kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}, {}]
+        kwargs_lower_lens = [
+            {'dq': -0.2, 'dphi': -0.2, 'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.6, 'a4_a': -0.1,
+             'a1_a': -0.1, 'delta_phi_m1': -np.pi,'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
+            {'gamma1': -0.5, 'gamma2': -0.5},
+            {'theta_E': 0.0, 'center_x': -10, 'center_y': -10}]
+        kwargs_upper_lens = [
+            {'dq': 0.2, 'dphi': 0.2, 'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.5, 'a4_a': 0.1,
+             'a1_a': 0.1, 'delta_phi_m1': np.pi,'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
+            {'gamma1': 0.5, 'gamma2': 0.5},
+        {'theta_E': 0.5, 'center_x': 10, 'center_y': 10}]
+        kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
+                                                                             kwargs_lens_init, macromodel_samples_fixed)
+        lens_model_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_lens_fixed, kwargs_lower_lens,
+                             kwargs_upper_lens]
+        return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
