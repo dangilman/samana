@@ -1,9 +1,12 @@
 from lenstronomy.LightModel.light_model import LightModel
 from copy import deepcopy
 from samana.forward_model_util import batch_lens_profiles
+import numpy as np
 from lenstronomy.Util.util import make_grid_with_coordtransform
 from lenstronomy.Data.coord_transforms import Coordinates
-
+from lenstronomy.LensModel.Util.decouple_multi_plane_util import (
+    setup_grids, coordinates_and_deflections, setup_lens_model,
+)
 
 def perturbed_flux_ratios_from_flux_ratios(flux_ratios, flux_ratio_measurement_uncertainties_percentage):
     """
