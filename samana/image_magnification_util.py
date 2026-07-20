@@ -499,159 +499,11 @@ from lenstronomy.Util import util
 from samana.image_magnification_util import calc_source_sb, decoupled_multiplane_rayshooting
 
 
-# ---- internal tunables ----
-M_ref = 1e8
-mass_exponent = 0.5
-floor_buffer = 3.0
-REGISTRATION_PASSES = 3
-
 
 # ---------------------------------------------------------------------------
 # helpers
 # ---------------------------------------------------------------------------
-def _beta_at_batch(lens_model_fixed, kwargs_lens_fixed, lens_model_free, kwargs_lens_free,
-                   kwargs_lens, xpts, ypts, z_split, z_source, cosmo_bkg):
-    Td = cosmo_bkg.T_xy(0, z_split)
-    Ts = cosmo_bkg.T_xy(0, z_source)
-    Tds = cosmo_bkg.T_xy(z_split, z_source)
-    reduced_to_phys = cosmo_bkg.d_xy(0, z_source) / cosmo_bkg.d_xy(z_split, z_source)
-    xpts = np.atleast_1d(xpts).astype(float)
-    ypts = np.atleast_1d(ypts).astype(float)
-    out = coordinates_and_deflections(lens_model_fixed, lens_model_free, kwargs_lens_fixed,
-                                      kwargs_lens_free, xpts, ypts, z_split, z_source, cosmo_bkg)
-    return calc_source_sb(*out, Td, Tds, Ts, reduced_to_phys, lens_model_free, kwargs_lens)
 
-
-def _fit_stencil(d, h, order):
-    """d: (2, 9) far-field beta difference on the stencil; returns dbeta, J, K."""
-    dbeta = d[:, 0].copy()
-    J = np.empty((2, 2))
-    K = np.zeros((2, 2, 2))
-    for c in range(2):
-        f = d[c]
-        J[c, 0] = (f[1] - f[2]) / (2 * h)
-        J[c, 1] = (f[3] - f[4]) / (2 * h)
-        if order >= 2:
-            K[c, 0, 0] = (f[1] - 2 * f[0] + f[2]) / h ** 2
-            K[c, 1, 1] = (f[3] - 2 * f[0] + f[4]) / h ** 2
-            K[c, 0, 1] = K[c, 1, 0] = (f[5] - f[6] - f[7] + f[8]) / (4 * h ** 2)
-    return dbeta, J, K
-
-
-def _mag_single_image_shifted(source_model, kwargs_source, lens_model_fixed, lens_model_free,
-                              kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
-                              z_split, z_source, cosmo_bkg, x_image, y_image,
-                              grid_x_large, grid_y_large, grid_r, r_step,
-                              grid_resolution, grid_size_max, zlens, zsource,
-                              dbeta_center=(0.0, 0.0), J=None, K=None):
-    """Annulus-based finite magnification with the near model plus the far-field
-    correction beta += dbeta + J@dth + 0.5 dth^T K dth."""
-    if J is None:
-        J = np.zeros((2, 2))
-    if K is None:
-        K = np.zeros((2, 2, 2))
-    flux_array = np.zeros(len(grid_x_large))
-    xD = np.zeros_like(flux_array); yD = np.zeros_like(flux_array)
-    a_fg_x = np.zeros_like(flux_array); a_fg_y = np.zeros_like(flux_array)
-    a_bg_x = np.zeros_like(flux_array); a_bg_y = np.zeros_like(flux_array)
-    r_min, r_max_ann = 0.0, r_step
-    mag_last, flux_total = 0.0, 0.0
-    inds_compute = np.array([])
-    Td = cosmo_bkg.T_xy(0, zlens); Ts = cosmo_bkg.T_xy(0, zsource)
-    Tds = cosmo_bkg.T_xy(zlens, zsource)
-    reduced_to_phys = cosmo_bkg.d_xy(0, zsource) / cosmo_bkg.d_xy(zlens, zsource)
-    dbx, dby = dbeta_center
-    while True:
-        beta_x_new, beta_y_new, inds_new, _ = decoupled_multiplane_rayshooting(
-            grid_r, r_min, r_max_ann, inds_compute,
-            grid_x_large, grid_y_large, x_image, y_image,
-            lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
-            z_split, z_source, cosmo_bkg, xD, yD, a_fg_x, a_fg_y, a_bg_x, a_bg_y,
-            Td, kwargs_lens, reduced_to_phys, Ts, Tds)
-        dx = grid_x_large[inds_new]; dy = grid_y_large[inds_new]
-        beta_x_new = (beta_x_new + dbx + J[0, 0]*dx + J[0, 1]*dy
-                      + 0.5*(K[0, 0, 0]*dx*dx + 2*K[0, 0, 1]*dx*dy + K[0, 1, 1]*dy*dy))
-        beta_y_new = (beta_y_new + dby + J[1, 0]*dx + J[1, 1]*dy
-                      + 0.5*(K[1, 0, 0]*dx*dx + 2*K[1, 0, 1]*dx*dy + K[1, 1, 1]*dy*dy))
-        sb_new = source_model.surface_brightness(beta_x_new, beta_y_new, kwargs_source)
-        flux_array[inds_new] = sb_new
-        flux_total += np.sum(sb_new)
-        mag_temp = flux_total * grid_resolution ** 2
-        diff = abs(mag_temp - mag_last) / mag_temp if mag_temp > 0 else 1.0
-        r_min += r_step; r_max_ann += r_step
-        if r_max_ann >= grid_size_max:
-            break
-        elif diff < 0.001 and mag_temp > 0.0001:
-            break
-        else:
-            mag_last = mag_temp
-    return mag_temp, flux_array
-
-
-def _mag_single_image_shifted(source_model, kwargs_source, lens_model_fixed, lens_model_free,
-                              kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
-                              z_split, z_source, cosmo_bkg, x_image, y_image,
-                              grid_x_large, grid_y_large, grid_r, r_step,
-                              grid_resolution, grid_size_max, zlens, zsource,
-                              dbeta_center=(0.0, 0.0), J=None, K=None):
-    """mag_finite_single_image, but with the NEAR-only fixed model and a far-field
-    correction  beta += dbeta_center + J@dth + 0.5 dth^T K[c] dth  applied before
-    sampling the source. dth=(dx,dy) are the grid offsets from the image center."""
-    if J is None:
-        J = np.zeros((2, 2))
-    if K is None:
-        K = np.zeros((2, 2, 2))
-    flux_array = np.zeros(len(grid_x_large))
-    xD = np.zeros_like(flux_array);
-    yD = np.zeros_like(flux_array)
-    a_fg_x = np.zeros_like(flux_array);
-    a_fg_y = np.zeros_like(flux_array)
-    a_bg_x = np.zeros_like(flux_array);
-    a_bg_y = np.zeros_like(flux_array)
-    r_min, r_max = 0.0, r_step
-    mag_last, flux_total = 0.0, 0.0
-    inds_compute = np.array([])
-    Td = cosmo_bkg.T_xy(0, zlens);
-    Ts = cosmo_bkg.T_xy(0, zsource)
-    Tds = cosmo_bkg.T_xy(zlens, zsource)
-    reduced_to_phys = cosmo_bkg.d_xy(0, zsource) / cosmo_bkg.d_xy(zlens, zsource)
-    dbx, dby = dbeta_center
-
-    while True:
-        beta_x_new, beta_y_new, inds_new, _ = decoupled_multiplane_rayshooting(
-            grid_r, r_min, r_max, inds_compute,
-            grid_x_large, grid_y_large, x_image, y_image,
-            lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
-            z_split, z_source, cosmo_bkg, xD, yD, a_fg_x, a_fg_y, a_bg_x, a_bg_y,
-            Td, kwargs_lens, reduced_to_phys, Ts, Tds)
-
-        # <<< far-field correction: shift + shear (J) + flexion (K), (dx,dy)=grid offset >>>
-        dx = grid_x_large[inds_new];
-        dy = grid_y_large[inds_new]
-        beta_x_new = (beta_x_new + dbx + J[0, 0] * dx + J[0, 1] * dy
-                      + 0.5 * (K[0, 0, 0] * dx * dx + 2 * K[0, 0, 1] * dx * dy + K[0, 1, 1] * dy * dy))
-        beta_y_new = (beta_y_new + dby + J[1, 0] * dx + J[1, 1] * dy
-                      + 0.5 * (K[1, 0, 0] * dx * dx + 2 * K[1, 0, 1] * dx * dy + K[1, 1, 1] * dy * dy))
-
-        sb_new = source_model.surface_brightness(beta_x_new, beta_y_new, kwargs_source)
-        flux_array[inds_new] = sb_new
-        flux_total += np.sum(sb_new)
-        mag_temp = flux_total * grid_resolution ** 2
-        diff = abs(mag_temp - mag_last) / mag_temp if mag_temp > 0 else 1.0
-        r_min += r_step;
-        r_max += r_step
-        if r_max >= grid_size_max:
-            break
-        elif diff < 0.001 and mag_temp > 0.0001:
-            break
-        else:
-            mag_last = mag_temp
-    return mag_temp, flux_array
-
-
-# ---------------------------------------------------------------------------
-# main prototype
-# ---------------------------------------------------------------------------
 def _beta_at_batch(lens_model_fixed, kwargs_lens_fixed, lens_model_free, kwargs_lens_free,
                    kwargs_lens, xpts, ypts, z_split, z_source, cosmo_bkg):
     Td = cosmo_bkg.T_xy(0, z_split)
@@ -791,9 +643,8 @@ def _leg_trajectory(mp, kwargs, x0, y0, ax0, ay0, z_start, stops):
         started = True
     return traj, (float(x[0]), float(y[0]), float(ax[0]), float(ay[0]))
 
-
 def _register_leg(lm_near, kw_near, shift_index, planes, traj_full, start_near, z_start,
-                  z_end, cosmo_bkg, zs_model):
+                  z_end, cosmo_bkg, zs_model, REGISTRATION_PASSES=3):
     """Calibrate SHIFTs on one leg so the near trajectory matches traj_full at every
     plane in `planes`. A shift at plane k adds the same slope to all downstream
     segments, so each correction is the INCREMENT of the segment-slope mismatch."""
@@ -831,7 +682,6 @@ def _register_leg(lm_near, kw_near, shift_index, planes, traj_full, start_near, 
             kw_near[si]['alpha_y'] += (my - my_prev) / resp_k
             mx_prev, my_prev = mx, my
     return kw_near
-
 
 def _register(lm_near, kw_near, shift_index, planes_fg, planes_bg,
               lens_model_fixed, kwargs_lens_fixed, lens_model_free, kwargs_lens_free,
@@ -877,7 +727,7 @@ def magnification_finite_decoupled_nearfar(
         source_model, kwargs_source, x_image, y_image,
         lens_model_init, kwargs_lens_init, kwargs_lens, index_lens_split,
         grid_size_list, grid_resolution, R_max, halo_masses,
-        farfield_order=2, farfield_stencil_h=1e-3, source_x=None, source_y=None,
+        farfield_order=2, farfield_stencil_h=5e-3, source_x=None, source_y=None,
         grid_increment_factor=15.0,
         setup_decoupled_multiplane_lens_model_output=None,
         magnification_method='ELLIPTICAL_APERTURE',
@@ -885,6 +735,10 @@ def magnification_finite_decoupled_nearfar(
     """Near/far split with background culling and two-leg ray registration.
     Sheets and other centerless profiles are always culled INTO the far field
     together with the halos (the registration shifts make this safe)."""
+
+    M_ref = 1e8
+    mass_exponent = 0.5
+    floor_buffer = 3.0
 
     if setup_decoupled_multiplane_lens_model_output is None:
         (lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
