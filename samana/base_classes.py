@@ -103,7 +103,7 @@ class SingleGaussianMagnification(object):
 
     def __call__(self, source_dict, source_x, source_y, data_class, model_class,
                  lens_model_init, kwargs_lens_init, kwargs_solution,
-                 setup_decoupled_multiplane_lens_model_output, halo_masses=None):
+                 setup_decoupled_multiplane_lens_model_output, halo_masses=None, verbose=False):
 
         source_model_quasar, kwargs_source = setup_gaussian_source(source_dict['source_size_pc'],
                                                                    np.mean(source_x), np.mean(source_y),
@@ -131,7 +131,8 @@ class SingleGaussianMagnification(object):
                                                                               rotation_angle_list=self.rotation_angle_list,
                                                                               hessian_eigenvalue_list=self.hessian_eigenvalue_list,
                                                                               halo_masses=halo_masses,
-                                                                              near_far_splitting=self.near_far_splitting)
+                                                                              near_far_splitting=self.near_far_splitting,
+                                                                              verbose=verbose)
         flux_uncertainty = None
         stat, flux_ratios, flux_ratios_data = flux_ratio_summary_statistic(data_class.magnifications,
                                                                                magnifications,

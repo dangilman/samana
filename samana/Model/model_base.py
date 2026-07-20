@@ -304,7 +304,8 @@ class EPLModelBase(object):
                                      hessian_eigenvalue_list=None,
                                      R_max=0.5,
                                      halo_masses=None,
-                                     near_far_splitting=False):
+                                     near_far_splitting=False,
+                                     verbose=False):
         """
 
         :param source_model_quasar:
@@ -330,7 +331,8 @@ class EPLModelBase(object):
                                                           setup_decoupled_multiplane_lens_model_output=setup_decoupled_multiplane_lens_model_output,
                                                           magnification_method=magnification_method,
                                                           rotation_angle_list=rotation_angle_list,
-                                                          hessian_eigenvalue_list=hessian_eigenvalue_list)
+                                                          hessian_eigenvalue_list=hessian_eigenvalue_list,
+                                                          verbose=verbose)
         else:
             from samana.image_magnification_util import magnification_finite_decoupled
             mags = magnification_finite_decoupled(source_model_quasar, kwargs_source,

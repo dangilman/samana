@@ -275,7 +275,7 @@ def magnification_finite_decoupled_nearfar(
         grid_increment_factor=15.0,
         setup_decoupled_multiplane_lens_model_output=None,
         magnification_method='ELLIPTICAL_APERTURE',
-        rotation_angle_list=None, hessian_eigenvalue_list=None):
+        rotation_angle_list=None, hessian_eigenvalue_list=None, verbose=False):
     """Near/far split with background culling and two-leg ray registration.
     Sheets and other centerless profiles are always culled INTO the far field
     together with the halos (the registration shifts make this safe)."""
