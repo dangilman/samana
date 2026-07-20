@@ -1,6 +1,6 @@
 from lenstronomy.LensModel.Util.decouple_multi_plane_util import *
 from lenstronomy.Util.param_util import ellipticity2phi_q
-from samana.image_magnification_util import magnification_finite_decoupled
+from samana.image_magnification_util import magnification_finite_decoupled_nearfar, magnification_finite_decoupled
 from samana.forward_model_util import macromodel_readout_function_eplshear
 import numpy as np
 from lenstronomy.Util.class_creator import create_class_instances
@@ -302,7 +302,9 @@ class EPLModelBase(object):
                                      setup_decoupled_multiplane_lens_model_output=None,
                                      magnification_method='CIRCULAR_APERTURE',
                                      rotation_angle_list=None,
-                                     hessian_eigenvalue_list=None):
+                                     hessian_eigenvalue_list=None,
+                                     R_max=0.3,
+                                     halo_masses=None):
         """
 
         :param source_model_quasar:
@@ -317,15 +319,25 @@ class EPLModelBase(object):
         :return:
         """
         _, _, index_lens_split, _ = self.setup_lens_model()
-        mags = magnification_finite_decoupled(source_model_quasar, kwargs_source,
-                                              self._data.x_image, self._data.y_image,
-                                              lens_model_init, kwargs_lens_init,
-                                              kwargs_lens, index_lens_split,
-                                              grid_size_list, grid_resolution,
-                                              setup_decoupled_multiplane_lens_model_output=setup_decoupled_multiplane_lens_model_output,
-                                              magnification_method=magnification_method,
-                                              rotation_angle_list=rotation_angle_list,
-                                              hessian_eigenvalue_list=hessian_eigenvalue_list)
+        # mags = magnification_finite_decoupled(source_model_quasar, kwargs_source,
+        #                                       self._data.x_image, self._data.y_image,
+        #                                       lens_model_init, kwargs_lens_init,
+        #                                       kwargs_lens, index_lens_split,
+        #                                       grid_size_list, grid_resolution,
+        #                                       setup_decoupled_multiplane_lens_model_output=setup_decoupled_multiplane_lens_model_output,
+        #                                       magnification_method=magnification_method,
+        #                                       rotation_angle_list=rotation_angle_list,
+        #                                       hessian_eigenvalue_list=hessian_eigenvalue_list)
+        mags = magnification_finite_decoupled_nearfar(source_model_quasar, kwargs_source,
+                                                      self._data.x_image, self._data.y_image,
+                                                      lens_model_init, kwargs_lens_init,
+                                                      kwargs_lens, index_lens_split,
+                                                      grid_size_list, grid_resolution,
+                                                      R_max=R_max, halo_masses=halo_masses,
+                                                      setup_decoupled_multiplane_lens_model_output=setup_decoupled_multiplane_lens_model_output,
+                                                      magnification_method=magnification_method,
+                                                      rotation_angle_list=rotation_angle_list,
+                                                      hessian_eigenvalue_list=hessian_eigenvalue_list)
         return mags
 
     def setup_kwargs_model(self, decoupled_multiplane=False, lens_model_list_halos=None,

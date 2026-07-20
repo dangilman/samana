@@ -1,5 +1,5 @@
 from samana.forward_model_util import filenames, sample_prior, \
-    split_kwargs_params, check_lens_equation_solution, align_realization, batch_lens_profiles
+    split_kwargs_params, check_lens_equation_solution, align_realization
 from lenstronomy.LensModel.lens_model import LensModel
 from lenstronomy.Workflow.fitting_sequence import FittingSequence
 from lenstronomy.Util.class_creator import create_im_sim
@@ -470,11 +470,11 @@ def forward_model_single_iteration(data_class,
         realization,
         realization_dict)
     # GET THE NEW LENS MODEL/KWARGS LIST
-    _lens_model_list_halos, _redshift_list_halos, _kwargs_halos, _ = realization.lensing_quantities(
+    lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
         **kwargs_mass_sheet_correction)
-    lens_model_list_halos, redshift_list_halos, kwargs_halos = (
-        batch_lens_profiles(_lens_model_list_halos, _redshift_list_halos, _kwargs_halos)
-    )
+    # lens_model_list_halos, redshift_list_halos, kwargs_halos = (
+    #     batch_lens_profiles(_lens_model_list_halos, _redshift_list_halos, _kwargs_halos)
+    # )
 
     pixel_size = data_class.coordinate_properties[0] / data_class.kwargs_numerics['supersampling_factor']
     grid_resolution_image_data = pixel_size / image_data_grid_resolution_rescale
@@ -672,10 +672,17 @@ def forward_model_single_iteration(data_class,
         if verbose:
             print('computing image magnifications...')
 
+        halo_masses = []
+        for halo in realization.halos:
+            if halo.is_subhalo:
+                halo_masses.append(halo.bound_mass)
+            else:
+                halo_masses.append(halo.mass)
         magnifications, images, stat, flux_ratios, flux_ratios_data = magnification_class(
             source_dict, source_x, source_y, data_class, model_class,
-            lens_model_init, kwargs_lens_init, kwargs_solution, setup_decoupled_multiplane_lens_model_output
-                                                     )
+            lens_model_init, kwargs_lens_init, kwargs_solution,
+            setup_decoupled_multiplane_lens_model_output,
+            halo_masses)
 
     tend = time()
     if verbose:
