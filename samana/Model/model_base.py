@@ -1,6 +1,5 @@
 from lenstronomy.LensModel.Util.decouple_multi_plane_util import *
 from lenstronomy.Util.param_util import ellipticity2phi_q
-from samana.image_magnification_util import magnification_finite_decoupled_nearfar, magnification_finite_decoupled
 from samana.forward_model_util import macromodel_readout_function_eplshear
 import numpy as np
 from lenstronomy.Util.class_creator import create_class_instances
@@ -333,6 +332,7 @@ class EPLModelBase(object):
                                                           rotation_angle_list=rotation_angle_list,
                                                           hessian_eigenvalue_list=hessian_eigenvalue_list)
         else:
+            from samana.image_magnification_util import magnification_finite_decoupled
             mags = magnification_finite_decoupled(source_model_quasar, kwargs_source,
                                                   self._data.x_image, self._data.y_image,
                                                   lens_model_init, kwargs_lens_init,
