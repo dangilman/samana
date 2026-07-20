@@ -2,6 +2,7 @@ from lenstronomy.LightModel.light_model import LightModel
 from copy import deepcopy
 from samana.forward_model_util import batch_lens_profiles
 import numpy as np
+from lenstronomy.Util import util
 from lenstronomy.Util.util import make_grid_with_coordtransform
 from lenstronomy.Data.coord_transforms import Coordinates
 from lenstronomy.LensModel.Util.decouple_multi_plane_util import (
