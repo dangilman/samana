@@ -82,7 +82,8 @@ class SingleGaussianMagnification(object):
                  rescale_grid_resolution,
                  magnification_method,
                  rotation_angle_list,
-                 hessian_eigenvalue_list):
+                 hessian_eigenvalue_list,
+                 near_far_splitting=False):
         """
 
         :param astropy_cosmo:
@@ -98,6 +99,7 @@ class SingleGaussianMagnification(object):
         self.magnification_method = magnification_method
         self.rotation_angle_list = rotation_angle_list
         self.hessian_eigenvalue_list = hessian_eigenvalue_list
+        self.near_far_splitting = near_far_splitting
 
     def __call__(self, source_dict, source_x, source_y, data_class, model_class,
                  lens_model_init, kwargs_lens_init, kwargs_solution,
@@ -128,7 +130,8 @@ class SingleGaussianMagnification(object):
                                                                               magnification_method=self.magnification_method,
                                                                               rotation_angle_list=self.rotation_angle_list,
                                                                               hessian_eigenvalue_list=self.hessian_eigenvalue_list,
-                                                                              halo_masses=halo_masses)
+                                                                              halo_masses=halo_masses,
+                                                                              near_far_splitting=self.near_far_splitting)
         flux_uncertainty = None
         stat, flux_ratios, flux_ratios_data = flux_ratio_summary_statistic(data_class.magnifications,
                                                                                magnifications,
