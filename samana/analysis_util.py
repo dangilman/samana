@@ -329,7 +329,10 @@ def quick_setup(lens_ID, use_qgrad=False):
         from samana.Model.b2045_model import B2045ModelEPLM3M4Shear as model_class
     elif lens_ID == 'HE0435':
         from samana.Data.he0435 import HE0435_NIRCAM as data_class
-        from samana.Model.he0435_model_nircam import HE0435ModelNircamEPLM1M3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.he0435_model_nircam import HE0435ModelNircamEPLM1M3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.he0435_model_nircam import HE0435ModelNircamEPLM1M3M4Shear as model_class
     elif lens_ID == 'J0248':
         from samana.Data.j0248 import J0248_MIRI as data_class
         if use_qgrad:

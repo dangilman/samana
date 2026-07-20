@@ -1,5 +1,5 @@
 from samana.forward_model_util import filenames, sample_prior, \
-    split_kwargs_params, check_lens_equation_solution, align_realization
+    split_kwargs_params, check_lens_equation_solution, align_realization, batch_lens_profiles
 from lenstronomy.LensModel.lens_model import LensModel
 from lenstronomy.Workflow.fitting_sequence import FittingSequence
 from lenstronomy.Util.class_creator import create_im_sim
@@ -470,8 +470,11 @@ def forward_model_single_iteration(data_class,
         realization,
         realization_dict)
     # GET THE NEW LENS MODEL/KWARGS LIST
-    lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
+    _lens_model_list_halos, _redshift_list_halos, _kwargs_halos, _ = realization.lensing_quantities(
         **kwargs_mass_sheet_correction)
+    lens_model_list_halos, redshift_list_halos, kwargs_halos = (
+        batch_lens_profiles(_lens_model_list_halos, _redshift_list_halos, _kwargs_halos)
+    )
 
     pixel_size = data_class.coordinate_properties[0] / data_class.kwargs_numerics['supersampling_factor']
     grid_resolution_image_data = pixel_size / image_data_grid_resolution_rescale

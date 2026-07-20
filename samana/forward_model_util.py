@@ -609,3 +609,43 @@ def macromodel_readout_function_eplshear_satellite(kwargs_solution, samples_fixe
         samples_macromodel.append(samples_fixed_dict['dphi'])
         param_names_macro += ['dphi']
     return np.array(samples_macromodel), param_names_macro
+
+import numpy as np
+
+def batch_lens_profiles(lens_model_list, redshift_array, kwargs_lens,
+                    profiles_to_batch=None, min_group=4):
+    """
+    Collapses every run of same-(profile, redshift) halos into a single MULTI_HALO_BATCH entry.
+    Works for any profile provided the derivatives method can be vectorized
+
+    Call like this:
+    lens_moel_list, redshift_array, kwargs_halos = batch_halos(lens_model_list, redshift_array, kwargs_halos)
+    and then create a lens model class as usual:
+
+    lens_model = LensModel(lens_model_list, lens_redshift_list=list(redshift_array), ...)
+
+    :param profiles_to_batch: set of profile names to group (default: all that repeat)
+    :param min_group: don't bother batching groups smaller than this.
+    """
+    redshift_array = np.asarray(redshift_array, dtype=float)
+    # bucket indices by (profile_name, rounded redshift)
+    buckets = {}
+    for i, (name, z) in enumerate(zip(lens_model_list, redshift_array)):
+        if profiles_to_batch is not None and name not in profiles_to_batch:
+            buckets.setdefault(("__passthrough__", i), []).append(i)
+        else:
+            buckets.setdefault((name, round(float(z), 8)), []).append(i)
+
+    out_names, out_z, out_kw = [], [], []
+    for key, idx in buckets.items():
+        name = key[0]
+        if name == "__passthrough__" or len(idx) < min_group:
+            for i in idx:
+                out_names.append(lens_model_list[i]); out_z.append(redshift_array[i]); out_kw.append(kwargs_lens[i])
+        else:
+            out_names.append("MULTI_HALO_BATCH")
+            out_z.append(redshift_array[idx[0]])
+            out_kw.append({"profile_name": name,
+                           "kwargs_list": [kwargs_lens[i] for i in idx]})
+    return out_names, np.array(out_z, dtype=float), out_kw
+
