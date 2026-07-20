@@ -675,9 +675,10 @@ def forward_model_single_iteration(data_class,
         halo_masses = []
         for halo in realization.halos:
             if halo.is_subhalo:
-                halo_masses.append(halo.bound_mass)
+                m = halo.bound_mass
             else:
-                halo_masses.append(halo.mass)
+                m = halo.mass
+            halo_masses += [m] * len(halo.lenstronomy_ID)
         magnifications, images, stat, flux_ratios, flux_ratios_data = magnification_class(
             source_dict, source_x, source_y, data_class, model_class,
             lens_model_init, kwargs_lens_init, kwargs_solution,

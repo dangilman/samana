@@ -303,7 +303,7 @@ class EPLModelBase(object):
                                      magnification_method='CIRCULAR_APERTURE',
                                      rotation_angle_list=None,
                                      hessian_eigenvalue_list=None,
-                                     R_max=0.3,
+                                     R_max=0.5,
                                      halo_masses=None):
         """
 
