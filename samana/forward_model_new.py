@@ -707,11 +707,12 @@ def forward_model_single_iteration(data_class,
             else:
                 m = halo.mass
             halo_masses += [m] * len(halo.lenstronomy_ID)
+        halo_masses += [np.nan] * (len(lens_model_list_halos) - len(halo_masses))
         magnifications, images, stat, flux_ratios, flux_ratios_data = magnification_class(
             source_dict, source_x, source_y, data_class, model_class,
             lens_model_init, kwargs_lens_init, kwargs_solution,
             setup_decoupled_multiplane_lens_model_output,
-            halo_masses)
+            halo_masses, verbose=verbose)
 
     tend = time()
     if verbose:

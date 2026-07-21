@@ -71,7 +71,9 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                                    setup_decoupled_multiplane_lens_model_output=None,
                                    magnification_method='CIRCULAR_APERTURE',
                                    rotation_angle_list=None,
-                                   hessian_eigenvalue_list=None):
+                                   hessian_eigenvalue_list=None,
+                                   halo_masses=None,
+                                   verbose=False):
     """
 
     :param source_model:
@@ -145,26 +147,49 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                                                       grid_r, r_step, grid_resolution, grid_size_list[j], z_split, z_source)
             magnifications.append(mag)
             flux_arrays.append(flux_array.reshape(npix_large, npix_large))
-        elif magnification_method == 'NEAR_FAR_SPLITTING':
+        elif magnification_method in ['NEAR_FAR_SPLITTING', 'NEAR_FAR_SPLITTING_ADAPTIVE']:
             # in development
-            from samana.image_magnification_near_far import mag_finite_single_image_distortion
+            from samana.image_magnification_near_far import (mag_finite_single_image_distortion,
+                                                             mag_finite_single_image_distortion_adaptive)
             from samana.forward_model_util import interpolate_ray_paths
-            R_max = 0.4
+            R_max_0 = 0.4
+            if halo_masses is None:
+                R_max = R_max_0
+            else:
+                R_max = np.maximum(R_max_0 * (np.array(halo_masses) / 10 ** 8) ** 0.333,
+                                   2*grid_size_list[j])
+
             grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
             r_step = grid_size_list[j] / grid_increment_factor
             ray_interp_x_list, ray_interp_y_list = interpolate_ray_paths([x_img], [y_img],
                                                                lens_model_init, kwargs_lens_init, z_source,
                                                                terminate_at_source=False
                                                                )
-            mag, flux_array = mag_finite_single_image_distortion(
-                source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
-                kwargs_lens, z_split, z_source,
-                cosmo_bkg, grid_x_large, grid_y_large,
-                grid_r, r_step, grid_resolution, grid_size_list[j],
-                R_max, ray_interp_x_list[0], ray_interp_y_list[0]
-            )
-            magnifications.append(mag)
-            flux_arrays.append(flux_array.reshape(npix_large, npix_large))
+            if magnification_method == 'NEAR_FAR_SPLITTING':
+                mag, flux_array = mag_finite_single_image_distortion(
+                    source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
+                    kwargs_lens, z_split, z_source,
+                    cosmo_bkg, grid_x_large, grid_y_large,
+                    grid_r, r_step, grid_resolution, grid_size_list[j],
+                    R_max, ray_interp_x_list[0], ray_interp_y_list[0], verbose=verbose
+                )
+                magnifications.append(mag)
+                flux_arrays.append(flux_array.reshape(npix_large, npix_large))
+            else:
+
+                mag, flux_array, tiling = mag_finite_single_image_distortion_adaptive(
+                    source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
+                    kwargs_lens, z_split, z_source, cosmo_bkg, x_img, y_img,
+                    grid_resolution, grid_size_list[j], R_max, ray_interp_x_list[0], ray_interp_y_list[0],
+                    n_coarse=20, rel_tol=1e-3, flux_floor_frac=1e-3,
+                    rotation_angle=rotation_angle_list[j], hessian_eigenvalue=hessian_eigenvalue_list[j]
+                )
+                # import matplotlib.pyplot as plt
+                # plot_image(flux_array, tiling)
+                # plt.show()
+                # a=input('continue')
+                magnifications.append(mag)
+                flux_arrays.append(flux_array.reshape(npix_large, npix_large))
         else:
             raise Exception('magnification_method must be either CIRCULAR_APERTURE, ELLIPTICAL_APERTURE, or ADAPTIVE. '
                             'You specified magnification_method '+str(magnification_method))

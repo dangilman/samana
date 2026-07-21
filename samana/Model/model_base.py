@@ -304,6 +304,7 @@ class EPLModelBase(object):
                                      magnification_method='CIRCULAR_APERTURE',
                                      rotation_angle_list=None,
                                      hessian_eigenvalue_list=None,
+                                     halo_masses=None,
                                      verbose=False):
         """
 
@@ -319,7 +320,6 @@ class EPLModelBase(object):
         :return:
         """
         _, _, index_lens_split, _ = self.setup_lens_model()
-
         mags = magnification_finite_decoupled(
             source_model_quasar, kwargs_source,
             self._data.x_image, self._data.y_image,
@@ -328,7 +328,8 @@ class EPLModelBase(object):
             setup_decoupled_multiplane_lens_model_output=setup_decoupled_multiplane_lens_model_output,  # built from batched model
             magnification_method=magnification_method,
             rotation_angle_list=rotation_angle_list,
-            hessian_eigenvalue_list=hessian_eigenvalue_list)
+            hessian_eigenvalue_list=hessian_eigenvalue_list,
+            halo_masses=halo_masses, verbose=verbose)
 
         return mags
 
