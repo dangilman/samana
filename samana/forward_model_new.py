@@ -44,7 +44,8 @@ def forward_model(output_path,
                   split_image_data_reconstruction=False,
                   tolerance_source_reconstruction=None,
                   fr_logL_source_reconstruction=None,
-                  return_astrometric_rejections=False
+                  return_astrometric_rejections=False,
+                  batch_lens_model=False
                   ):
     """
     Top-level function for forward modeling strong lenses with substructure. This function makes repeated calls to
@@ -210,7 +211,8 @@ def forward_model(output_path,
             tolerance_source_reconstruction=tolerance_source_reconstruction,
             fr_logL_source_reconstruction=fr_logL_source_reconstruction,
             scale_window_size_decoupled_multiplane=scale_window_size_decoupled_multiplane,
-            return_astrometric_rejections=return_astrometric_rejections)
+            return_astrometric_rejections=return_astrometric_rejections,
+            batch_lens_model=batch_lens_model)
 
         seed_counter += 1
         acceptance_rate_counter += 1
@@ -356,7 +358,8 @@ def forward_model_single_iteration(data_class,
                                    tolerance_source_reconstruction=None,
                                    fr_logL_source_reconstruction=None,
                                    scale_window_size_decoupled_multiplane=1.0,
-                                   return_astrometric_rejections=False
+                                   return_astrometric_rejections=False,
+                                   batch_lens_model=False
                            ):
     """
 
@@ -472,6 +475,13 @@ def forward_model_single_iteration(data_class,
     # GET THE NEW LENS MODEL/KWARGS LIST
     lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
         **kwargs_mass_sheet_correction)
+
+    if batch_lens_model:
+        from samana.forward_model_util import batch_lens_profiles
+        lens_model_list_halos, redshift_list_halos, kwargs_halos = batch_lens_profiles(
+            lens_model_list_halos, redshift_list_halos, kwargs_halos,
+            profiles_to_batch={'CORE_COLLAPSED_HALO', 'TNFW', 'TNFWC', 'NFW'},
+            min_group=4)
     # lens_model_list_halos, redshift_list_halos, kwargs_halos = (
     #     batch_lens_profiles(_lens_model_list_halos, _redshift_list_halos, _kwargs_halos)
     # )
@@ -506,6 +516,24 @@ def forward_model_single_iteration(data_class,
         kwargs_constraints['point_source_offset'] = True
     else:
         kwargs_constraints['point_source_offset'] = False
+
+    # from samana.forward_model_util import save_realization
+    # grid_res = magnification_class.grid_resolution(source_dict['source_size_pc'])
+    # grid_size = magnification_class.grid_size_list(source_dict['source_size_pc'])
+    # save_realization('realization_test_seed'+str(seed)+'.json',
+    #                  data_class.z_lens,
+    #                  data_class.z_source,
+    #                  lens_model_list_halos,
+    #                  redshift_list_halos,
+    #                  kwargs_halos,
+    #                  kwargs_lens_macro_init,
+    #                  index_lens_split,
+    #                  data_class.x_image,
+    #                  data_class.y_image,
+    #                  source_dict['source_size_pc'],
+    #                  grid_res,
+    #                  grid_size)
+    # exit(1)
 
     if use_imaging_data:
         image_data_grids_computed = True

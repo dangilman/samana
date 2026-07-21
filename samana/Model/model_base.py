@@ -304,7 +304,6 @@ class EPLModelBase(object):
                                      magnification_method='CIRCULAR_APERTURE',
                                      rotation_angle_list=None,
                                      hessian_eigenvalue_list=None,
-                                     batch_realization=True,
                                      verbose=False):
         """
 
@@ -320,33 +319,16 @@ class EPLModelBase(object):
         :return:
         """
         _, _, index_lens_split, _ = self.setup_lens_model()
-        if batch_realization:
-            names_b, z_b, kw_b = batch_lens_profiles(
-                lens_model_init.lens_model_list, lens_model_init.redshift_list, kwargs_lens_init,
-                profiles_to_batch={'TNFW', 'PSEUDO_DPL'}, min_group=10)
-            lens_model_init_batched = LensModel(
-                names_b, lens_redshift_list=list(z_b),
-                z_source=self._data.z_source, multi_plane=True, cosmo=lens_model_init.cosmo)
-            setup_batched = setup_lens_model(lens_model_init_batched, kw_b, index_lens_split)
-            mags = magnification_finite_decoupled(
-                source_model_quasar, kwargs_source,
-                self._data.x_image, self._data.y_image,
-                lens_model_init_batched, kw_b, kwargs_lens, index_lens_split,
-                grid_size_list, grid_resolution,
-                setup_decoupled_multiplane_lens_model_output=setup_batched,  # built from batched model
-                magnification_method=magnification_method,
-                rotation_angle_list=rotation_angle_list,
-                hessian_eigenvalue_list=hessian_eigenvalue_list)
-        else:
-            mags = magnification_finite_decoupled(
-                source_model_quasar, kwargs_source,
-                self._data.x_image, self._data.y_image,
-                lens_model_init, kwargs_lens_init, kwargs_lens, index_lens_split,
-                grid_size_list, grid_resolution,
-                setup_decoupled_multiplane_lens_model_output=setup_decoupled_multiplane_lens_model_output,  # built from batched model
-                magnification_method=magnification_method,
-                rotation_angle_list=rotation_angle_list,
-                hessian_eigenvalue_list=hessian_eigenvalue_list)
+
+        mags = magnification_finite_decoupled(
+            source_model_quasar, kwargs_source,
+            self._data.x_image, self._data.y_image,
+            lens_model_init, kwargs_lens_init, kwargs_lens, index_lens_split,
+            grid_size_list, grid_resolution,
+            setup_decoupled_multiplane_lens_model_output=setup_decoupled_multiplane_lens_model_output,  # built from batched model
+            magnification_method=magnification_method,
+            rotation_angle_list=rotation_angle_list,
+            hessian_eigenvalue_list=hessian_eigenvalue_list)
 
         return mags
 

@@ -647,3 +647,47 @@ def batch_lens_profiles(lens_model_list, redshift_array, kwargs_lens,
                            "kwargs_list": [kwargs_lens[i] for i in idx]})
     return out_names, np.array(out_z, dtype=float), out_kw
 
+def save_realization(filename,
+                     z_lens,
+                     z_source,
+                     lens_model_list_halos,
+                     redshift_list_halos,
+                     kwargs_halos,
+                     kwargs_lens_macro_init,
+                     index_lens_split,
+                     x_image,
+                     y_image,
+                     source_fwhm_pc,
+                     grid_size_list,
+                     grid_resolution,
+                     output_dir='./'):
+
+    import json, numpy as np
+
+    def _to_native(o):
+        if isinstance(o, dict):          return {k: _to_native(v) for k, v in o.items()}
+        if isinstance(o, (list, tuple)): return [_to_native(v) for v in o]
+        if isinstance(o, np.ndarray):    return o.tolist()
+        if isinstance(o, np.floating):   return float(o)
+        if isinstance(o, np.integer):    return int(o)
+        if isinstance(o, np.bool_):      return bool(o)
+        return o
+
+    realization = {
+        # lens model
+        'lens_model_list_halos':  lens_model_list_halos,
+        'redshift_list_halos':    redshift_list_halos,
+        'kwargs_halos':           kwargs_halos,
+        'kwargs_lens_macro_init': kwargs_lens_macro_init,
+        # everything else needed to reproduce the magnification exactly
+        'index_lens_split':       index_lens_split,
+        'z_lens':                 z_lens,
+        'z_source':               z_source,
+        'x_image':                x_image,
+        'y_image':                y_image,
+        'source_fwhm_pc':         source_fwhm_pc,     # or the source kwargs you use
+        'grid_size_list':         grid_size_list,
+        'grid_resolution':        grid_resolution,
+    }
+    with open(output_dir + filename, 'w') as f:
+        json.dump(_to_native(realization), f, indent=2)

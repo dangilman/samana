@@ -147,18 +147,18 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
             flux_arrays.append(flux_array.reshape(npix_large, npix_large))
         elif magnification_method == 'NEAR_FAR_SPLITTING':
             # in development
-            from samana.image_magnification_pert import mag_finite_single_image_distortion
+            from samana.image_magnification_near_far import mag_finite_single_image_distortion
             from samana.forward_model_util import interpolate_ray_paths
             R_max = 0.4
             grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
             r_step = grid_size_list[j] / grid_increment_factor
             ray_interp_x_list, ray_interp_y_list = interpolate_ray_paths([x_img], [y_img],
                                                                lens_model_init, kwargs_lens_init, z_source,
-                                                               terminate_at_source=False, source_x=None, source_y=None
+                                                               terminate_at_source=False
                                                                )
             mag, flux_array = mag_finite_single_image_distortion(
                 source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
-                kwargs_lens_free, kwargs_lens, z_split, z_source,
+                kwargs_lens, z_split, z_source,
                 cosmo_bkg, grid_x_large, grid_y_large,
                 grid_r, r_step, grid_resolution, grid_size_list[j],
                 R_max, ray_interp_x_list[0], ray_interp_y_list[0]

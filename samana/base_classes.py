@@ -82,8 +82,7 @@ class SingleGaussianMagnification(object):
                  rescale_grid_resolution,
                  magnification_method,
                  rotation_angle_list,
-                 hessian_eigenvalue_list,
-                 near_far_splitting=False):
+                 hessian_eigenvalue_list):
         """
 
         :param astropy_cosmo:
@@ -99,17 +98,13 @@ class SingleGaussianMagnification(object):
         self.magnification_method = magnification_method
         self.rotation_angle_list = rotation_angle_list
         self.hessian_eigenvalue_list = hessian_eigenvalue_list
-        self.near_far_splitting = near_far_splitting
 
-    def __call__(self, source_dict, source_x, source_y, data_class, model_class,
-                 lens_model_init, kwargs_lens_init, kwargs_solution,
-                 setup_decoupled_multiplane_lens_model_output, halo_masses=None, verbose=False):
+    def grid_resolution(self, source_size):
+        return self.rescale_grid_resolution * source_size
 
-        source_model_quasar, kwargs_source = setup_gaussian_source(source_dict['source_size_pc'],
-                                                                   np.mean(source_x), np.mean(source_y),
-                                                                   self.astropy_cosmo, data_class.z_source)
-        grid_size_base = auto_raytracing_grid_size(source_dict['source_size_pc'])
-        grid_resolution = self.rescale_grid_resolution * auto_raytracing_grid_resolution(source_dict['source_size_pc'])
+    def grid_size_list(self, source_size):
+
+        grid_size_base = auto_raytracing_grid_size(source_size)
         if isinstance(self.rescale_grid_size, list) or isinstance(self.rescale_grid_size, np.ndarray):
             assert len(self.rescale_grid_size) == 4
             grid_size_list = []
@@ -117,6 +112,19 @@ class SingleGaussianMagnification(object):
                 grid_size_list.append(rescale_size * grid_size_base)
         else:
             grid_size_list = [self.rescale_grid_size * grid_size_base] * 4
+        return grid_size_list
+
+    def __call__(self, source_dict, source_x, source_y, data_class, model_class,
+                 lens_model_init, kwargs_lens_init, kwargs_solution,
+                 setup_decoupled_multiplane_lens_model_output,
+                 verbose=False):
+
+        source_model_quasar, kwargs_source = setup_gaussian_source(source_dict['source_size_pc'],
+                                                                   np.mean(source_x), np.mean(source_y),
+                                                                   self.astropy_cosmo, data_class.z_source)
+
+        grid_resolution = self.rescale_grid_resolution * auto_raytracing_grid_resolution(source_dict['source_size_pc'])
+        grid_size_list = self.grid_size_list(source_dict['source_size_pc'])
         # we pass in setup_decoupled_multiplane_lens_model_output, the decoupled multiplane parameters
         # computed for the proposed macromodel in setup_kwargs_model
         magnifications, images = model_class.image_magnification_gaussian(source_model_quasar,
@@ -130,8 +138,6 @@ class SingleGaussianMagnification(object):
                                                                               magnification_method=self.magnification_method,
                                                                               rotation_angle_list=self.rotation_angle_list,
                                                                               hessian_eigenvalue_list=self.hessian_eigenvalue_list,
-                                                                              halo_masses=halo_masses,
-                                                                              near_far_splitting=self.near_far_splitting,
                                                                               verbose=verbose)
         flux_uncertainty = None
         stat, flux_ratios, flux_ratios_data = flux_ratio_summary_statistic(data_class.magnifications,
