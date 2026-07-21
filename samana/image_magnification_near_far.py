@@ -177,40 +177,27 @@ def lens_models_at_z(z, lens_model_fixed, kwargs_lens_fixed,
 
     lens_model_exact = LensModel(near_names)
     kwargs_lens_exact = near_kw
-    # if verbose:
-    #     print('at plane ' + str(z))
-    #     print('exact lens models: ', len(near_names))
-    #     print('perturbative lens models: ', len(far_idx))
-    # mean convergence of the near halos, "average sense" via the deflection flux:
-    # for the azimuthal average, alpha_radial(R) = R * <kappa>(<R), so
-    # <kappa> = <alpha_radial(R_ring)> / R_ring. Uses only the LensModel (no halo masses).
-    # (Only used when subtract_near_kappa=True; a scalar ring radius is used even when
-    #  R_max is per-halo -- the largest near-halo radius, i.e. the effective aperture.)
-    #finite_r = R_max_arr[np.isfinite(R_max_arr)]
-    #R_ring = float(R_max_arr[0]) if scalar_rmax else (float(np.max(finite_r)) if finite_r.size else 0.0)
-    # if near_names and R_ring > 0:
-    #     n_ring = 32
-    #     phi = np.linspace(0.0, 2 * np.pi, n_ring, endpoint=False)
-    #     rx = x_center_at_plane + R_ring * np.cos(phi)
-    #     ry = y_center_at_plane + R_ring * np.sin(phi)
-    #     aex, aey = lens_model_exact.alpha(rx, ry, kwargs_lens_exact)
-    #     alpha_radial = np.mean(aex * np.cos(phi) + aey * np.sin(phi))
-    #     kappa_near = alpha_radial / R_ring
-    # else:
-    #     kappa_near = 0.0
 
     kappa_near = 0.0
-    # far field: sum the far halos' Hessian at the central ray, represent as one HESSIAN
+    # far field: sum the far halos' Hessian at the central ray, represent as one HESSIAN.
+    # Group the far halos into MULTI_HALO_BATCH entries (per profile type) so the Hessian
+    # sum is vectorized; CONVERGENCE sheets pass through individually.
     if far_idx:
-        lm_far_full = LensModel([names[i] for i in far_idx])
-        kw_far_full = [kwargs_lens_fixed[i] for i in far_idx]
-        fxx, fxy, fyx, fyy = lm_far_full.hessian(x_center_at_plane, y_center_at_plane, kw_far_full)
+        from samana.forward_model_util import batch_lens_profiles
+        far_names_in = [names[i] for i in far_idx]
+        far_kw_in = [kwargs_lens_fixed[i] for i in far_idx]
+        far_z = [0.0] * len(far_idx)  # single plane; z unused by the hessian
+        to_batch = set(far_names_in) - {'CONVERGENCE'}  # don't batch mass sheets
+        b_names, _, b_kw = batch_lens_profiles(far_names_in, far_z, far_kw_in,
+                                               profiles_to_batch=to_batch, min_group=4)
+        lm_far_full = LensModel(b_names)
+        fxx, fxy, fyx, fyy = lm_far_full.hessian(x_center_at_plane, y_center_at_plane, b_kw)
     else:
         fxx = fxy = fyx = fyy = 0.0
     lens_model_far = LensModel(['HESSIAN'])
     kwargs_lens_far = [{'f_xx': float(fxx), 'f_xy': float(fxy),
                         'f_yx': float(fyx), 'f_yy': float(fyy),
-                        'ra_0': x_center_at_plane, 'dec_0': y_center_at_plane}]  # HESSIAN params verified (alpha(center)=0)
+                        'ra_0': x_center_at_plane, 'dec_0': y_center_at_plane}]
     return (lens_model_exact, kwargs_lens_exact), (lens_model_far, kwargs_lens_far), float(kappa_near)
 
 

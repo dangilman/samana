@@ -304,6 +304,8 @@ class EPLModelBase(object):
                                      magnification_method='CIRCULAR_APERTURE',
                                      rotation_angle_list=None,
                                      hessian_eigenvalue_list=None,
+                                     lens_model_batch=None,
+                                     kwargs_lens_batch=None,
                                      halo_masses=None,
                                      verbose=False):
         """
@@ -329,7 +331,10 @@ class EPLModelBase(object):
             magnification_method=magnification_method,
             rotation_angle_list=rotation_angle_list,
             hessian_eigenvalue_list=hessian_eigenvalue_list,
-            halo_masses=halo_masses, verbose=verbose)
+            lens_model_batch=lens_model_batch,
+            kwargs_lens_batch=kwargs_lens_batch,
+            halo_masses=halo_masses,
+            verbose=verbose)
 
         return mags
 

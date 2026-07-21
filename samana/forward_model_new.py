@@ -476,22 +476,13 @@ def forward_model_single_iteration(data_class,
     lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
         **kwargs_mass_sheet_correction)
 
-    if batch_lens_model:
-        from samana.forward_model_util import batch_lens_profiles
-        lens_model_list_halos, redshift_list_halos, kwargs_halos = batch_lens_profiles(
-            lens_model_list_halos, redshift_list_halos, kwargs_halos,
-            profiles_to_batch={'CORE_COLLAPSED_HALO', 'TNFW', 'TNFWC', 'NFW'},
-            min_group=4)
-    # lens_model_list_halos, redshift_list_halos, kwargs_halos = (
-    #     batch_lens_profiles(_lens_model_list_halos, _redshift_list_halos, _kwargs_halos)
-    # )
-
     pixel_size = data_class.coordinate_properties[0] / data_class.kwargs_numerics['supersampling_factor']
     grid_resolution_image_data = pixel_size / image_data_grid_resolution_rescale
     if use_imaging_data:
         decoupled_multiplane_grid_type = 'GRID'
     else:
         decoupled_multiplane_grid_type = 'POINT'
+
     kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split, setup_decoupled_multiplane_lens_model_output = (
         model_class.setup_kwargs_model(
             decoupled_multiplane=use_decoupled_multiplane_approximation,
@@ -507,6 +498,34 @@ def forward_model_single_iteration(data_class,
             decoupled_multiplane_grid_type=decoupled_multiplane_grid_type,
             scale_window_size=scale_window_size_decoupled_multiplane
         ))
+    if batch_lens_model:
+        from samana.forward_model_util import batch_lens_profiles
+        lens_model_list_halos_batch, redshift_list_halos_batch, kwargs_halos_batch = batch_lens_profiles(
+            lens_model_list_halos, redshift_list_halos, kwargs_halos,
+            profiles_to_batch={'CORE_COLLAPSED_HALO', 'TNFW', 'TNFWC', 'NFW'},
+            min_group=4)
+        (kwargs_model_batch, lens_model_init_batch, kwargs_lens_init_batch, _,
+         setup_decoupled_multiplane_lens_model_output_batch) = (
+            model_class.setup_kwargs_model(
+                decoupled_multiplane=use_decoupled_multiplane_approximation,
+                lens_model_list_halos=lens_model_list_halos_batch,
+                kwargs_lens_macro_init=kwargs_lens_macro_init,
+                grid_resolution=grid_resolution_image_data,
+                redshift_list_halos=list(redshift_list_halos_batch),
+                kwargs_halos=kwargs_halos_batch,
+                verbose=verbose,
+                macromodel_samples_fixed=macromodel_samples_fixed_dict,
+                astropy_cosmo=astropy_cosmo,
+                use_JAXstronomy=False,
+                decoupled_multiplane_grid_type=decoupled_multiplane_grid_type,
+                scale_window_size=scale_window_size_decoupled_multiplane
+            ))
+    else:
+        (kwargs_model_batch, lens_model_init_batch, kwargs_lens_init_batch,
+         setup_decoupled_multiplane_lens_model_output_batch) = \
+            (kwargs_model, lens_model_init, kwargs_lens_init,
+             setup_decoupled_multiplane_lens_model_output)
+
     if 'q' in param_names_macro_fixed and use_imaging_data:
         model_class.set_fixed_q(macromodel_samples_fixed_dict['q'])
     kwargs_constraints = model_class.kwargs_constraints
@@ -579,11 +598,11 @@ def forward_model_single_iteration(data_class,
                 param_class = param_class_4pointsolver
             # we use the macromodel parameters that satisfy the lens equation to set up the decopuled multiplane approx.
             # inside the class
-            kwargs_lens_init = kwargs_lens_align + kwargs_lens_init[len(kwargs_lens_align):]
+            kwargs_lens_init_batch = kwargs_lens_align + kwargs_lens_init_batch[len(kwargs_lens_align):]
             opt = Optimizer.decoupled_multiplane(data_class.x_image,
                                                  data_class.y_image,
-                                                 lens_model_init,
-                                                 kwargs_lens_init,
+                                                 lens_model_init_batch,
+                                                 kwargs_lens_init_batch,
                                                  index_lens_split,
                                                  param_class,
                                                  particle_swarm=run_initial_PSO,
@@ -700,19 +719,30 @@ def forward_model_single_iteration(data_class,
         if verbose:
             print('computing image magnifications...')
 
-        halo_masses = []
-        for halo in realization.halos:
-            if halo.is_subhalo:
-                m = halo.bound_mass
-            else:
-                m = halo.mass
-            halo_masses += [m] * len(halo.lenstronomy_ID)
-        halo_masses += [np.nan] * (len(lens_model_list_halos) - len(halo_masses))
-        magnifications, images, stat, flux_ratios, flux_ratios_data = magnification_class(
-            source_dict, source_x, source_y, data_class, model_class,
-            lens_model_init, kwargs_lens_init, kwargs_solution,
-            setup_decoupled_multiplane_lens_model_output,
-            halo_masses, verbose=verbose)
+        # don't care about magnifications if reconstructing imaging data
+        if split_image_data_reconstruction and np.isinf(fr_logL_source_reconstruction):
+            if verbose: print('skipping image magnification calculation')
+            magnifications = np.array([1.0] * 4)
+            images = [None] * 4
+            stat = 1.0
+            flux_ratios = np.array([1.0] * 3)
+            flux_ratios_data = np.array([1.0] * 3)
+        else:
+            # don't care about the magnifications if we are reconstructing the arcs
+            halo_masses = []
+            for halo in realization.halos:
+                if halo.is_subhalo:
+                    m = halo.bound_mass
+                else:
+                    m = halo.mass
+                halo_masses += [m] * len(halo.lenstronomy_ID)
+
+            halo_masses += [np.nan] * (len(lens_model_list_halos) - len(halo_masses))
+            magnifications, images, stat, flux_ratios, flux_ratios_data = magnification_class(
+                source_dict, source_x, source_y, data_class, model_class,
+                lens_model_init, kwargs_lens_init, kwargs_solution,
+                setup_decoupled_multiplane_lens_model_output,
+                lens_model_init_batch, kwargs_lens_init_batch, halo_masses, verbose=verbose)
 
     tend = time()
     if verbose:
@@ -791,11 +821,11 @@ def forward_model_single_iteration(data_class,
             kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split, setup_decoupled_multiplane_lens_model_output = (
                 model_class.setup_kwargs_model(
                     decoupled_multiplane=use_decoupled_multiplane_approximation,
-                    lens_model_list_halos=lens_model_list_halos,
+                    lens_model_list_halos=lens_model_list_halos_batch,
                     kwargs_lens_macro_init=kwargs_lens_macro_init,
                     grid_resolution=grid_resolution_image_data,
-                    redshift_list_halos=list(redshift_list_halos),
-                    kwargs_halos=kwargs_halos,
+                    redshift_list_halos=list(redshift_list_halos_batch),
+                    kwargs_halos=kwargs_halos_batch,
                     verbose=verbose,
                     macromodel_samples_fixed=macromodel_samples_fixed_dict,
                     astropy_cosmo=astropy_cosmo,
@@ -869,11 +899,11 @@ def forward_model_single_iteration(data_class,
             kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split, setup_decoupled_multiplane_lens_model_output = (
                 model_class.setup_kwargs_model(
                     decoupled_multiplane=use_decoupled_multiplane_approximation,
-                    lens_model_list_halos=lens_model_list_halos,
+                    lens_model_list_halos=lens_model_list_halos_batch,
                     kwargs_lens_macro_init=kwargs_lens_macro_init,
                     grid_resolution=grid_resolution_image_data,
-                    redshift_list_halos=list(redshift_list_halos),
-                    kwargs_halos=kwargs_halos,
+                    redshift_list_halos=list(redshift_list_halos_batch),
+                    kwargs_halos=kwargs_halos_batch,
                     verbose=verbose,
                     macromodel_samples_fixed=macromodel_samples_fixed_dict,
                     astropy_cosmo=astropy_cosmo,
@@ -899,18 +929,19 @@ def forward_model_single_iteration(data_class,
         from lenstronomy.Plots.model_plot import ModelPlot
         from lenstronomy.Plots import chain_plot
         import matplotlib.pyplot as plt
-        fig = plt.figure(1)
-        fig.set_size_inches(16,8)
-        ax1 = plt.subplot(141)
-        ax2 = plt.subplot(142)
-        ax3 = plt.subplot(143)
-        ax4 = plt.subplot(144)
-        axes_list = [ax1, ax2, ax3, ax4]
-        for mag, ax, image in zip(magnifications, axes_list, images):
-            ax.imshow(image, origin='lower')
-            ax.annotate('magnification: '+str(np.round(mag,2)), xy=(0.3,0.9),
-                        xycoords='axes fraction',color='w',fontsize=12)
-        plt.show()
+        if images[0] is not None:
+            fig = plt.figure(1)
+            fig.set_size_inches(16,8)
+            ax1 = plt.subplot(141)
+            ax2 = plt.subplot(142)
+            ax3 = plt.subplot(143)
+            ax4 = plt.subplot(144)
+            axes_list = [ax1, ax2, ax3, ax4]
+            for mag, ax, image in zip(magnifications, axes_list, images):
+                ax.imshow(image, origin='lower')
+                ax.annotate('magnification: '+str(np.round(mag,2)), xy=(0.3,0.9),
+                            xycoords='axes fraction',color='w',fontsize=12)
+            plt.show()
         modelPlot = ModelPlot(data_class.kwargs_data_joint['multi_band_list'],
                               kwargs_model, kwargs_result,
                               fast_caustic=True,
@@ -920,8 +951,8 @@ def forward_model_single_iteration(data_class,
             print('num degrees of freedom: ', fitting_sequence.likelihoodModule.effective_num_data_points(**kwargs_result))
 
         f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
-        modelPlot.data_plot(ax=axes[0, 0])
-        modelPlot.model_plot(ax=axes[0, 1])
+        modelPlot.data_plot(ax=axes[0, 0], vmin=-2, vmax=2)
+        modelPlot.model_plot(ax=axes[0, 1], vmin=-2, vmax=2)
         modelPlot.normalized_residual_plot(ax=axes[0, 2], vmin=-6, vmax=6)
         modelPlot.source_plot(ax=axes[1, 0], delta_pix_source=0.01, num_pix=100)
         modelPlot.convergence_plot(ax=axes[1, 1], vmax=1)

@@ -117,6 +117,7 @@ class SingleGaussianMagnification(object):
     def __call__(self, source_dict, source_x, source_y, data_class, model_class,
                  lens_model_init, kwargs_lens_init, kwargs_solution,
                  setup_decoupled_multiplane_lens_model_output,
+                 lens_model_init_batch, kwargs_lens_init_batch,
                  halo_masses=None,
                  verbose=False):
 
@@ -139,6 +140,8 @@ class SingleGaussianMagnification(object):
                                                                               magnification_method=self.magnification_method,
                                                                               rotation_angle_list=self.rotation_angle_list,
                                                                               hessian_eigenvalue_list=self.hessian_eigenvalue_list,
+                                                                              lens_model_batch=lens_model_init_batch,
+                                                                              kwargs_lens_batch=kwargs_lens_init_batch,
                                                                               halo_masses=halo_masses,
                                                                               verbose=verbose)
         flux_uncertainty = None

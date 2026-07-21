@@ -72,6 +72,8 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                                    magnification_method='CIRCULAR_APERTURE',
                                    rotation_angle_list=None,
                                    hessian_eigenvalue_list=None,
+                                   lens_model_batch=None,
+                                   kwargs_lens_batch=None,
                                    halo_masses=None,
                                    verbose=False):
     """
@@ -162,7 +164,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
             grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
             r_step = grid_size_list[j] / grid_increment_factor
             ray_interp_x_list, ray_interp_y_list = interpolate_ray_paths([x_img], [y_img],
-                                                               lens_model_init, kwargs_lens_init, z_source,
+                                                               lens_model_batch, kwargs_lens_batch, z_source,
                                                                terminate_at_source=False
                                                                )
             if magnification_method == 'NEAR_FAR_SPLITTING':
