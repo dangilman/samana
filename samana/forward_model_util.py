@@ -610,8 +610,6 @@ def macromodel_readout_function_eplshear_satellite(kwargs_solution, samples_fixe
         param_names_macro += ['dphi']
     return np.array(samples_macromodel), param_names_macro
 
-import numpy as np
-
 def batch_lens_profiles(lens_model_list, redshift_array, kwargs_lens,
                     profiles_to_batch=None, min_group=4):
     """

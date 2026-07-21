@@ -67,7 +67,7 @@ def perturbed_fluxes_from_fluxes(fluxes, flux_measurement_uncertainties_percenta
 def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image,
                                    lens_model_init, kwargs_lens_init, kwargs_lens, index_lens_split,
                                    grid_size_list, grid_resolution,
-                                   grid_increment_factor=15.0,
+                                   grid_increment_factor=20.0,
                                    setup_decoupled_multiplane_lens_model_output=None,
                                    magnification_method='CIRCULAR_APERTURE',
                                    rotation_angle_list=None,
@@ -109,13 +109,25 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
         grid_y_large = grid_y_large.ravel()
 
         if magnification_method == 'ADAPTIVE':
-            mag, flux_array = mag_finite_single_image_adaptive(source_model, kwargs_source, lens_model_fixed,
-                                                         lens_model_free, kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
-                                                         z_split, z_source, cosmo_bkg, x_img, y_img, grid_resolution,
-                                                         grid_size_list[j],
-                                                         z_split, z_source)
+            # mag, flux_array = mag_finite_single_image_adaptive(source_model, kwargs_source, lens_model_fixed,
+            #                                              lens_model_free, kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
+            #                                              z_split, z_source, cosmo_bkg, x_img, y_img, grid_resolution,
+            #                                              grid_size_list[j],
+            #                                              z_split, z_source)
+            # magnifications.append(mag)
+            # flux_arrays.append(flux_array.T)
+            mag, flux_array, tiling = mag_finite_single_image_adaptive(
+                source_model, kwargs_source, lens_model_fixed, lens_model_free,
+                kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
+                z_split, z_source, cosmo_bkg, x_img, y_img, grid_resolution,
+                grid_size_list[j], z_split, z_source, rotation_angle_list[j],
+                hessian_eigenvalue_list[j])
             magnifications.append(mag)
-            flux_arrays.append(flux_array.T)
+            flux_arrays.append(flux_array)
+            # import matplotlib.pyplot as plt
+            # plot_image(flux_array, tiling)
+            # plt.show()
+            # a=input('continue')
 
         elif magnification_method in ['CIRCULAR_APERTURE', 'ELLIPTICAL_APERTURE']:
             if magnification_method == 'ELLIPTICAL_APERTURE':
@@ -133,169 +145,514 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                                                       grid_r, r_step, grid_resolution, grid_size_list[j], z_split, z_source)
             magnifications.append(mag)
             flux_arrays.append(flux_array.reshape(npix_large, npix_large))
+        elif magnification_method == 'NEAR_FAR_SPLITTING':
+            # in development
+            from samana.image_magnification_pert import mag_finite_single_image_distortion
+            from samana.forward_model_util import interpolate_ray_paths
+            R_max = 0.4
+            grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
+            r_step = grid_size_list[j] / grid_increment_factor
+            ray_interp_x_list, ray_interp_y_list = interpolate_ray_paths([x_img], [y_img],
+                                                               lens_model_init, kwargs_lens_init, z_source,
+                                                               terminate_at_source=False, source_x=None, source_y=None
+                                                               )
+            mag, flux_array = mag_finite_single_image_distortion(
+                source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
+                kwargs_lens_free, kwargs_lens, z_split, z_source,
+                cosmo_bkg, grid_x_large, grid_y_large,
+                grid_r, r_step, grid_resolution, grid_size_list[j],
+                R_max, ray_interp_x_list[0], ray_interp_y_list[0]
+            )
+            magnifications.append(mag)
+            flux_arrays.append(flux_array.reshape(npix_large, npix_large))
         else:
             raise Exception('magnification_method must be either CIRCULAR_APERTURE, ELLIPTICAL_APERTURE, or ADAPTIVE. '
                             'You specified magnification_method '+str(magnification_method))
 
     return np.array(magnifications), flux_arrays
 
-def mag_finite_single_image_adaptive(source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
-                            kwargs_lens_free, kwargs_lens, z_split, z_source,
-                            cosmo_bkg, x_image, y_image, grid_resolution, grid_size_max,
-                               zlens, zsource, intial_resolution_reduction_factor=4,flux_threshold_factor=200,
-                               distance_factor=30):
-    """
 
-    :param source_model:
-    :param kwargs_source:
-    :param lens_model_fixed:
-    :param lens_model_free:
-    :param kwargs_lens_fixed:
-    :param kwargs_lens_free:
-    :param kwargs_lens:
-    :param z_split:
-    :param z_source:
-    :param cosmo_bkg:
-    :param x_image:
-    :param y_image:
-    :param grid_resolution:
-    :param grid_size_max:
-    :param zlens:
-    :param zsource:
-    :param intial_resolution_reduction_factor:
-    :param flux_threshold_factor:
-    :param distance_factor:
-    :return:
+"""
+Edge-refining breadth-first quadtree finite-source magnification.
+
+mag = integral over the box of SB(beta(theta)) d^2theta.
+
+Algorithm (as specified):
+  0. Coarse scan: a grid at 1/reduction res -- each pixel is a Cell. One batched
+     ray-shoot; record SB at each cell center.
+  1. Split every active Cell into 4 children; ray-shoot all children in ONE batched
+     call (breadth-first -> one call per level, which is what the cost model rewards:
+     per-call overhead ~8ms dominates, so few big calls beats many small ones).
+  2. Refine a Cell further iff it has FLUX and a LARGE CHANGE on subdivision:
+        flux gate:   max(SB over the cell) > flux_floor
+        change gate: |sum(child estimates) - parent estimate| > thresh
+     Empty cells (no flux) and smooth cells (no change) are accepted as-is; only
+     edges / under-resolved peaks keep splitting.
+  3. Iterate until no cell needs refining, or cells reach the base resolution.
+
+The magnification is the sum of accepted-leaf estimates (each = cell-center SB x cell
+area), using the finer child estimate for a cell whenever it was subdivided.
+
+The integrator is lens-agnostic: pass ray_shoot(thx,thy)->(bx,by) and
+source_sb(bx,by)->SB. `n_calls` (levels) is returned alongside the eval count because
+that is the real cost driver in the decoupled model.
+"""
+import numpy as np
+
+class _Counter:
+    def __init__(self, ray_shoot):
+        self._f = ray_shoot; self.n_pts = 0; self.n_calls = 0
+
+    def __call__(self, thx, thy):
+        thx = np.atleast_1d(thx); thy = np.atleast_1d(thy)
+        self.n_pts += thx.size; self.n_calls += 1
+        return self._f(thx, thy)
+
+def _aperture_radius(cx, cy, rotation_angle=None, hessian_eigenvalue=None):
+    """Aperture metric radius for offsets (cx, cy) from the image center.
+    Circle (default) -> hypot(cx, cy). Ellipse (both args given) -> rotate by
+    rotation_angle then hypot(x_rot, y_rot / hessian_eigenvalue), matching samana's
+    ELLIPTICAL_APERTURE grid_r. A point is inside the aperture if this <= box_size/2."""
+    if rotation_angle is None or hessian_eigenvalue is None:
+        return np.hypot(cx, cy)
+    ca = np.cos(rotation_angle); sa = np.sin(rotation_angle)
+    xr = cx * ca + cy * sa               # lenstronomy util.rotate convention
+    yr = -cx * sa + cy * ca
+    return np.hypot(xr, yr / hessian_eigenvalue)
+
+
+def adaptive_quadtree_magnification(
+        ray_shoot, source_sb, x_image, y_image, box_size, grid_resolution,
+        n_coarse, rel_tol, flux_floor_frac, max_depth=None,
+        empty_rescan=True, rotation_angle=None, hessian_eigenvalue=None,
+        return_leaves=False):
     """
+    :param ray_shoot: callable (thx, thy) -> (beta_x, beta_y)  [absolute angles]
+    :param source_sb: callable (beta_x, beta_y) -> surface brightness
+    :param x_image, y_image: box center (image position), arcsec
+    :param box_size: full box width, arcsec
+    :param grid_resolution: target finest pixel scale (refinement stops here)
+    :param n_coarse: number of coarse cells PER SIDE at level 0 (coarse cell =
+        box_size / n_coarse). Scale-invariant: ~20 always gives enough resolution to
+        catch and resolve a pre-image (~box/5) while staying cheap (~n_coarse^2 points,
+        one call). Prefer this over a "reduction * base-pixel" rule, which for a small
+        box collapses to just a handful of cells across the whole box.
+    :param rel_tol: PER-CELL accuracy knob -- refine a cell while subdividing it changes
+        its own estimate by more than rel_tol, i.e. |child - parent| / |child| > rel_tol
+    :param flux_floor_frac: a cell must have SB > flux_floor_frac * peak_SB somewhere
+        to be eligible for refinement (the "there is flux" gate)
+    :param max_depth: cap on refinement levels; default set so the finest cell reaches
+        ~grid_resolution from the coarse cell
+    :param empty_rescan: if the coarse scan finds no flux, halve the coarse cell and
+        rescan (up to a few times) -- guards against skipping a tiny low-mag pre-image.
+    :param rotation_angle, hessian_eigenvalue: if BOTH given, the aperture is the ELLIPSE
+        hypot(x_rot, y_rot/hessian_eigenvalue) <= box_size/2 (rotated by rotation_angle),
+        matching samana's ELLIPTICAL_APERTURE. If either is None the aperture is the
+        CIRCLE of radius box_size/2 inscribed in the box (the default). Cells whose
+        center falls outside the aperture are dropped (not evaluated, not integrated).
+    :param return_leaves: also return accepted-leaf (cx, cy, half, sb) for rasterizing
+    :return: (magnification, n_calls, n_points[, leaves])
+    """
+    rs = _Counter(ray_shoot)
+    r_ap = box_size / 2.0
+
+    def in_aperture(cx, cy):
+        return _aperture_radius(cx, cy, rotation_angle, hessian_eigenvalue) <= r_ap
+
+    def coarse_scan(n0):
+        n0 = max(int(n0), 2)
+        cell = box_size / n0
+        c = (np.arange(n0) + 0.5) * cell - box_size / 2.0
+        cxg, cyg = np.meshgrid(c, c)
+        cx = cxg.ravel(); cy = cyg.ravel()
+        bx, by = rs(cx + x_image, cy + y_image)
+        return cx, cy, source_sb(bx, by), cell
+
+    n0 = max(int(round(n_coarse)), 2)
+    cx, cy, sbc, cell0 = coarse_scan(n0)
+    # empty-scan fallback: if nothing lit up, the grid may have skipped the pre-image
+    tries = 0
+    while empty_rescan and float(np.max(sbc)) <= 0.0 and cell0 > grid_resolution and tries < 4:
+        n0 *= 2
+        cx, cy, sbc, cell0 = coarse_scan(n0)
+        tries += 1
+
+    half = np.full(cx.shape, cell0 / 2.0)
+    if max_depth is None:
+        max_depth = int(np.ceil(np.log2(max(cell0 / grid_resolution, 2))))
+
+    peak = 1e-300           # tracked as the brightest sample seen (updated from children)
+
+    leaf_cx, leaf_cy, leaf_h, leaf_sb = [], [], [], []
+    total = 0.0
+
+    for level in range(max_depth + 1):
+        if cx.size == 0:
+            break
+        # aperture mask: drop cells whose center is outside the circle/ellipse
+        inside = in_aperture(cx, cy)
+        if not np.all(inside):
+            cx = cx[inside]; cy = cy[inside]; sbc = sbc[inside]; half = half[inside]
+        if cx.size == 0:
+            break
+        area = (2.0 * half) ** 2
+        q = half / 2.0
+        # 4 children per cell, one batched call
+        childx = np.concatenate([cx - q, cx + q, cx - q, cx + q])
+        childy = np.concatenate([cy - q, cy - q, cy + q, cy + q])
+        bxc, byc = rs(childx + x_image, childy + y_image)
+        sbch = source_sb(bxc, byc).reshape(4, cx.size)
+
+        # keep the flux floor relative to the brightest sample seen so far (the coarse
+        # scan can underestimate the peak; the denser child samples correct it)
+        peak = max(peak, float(sbch.max()))
+        flux_floor = flux_floor_frac * peak
+
+        coarse_est = sbc * area                       # parent midpoint estimate
+        fine_est = sbch.sum(axis=0) * (area / 4.0)     # 4-child midpoint estimate
+        disagree = np.abs(fine_est - coarse_est)
+
+        has_flux = np.maximum(sbc, sbch.max(axis=0)) > flux_floor
+        # PER-CELL relative change on subdivision: refine a cell while subdividing it
+        # changes ITS OWN estimate by more than rel_tol (the "large derivative" test).
+        with np.errstate(divide='ignore', invalid='ignore'):
+            rel_change = disagree / np.maximum(np.abs(fine_est), 1e-300)
+        at_base = (2.0 * q) <= grid_resolution * 1.0001    # children would be <= base res
+        if level >= max_depth:
+            refine = np.zeros(cx.size, bool)
+        elif level == 0:
+            # every coarse cell is subdivided at least once (the coarse scan can step
+            # over a compact pre-image); the flux/change gates only act from level 1 on
+            refine = ~at_base
+        else:
+            refine = has_flux & (rel_change > rel_tol) & (~at_base)
+
+        acc = ~refine
+        total += float(np.sum(fine_est[acc]))
+        if return_leaves and np.any(acc):
+            leaf_cx.append(cx[acc]); leaf_cy.append(cy[acc])
+            leaf_h.append(half[acc]); leaf_sb.append(sbch[:, acc].mean(axis=0))
+        if not np.any(refine):
+            break
+
+        r = np.where(refine)[0]
+        qc = q[r]
+        cx = np.concatenate([cx[r] - qc, cx[r] + qc, cx[r] - qc, cx[r] + qc])
+        cy = np.concatenate([cy[r] - qc, cy[r] - qc, cy[r] + qc, cy[r] + qc])
+        sbc = np.concatenate([sbch[0, r], sbch[1, r], sbch[2, r], sbch[3, r]])
+        half = np.concatenate([qc, qc, qc, qc])
+
+    if return_leaves:
+        if leaf_cx:
+            leaves = (np.concatenate(leaf_cx), np.concatenate(leaf_cy),
+                      np.concatenate(leaf_h), np.concatenate(leaf_sb))
+        else:
+            z = np.array([]); leaves = (z, z, z, z)
+        return total, rs.n_calls, rs.n_pts, leaves
+    return total, rs.n_calls, rs.n_pts
+
+
+def rasterize_leaves(leaves, box_size, npix):
+    """Paint the accepted quadtree leaf cells as constant blocks onto a uniform
+    (npix, npix) surface-brightness image over the box (offsets from the image center).
+    Big blocks show where the tree stayed coarse (smooth / empty), fine blocks show the
+    refined edges -- so plotting this array literally shows the subdivided cell grid.
+
+    No ray-shooting; purely for display. sum(image) * (box_size/npix)^2 recovers the
+    magnification. Indexing is image[row=y, col=x]; show with
+    imshow(image, origin='lower', extent=[-box/2, box/2, -box/2, box/2]).
+    """
+    lcx, lcy, lh, lsb = leaves
+    img = np.zeros((npix, npix))
+    half0 = box_size / 2.0
+    px = box_size / npix
+    for k in range(len(lcx)):
+        i0 = min(max(int(round((lcx[k] - lh[k] + half0) / px)), 0), npix)
+        i1 = min(max(int(round((lcx[k] + lh[k] + half0) / px)), 0), npix)
+        j0 = min(max(int(round((lcy[k] - lh[k] + half0) / px)), 0), npix)
+        j1 = min(max(int(round((lcy[k] + lh[k] + half0) / px)), 0), npix)
+        img[j0:j1, i0:i1] = lsb[k]     # row=y (j), col=x (i)
+    return img
+
+
+# ---------------------------------------------------------------------------
+# samana drop-in: replaces mag_finite_single_image_adaptive (same call signature)
+# ---------------------------------------------------------------------------
+
+def mag_finite_single_image_adaptive(
+        source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
+        kwargs_lens_free, kwargs_lens, z_split, z_source,
+        cosmo_bkg, x_image, y_image, grid_resolution, grid_size_max, zlens, zsource,
+        rotation_angle=None, hessian_eigenvalue=None,
+        n_coarse=16, rel_tol=5e-3, flux_floor_frac=5e-3):
+    """Edge-refining quadtree magnification through the exact decoupled multiplane model.
+    Drop-in for samana.image_magnification_util.mag_finite_single_image_adaptive.
+
+    :param rotation_angle, hessian_eigenvalue: per-image ELLIPSE aperture parameters
+        (scalars). If BOTH given, cells are kept inside
+        hypot(x_rot, y_rot/hessian_eigenvalue) <= grid_size_max/2 (samana's
+        ELLIPTICAL_APERTURE). If either is None, the aperture defaults to the CIRCLE of
+        radius grid_size_max/2 inscribed in the box. In magnification_finite_decoupled's
+        loop pass the per-image values, e.g. rotation_angle_list[j], hessian_eigenvalue_list[j].
+    :return: (magnification, flux_array, tiling)
+        flux_array : (npix, npix) block image of the subdivided cells
+                     (npix = round(grid_size_max / grid_resolution)),
+                     imshow(flux_array, origin='lower').
+        tiling     : dict describing the quadtree leaves + aperture -- pass to plot_image()
+                     to overlay the cell boundaries and aperture outline. Keys:
+                       cx, cy   leaf-center offsets from the image (arcsec)
+                       half     leaf half-size (arcsec)
+                       sb       leaf mean surface brightness
+                       box_size, npix, grid_resolution
+                       rotation_angle, hessian_eigenvalue   (None -> circle)
+                       n_calls, n_points   (ray-shoot diagnostics)
+    """
+    from lenstronomy.LensModel.Util.decouple_multi_plane_util import coordinates_and_deflections
+    from samana.image_magnification_util import calc_source_sb
+
     Td = cosmo_bkg.T_xy(0, zlens)
     Ts = cosmo_bkg.T_xy(0, zsource)
     Tds = cosmo_bkg.T_xy(zlens, zsource)
     reduced_to_phys = cosmo_bkg.d_xy(0, zsource) / cosmo_bkg.d_xy(zlens, zsource)
 
-    # initialize low-res flux array
-    deltapix_init = intial_resolution_reduction_factor * grid_resolution
-    numPix_init = int(grid_size_max / deltapix_init)
-    (grid_x_large_init, grid_y_large_init, ra_at_xy_0, dec_at_xy_0,
-     x_at_radec_0, y_at_radec_0, Mpix2coord, Mcoord2pix) = (
-        make_grid_with_coordtransform(numPix_init, deltapix_init))
-    coordinates_lowres = Coordinates(Mpix2coord, ra_at_xy_0, dec_at_xy_0)
-    grid_r = np.hypot(grid_x_large_init, grid_y_large_init).ravel()
+    def ray_shoot(thx, thy):
+        xD, yD, afx, afy, abx, aby = coordinates_and_deflections(
+            lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
+            np.atleast_1d(thx), np.atleast_1d(thy), z_split, z_source, cosmo_bkg)
+        # calc_source_sb returns the SOURCE-plane coords (beta), despite the name
+        return calc_source_sb(xD, yD, afx, afy, abx, aby, Td, Tds, Ts,
+                              reduced_to_phys, lens_model_free, kwargs_lens)
 
-    # setup ray tracing info
-    xD = np.zeros_like(grid_x_large_init)
-    yD = np.zeros_like(grid_y_large_init)
-    alpha_x_foreground = np.zeros_like(grid_x_large_init)
-    alpha_y_foreground = np.zeros_like(grid_y_large_init)
-    alpha_x_background = np.zeros_like(grid_x_large_init)
-    alpha_y_background = np.zeros_like(grid_y_large_init)
-    inds_compute = np.where(grid_r <= grid_size_max/2)
-    grid_x_large_init = grid_x_large_init[inds_compute]
-    grid_y_large_init = grid_y_large_init[inds_compute]
-    x_points_temp = grid_x_large_init + x_image
-    y_points_temp = grid_y_large_init + y_image
-    _xD, _yD, _alpha_x_foreground, _alpha_y_foreground, _alpha_x_background, _alpha_y_background = \
-        coordinates_and_deflections(lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
-                                    x_points_temp, y_points_temp, z_split, z_source, cosmo_bkg)
-    xD[inds_compute] = _xD
-    yD[inds_compute] = _yD
-    alpha_x_foreground[inds_compute] = _alpha_x_foreground
-    alpha_y_foreground[inds_compute] = _alpha_y_foreground
-    alpha_x_background[inds_compute] = _alpha_x_background
-    alpha_y_background[inds_compute] = _alpha_y_background
-    beta_x, beta_y = calc_source_sb(xD.ravel(),
-                                      yD.ravel(),
-                                      alpha_x_foreground.ravel(),
-                                      alpha_y_foreground.ravel(),
-                                      alpha_x_background.ravel(),
-                                      alpha_y_background.ravel(),
-                                      Td, Tds, Ts, reduced_to_phys,
-                                      lens_model_free,
-                                      kwargs_lens)
-    flux_array = source_model.surface_brightness(beta_x, beta_y, kwargs_source).reshape(numPix_init, numPix_init)
+    def source_sb(bx, by):
+        return source_model.surface_brightness(bx, by, kwargs_source)
 
-    dist = grid_size_max / distance_factor
-    flux_array_threshold = np.max(flux_array) / flux_threshold_factor
-    bright_indexes = np.where(flux_array >= flux_array_threshold)
-    bright_coords = coordinates_lowres.map_pix2coord(bright_indexes[0], bright_indexes[1])
+    mag, n_calls, n_pts, leaves = adaptive_quadtree_magnification(
+        ray_shoot, source_sb, x_image, y_image, grid_size_max, grid_resolution,
+        n_coarse=n_coarse, rel_tol=rel_tol, flux_floor_frac=flux_floor_frac,
+        rotation_angle=rotation_angle, hessian_eigenvalue=hessian_eigenvalue,
+        return_leaves=True)
 
-    # import matplotlib.pyplot as plt
-    # plt.imshow(flux_array, origin='upper')
-    # plt.show()
-    #
-    # plt.imshow(flux_array, origin='upper')
-    # plt.scatter(bright_indexes[1], bright_indexes[0], color='r',alpha=0.3,marker='+')
-    # plt.show()
-
-    # NOW AT HIGH RESOLUTION
-    # initialize high-res flux array
-    deltapix = grid_resolution
-    numPix = int(grid_size_max / deltapix)
-    (grid_x_large, grid_y_large, ra_at_xy_0, dec_at_xy_0,
-     x_at_radec_0, y_at_radec_0, Mpix2coord, Mcoord2pix) = (
-        make_grid_with_coordtransform(numPix, deltapix))
-
-    inds_compute_array = np.zeros_like(grid_x_large)
-    grid_r = np.hypot(grid_x_large, grid_y_large)
-    bright_coords_x, bright_coords_y = bright_coords[1], bright_coords[0]
-
-    # shape: (N_highres_pixels, N_bright_coords)
-    dx = grid_x_large[:, None] - bright_coords_x[None, :]
-    dy = grid_y_large[:, None] - bright_coords_y[None, :]
-    dr = np.sqrt(dx ** 2 + dy ** 2)
-    within_radius = np.any(dr <= dist, axis=1)  # shape: (N_highres_pixels,)
-    within_bounds = grid_r <= grid_size_max / 2
-    inds_compute_highres = np.where(within_radius & within_bounds)
+    npix = max(int(round(grid_size_max / grid_resolution)), 2)
+    flux_array = rasterize_leaves(leaves, grid_size_max, npix)
+    lcx, lcy, lh, lsb = leaves
+    tiling = {'cx': lcx, 'cy': lcy, 'half': lh, 'sb': lsb,
+              'box_size': grid_size_max, 'npix': npix,
+              'grid_resolution': grid_resolution,
+              'rotation_angle': rotation_angle, 'hessian_eigenvalue': hessian_eigenvalue,
+              'n_calls': n_calls, 'n_points': n_pts}
+    return mag, flux_array, tiling
 
 
-    # for grid_index, (coord_x, coord_y, r_coord) in enumerate(zip(grid_x_large, grid_y_large, grid_r)):
-    #     if r_coord > grid_size_max / 2:
-    #         continue
-    #     else:
-    #         dx, dy = coord_x - bright_coords_x, coord_y - bright_coords_y
-    #         dr = np.sqrt(dx ** 2 + dy ** 2)
-    #         if np.any(dr <= dist):
-    #             inds_compute_array[grid_index] = 1
+def plot_image(flux_array, tiling, ax=None, cmap='inferno', show_cells=True,
+               cell_color='white', cell_lw=0.3, cell_alpha=0.35,
+               show_aperture=True, log=False):
+    """Show the finite-source image with the adaptive quadtree cell boundaries and the
+    aperture (circle or ellipse) overlaid.
+
+    :param flux_array: the (npix, npix) block image returned by
+        mag_finite_single_image_adaptive
+    :param tiling: the tiling dict returned alongside it
+    :param ax: optional matplotlib Axes; a new figure is made if None
+    :param show_cells: draw the leaf-cell rectangles (the subdivided grid)
+    :param show_aperture: draw the circular/elliptical aperture outline
+    :param log: display log10(flux) (clipped) instead of linear
+    :return: the Axes
+    """
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Rectangle
+
+    box = tiling['box_size']; h = box / 2.0
+    if ax is None:
+        _, ax = plt.subplots(figsize=(5, 5))
+    img = flux_array
+    if log:
+        pos = img[img > 0]
+        floor = (pos.min() if pos.size else 1.0) * 1e-3
+        img = np.log10(np.clip(img, floor, None))
+    ax.imshow(img, origin='lower', extent=[-h, h, -h, h], cmap=cmap)
+
+    if show_cells:
+        cx = tiling['cx']; cy = tiling['cy']; ch = tiling['half']
+        for k in range(len(cx)):
+            ax.add_patch(Rectangle((cx[k] - ch[k], cy[k] - ch[k]), 2 * ch[k], 2 * ch[k],
+                                   fill=False, edgecolor=cell_color,
+                                   linewidth=cell_lw, alpha=cell_alpha))
+    if show_aperture:
+        ang = tiling.get('rotation_angle'); qe = tiling.get('hessian_eigenvalue')
+        phi = np.linspace(0, 2 * np.pi, 200)
+        xr = h * np.cos(phi); yr = (h if qe is None else h * qe) * np.sin(phi)
+        if ang is None or qe is None:
+            ax_bx, ax_by = xr, yr
+        else:
+            ca, sa = np.cos(ang), np.sin(ang)
+            ax_bx = xr * ca - yr * sa            # inverse of util.rotate
+            ax_by = xr * sa + yr * ca
+        ax.plot(ax_bx, ax_by, color='cyan', lw=1.0, alpha=0.8)
+
+    ax.set_xlim(-h, h); ax.set_ylim(-h, h)
+    ax.set_xlabel('arcsec'); ax.set_ylabel('arcsec')
+    ax.set_title('%d cells, %d calls, %d ray-shoots'
+                 % (len(tiling['cx']), tiling['n_calls'], tiling['n_points']))
+    return ax
 
 
-    inds_compute_array = inds_compute_array.reshape(numPix,numPix)[::-1,::-1]
-    #plt.imshow(inds_compute_array, origin='upper'); plt.show()
-    #inds_compute_highres = np.where(inds_compute_array.ravel()==1)
-    x_points_temp = grid_x_large[inds_compute_highres] + x_image
-    y_points_temp = grid_y_large[inds_compute_highres] + y_image
-    # setup ray tracing info
-    xD = np.zeros_like(grid_x_large)
-    yD = np.zeros_like(grid_y_large)
-    alpha_x_foreground = np.zeros_like(grid_x_large)
-    alpha_y_foreground = np.zeros_like(grid_y_large)
-    alpha_x_background = np.zeros_like(grid_x_large)
-    alpha_y_background = np.zeros_like(grid_y_large)
-    _xD, _yD, _alpha_x_foreground, _alpha_y_foreground, _alpha_x_background, _alpha_y_background = \
-        coordinates_and_deflections(lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
-                                    x_points_temp, y_points_temp, z_split, z_source, cosmo_bkg)
-    xD[inds_compute_highres] = _xD
-    yD[inds_compute_highres] = _yD
-    alpha_x_foreground[inds_compute_highres] = _alpha_x_foreground
-    alpha_y_foreground[inds_compute_highres] = _alpha_y_foreground
-    alpha_x_background[inds_compute_highres] = _alpha_x_background
-    alpha_y_background[inds_compute_highres] = _alpha_y_background
-    beta_x_highres, beta_y_highres = calc_source_sb(xD.ravel(),
-                                    yD.ravel(),
-                                    alpha_x_foreground.ravel(),
-                                    alpha_y_foreground.ravel(),
-                                    alpha_x_background.ravel(),
-                                    alpha_y_background.ravel(),
-                                    Td, Tds, Ts, reduced_to_phys,
-                                    lens_model_free,
-                                    kwargs_lens)
-    flux_array_highres = source_model.surface_brightness(beta_x_highres, beta_y_highres, kwargs_source).reshape(numPix, numPix)
-    magnification_highres = np.sum(flux_array_highres) * grid_resolution ** 2
-    flux_array_highres = flux_array_highres.reshape(numPix, numPix)
-    #
-    #plt.imshow(flux_array_highres, origin='upper');
-    #plt.scatter(pixel_x_large, pixel_y_large, color='r',alpha=0.1,s=5)
-    #plt.show()
-    #a = input('continue')
-    return magnification_highres, flux_array_highres
+# def mag_finite_single_image_adaptive(source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
+#                             kwargs_lens_free, kwargs_lens, z_split, z_source,
+#                             cosmo_bkg, x_image, y_image, grid_resolution, grid_size_max,
+#                                zlens, zsource, intial_resolution_reduction_factor=4,flux_threshold_factor=200,
+#                                distance_factor=30):
+#     """
+#
+#     :param source_model:
+#     :param kwargs_source:
+#     :param lens_model_fixed:
+#     :param lens_model_free:
+#     :param kwargs_lens_fixed:
+#     :param kwargs_lens_free:
+#     :param kwargs_lens:
+#     :param z_split:
+#     :param z_source:
+#     :param cosmo_bkg:
+#     :param x_image:
+#     :param y_image:
+#     :param grid_resolution:
+#     :param grid_size_max:
+#     :param zlens:
+#     :param zsource:
+#     :param intial_resolution_reduction_factor:
+#     :param flux_threshold_factor:
+#     :param distance_factor:
+#     :return:
+#     """
+#     Td = cosmo_bkg.T_xy(0, zlens)
+#     Ts = cosmo_bkg.T_xy(0, zsource)
+#     Tds = cosmo_bkg.T_xy(zlens, zsource)
+#     reduced_to_phys = cosmo_bkg.d_xy(0, zsource) / cosmo_bkg.d_xy(zlens, zsource)
+#
+#     # initialize low-res flux array
+#     deltapix_init = intial_resolution_reduction_factor * grid_resolution
+#     numPix_init = int(grid_size_max / deltapix_init)
+#     (grid_x_large_init, grid_y_large_init, ra_at_xy_0, dec_at_xy_0,
+#      x_at_radec_0, y_at_radec_0, Mpix2coord, Mcoord2pix) = (
+#         make_grid_with_coordtransform(numPix_init, deltapix_init))
+#     coordinates_lowres = Coordinates(Mpix2coord, ra_at_xy_0, dec_at_xy_0)
+#     grid_r = np.hypot(grid_x_large_init, grid_y_large_init).ravel()
+#
+#     # setup ray tracing info
+#     xD = np.zeros_like(grid_x_large_init)
+#     yD = np.zeros_like(grid_y_large_init)
+#     alpha_x_foreground = np.zeros_like(grid_x_large_init)
+#     alpha_y_foreground = np.zeros_like(grid_y_large_init)
+#     alpha_x_background = np.zeros_like(grid_x_large_init)
+#     alpha_y_background = np.zeros_like(grid_y_large_init)
+#     inds_compute = np.where(grid_r <= grid_size_max/2)
+#     grid_x_large_init = grid_x_large_init[inds_compute]
+#     grid_y_large_init = grid_y_large_init[inds_compute]
+#     x_points_temp = grid_x_large_init + x_image
+#     y_points_temp = grid_y_large_init + y_image
+#     _xD, _yD, _alpha_x_foreground, _alpha_y_foreground, _alpha_x_background, _alpha_y_background = \
+#         coordinates_and_deflections(lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
+#                                     x_points_temp, y_points_temp, z_split, z_source, cosmo_bkg)
+#     xD[inds_compute] = _xD
+#     yD[inds_compute] = _yD
+#     alpha_x_foreground[inds_compute] = _alpha_x_foreground
+#     alpha_y_foreground[inds_compute] = _alpha_y_foreground
+#     alpha_x_background[inds_compute] = _alpha_x_background
+#     alpha_y_background[inds_compute] = _alpha_y_background
+#     beta_x, beta_y = calc_source_sb(xD.ravel(),
+#                                       yD.ravel(),
+#                                       alpha_x_foreground.ravel(),
+#                                       alpha_y_foreground.ravel(),
+#                                       alpha_x_background.ravel(),
+#                                       alpha_y_background.ravel(),
+#                                       Td, Tds, Ts, reduced_to_phys,
+#                                       lens_model_free,
+#                                       kwargs_lens)
+#     flux_array = source_model.surface_brightness(beta_x, beta_y, kwargs_source).reshape(numPix_init, numPix_init)
+#
+#     dist = grid_size_max / distance_factor
+#     flux_array_threshold = np.max(flux_array) / flux_threshold_factor
+#     bright_indexes = np.where(flux_array >= flux_array_threshold)
+#     bright_coords = coordinates_lowres.map_pix2coord(bright_indexes[0], bright_indexes[1])
+#
+#     # import matplotlib.pyplot as plt
+#     # plt.imshow(flux_array, origin='upper')
+#     # plt.show()
+#     #
+#     # plt.imshow(flux_array, origin='upper')
+#     # plt.scatter(bright_indexes[1], bright_indexes[0], color='r',alpha=0.3,marker='+')
+#     # plt.show()
+#
+#     # NOW AT HIGH RESOLUTION
+#     # initialize high-res flux array
+#     deltapix = grid_resolution
+#     numPix = int(grid_size_max / deltapix)
+#     (grid_x_large, grid_y_large, ra_at_xy_0, dec_at_xy_0,
+#      x_at_radec_0, y_at_radec_0, Mpix2coord, Mcoord2pix) = (
+#         make_grid_with_coordtransform(numPix, deltapix))
+#
+#     #inds_compute_array = np.zeros_like(grid_x_large)
+#     grid_r = np.hypot(grid_x_large, grid_y_large)
+#     bright_coords_x, bright_coords_y = bright_coords[1], bright_coords[0]
+#
+#     # shape: (N_highres_pixels, N_bright_coords)
+#     dx = grid_x_large[:, None] - bright_coords_x[None, :]
+#     dy = grid_y_large[:, None] - bright_coords_y[None, :]
+#     dr = np.sqrt(dx ** 2 + dy ** 2)
+#     within_radius = np.any(dr <= dist, axis=1)  # shape: (N_highres_pixels,)
+#     within_bounds = grid_r <= grid_size_max / 2
+#     inds_compute_highres = np.where(within_radius & within_bounds)
+#
+#
+#     # for grid_index, (coord_x, coord_y, r_coord) in enumerate(zip(grid_x_large, grid_y_large, grid_r)):
+#     #     if r_coord > grid_size_max / 2:
+#     #         continue
+#     #     else:
+#     #         dx, dy = coord_x - bright_coords_x, coord_y - bright_coords_y
+#     #         dr = np.sqrt(dx ** 2 + dy ** 2)
+#     #         if np.any(dr <= dist):
+#     #             inds_compute_array[grid_index] = 1
+#
+#
+#     #inds_compute_array = inds_compute_array.reshape(numPix,numPix)[::-1,::-1]
+#     #plt.imshow(inds_compute_array, origin='upper'); plt.show()
+#     #inds_compute_highres = np.where(inds_compute_array.ravel()==1)
+#     x_points_temp = grid_x_large[inds_compute_highres] + x_image
+#     y_points_temp = grid_y_large[inds_compute_highres] + y_image
+#     # setup ray tracing info
+#     xD = np.zeros_like(grid_x_large)
+#     yD = np.zeros_like(grid_y_large)
+#     alpha_x_foreground = np.zeros_like(grid_x_large)
+#     alpha_y_foreground = np.zeros_like(grid_y_large)
+#     alpha_x_background = np.zeros_like(grid_x_large)
+#     alpha_y_background = np.zeros_like(grid_y_large)
+#     _xD, _yD, _alpha_x_foreground, _alpha_y_foreground, _alpha_x_background, _alpha_y_background = \
+#         coordinates_and_deflections(lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
+#                                     x_points_temp, y_points_temp, z_split, z_source, cosmo_bkg)
+#     xD[inds_compute_highres] = _xD
+#     yD[inds_compute_highres] = _yD
+#     alpha_x_foreground[inds_compute_highres] = _alpha_x_foreground
+#     alpha_y_foreground[inds_compute_highres] = _alpha_y_foreground
+#     alpha_x_background[inds_compute_highres] = _alpha_x_background
+#     alpha_y_background[inds_compute_highres] = _alpha_y_background
+#     beta_x_highres, beta_y_highres = calc_source_sb(xD.ravel(),
+#                                     yD.ravel(),
+#                                     alpha_x_foreground.ravel(),
+#                                     alpha_y_foreground.ravel(),
+#                                     alpha_x_background.ravel(),
+#                                     alpha_y_background.ravel(),
+#                                     Td, Tds, Ts, reduced_to_phys,
+#                                     lens_model_free,
+#                                     kwargs_lens)
+#     flux_array_highres = source_model.surface_brightness(beta_x_highres, beta_y_highres, kwargs_source).reshape(numPix, numPix)
+#     magnification_highres = np.sum(flux_array_highres) * grid_resolution ** 2
+#     flux_array_highres = flux_array_highres.reshape(numPix, numPix)
+#     #
+#     #plt.imshow(flux_array_highres, origin='upper');
+#     #plt.scatter(pixel_x_large, pixel_y_large, color='r',alpha=0.1,s=5)
+#     #plt.show()
+#     #a = input('continue')
+#     return magnification_highres, flux_array_highres
 
 def calc_source_sb(x, y, alpha_x_foreground, alpha_y_foreground, alpha_x_background, alpha_y_background,
                   Td, Tds, Ts, reduced_to_phys, lens_model_free, kwargs_lens):

@@ -683,7 +683,7 @@ def forward_model_single_iteration(data_class,
             source_dict, source_x, source_y, data_class, model_class,
             lens_model_init, kwargs_lens_init, kwargs_solution,
             setup_decoupled_multiplane_lens_model_output,
-            halo_masses, verbose=verbose)
+            halo_masses)
 
     tend = time()
     if verbose:
