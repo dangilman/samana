@@ -145,7 +145,7 @@ def forward_model(output_path,
     acceptance_rate_counter = 0
     iteration_counter = 0
     # estimate the sampling rate (CPU minutes per realization) after this many iterations
-    readout_sampling_rate_index = 10
+    readout_sampling_rate_index = 20
     acceptance_ratio = np.nan
     sampling_rate = np.nan
     t0 = time()

@@ -182,7 +182,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                     hessian_eigenvalue=hessian_eigenvalue_list[j]
                 )
             if verbose: print('point-source mag discrepancy: ', mu_discrepancy)
-            MU_TOLERANCE = 0.1  # FLAGS IMAGES WHERE APPROXIMATION BREAKS DOWN
+            MU_TOLERANCE = 0.05  # FLAGS IMAGES WHERE APPROXIMATION BREAKS DOWN
             if mu_discrepancy > MU_TOLERANCE:
                 if verbose:
                     print('image '+str(j+1)+' exceeds threshold '+str(MU_TOLERANCE)+', using exact ray tracing')
