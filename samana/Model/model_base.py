@@ -301,12 +301,13 @@ class EPLModelBase(object):
     def image_magnification_gaussian(self, source_model_quasar, kwargs_source, lens_model_init, kwargs_lens_init,
                             kwargs_lens, grid_size_list, grid_resolution,
                                      setup_decoupled_multiplane_lens_model_output=None,
-                                     magnification_method='CIRCULAR_APERTURE',
+                                     magnification_method='ELLIPTICAL_APERTURE',
                                      rotation_angle_list=None,
                                      hessian_eigenvalue_list=None,
                                      lens_model_batch=None,
                                      kwargs_lens_batch=None,
                                      halo_masses=None,
+                                     fallback='ELLIPTICAL_APERTURE',
                                      verbose=False):
         """
 
@@ -334,6 +335,7 @@ class EPLModelBase(object):
             lens_model_batch=lens_model_batch,
             kwargs_lens_batch=kwargs_lens_batch,
             halo_masses=halo_masses,
+            fallback=fallback,
             verbose=verbose)
 
         return mags

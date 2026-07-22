@@ -35,6 +35,8 @@ distortion_multiplane_rayshooting per annulus) instead of decoupled_multiplane_r
 """
 import numpy as np
 from lenstronomy.LensModel.lens_model import LensModel
+from samana.image_magnification_util import (adaptive_quadtree_magnification,
+                                             rasterize_leaves)
 
 
 def distortion_field_at_lens_plane(x_co, y_co, x_center_at_plane, y_center_at_plane,
@@ -438,22 +440,15 @@ def mag_finite_single_image_distortion_adaptive(
         source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
         kwargs_lens, z_split, z_source, cosmo_bkg, x_image, y_image,
         grid_resolution, grid_size_max, R_max, ray_interp_x, ray_interp_y,
-        redshift_planes=None, n_coarse=20, rel_tol=1e-3, flux_floor_frac=1e-3,
-        rotation_angle=None, hessian_eigenvalue=None, return_diagnostics=False):
-    """Adaptive-tiling version of mag_finite_single_image_distortion: same near/far
-    distortion physics, tiled by the edge-refining quadtree instead of radial annuli
-    (~2x fewer 181-plane passes => ~2x faster on non-critical images). Needs x_image,
-    y_image because the quadtree works in absolute image-plane coordinates.
-    :return: (magnification, flux_array[, {n_calls, n_points}])
-    """
-    from samana.image_magnification_util import adaptive_quadtree_magnification, rasterize_leaves
+        kwargs_lens_free, n_coarse=20, rel_tol=1e-3, flux_floor_frac=1e-3,
+        rotation_angle=None, hessian_eigenvalue=None):
+    """Adaptive-tiling version of mag_finite_single_image_distortion"""
 
     rix = _as_interp(ray_interp_x); riy = _as_interp(ray_interp_y)
-    if redshift_planes is None:
-        redshift_planes = sorted(set(np.round(np.asarray(
-            lens_model_fixed.redshift_list, dtype=float), 8).tolist()))
-        if not any(np.isclose(z, z_split) for z in redshift_planes):
-            redshift_planes = sorted(redshift_planes + [float(z_split)])
+    redshift_planes = sorted(set(np.round(np.asarray(
+        lens_model_fixed.redshift_list, dtype=float), 8).tolist()))
+    if not any(np.isclose(z, z_split) for z in redshift_planes):
+        redshift_planes = sorted(redshift_planes + [float(z_split)])
 
     beta_center = (kwargs_source[0]['center_x'], kwargs_source[0]['center_y'])
     plane_splits = precompute_plane_splits(rix, riy, lens_model_fixed, kwargs_lens_fixed,
@@ -480,25 +475,27 @@ def mag_finite_single_image_distortion_adaptive(
     npix = max(int(round(grid_size_max / grid_resolution)), 2)
     flux_array = rasterize_leaves(leaves, grid_size_max, npix)
     lcx, lcy, lh, lsb = leaves  # square-quadtree leaves: centers, half-size, SB
+
     tiling = {'shape': 'square', 'cx': lcx, 'cy': lcy, 'half': lh, 'sb': lsb,
               'box_size': grid_size_max, 'npix': npix, 'grid_resolution': grid_resolution,
               'rotation_angle': rotation_angle, 'hessian_eigenvalue': hessian_eigenvalue,
               'n_calls': n_calls, 'n_points': n_pts}
 
-    return mag, flux_array, tiling
+    mu_point = exact_point_source_magnification(
+        lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
+        z_split, z_source, cosmo_bkg, x_image, y_image, eps=grid_resolution)
+    mu_discrepancy = abs(mag - mu_point) / mu_point if mu_point > 0 else np.inf
+
+    return mag, flux_array, tiling, mu_discrepancy
+
 
 def mag_finite_single_image_distortion(
         source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
         kwargs_lens, z_split, z_source,
         cosmo_bkg, grid_x_large, grid_y_large,
         grid_r, r_step, grid_resolution, grid_size_max,
-        R_max, ray_interp_x, ray_interp_y, verbose=False):
-    """Finite-source magnification of a single image via the near/far distortion field.
-    Drop-in for samana.image_magnification_util.mag_finite_single_image: same
-    growing-annulus driver, convergence test (diff < 1e-3 and mag > 1e-4), and flux
-    bookkeeping, but the per-annulus ray-shoot uses the distortion field instead of the
-    full decoupled model. The central ray is pinned to the source (beta_center is taken
-    from kwargs_source), and each annulus accumulates the differential distortion about it.
+        R_max, ray_interp_x, ray_interp_y, x_image, y_image, kwargs_lens_free, verbose=False):
+    """Finite-source magnification of a single image via the near/far distortion field
 
     :param source_model: a lenstronomy LightModel for the source
     :param kwargs_source: source light kwargs; kwargs_source[0]['center_x'/'center_y'] IS
@@ -521,23 +518,29 @@ def mag_finite_single_image_distortion(
         interpolate_ray_paths on the full initial model
     :param ray_interp_y: interp1d(T) (or 1-element list) -> central-ray angular y
     :param verbose: make print statements
-    :return: (magnification, flux_array) -- the finite-source magnification and the
-        per-grid-point surface-brightness array (same as mag_finite_single_image)
+    :return: (magnification, flux_array, log_mag_grad) -- finite-source magnification, the
+        per-grid-point surface-brightness array, and log10 of the flux-weighted
+        magnification gradient (near-critical trigger; fall back to exact when it
+        exceeds ~ -1). -inf if there is no flux.
     """
-    rix = _as_interp(ray_interp_x); riy = _as_interp(ray_interp_y)
+    rix = _as_interp(ray_interp_x)
+    riy = _as_interp(ray_interp_y)
     redshift_planes = sorted(set(np.round(np.asarray(
         lens_model_fixed.redshift_list, dtype=float), 8).tolist()))
     if not any(np.isclose(z, z_split) for z in redshift_planes):
         redshift_planes = sorted(redshift_planes + [float(z_split)])
 
-    # beta_center = the source position; this pins the central ray to the source so the
-    # central grid point (offset 0) maps to the source center by construction.
     beta_center = (kwargs_source[0]['center_x'], kwargs_source[0]['center_y'])
     central_ray = central_ray_from_interp(rix, riy, beta_center, redshift_planes, z_source)
 
     flux_array = np.zeros(len(grid_x_large))
-    r_min = 0.0; r_max = r_min + r_step
-    magnification_last = 0.0; inds_compute = np.array([]); flux_total = 0.0
+    beta_x_grid = np.full(len(grid_x_large), np.nan)  # source-plane map, for the near-critical check
+    beta_y_grid = np.full(len(grid_x_large), np.nan)
+    r_min = 0.0
+    r_max = r_min + r_step
+    magnification_last = 0.0
+    inds_compute = np.array([])
+    flux_total = 0.0
     central_ray['plane_splits'] = precompute_plane_splits(
         rix, riy, lens_model_fixed, kwargs_lens_fixed, redshift_planes, cosmo_bkg, R_max)
 
@@ -549,18 +552,51 @@ def mag_finite_single_image_distortion(
             z_split, z_source, cosmo_bkg, R_max, central_ray, _inds_compute_grid, verbose=verbose)
         sb_new = source_model.surface_brightness(beta_x_new, beta_y_new, kwargs_source)
         flux_array[inds_new] = sb_new
+        beta_x_grid[inds_new] = beta_x_new
+        beta_y_grid[inds_new] = beta_y_new
         flux_total += np.sum(sb_new)
         magnification_temp = flux_total * grid_resolution ** 2
         diff = abs(magnification_temp - magnification_last) / magnification_temp if magnification_temp > 0 else 1.0
-        r_min += r_step; r_max += r_step
+        r_min += r_step
+        r_max += r_step
+
         if r_max >= grid_size_max:
             break
         elif diff < 0.001 and magnification_temp > 0.0001:
             break
         else:
             magnification_last = magnification_temp
-    return magnification_temp, flux_array
 
+    mu_point = exact_point_source_magnification(
+        lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
+        z_split, z_source, cosmo_bkg, x_image, y_image, eps=grid_resolution)
+    mu_discrepancy = abs(magnification_temp - mu_point) / mu_point if mu_point > 0 else np.inf
+    return magnification_temp, flux_array, mu_discrepancy
+
+def exact_point_source_magnification(lens_model_fixed, lens_model_free, kwargs_lens_fixed,
+                                     kwargs_lens_free, kwargs_lens, z_split, z_source,
+                                     cosmo_bkg, x_image, y_image, eps):
+    """Exact point-source magnification 1/|det(dbeta/dtheta)| at (x_image, y_image), from a
+    5-point finite-difference Hessian through the decoupled multiplane model (~5 ray-shoots).
+    For a small source away from a caustic the finite-source magnification equals this, so a
+    large near/far-vs-this discrepancy flags a near/far failure (over- OR under-production)
+    that the geometry-based fold metric misses."""
+    from lenstronomy.LensModel.Util.decouple_multi_plane_util import coordinates_and_deflections
+    from samana.image_magnification_util import calc_source_sb
+    Td = cosmo_bkg.T_xy(0, z_split); Ts = cosmo_bkg.T_xy(0, z_source)
+    Tds = cosmo_bkg.T_xy(z_split, z_source)
+    reduced_to_phys = cosmo_bkg.d_xy(0, z_source) / cosmo_bkg.d_xy(z_split, z_source)
+    tx = np.array([x_image + eps, x_image - eps, x_image, x_image])
+    ty = np.array([y_image, y_image, y_image + eps, y_image - eps])
+    xD, yD, afx, afy, abx, aby = coordinates_and_deflections(
+        lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
+        tx, ty, z_split, z_source, cosmo_bkg)
+    bx, by = calc_source_sb(xD, yD, afx, afy, abx, aby, Td, Tds, Ts,
+                            reduced_to_phys, lens_model_free, kwargs_lens)
+    Axx = (bx[0] - bx[1]) / (2 * eps); Ayx = (by[0] - by[1]) / (2 * eps)
+    Axy = (bx[2] - bx[3]) / (2 * eps); Ayy = (by[2] - by[3]) / (2 * eps)
+    det = Axx * Ayy - Axy * Ayx
+    return 1.0 / abs(det) if det != 0 else np.inf
 
 def _inds_compute_grid(grid_r, r_min, r_max, inds_compute):
     """Select the grid points in the annulus [r_min, r_max) to add this iteration.

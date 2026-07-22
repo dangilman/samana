@@ -1,10 +1,6 @@
 from lenstronomy.LightModel.light_model import LightModel
 from copy import deepcopy
-from samana.forward_model_util import batch_lens_profiles
-import numpy as np
 from lenstronomy.Util import util
-from lenstronomy.Util.util import make_grid_with_coordtransform
-from lenstronomy.Data.coord_transforms import Coordinates
 from lenstronomy.LensModel.Util.decouple_multi_plane_util import (
     setup_grids, coordinates_and_deflections, setup_lens_model,
 )
@@ -75,6 +71,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                                    lens_model_batch=None,
                                    kwargs_lens_batch=None,
                                    halo_masses=None,
+                                   fallback='ADAPTIVE',
                                    verbose=False):
     """
 
@@ -120,15 +117,11 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                 z_split, z_source, cosmo_bkg, x_img, y_img, grid_resolution,
                 grid_size_list[j], z_split, z_source, rotation_angle_list[j],
                 hessian_eigenvalue_list[j],
-                n_coarse=24,
-                rel_tol=1e-3,
-                flux_floor_frac=1e-3,)
+                n_coarse=40,
+                rel_tol=5e-4,
+                flux_floor_frac=1e-4)
             magnifications.append(mag)
             flux_arrays.append([flux_array, tiling])
-            # import matplotlib.pyplot as plt
-            # plot_image(flux_array, tiling)
-            # plt.show()
-            # a=input('continue')
 
         elif magnification_method in ['CIRCULAR_APERTURE', 'ELLIPTICAL_APERTURE']:
             if magnification_method == 'ELLIPTICAL_APERTURE':
@@ -137,8 +130,8 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                 grid_r = np.hypot(grid_x, grid_y / hessian_eigenvalue_list[j]).ravel()
             else:
                 grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
-
             r_step = grid_size_list[j] / grid_increment_factor
+
             mag, flux_array = mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_model_free,
                                                       kwargs_lens_fixed,
                                                       kwargs_lens_free, kwargs_lens, z_split, z_source,
@@ -164,48 +157,70 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                                                                lens_model_batch, kwargs_lens_batch, z_source,
                                                                terminate_at_source=False
                                                                )
+            tiling = None
             if magnification_method == 'NEAR_FAR_SPLITTING':
 
-
-                # here are the inputs:
-                # inputs = (source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
-                #     kwargs_lens, z_split, z_source,
-                #     cosmo_bkg, grid_x_large, grid_y_large,
-                #     grid_r, r_step, grid_resolution, grid_size_list[j],
-                #     R_max, ray_interp_x_list[0], ray_interp_y_list[0])
-
-                # import pickle
-                # inputs = (source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
-                #           kwargs_lens, z_split, z_source, cosmo_bkg, grid_x_large, grid_y_large,
-                #           grid_r, r_step, grid_resolution, grid_size_list[j],
-                #           R_max, ray_interp_x_list[0], ray_interp_y_list[0])
-                # with open('j0607_seed108_image'+str(j)+'.pkl', 'wb') as f:
-                #     pickle.dump(SaveClass(inputs), f)
-
-                mag, flux_array = mag_finite_single_image_distortion(
+                mag, flux_array, mu_discrepancy = mag_finite_single_image_distortion(
                     source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
                     kwargs_lens, z_split, z_source,
                     cosmo_bkg, grid_x_large, grid_y_large,
                     grid_r, r_step, grid_resolution, grid_size_list[j],
-                    R_max, ray_interp_x_list[0], ray_interp_y_list[0], verbose=verbose
+                    R_max, ray_interp_x_list[0], ray_interp_y_list[0], x_img, y_img, kwargs_lens_free,
+                    verbose=verbose
                 )
-                magnifications.append(mag)
-                flux_arrays.append(flux_array.reshape(npix_large, npix_large))
-            else:
 
-                mag, flux_array, tiling = mag_finite_single_image_distortion_adaptive(
+            else:
+                mag, flux_array, tiling, mu_discrepancy = mag_finite_single_image_distortion_adaptive(
                     source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
                     kwargs_lens, z_split, z_source, cosmo_bkg, x_img, y_img,
                     grid_resolution, grid_size_list[j], R_max, ray_interp_x_list[0], ray_interp_y_list[0],
-                    n_coarse=20, rel_tol=1e-3, flux_floor_frac=1e-3,
-                    rotation_angle=rotation_angle_list[j], hessian_eigenvalue=hessian_eigenvalue_list[j]
+                    kwargs_lens_free,
+                    n_coarse=40,
+                    rel_tol=5e-4,
+                    flux_floor_frac=1e-4,
+                    rotation_angle=rotation_angle_list[j],
+                    hessian_eigenvalue=hessian_eigenvalue_list[j]
                 )
-                # import matplotlib.pyplot as plt
-                # plot_image(flux_array, tiling)
-                # plt.show()
-                # a=input('continue')
-                magnifications.append(mag)
+            if verbose: print('point-source mag discrepancy: ', mu_discrepancy)
+            MU_TOLERANCE = 0.1  # FLAGS IMAGES WHERE APPROXIMATION BREAKS DOWN
+            if mu_discrepancy > MU_TOLERANCE:
+                if verbose:
+                    print('image '+str(j+1)+' exceeds threshold '+str(MU_TOLERANCE)+', using exact ray tracing')
+
+                if fallback == 'ADAPTIVE':
+                    mag, flux_array, tiling = mag_finite_single_image_adaptive(
+                        source_model, kwargs_source, lens_model_fixed, lens_model_free,
+                        kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
+                        z_split, z_source, cosmo_bkg, x_img, y_img, grid_resolution,
+                        grid_size_list[j], z_split, z_source, rotation_angle_list[j],
+                        hessian_eigenvalue_list[j],
+                        n_coarse=40,
+                        rel_tol=5e-4,
+                        flux_floor_frac=1e-4)
+                else:
+
+                    if hessian_eigenvalue_list is not None:
+                        grid_x, grid_y = util.rotate(grid_x_large, grid_y_large,
+                                                     rotation_angle_list[j])
+                        grid_r = np.hypot(grid_x, grid_y / hessian_eigenvalue_list[j]).ravel()
+                    else:
+                        grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
+                    r_step = grid_size_list[j] / grid_increment_factor
+                    mag, flux_array = mag_finite_single_image(source_model, kwargs_source, lens_model_fixed,
+                                                              lens_model_free,
+                                                              kwargs_lens_fixed,
+                                                              kwargs_lens_free, kwargs_lens, z_split, z_source,
+                                                              cosmo_bkg, x_img, y_img, grid_x_large, grid_y_large,
+                                                              grid_r, r_step, grid_resolution, grid_size_list[j],
+                                                              z_split, z_source)
+                    tiling = None # don't return tiling if we use the fallback
+
+            magnifications.append(mag)
+            if tiling is not None:
                 flux_arrays.append([flux_array, tiling])
+            else:
+                flux_arrays.append(flux_array.reshape(npix_large, npix_large))
+
         else:
             raise Exception('magnification_method must be either CIRCULAR_APERTURE, ELLIPTICAL_APERTURE, or ADAPTIVE. '
                             'You specified magnification_method '+str(magnification_method))
@@ -395,24 +410,17 @@ def adaptive_quadtree_magnification(
 
 def rasterize_leaves(leaves, box_size, npix):
     """Paint the accepted quadtree leaf cells as constant blocks onto a uniform
-    (npix, npix) surface-brightness image over the box (offsets from the image center).
-    Big blocks show where the tree stayed coarse (smooth / empty), fine blocks show the
-    refined edges -- so plotting this array literally shows the subdivided cell grid.
-
-    No ray-shooting; purely for display. sum(image) * (box_size/npix)^2 recovers the
-    magnification. Indexing is image[row=y, col=x]; show with
-    imshow(image, origin='lower', extent=[-box/2, box/2, -box/2, box/2]).
-    """
+    (npix, npix) surface-brightness image. Pixels are assigned by their centers, so
+    adjacent leaves abut exactly with no seams (fixes the 1-px dark cross at the box
+    center). Display only; the magnification comes from the leaf estimates, not this."""
     lcx, lcy, lh, lsb = leaves
     img = np.zeros((npix, npix))
-    half0 = box_size / 2.0
     px = box_size / npix
+    xc = (np.arange(npix) + 0.5) * px - box_size / 2.0   # pixel-center coordinates
     for k in range(len(lcx)):
-        i0 = min(max(int(round((lcx[k] - lh[k] + half0) / px)), 0), npix)
-        i1 = min(max(int(round((lcx[k] + lh[k] + half0) / px)), 0), npix)
-        j0 = min(max(int(round((lcy[k] - lh[k] + half0) / px)), 0), npix)
-        j1 = min(max(int(round((lcy[k] + lh[k] + half0) / px)), 0), npix)
-        img[j0:j1, i0:i1] = lsb[k]     # row=y (j), col=x (i)
+        i0, i1 = np.searchsorted(xc, [lcx[k] - lh[k], lcx[k] + lh[k]])  # cols whose centers ∈ cell
+        j0, j1 = np.searchsorted(xc, [lcy[k] - lh[k], lcy[k] + lh[k]])  # rows (y)
+        img[j0:j1, i0:i1] = lsb[k]                        # row = y (j), col = x (i)
     return img
 
 
@@ -483,7 +491,6 @@ def mag_finite_single_image_adaptive(
               'n_calls': n_calls, 'n_points': n_pts}
     return mag, flux_array, tiling
 
-
 def plot_tiled_image(flux_array, tiling, ax=None, cmap='inferno', show_cells=True,
                cell_color='white', cell_lw=0.3, cell_alpha=0.35,
                show_aperture=True, log=False):
@@ -535,165 +542,6 @@ def plot_tiled_image(flux_array, tiling, ax=None, cmap='inferno', show_cells=Tru
     ax.set_title('%d cells, %d calls, %d ray-shoots'
                  % (len(tiling['cx']), tiling['n_calls'], tiling['n_points']))
     return ax
-
-
-# def mag_finite_single_image_adaptive(source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
-#                             kwargs_lens_free, kwargs_lens, z_split, z_source,
-#                             cosmo_bkg, x_image, y_image, grid_resolution, grid_size_max,
-#                                zlens, zsource, intial_resolution_reduction_factor=4,flux_threshold_factor=200,
-#                                distance_factor=30):
-#     """
-#
-#     :param source_model:
-#     :param kwargs_source:
-#     :param lens_model_fixed:
-#     :param lens_model_free:
-#     :param kwargs_lens_fixed:
-#     :param kwargs_lens_free:
-#     :param kwargs_lens:
-#     :param z_split:
-#     :param z_source:
-#     :param cosmo_bkg:
-#     :param x_image:
-#     :param y_image:
-#     :param grid_resolution:
-#     :param grid_size_max:
-#     :param zlens:
-#     :param zsource:
-#     :param intial_resolution_reduction_factor:
-#     :param flux_threshold_factor:
-#     :param distance_factor:
-#     :return:
-#     """
-#     Td = cosmo_bkg.T_xy(0, zlens)
-#     Ts = cosmo_bkg.T_xy(0, zsource)
-#     Tds = cosmo_bkg.T_xy(zlens, zsource)
-#     reduced_to_phys = cosmo_bkg.d_xy(0, zsource) / cosmo_bkg.d_xy(zlens, zsource)
-#
-#     # initialize low-res flux array
-#     deltapix_init = intial_resolution_reduction_factor * grid_resolution
-#     numPix_init = int(grid_size_max / deltapix_init)
-#     (grid_x_large_init, grid_y_large_init, ra_at_xy_0, dec_at_xy_0,
-#      x_at_radec_0, y_at_radec_0, Mpix2coord, Mcoord2pix) = (
-#         make_grid_with_coordtransform(numPix_init, deltapix_init))
-#     coordinates_lowres = Coordinates(Mpix2coord, ra_at_xy_0, dec_at_xy_0)
-#     grid_r = np.hypot(grid_x_large_init, grid_y_large_init).ravel()
-#
-#     # setup ray tracing info
-#     xD = np.zeros_like(grid_x_large_init)
-#     yD = np.zeros_like(grid_y_large_init)
-#     alpha_x_foreground = np.zeros_like(grid_x_large_init)
-#     alpha_y_foreground = np.zeros_like(grid_y_large_init)
-#     alpha_x_background = np.zeros_like(grid_x_large_init)
-#     alpha_y_background = np.zeros_like(grid_y_large_init)
-#     inds_compute = np.where(grid_r <= grid_size_max/2)
-#     grid_x_large_init = grid_x_large_init[inds_compute]
-#     grid_y_large_init = grid_y_large_init[inds_compute]
-#     x_points_temp = grid_x_large_init + x_image
-#     y_points_temp = grid_y_large_init + y_image
-#     _xD, _yD, _alpha_x_foreground, _alpha_y_foreground, _alpha_x_background, _alpha_y_background = \
-#         coordinates_and_deflections(lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
-#                                     x_points_temp, y_points_temp, z_split, z_source, cosmo_bkg)
-#     xD[inds_compute] = _xD
-#     yD[inds_compute] = _yD
-#     alpha_x_foreground[inds_compute] = _alpha_x_foreground
-#     alpha_y_foreground[inds_compute] = _alpha_y_foreground
-#     alpha_x_background[inds_compute] = _alpha_x_background
-#     alpha_y_background[inds_compute] = _alpha_y_background
-#     beta_x, beta_y = calc_source_sb(xD.ravel(),
-#                                       yD.ravel(),
-#                                       alpha_x_foreground.ravel(),
-#                                       alpha_y_foreground.ravel(),
-#                                       alpha_x_background.ravel(),
-#                                       alpha_y_background.ravel(),
-#                                       Td, Tds, Ts, reduced_to_phys,
-#                                       lens_model_free,
-#                                       kwargs_lens)
-#     flux_array = source_model.surface_brightness(beta_x, beta_y, kwargs_source).reshape(numPix_init, numPix_init)
-#
-#     dist = grid_size_max / distance_factor
-#     flux_array_threshold = np.max(flux_array) / flux_threshold_factor
-#     bright_indexes = np.where(flux_array >= flux_array_threshold)
-#     bright_coords = coordinates_lowres.map_pix2coord(bright_indexes[0], bright_indexes[1])
-#
-#     # import matplotlib.pyplot as plt
-#     # plt.imshow(flux_array, origin='upper')
-#     # plt.show()
-#     #
-#     # plt.imshow(flux_array, origin='upper')
-#     # plt.scatter(bright_indexes[1], bright_indexes[0], color='r',alpha=0.3,marker='+')
-#     # plt.show()
-#
-#     # NOW AT HIGH RESOLUTION
-#     # initialize high-res flux array
-#     deltapix = grid_resolution
-#     numPix = int(grid_size_max / deltapix)
-#     (grid_x_large, grid_y_large, ra_at_xy_0, dec_at_xy_0,
-#      x_at_radec_0, y_at_radec_0, Mpix2coord, Mcoord2pix) = (
-#         make_grid_with_coordtransform(numPix, deltapix))
-#
-#     #inds_compute_array = np.zeros_like(grid_x_large)
-#     grid_r = np.hypot(grid_x_large, grid_y_large)
-#     bright_coords_x, bright_coords_y = bright_coords[1], bright_coords[0]
-#
-#     # shape: (N_highres_pixels, N_bright_coords)
-#     dx = grid_x_large[:, None] - bright_coords_x[None, :]
-#     dy = grid_y_large[:, None] - bright_coords_y[None, :]
-#     dr = np.sqrt(dx ** 2 + dy ** 2)
-#     within_radius = np.any(dr <= dist, axis=1)  # shape: (N_highres_pixels,)
-#     within_bounds = grid_r <= grid_size_max / 2
-#     inds_compute_highres = np.where(within_radius & within_bounds)
-#
-#
-#     # for grid_index, (coord_x, coord_y, r_coord) in enumerate(zip(grid_x_large, grid_y_large, grid_r)):
-#     #     if r_coord > grid_size_max / 2:
-#     #         continue
-#     #     else:
-#     #         dx, dy = coord_x - bright_coords_x, coord_y - bright_coords_y
-#     #         dr = np.sqrt(dx ** 2 + dy ** 2)
-#     #         if np.any(dr <= dist):
-#     #             inds_compute_array[grid_index] = 1
-#
-#
-#     #inds_compute_array = inds_compute_array.reshape(numPix,numPix)[::-1,::-1]
-#     #plt.imshow(inds_compute_array, origin='upper'); plt.show()
-#     #inds_compute_highres = np.where(inds_compute_array.ravel()==1)
-#     x_points_temp = grid_x_large[inds_compute_highres] + x_image
-#     y_points_temp = grid_y_large[inds_compute_highres] + y_image
-#     # setup ray tracing info
-#     xD = np.zeros_like(grid_x_large)
-#     yD = np.zeros_like(grid_y_large)
-#     alpha_x_foreground = np.zeros_like(grid_x_large)
-#     alpha_y_foreground = np.zeros_like(grid_y_large)
-#     alpha_x_background = np.zeros_like(grid_x_large)
-#     alpha_y_background = np.zeros_like(grid_y_large)
-#     _xD, _yD, _alpha_x_foreground, _alpha_y_foreground, _alpha_x_background, _alpha_y_background = \
-#         coordinates_and_deflections(lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
-#                                     x_points_temp, y_points_temp, z_split, z_source, cosmo_bkg)
-#     xD[inds_compute_highres] = _xD
-#     yD[inds_compute_highres] = _yD
-#     alpha_x_foreground[inds_compute_highres] = _alpha_x_foreground
-#     alpha_y_foreground[inds_compute_highres] = _alpha_y_foreground
-#     alpha_x_background[inds_compute_highres] = _alpha_x_background
-#     alpha_y_background[inds_compute_highres] = _alpha_y_background
-#     beta_x_highres, beta_y_highres = calc_source_sb(xD.ravel(),
-#                                     yD.ravel(),
-#                                     alpha_x_foreground.ravel(),
-#                                     alpha_y_foreground.ravel(),
-#                                     alpha_x_background.ravel(),
-#                                     alpha_y_background.ravel(),
-#                                     Td, Tds, Ts, reduced_to_phys,
-#                                     lens_model_free,
-#                                     kwargs_lens)
-#     flux_array_highres = source_model.surface_brightness(beta_x_highres, beta_y_highres, kwargs_source).reshape(numPix, numPix)
-#     magnification_highres = np.sum(flux_array_highres) * grid_resolution ** 2
-#     flux_array_highres = flux_array_highres.reshape(numPix, numPix)
-#     #
-#     #plt.imshow(flux_array_highres, origin='upper');
-#     #plt.scatter(pixel_x_large, pixel_y_large, color='r',alpha=0.1,s=5)
-#     #plt.show()
-#     #a = input('continue')
-#     return magnification_highres, flux_array_highres
 
 def calc_source_sb(x, y, alpha_x_foreground, alpha_y_foreground, alpha_x_background, alpha_y_background,
                   Td, Tds, Ts, reduced_to_phys, lens_model_free, kwargs_lens):
@@ -856,6 +704,22 @@ def setup_gaussian_source(source_fwhm_pc, source_x, source_y, astropy_cosmo, z_s
     kwargs_source_light = [{'amp': 1.0, 'center_x': source_x, 'center_y': source_y, 'sigma': source_sigma}]
     return LightModel(['GAUSSIAN']), kwargs_source_light
 
+# save_class_exact.py  -- ship alongside the pickle
+class SaveClassExact:
+    fields = ('source_model', 'kwargs_source', 'lens_model_fixed', 'lens_model_free',
+              'kwargs_lens_fixed', 'kwargs_lens_free', 'kwargs_lens', 'z_split', 'z_source',
+              'cosmo_bkg', 'x_image', 'y_image', 'grid_x_large', 'grid_y_large',
+              'grid_r', 'r_step', 'grid_resolution', 'grid_size_max', 'zlens', 'zsource')
+
+    def __init__(self, inputs):
+        self.inputs = tuple(inputs)
+        for name, val in zip(self.fields, self.inputs):
+            setattr(self, name, val)
+
+    def run_exact(self):
+        from samana.image_magnification_util import mag_finite_single_image
+        return mag_finite_single_image(*self.inputs)
+
 # save_class.py  -- keep this file alongside the pickle
 class SaveClass:
     fields = ('source_model', 'kwargs_source', 'lens_model_fixed', 'lens_model_free',
@@ -868,6 +732,15 @@ class SaveClass:
         for name, val in zip(self.fields, self.inputs):
             setattr(self, name, val)
 
-    def run(self, verbose=False):
+    def run_nearfar(self, verbose=False):
         from samana.image_magnification_near_far import mag_finite_single_image_distortion
         return mag_finite_single_image_distortion(*self.inputs, verbose=verbose)
+
+    def run_adaptive(self):
+        from samana.image_magnification_util import mag_finite_single_image_adaptive
+        # pass only the args the adaptive full-model function actually takes
+        return mag_finite_single_image_adaptive(
+            self.source_model, self.kwargs_source, self.lens_model_fixed, self.lens_model_free,
+            self.kwargs_lens_fixed, self.kwargs_lens, self.z_split, self.z_source,
+            self.cosmo_bkg, self.grid_x_large, self.grid_y_large,  # x_img,y_img in your adaptive branch
+            self.grid_resolution, self.grid_size, self.z_split, self.z_source)

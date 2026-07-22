@@ -22,7 +22,7 @@ def default_rendering_area(lens_ID=None,
     thetaE = model.setup_lens_model()[-1][0][0]['theta_E']
     return opening_angle_factor * thetaE
 
-def raytracing_grid_orientation(lens_ID, min_q=0.2):
+def raytracing_grid_orientation(lens_ID, min_q=0.25):
     """
     Return the orientation and flatting for an elliptical ray tracing grid
     :param lens_ID: lens ID e.g. J0607

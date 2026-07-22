@@ -912,6 +912,7 @@ def forward_model_single_iteration(data_class,
         from lenstronomy.Plots import chain_plot
         import matplotlib.pyplot as plt
         from samana.image_magnification_util import plot_tiled_image
+
         for mag, image in zip(magnifications, images):
             fig = plt.figure()
             ax = plt.subplot(111)
