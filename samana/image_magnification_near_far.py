@@ -159,19 +159,33 @@ def lens_models_at_z(z, lens_model_fixed, kwargs_lens_fixed,
     # R_max may be a scalar (shared) or a per-halo array indexed like lens_model_list
     R_max_arr = np.atleast_1d(np.asarray(R_max, dtype=float))
     scalar_rmax = R_max_arr.size == 1
+    # lens_model_fixed can LEAD with non-halo macro deflectors absent from the per-halo
+    # R_max array -- e.g. HE0435's SIS background galaxy at another plane, which
+    # index_lens_split=[0,1] leaves in the fixed model. These
+    # occupy the first n_extra fixed indices, so offset the lookup
+    n_extra = 0 if scalar_rmax else max(len(names) - R_max_arr.size, 0)
 
     near_names, near_kw, far_idx = [], [], []
 
     for i in at_z:
-        if names[i] in exclude_names:          # skip mass sheets etc. entirely
+        if names[i] in exclude_names:  # skip mass sheets etc. entirely
             continue
         kw = kwargs_lens_fixed[i]
         cxi = kw.get('center_x', np.nan) if isinstance(kw, dict) else np.nan
         cyi = kw.get('center_y', np.nan) if isinstance(kw, dict) else np.nan
-        rmi = R_max_arr[0] if scalar_rmax else R_max_arr[i]     # this halo's split radius
-        if (np.isfinite(cxi) and np.isfinite(rmi)
-                and np.hypot(cxi - x_center_at_plane, cyi - y_center_at_plane) <= rmi):
-            near_names.append(names[i]); near_kw.append(kw)
+        force_near = False
+        if scalar_rmax:
+            rmi = R_max_arr[0]
+        else:
+            j = i - n_extra
+            if 0 <= j < R_max_arr.size:
+                rmi = R_max_arr[j]
+            else:
+                rmi, force_near = np.inf, True  # extra macro deflector (bkg galaxy) -> keep exact
+        if force_near or (np.isfinite(cxi) and np.isfinite(rmi)
+                          and np.hypot(cxi - x_center_at_plane, cyi - y_center_at_plane) <= rmi):
+            near_names.append(names[i])
+            near_kw.append(kw)
         else:
             far_idx.append(i)
 

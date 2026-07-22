@@ -113,21 +113,18 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
         grid_y_large = grid_y_large.ravel()
 
         if magnification_method == 'ADAPTIVE':
-            # mag, flux_array = mag_finite_single_image_adaptive(source_model, kwargs_source, lens_model_fixed,
-            #                                              lens_model_free, kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
-            #                                              z_split, z_source, cosmo_bkg, x_img, y_img, grid_resolution,
-            #                                              grid_size_list[j],
-            #                                              z_split, z_source)
-            # magnifications.append(mag)
-            # flux_arrays.append(flux_array.T)
+
             mag, flux_array, tiling = mag_finite_single_image_adaptive(
                 source_model, kwargs_source, lens_model_fixed, lens_model_free,
                 kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
                 z_split, z_source, cosmo_bkg, x_img, y_img, grid_resolution,
                 grid_size_list[j], z_split, z_source, rotation_angle_list[j],
-                hessian_eigenvalue_list[j])
+                hessian_eigenvalue_list[j],
+                n_coarse=24,
+                rel_tol=1e-3,
+                flux_floor_frac=1e-3,)
             magnifications.append(mag)
-            flux_arrays.append(flux_array)
+            flux_arrays.append([flux_array, tiling])
             # import matplotlib.pyplot as plt
             # plot_image(flux_array, tiling)
             # plt.show()
@@ -159,8 +156,8 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                 R_max = R_max_0
             else:
                 R_max = np.maximum(R_max_0 * (np.array(halo_masses) / 10 ** 8) ** 0.333,
-                                   2*grid_size_list[j])
-
+                                   2.0*grid_size_list[j])
+                R_max[np.where(np.log10(halo_masses) > 9)[0]] = 1e9
             grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
             r_step = grid_size_list[j] / grid_increment_factor
             ray_interp_x_list, ray_interp_y_list = interpolate_ray_paths([x_img], [y_img],
@@ -168,6 +165,23 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                                                                terminate_at_source=False
                                                                )
             if magnification_method == 'NEAR_FAR_SPLITTING':
+
+
+                # here are the inputs:
+                # inputs = (source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
+                #     kwargs_lens, z_split, z_source,
+                #     cosmo_bkg, grid_x_large, grid_y_large,
+                #     grid_r, r_step, grid_resolution, grid_size_list[j],
+                #     R_max, ray_interp_x_list[0], ray_interp_y_list[0])
+
+                # import pickle
+                # inputs = (source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
+                #           kwargs_lens, z_split, z_source, cosmo_bkg, grid_x_large, grid_y_large,
+                #           grid_r, r_step, grid_resolution, grid_size_list[j],
+                #           R_max, ray_interp_x_list[0], ray_interp_y_list[0])
+                # with open('j0607_seed108_image'+str(j)+'.pkl', 'wb') as f:
+                #     pickle.dump(SaveClass(inputs), f)
+
                 mag, flux_array = mag_finite_single_image_distortion(
                     source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
                     kwargs_lens, z_split, z_source,
@@ -191,7 +205,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                 # plt.show()
                 # a=input('continue')
                 magnifications.append(mag)
-                flux_arrays.append(flux_array.reshape(npix_large, npix_large))
+                flux_arrays.append([flux_array, tiling])
         else:
             raise Exception('magnification_method must be either CIRCULAR_APERTURE, ELLIPTICAL_APERTURE, or ADAPTIVE. '
                             'You specified magnification_method '+str(magnification_method))
@@ -411,7 +425,7 @@ def mag_finite_single_image_adaptive(
         kwargs_lens_free, kwargs_lens, z_split, z_source,
         cosmo_bkg, x_image, y_image, grid_resolution, grid_size_max, zlens, zsource,
         rotation_angle=None, hessian_eigenvalue=None,
-        n_coarse=16, rel_tol=5e-3, flux_floor_frac=5e-3):
+        n_coarse=16, rel_tol=1e-3, flux_floor_frac=1e-3):
     """Edge-refining quadtree magnification through the exact decoupled multiplane model.
     Drop-in for samana.image_magnification_util.mag_finite_single_image_adaptive.
 
@@ -470,7 +484,7 @@ def mag_finite_single_image_adaptive(
     return mag, flux_array, tiling
 
 
-def plot_image(flux_array, tiling, ax=None, cmap='inferno', show_cells=True,
+def plot_tiled_image(flux_array, tiling, ax=None, cmap='inferno', show_cells=True,
                cell_color='white', cell_lw=0.3, cell_alpha=0.35,
                show_aperture=True, log=False):
     """Show the finite-source image with the adaptive quadtree cell boundaries and the
@@ -842,3 +856,18 @@ def setup_gaussian_source(source_fwhm_pc, source_x, source_y, astropy_cosmo, z_s
     kwargs_source_light = [{'amp': 1.0, 'center_x': source_x, 'center_y': source_y, 'sigma': source_sigma}]
     return LightModel(['GAUSSIAN']), kwargs_source_light
 
+# save_class.py  -- keep this file alongside the pickle
+class SaveClass:
+    fields = ('source_model', 'kwargs_source', 'lens_model_fixed', 'lens_model_free',
+              'kwargs_lens_fixed', 'kwargs_lens', 'z_split', 'z_source', 'cosmo_bkg',
+              'grid_x_large', 'grid_y_large', 'grid_r', 'r_step', 'grid_resolution',
+              'grid_size', 'R_max', 'ray_interp_x', 'ray_interp_y')
+
+    def __init__(self, inputs):
+        self.inputs = tuple(inputs)
+        for name, val in zip(self.fields, self.inputs):
+            setattr(self, name, val)
+
+    def run(self, verbose=False):
+        from samana.image_magnification_near_far import mag_finite_single_image_distortion
+        return mag_finite_single_image_distortion(*self.inputs, verbose=verbose)

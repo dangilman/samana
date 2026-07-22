@@ -536,24 +536,6 @@ def forward_model_single_iteration(data_class,
     else:
         kwargs_constraints['point_source_offset'] = False
 
-    # from samana.forward_model_util import save_realization
-    # grid_res = magnification_class.grid_resolution(source_dict['source_size_pc'])
-    # grid_size = magnification_class.grid_size_list(source_dict['source_size_pc'])
-    # save_realization('realization_test_seed'+str(seed)+'.json',
-    #                  data_class.z_lens,
-    #                  data_class.z_source,
-    #                  lens_model_list_halos,
-    #                  redshift_list_halos,
-    #                  kwargs_halos,
-    #                  kwargs_lens_macro_init,
-    #                  index_lens_split,
-    #                  data_class.x_image,
-    #                  data_class.y_image,
-    #                  source_dict['source_size_pc'],
-    #                  grid_res,
-    #                  grid_size)
-    # exit(1)
-
     if use_imaging_data:
         image_data_grids_computed = True
         if verbose:
@@ -929,19 +911,16 @@ def forward_model_single_iteration(data_class,
         from lenstronomy.Plots.model_plot import ModelPlot
         from lenstronomy.Plots import chain_plot
         import matplotlib.pyplot as plt
-        if images[0] is not None:
-            fig = plt.figure(1)
-            fig.set_size_inches(16,8)
-            ax1 = plt.subplot(141)
-            ax2 = plt.subplot(142)
-            ax3 = plt.subplot(143)
-            ax4 = plt.subplot(144)
-            axes_list = [ax1, ax2, ax3, ax4]
-            for mag, ax, image in zip(magnifications, axes_list, images):
+        from samana.image_magnification_util import plot_tiled_image
+        for mag, image in zip(magnifications, images):
+            fig = plt.figure()
+            ax = plt.subplot(111)
+            if isinstance(image, list):  # adaptive: [flux_array, tiling]
+                plot_tiled_image(*image, ax=ax)  # (or however plot_image takes an axis)
+            else:  # circular / elliptical / near-far: npix x npix grid
                 ax.imshow(image, origin='lower')
-                ax.annotate('magnification: '+str(np.round(mag,2)), xy=(0.3,0.9),
-                            xycoords='axes fraction',color='w',fontsize=12)
-            plt.show()
+            ax.annotate('magnification: ' + str(np.round(mag, 2)), xy=(0.3, 0.9),
+                        xycoords='axes fraction', color='w', fontsize=12)
         modelPlot = ModelPlot(data_class.kwargs_data_joint['multi_band_list'],
                               kwargs_model, kwargs_result,
                               fast_caustic=True,
