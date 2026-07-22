@@ -308,6 +308,7 @@ class EPLModelBase(object):
                                      kwargs_lens_batch=None,
                                      halo_masses=None,
                                      fallback='ELLIPTICAL_APERTURE',
+                                     mu_tolerance=0.05,
                                      verbose=False):
         """
 
@@ -336,6 +337,7 @@ class EPLModelBase(object):
             kwargs_lens_batch=kwargs_lens_batch,
             halo_masses=halo_masses,
             fallback=fallback,
+            MU_TOLERANCE=mu_tolerance,
             verbose=verbose)
 
         return mags

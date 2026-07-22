@@ -83,7 +83,8 @@ class SingleGaussianMagnification(object):
                  magnification_method,
                  rotation_angle_list,
                  hessian_eigenvalue_list,
-                 fallback='ELLIPTICAL_APERTURE'):
+                 fallback='ELLIPTICAL_APERTURE',
+                 mu_tolerance=0.05):
         """
 
         :param astropy_cosmo:
@@ -100,6 +101,7 @@ class SingleGaussianMagnification(object):
         self.rotation_angle_list = rotation_angle_list
         self.hessian_eigenvalue_list = hessian_eigenvalue_list
         self.fallback = fallback
+        self.mu_tolerance = mu_tolerance
 
     def grid_resolution(self, source_size):
         return self.rescale_grid_resolution * source_size
@@ -146,6 +148,7 @@ class SingleGaussianMagnification(object):
                                                                               kwargs_lens_batch=kwargs_lens_init_batch,
                                                                               halo_masses=halo_masses,
                                                                               fallback=self.fallback,
+                                                                              mu_tolerance=self.mu_tolerance,
                                                                               verbose=verbose)
         flux_uncertainty = None
         stat, flux_ratios, flux_ratios_data = flux_ratio_summary_statistic(data_class.magnifications,
