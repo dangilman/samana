@@ -472,7 +472,8 @@ def forward_model_single_iteration(data_class,
         data_class.x_image,
         data_class.y_image,
         realization,
-        realization_dict)
+        realization_dict,
+        verbose=verbose)
     # GET THE NEW LENS MODEL/KWARGS LIST
     lens_model_list_halos, redshift_list_halos, kwargs_halos, _ = realization.lensing_quantities(
         **kwargs_mass_sheet_correction)
