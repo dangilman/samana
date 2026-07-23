@@ -306,6 +306,7 @@ class EPLModelBase(object):
                                      hessian_eigenvalue_list=None,
                                      lens_model_batch=None,
                                      kwargs_lens_batch=None,
+                                     setup_decoupled_multiplane_lens_model_output_batch=None,
                                      halo_masses=None,
                                      fallback='ELLIPTICAL_APERTURE',
                                      mu_tolerance=0.05,
@@ -336,6 +337,7 @@ class EPLModelBase(object):
             lens_model_batch=lens_model_batch,
             kwargs_lens_batch=kwargs_lens_batch,
             halo_masses=halo_masses,
+            setup_decoupled_multiplane_lens_model_output_batch=setup_decoupled_multiplane_lens_model_output_batch,
             fallback=fallback,
             MU_TOLERANCE=mu_tolerance,
             verbose=verbose)

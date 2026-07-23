@@ -123,6 +123,7 @@ class SingleGaussianMagnification(object):
                  setup_decoupled_multiplane_lens_model_output,
                  lens_model_init_batch, kwargs_lens_init_batch,
                  halo_masses=None,
+                 setup_decoupled_multiplane_lens_model_output_batch=None,
                  verbose=False):
 
         source_model_quasar, kwargs_source = setup_gaussian_source(source_dict['source_size_pc'],
@@ -146,6 +147,7 @@ class SingleGaussianMagnification(object):
                                                                               hessian_eigenvalue_list=self.hessian_eigenvalue_list,
                                                                               lens_model_batch=lens_model_init_batch,
                                                                               kwargs_lens_batch=kwargs_lens_init_batch,
+                                          setup_decoupled_multiplane_lens_model_output_batch=setup_decoupled_multiplane_lens_model_output_batch,
                                                                               halo_masses=halo_masses,
                                                                               fallback=self.fallback,
                                                                               mu_tolerance=self.mu_tolerance,

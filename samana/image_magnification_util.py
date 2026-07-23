@@ -71,7 +71,8 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                                    lens_model_batch=None,
                                    kwargs_lens_batch=None,
                                    halo_masses=None,
-                                   fallback='ADAPTIVE',
+                                   setup_decoupled_multiplane_lens_model_output_batch=None,
+                                   fallback='ELLIPTICAL_APERTURE',
                                    MU_TOLERANCE=0.05,
                                    verbose=False):
     """
@@ -93,12 +94,21 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
     :param hessian_eigenvalue_list:
     :return:
     """
+
     if setup_decoupled_multiplane_lens_model_output is None:
         lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free, z_source, z_split, cosmo_bkg = \
             setup_lens_model(lens_model_init, kwargs_lens_init, index_lens_split)
     else:
         (lens_model_fixed, lens_model_free, kwargs_lens_fixed,
          kwargs_lens_free, z_source, z_split, cosmo_bkg) = setup_decoupled_multiplane_lens_model_output
+
+    if setup_decoupled_multiplane_lens_model_output_batch is not None:
+        (lens_model_fixed_batch, lens_model_free_batch, kwargs_lens_fixed_batch,
+         kwargs_lens_free_batch, _, _, _) = setup_decoupled_multiplane_lens_model_output_batch
+    else:
+        lens_model_fixed_batch, lens_model_free_batch = lens_model_fixed, lens_model_free
+        kwargs_lens_fixed_batch, kwargs_lens_free_batch = kwargs_lens_fixed, kwargs_lens_free
+
     magnifications = []
     flux_arrays = []
 
@@ -111,7 +121,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
         grid_y_large = grid_y_large.ravel()
 
         if magnification_method == 'ADAPTIVE':
-
+            # batching is slower here, don't use it
             mag, flux_array, tiling = mag_finite_single_image_adaptive(
                 source_model, kwargs_source, lens_model_fixed, lens_model_free,
                 kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
@@ -132,16 +142,19 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
             else:
                 grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
             r_step = grid_size_list[j] / grid_increment_factor
-
-            mag, flux_array = mag_finite_single_image(source_model, kwargs_source, lens_model_fixed, lens_model_free,
-                                                      kwargs_lens_fixed,
-                                                      kwargs_lens_free, kwargs_lens, z_split, z_source,
-                                                      cosmo_bkg, x_img, y_img, grid_x_large, grid_y_large,
-                                                      grid_r, r_step, grid_resolution, grid_size_list[j], z_split, z_source)
+            # batching is slower here, don't use it
+            mag, flux_array = mag_finite_single_image(
+                source_model, kwargs_source, lens_model_fixed,
+                lens_model_free, kwargs_lens_fixed,
+                kwargs_lens_free, kwargs_lens, z_split, z_source,
+                cosmo_bkg, x_img, y_img, grid_x_large, grid_y_large,
+                grid_r, r_step, grid_resolution, grid_size_list[j],
+                z_split, z_source
+            )
             magnifications.append(mag)
             flux_arrays.append(flux_array.reshape(npix_large, npix_large))
         elif magnification_method in ['NEAR_FAR_SPLITTING', 'NEAR_FAR_SPLITTING_ADAPTIVE']:
-            # in development
+
             from samana.image_magnification_near_far import (mag_finite_single_image_distortion,
                                                              mag_finite_single_image_distortion_adaptive)
             from samana.forward_model_util import interpolate_ray_paths
@@ -154,13 +167,13 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                 R_max[np.where(np.log10(halo_masses) > 9)[0]] = 1e9
             grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
             r_step = grid_size_list[j] / grid_increment_factor
+            # batching is faster here, use it
             ray_interp_x_list, ray_interp_y_list = interpolate_ray_paths([x_img], [y_img],
                                                                lens_model_batch, kwargs_lens_batch, z_source,
                                                                terminate_at_source=False
                                                                )
             tiling = None
             if magnification_method == 'NEAR_FAR_SPLITTING':
-
                 mag, flux_array, mu_discrepancy = mag_finite_single_image_distortion(
                     source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
                     kwargs_lens, z_split, z_source,
@@ -208,8 +221,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                         grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
                     r_step = grid_size_list[j] / grid_increment_factor
                     mag, flux_array = mag_finite_single_image(source_model, kwargs_source, lens_model_fixed,
-                                                              lens_model_free,
-                                                              kwargs_lens_fixed,
+                                                              lens_model_free, kwargs_lens_fixed,
                                                               kwargs_lens_free, kwargs_lens, z_split, z_source,
                                                               cosmo_bkg, x_img, y_img, grid_x_large, grid_y_large,
                                                               grid_r, r_step, grid_resolution, grid_size_list[j],

@@ -724,7 +724,9 @@ def forward_model_single_iteration(data_class,
                 source_dict, source_x, source_y, data_class, model_class,
                 lens_model_init, kwargs_lens_init, kwargs_solution,
                 setup_decoupled_multiplane_lens_model_output,
-                lens_model_init_batch, kwargs_lens_init_batch, halo_masses, verbose=verbose)
+                lens_model_init_batch, kwargs_lens_init_batch, halo_masses,
+                setup_decoupled_multiplane_lens_model_output_batch=setup_decoupled_multiplane_lens_model_output_batch,
+                verbose=verbose)
 
     tend = time()
     if verbose:
@@ -881,11 +883,11 @@ def forward_model_single_iteration(data_class,
             kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split, setup_decoupled_multiplane_lens_model_output = (
                 model_class.setup_kwargs_model(
                     decoupled_multiplane=use_decoupled_multiplane_approximation,
-                    lens_model_list_halos=lens_model_list_halos_batch,
+                    lens_model_list_halos=lens_model_list_halos,
                     kwargs_lens_macro_init=kwargs_lens_macro_init,
                     grid_resolution=grid_resolution_image_data,
-                    redshift_list_halos=list(redshift_list_halos_batch),
-                    kwargs_halos=kwargs_halos_batch,
+                    redshift_list_halos=list(redshift_list_halos),
+                    kwargs_halos=kwargs_halos,
                     verbose=verbose,
                     macromodel_samples_fixed=macromodel_samples_fixed_dict,
                     astropy_cosmo=astropy_cosmo,
