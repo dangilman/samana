@@ -203,7 +203,7 @@ def lens_models_at_z(z, lens_model_fixed, kwargs_lens_fixed,
         far_names_in = [names[i] for i in far_idx]
         far_kw_in = [kwargs_lens_fixed[i] for i in far_idx]
         far_z = [0.0] * len(far_idx)  # single plane; z unused by the hessian
-        to_batch = set(far_names_in) - {'CONVERGENCE'}  # don't batch mass sheets
+        to_batch = set(far_names_in) - {'CONVERGENCE', 'PJAFFE', 'SPL_CORE'}  # don't batch mass sheets or GCs
         b_names, _, b_kw = batch_lens_profiles(far_names_in, far_z, far_kw_in,
                                                profiles_to_batch=to_batch, min_group=4)
         lm_far_full = LensModel(b_names)
