@@ -62,7 +62,7 @@ def perturbed_fluxes_from_fluxes(fluxes, flux_measurement_uncertainties_percenta
 
 def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image,
                                    lens_model_init, kwargs_lens_init, kwargs_lens, index_lens_split,
-                                   grid_size_list, grid_resolution,
+                                   grid_size_list, grid_resolution_list,
                                    grid_increment_factor=20.0,
                                    setup_decoupled_multiplane_lens_model_output=None,
                                    magnification_method='CIRCULAR_APERTURE',
@@ -101,13 +101,13 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
     else:
         (lens_model_fixed, lens_model_free, kwargs_lens_fixed,
          kwargs_lens_free, z_source, z_split, cosmo_bkg) = setup_decoupled_multiplane_lens_model_output
-
-    if setup_decoupled_multiplane_lens_model_output_batch is not None:
-        (lens_model_fixed_batch, lens_model_free_batch, kwargs_lens_fixed_batch,
-         kwargs_lens_free_batch, _, _, _) = setup_decoupled_multiplane_lens_model_output_batch
-    else:
-        lens_model_fixed_batch, lens_model_free_batch = lens_model_fixed, lens_model_free
-        kwargs_lens_fixed_batch, kwargs_lens_free_batch = kwargs_lens_fixed, kwargs_lens_free
+    #
+    # if setup_decoupled_multiplane_lens_model_output_batch is not None:
+    #     (lens_model_fixed_batch, lens_model_free_batch, kwargs_lens_fixed_batch,
+    #      kwargs_lens_free_batch, _, _, _) = setup_decoupled_multiplane_lens_model_output_batch
+    # else:
+    #     lens_model_fixed_batch, lens_model_free_batch = lens_model_fixed, lens_model_free
+    #     kwargs_lens_fixed_batch, kwargs_lens_free_batch = kwargs_lens_fixed, kwargs_lens_free
 
     magnifications = []
     flux_arrays = []
@@ -115,7 +115,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
     for j, (x_img, y_img) in enumerate(zip(x_image, y_image)):
 
         grid_x_large, grid_y_large, interp_points_large, npix_large = setup_grids(grid_size_list[j],
-                                                                                  grid_resolution,
+                                                                                  grid_resolution_list[j],
                                                                                   0.0, 0.0)
         grid_x_large = grid_x_large.ravel()
         grid_y_large = grid_y_large.ravel()
@@ -125,7 +125,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
             mag, flux_array, tiling = mag_finite_single_image_adaptive(
                 source_model, kwargs_source, lens_model_fixed, lens_model_free,
                 kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
-                z_split, z_source, cosmo_bkg, x_img, y_img, grid_resolution,
+                z_split, z_source, cosmo_bkg, x_img, y_img, grid_resolution_list[j],
                 grid_size_list[j], z_split, z_source, rotation_angle_list[j],
                 hessian_eigenvalue_list[j],
                 n_coarse=40,
@@ -148,7 +148,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                 lens_model_free, kwargs_lens_fixed,
                 kwargs_lens_free, kwargs_lens, z_split, z_source,
                 cosmo_bkg, x_img, y_img, grid_x_large, grid_y_large,
-                grid_r, r_step, grid_resolution, grid_size_list[j],
+                grid_r, r_step, grid_resolution_list[j], grid_size_list[j],
                 z_split, z_source
             )
             magnifications.append(mag)
@@ -178,7 +178,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                     source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
                     kwargs_lens, z_split, z_source,
                     cosmo_bkg, grid_x_large, grid_y_large,
-                    grid_r, r_step, grid_resolution, grid_size_list[j],
+                    grid_r, r_step, grid_resolution_list[j], grid_size_list[j],
                     R_max, ray_interp_x_list[0], ray_interp_y_list[0], x_img, y_img, kwargs_lens_free,
                     verbose=verbose
                 )
@@ -187,7 +187,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                 mag, flux_array, tiling, mu_discrepancy = mag_finite_single_image_distortion_adaptive(
                     source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
                     kwargs_lens, z_split, z_source, cosmo_bkg, x_img, y_img,
-                    grid_resolution, grid_size_list[j], R_max, ray_interp_x_list[0], ray_interp_y_list[0],
+                    grid_resolution_list[j], grid_size_list[j], R_max, ray_interp_x_list[0], ray_interp_y_list[0],
                     kwargs_lens_free,
                     n_coarse=40,
                     rel_tol=5e-4,
@@ -205,7 +205,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                     mag, flux_array, tiling = mag_finite_single_image_adaptive(
                         source_model, kwargs_source, lens_model_fixed, lens_model_free,
                         kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
-                        z_split, z_source, cosmo_bkg, x_img, y_img, grid_resolution,
+                        z_split, z_source, cosmo_bkg, x_img, y_img, grid_resolution_list[j],
                         grid_size_list[j], z_split, z_source, rotation_angle_list[j],
                         hessian_eigenvalue_list[j],
                         n_coarse=40,
@@ -224,7 +224,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                                                               lens_model_free, kwargs_lens_fixed,
                                                               kwargs_lens_free, kwargs_lens, z_split, z_source,
                                                               cosmo_bkg, x_img, y_img, grid_x_large, grid_y_large,
-                                                              grid_r, r_step, grid_resolution, grid_size_list[j],
+                                                              grid_r, r_step, grid_resolution_list[j], grid_size_list[j],
                                                               z_split, z_source)
                     tiling = None # don't return tiling if we use the fallback
 

@@ -299,7 +299,7 @@ class EPLModelBase(object):
         return kwargs_lens_fixed, kwargs_lens_init
 
     def image_magnification_gaussian(self, source_model_quasar, kwargs_source, lens_model_init, kwargs_lens_init,
-                            kwargs_lens, grid_size_list, grid_resolution,
+                            kwargs_lens, grid_size_list, grid_resolution_list,
                                      setup_decoupled_multiplane_lens_model_output=None,
                                      magnification_method='ELLIPTICAL_APERTURE',
                                      rotation_angle_list=None,
@@ -329,7 +329,7 @@ class EPLModelBase(object):
             source_model_quasar, kwargs_source,
             self._data.x_image, self._data.y_image,
             lens_model_init, kwargs_lens_init, kwargs_lens, index_lens_split,
-            grid_size_list, grid_resolution,
+            grid_size_list, grid_resolution_list,
             setup_decoupled_multiplane_lens_model_output=setup_decoupled_multiplane_lens_model_output,  # built from batched model
             magnification_method=magnification_method,
             rotation_angle_list=rotation_angle_list,

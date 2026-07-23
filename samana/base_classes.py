@@ -84,7 +84,7 @@ class SingleGaussianMagnification(object):
                  rotation_angle_list,
                  hessian_eigenvalue_list,
                  fallback='ELLIPTICAL_APERTURE',
-                 mu_tolerance=0.05):
+                 mu_tolerance=0.1):
         """
 
         :param astropy_cosmo:
@@ -129,8 +129,12 @@ class SingleGaussianMagnification(object):
         source_model_quasar, kwargs_source = setup_gaussian_source(source_dict['source_size_pc'],
                                                                    np.mean(source_x), np.mean(source_y),
                                                                    self.astropy_cosmo, data_class.z_source)
-
-        grid_resolution = self.rescale_grid_resolution * auto_raytracing_grid_resolution(source_dict['source_size_pc'])
+        if isinstance(self.rescale_grid_resolution, list):
+            grid_resolution_list = [grid_res_i * auto_raytracing_grid_resolution(
+                source_dict['source_size_pc']) for grid_res_i in self.rescale_grid_resolution]
+        else:
+            grid_resolution_list = [self.rescale_grid_resolution *
+                               auto_raytracing_grid_resolution(source_dict['source_size_pc'])] * 4
         grid_size_list = self.grid_size_list(source_dict['source_size_pc'])
         # we pass in setup_decoupled_multiplane_lens_model_output, the decoupled multiplane parameters
         # computed for the proposed macromodel in setup_kwargs_model
@@ -140,7 +144,7 @@ class SingleGaussianMagnification(object):
                                                                               kwargs_lens_init,
                                                                               kwargs_solution,
                                                                               grid_size_list,
-                                                                              grid_resolution,
+                                                                              grid_resolution_list,
                                                                               setup_decoupled_multiplane_lens_model_output,
                                                                               magnification_method=self.magnification_method,
                                                                               rotation_angle_list=self.rotation_angle_list,

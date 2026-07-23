@@ -125,7 +125,7 @@ def numerics_setup(lens_ID):
     :return:
     """
     if lens_ID == 'B1422':
-        rescale_grid_size = 1.4
+        rescale_grid_size = [1.4, 1.4, 1.4, 0.8]
         rescale_grid_res = 1.5
     elif lens_ID == 'WFI2026':
         rescale_grid_size = [1.5, 1.5, 1.0, 1.0]
@@ -187,11 +187,11 @@ def numerics_setup(lens_ID):
         rescale_grid_res = 1.5
         rescale_grid_size = [1., 1., 3.0, 3.0]
     elif lens_ID == 'PSJ0147':
-        rescale_grid_res = 1.5
-        rescale_grid_size = 2.5
+        rescale_grid_res = [1.5, 1.5, 1.5, 1.0]
+        rescale_grid_size = [2.5, 2.5, 2.5, 0.1]
     elif lens_ID == 'PSJ1606':
-        rescale_grid_res = 1.5
-        rescale_grid_size = 0.7
+        rescale_grid_res = 1.1
+        rescale_grid_size = 0.6
     elif lens_ID == 'RXJ0911':
         rescale_grid_res = 1.5
         rescale_grid_size = 1.0
