@@ -4,6 +4,7 @@ from lenstronomy.LensModel.lens_model import LensModel
 from lenstronomy.Workflow.fitting_sequence import FittingSequence
 from lenstronomy.Util.class_creator import create_im_sim
 from lenstronomy.LensModel.QuadOptimizer.optimizer import Optimizer
+from samana.forward_model_util import sample_globular_cluster_params
 from samana.param_managers import auto_param_class
 from scipy.stats import multivariate_normal
 from copy import deepcopy
@@ -467,7 +468,7 @@ def forward_model_single_iteration(data_class,
         realization, realization_dict
     )
     # add globular clusters
-    realization = dark_matter_model_class.add_globular_clusters(
+    realization, gc_samples, gc_sample_names = dark_matter_model_class.add_globular_clusters(
         data_class.x_image,
         data_class.y_image,
         realization,
@@ -994,6 +995,11 @@ def forward_model_single_iteration(data_class,
         realization_param_names += ['scale_multipole']
         if verbose:
             print('hierachical multipole scaling: ', realization_samples[-1])
+
+    if len(gc_sample_names) > 0:
+        realization_samples = np.append(realization_samples, gc_samples)
+        realization_param_names += gc_sample_names
+
     output_vector = (magnifications, images, realization_samples, source_samples, samples_macromodel, samples_macromodel_fixed, \
            logL_imaging_data, fitting_sequence, \
            stat, bic, realization_param_names, \
