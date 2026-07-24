@@ -123,8 +123,8 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
         if magnification_method == 'ADAPTIVE':
             # batching is slower here, don't use it
             mag, flux_array, tiling = mag_finite_single_image_adaptive(
-                source_model, kwargs_source, lens_model_fixed, lens_model_free,
-                kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
+                source_model, kwargs_source, lens_model_fixed_batch, lens_model_free,
+                kwargs_lens_fixed_batch, kwargs_lens_free, kwargs_lens,
                 z_split, z_source, cosmo_bkg, x_img, y_img, grid_resolution_list[j],
                 grid_size_list[j], z_split, z_source, rotation_angle_list[j],
                 hessian_eigenvalue_list[j],
@@ -142,14 +142,14 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
             else:
                 grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
             r_step = grid_size_list[j] / grid_increment_factor
-            # batching is slower here, don't use it
             mag, flux_array = mag_finite_single_image(
-                source_model, kwargs_source, lens_model_fixed,
-                lens_model_free, kwargs_lens_fixed,
-                kwargs_lens_free, kwargs_lens, z_split, z_source,
-                cosmo_bkg, x_img, y_img, grid_x_large, grid_y_large,
-                grid_r, r_step, grid_resolution_list[j], grid_size_list[j],
-                z_split, z_source
+                source_model, kwargs_source, lens_model_fixed_batch,
+                          lens_model_free, kwargs_lens_fixed_batch,
+                          kwargs_lens_free, kwargs_lens, z_split, z_source,
+                          cosmo_bkg, x_img, y_img, grid_x_large, grid_y_large,
+                          grid_r, r_step, grid_resolution_list[j],
+                          grid_size_list[j],
+                          z_split, z_source
             )
             magnifications.append(mag)
             flux_arrays.append(flux_array.reshape(npix_large, npix_large))
@@ -293,7 +293,6 @@ def _aperture_radius(cx, cy, rotation_angle=None, hessian_eigenvalue=None):
     xr = cx * ca + cy * sa               # lenstronomy util.rotate convention
     yr = -cx * sa + cy * ca
     return np.hypot(xr, yr / hessian_eigenvalue)
-
 
 def adaptive_quadtree_magnification(
         ray_shoot, source_sb, x_image, y_image, box_size, grid_resolution,
