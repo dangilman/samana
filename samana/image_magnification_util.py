@@ -101,13 +101,13 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
     else:
         (lens_model_fixed, lens_model_free, kwargs_lens_fixed,
          kwargs_lens_free, z_source, z_split, cosmo_bkg) = setup_decoupled_multiplane_lens_model_output
-    #
-    # if setup_decoupled_multiplane_lens_model_output_batch is not None:
-    #     (lens_model_fixed_batch, lens_model_free_batch, kwargs_lens_fixed_batch,
-    #      kwargs_lens_free_batch, _, _, _) = setup_decoupled_multiplane_lens_model_output_batch
-    # else:
-    #     lens_model_fixed_batch, lens_model_free_batch = lens_model_fixed, lens_model_free
-    #     kwargs_lens_fixed_batch, kwargs_lens_free_batch = kwargs_lens_fixed, kwargs_lens_free
+
+    if setup_decoupled_multiplane_lens_model_output_batch is not None:
+        (lens_model_fixed_batch, _, kwargs_lens_fixed_batch,
+         _, _, _, _) = setup_decoupled_multiplane_lens_model_output_batch
+    else:
+        lens_model_fixed_batch = lens_model_fixed
+        kwargs_lens_fixed_batch = kwargs_lens_fixed
 
     magnifications = []
     flux_arrays = []
@@ -180,6 +180,8 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                     cosmo_bkg, grid_x_large, grid_y_large,
                     grid_r, r_step, grid_resolution_list[j], grid_size_list[j],
                     R_max, ray_interp_x_list[0], ray_interp_y_list[0], x_img, y_img, kwargs_lens_free,
+                    lens_model_fixed_batched=lens_model_fixed_batch,
+                    kwargs_lens_fixed_batched=kwargs_lens_fixed_batch,
                     verbose=verbose
                 )
 
@@ -193,7 +195,9 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                     rel_tol=5e-4,
                     flux_floor_frac=1e-4,
                     rotation_angle=rotation_angle_list[j],
-                    hessian_eigenvalue=hessian_eigenvalue_list[j]
+                    hessian_eigenvalue=hessian_eigenvalue_list[j],
+                    lens_model_fixed_batched=lens_model_fixed_batch,
+                    kwargs_lens_fixed_batched=kwargs_lens_fixed_batch
                 )
             if verbose: print('point-source mag discrepancy: ', mu_discrepancy)
             # FLAGS IMAGES WHERE APPROXIMATION BREAKS DOWN
@@ -203,8 +207,8 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
 
                 if fallback == 'ADAPTIVE':
                     mag, flux_array, tiling = mag_finite_single_image_adaptive(
-                        source_model, kwargs_source, lens_model_fixed, lens_model_free,
-                        kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
+                        source_model, kwargs_source, lens_model_fixed_batch, lens_model_free,
+                        kwargs_lens_fixed_batch, kwargs_lens_free, kwargs_lens,
                         z_split, z_source, cosmo_bkg, x_img, y_img, grid_resolution_list[j],
                         grid_size_list[j], z_split, z_source, rotation_angle_list[j],
                         hessian_eigenvalue_list[j],
@@ -220,13 +224,14 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                     else:
                         grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
                     r_step = grid_size_list[j] / grid_increment_factor
-                    mag, flux_array = mag_finite_single_image(source_model, kwargs_source, lens_model_fixed,
-                                                              lens_model_free, kwargs_lens_fixed,
+                    mag, flux_array = mag_finite_single_image(source_model, kwargs_source, lens_model_fixed_batch,
+                                                              lens_model_free, kwargs_lens_fixed_batch,
                                                               kwargs_lens_free, kwargs_lens, z_split, z_source,
                                                               cosmo_bkg, x_img, y_img, grid_x_large, grid_y_large,
-                                                              grid_r, r_step, grid_resolution_list[j], grid_size_list[j],
+                                                              grid_r, r_step, grid_resolution_list[j],
+                                                              grid_size_list[j],
                                                               z_split, z_source)
-                    tiling = None # don't return tiling if we use the fallback
+                    tiling = None  # don't return tiling if we use the fallback
 
             magnifications.append(mag)
             if tiling is not None:
@@ -422,18 +427,19 @@ def adaptive_quadtree_magnification(
 
 
 def rasterize_leaves(leaves, box_size, npix):
-    """Paint the accepted quadtree leaf cells as constant blocks onto a uniform
-    (npix, npix) surface-brightness image. Pixels are assigned by their centers, so
-    adjacent leaves abut exactly with no seams (fixes the 1-px dark cross at the box
-    center). Display only; the magnification comes from the leaf estimates, not this."""
+    """Paint accepted quadtree leaves onto an (npix, npix) image. Leaf edges are
+    rounded to pixel boundaries so adjacent leaves share the same integer edge --
+    no fp cracks at cell seams (the box center is a seam at every level)."""
     lcx, lcy, lh, lsb = leaves
     img = np.zeros((npix, npix))
     px = box_size / npix
-    xc = (np.arange(npix) + 0.5) * px - box_size / 2.0   # pixel-center coordinates
+    half_box = box_size / 2.0
     for k in range(len(lcx)):
-        i0, i1 = np.searchsorted(xc, [lcx[k] - lh[k], lcx[k] + lh[k]])  # cols whose centers ∈ cell
-        j0, j1 = np.searchsorted(xc, [lcy[k] - lh[k], lcy[k] + lh[k]])  # rows (y)
-        img[j0:j1, i0:i1] = lsb[k]                        # row = y (j), col = x (i)
+        i0 = max(int(round((lcx[k] - lh[k] + half_box) / px)), 0)
+        i1 = min(int(round((lcx[k] + lh[k] + half_box) / px)), npix)
+        j0 = max(int(round((lcy[k] - lh[k] + half_box) / px)), 0)
+        j1 = min(int(round((lcy[k] + lh[k] + half_box) / px)), npix)
+        img[j0:j1, i0:i1] = lsb[k]
     return img
 
 
@@ -504,8 +510,8 @@ def mag_finite_single_image_adaptive(
               'n_calls': n_calls, 'n_points': n_pts}
     return mag, flux_array, tiling
 
-def plot_tiled_image(flux_array, tiling, ax=None, cmap='inferno', show_cells=True,
-               cell_color='white', cell_lw=0.3, cell_alpha=0.35,
+def plot_tiled_image(flux_array, tiling, ax=None, cmap='inferno',
+                     show_cells=False, cell_color='white', cell_lw=0.3, cell_alpha=0.35,
                show_aperture=True, log=False):
     """Show the finite-source image with the adaptive quadtree cell boundaries and the
     aperture (circle or ellipse) overlaid.

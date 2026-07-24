@@ -427,7 +427,7 @@ def forward_model_single_iteration(data_class,
 
     # generate a macromodel that satisfies the lens equation for the perturbed image positions
     astropy_cosmo = dark_matter_model_class.astropy_cosmo
-    kwargs_model_align, _, kwargs_lens_macro_init, _, _ = model_class.setup_kwargs_model(
+    kwargs_model_align, _, kwargs_lens_macro_init, _, _, _ = model_class.setup_kwargs_model(
         decoupled_multiplane=False,
         kwargs_lens_macro_init=None,
         macromodel_samples_fixed=macromodel_samples_fixed_dict,
@@ -485,7 +485,8 @@ def forward_model_single_iteration(data_class,
     else:
         decoupled_multiplane_grid_type = 'POINT'
 
-    kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split, setup_decoupled_multiplane_lens_model_output = (
+    (kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split,
+     setup_decoupled_multiplane_lens_model_output, setup_output_batch) = (
         model_class.setup_kwargs_model(
             decoupled_multiplane=use_decoupled_multiplane_approximation,
             lens_model_list_halos=lens_model_list_halos,
@@ -498,35 +499,31 @@ def forward_model_single_iteration(data_class,
             astropy_cosmo=astropy_cosmo,
             use_JAXstronomy=False,
             decoupled_multiplane_grid_type=decoupled_multiplane_grid_type,
-            scale_window_size=scale_window_size_decoupled_multiplane
+            scale_window_size=scale_window_size_decoupled_multiplane,
+            batch_lens_model=batch_lens_model
         ))
+    setup_decoupled_multiplane_lens_model_output_batch = (
+        setup_output_batch if batch_lens_model
+        else setup_decoupled_multiplane_lens_model_output)
+
     if batch_lens_model:
         from samana.forward_model_util import batch_lens_profiles
-        lens_model_list_halos_batch, redshift_list_halos_batch, kwargs_halos_batch = batch_lens_profiles(
-            lens_model_list_halos, redshift_list_halos, kwargs_halos,
+        b_names_init, b_z_init, kwargs_lens_init_batch = batch_lens_profiles(
+            lens_model_init.lens_model_list,
+            list(lens_model_init.redshift_list),
+            kwargs_lens_init,
             profiles_to_batch={'CORE_COLLAPSED_HALO', 'TNFW', 'TNFWC', 'NFW'},
             min_group=4)
-        (kwargs_model_batch, lens_model_init_batch, kwargs_lens_init_batch, _,
-         setup_decoupled_multiplane_lens_model_output_batch) = (
-            model_class.setup_kwargs_model(
-                decoupled_multiplane=use_decoupled_multiplane_approximation,
-                lens_model_list_halos=lens_model_list_halos_batch,
-                kwargs_lens_macro_init=kwargs_lens_macro_init,
-                grid_resolution=grid_resolution_image_data,
-                redshift_list_halos=list(redshift_list_halos_batch),
-                kwargs_halos=kwargs_halos_batch,
-                verbose=verbose,
-                macromodel_samples_fixed=macromodel_samples_fixed_dict,
-                astropy_cosmo=astropy_cosmo,
-                use_JAXstronomy=False,
-                decoupled_multiplane_grid_type=decoupled_multiplane_grid_type,
-                scale_window_size=scale_window_size_decoupled_multiplane
-            ))
+        lens_model_init_batch = LensModel(b_names_init,
+                                          lens_redshift_list=list(b_z_init),
+                                          cosmo=astropy_cosmo,
+                                          z_source=data_class.z_source,
+                                          multi_plane=True)
+        assert b_names_init[:len(index_lens_split)] == list(lens_model_init.lens_model_list[:len(index_lens_split)]), \
+            'macro deflector was swept into a halo batch'
     else:
-        (kwargs_model_batch, lens_model_init_batch, kwargs_lens_init_batch,
-         setup_decoupled_multiplane_lens_model_output_batch) = \
-            (kwargs_model, lens_model_init, kwargs_lens_init,
-             setup_decoupled_multiplane_lens_model_output)
+        lens_model_init_batch = lens_model_init
+        kwargs_lens_init_batch = kwargs_lens_init
 
     if 'q' in param_names_macro_fixed and use_imaging_data:
         model_class.set_fixed_q(macromodel_samples_fixed_dict['q'])
@@ -882,7 +879,8 @@ def forward_model_single_iteration(data_class,
                              'kwargs_params': kwargs_result}
     else:
         if image_data_grids_computed is False and test_mode:
-            kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split, setup_decoupled_multiplane_lens_model_output = (
+            (kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split,
+             setup_decoupled_multiplane_lens_model_output, _) = (
                 model_class.setup_kwargs_model(
                     decoupled_multiplane=use_decoupled_multiplane_approximation,
                     lens_model_list_halos=lens_model_list_halos,

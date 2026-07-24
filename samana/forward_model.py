@@ -584,7 +584,7 @@ def forward_model_single_iteration(data_class, model, preset_model_name, kwargs_
 
     astropy_cosmo = realization_init.lens_cosmo.cosmo.astropy
     # generate a macromodel that satisfies the lens equation for the perturbed image positions
-    kwargs_model_align, _, kwargs_lens_macro_init, _, _ = model_class.setup_kwargs_model(
+    kwargs_model_align, _, kwargs_lens_macro_init, _, _, _ = model_class.setup_kwargs_model(
         decoupled_multiplane=False,
         kwargs_lens_macro_init=None,
         macromodel_samples_fixed=macromodel_samples_fixed_dict,

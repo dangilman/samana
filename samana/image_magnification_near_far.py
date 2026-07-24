@@ -39,6 +39,19 @@ from samana.image_magnification_util import (adaptive_quadtree_magnification,
                                              rasterize_leaves)
 
 
+_LENS_MODEL_CACHE = {}
+_LM_HESSIAN = LensModel(['HESSIAN'])
+
+def _cached_lens_model(names):
+    key = tuple(names)
+    lm = _LENS_MODEL_CACHE.get(key)
+    if lm is None:
+        if len(_LENS_MODEL_CACHE) > 5000:   # crude bound for long production runs
+            _LENS_MODEL_CACHE.clear()
+        lm = LensModel(list(names))
+        _LENS_MODEL_CACHE[key] = lm
+    return lm
+
 def distortion_field_at_lens_plane(x_co, y_co, x_center_at_plane, y_center_at_plane,
                                    T_z, lens_model_exact, lens_model_far,
                                    kwargs_lens_exact, kwargs_lens_far, kappa_near=0.0,
@@ -99,7 +112,7 @@ def distortion_field_at_lens_plane(x_co, y_co, x_center_at_plane, y_center_at_pl
     return ax, ay
 
 def precompute_plane_splits(ray_angle_interp_x, ray_angle_interp_y, lens_model_fixed,
-                            kwargs_lens_fixed, redshift_planes, cosmo_bkg, R_max):
+                            kwargs_lens_fixed, redshift_planes, cosmo_bkg, R_max, z_source):
     """Precompute the per-plane near/far split ONCE for an image (it depends only on the
     fixed central ray, not on the annulus grid points, so it is identical for every
     annulus). Reuse the result across annuli to avoid re-splitting the halos and
@@ -113,10 +126,13 @@ def precompute_plane_splits(ray_angle_interp_x, ray_angle_interp_y, lens_model_f
     :param redshift_planes: sorted list of lens-plane redshifts to traverse
     :param cosmo_bkg: lenstronomy Background
     :param R_max: near/far split radius (scalar or per-halo array; see lens_models_at_z)
+    :param z_source: source redshift
     :return: list of per-plane dicts with keys zi, T_z, x_center, y_center, lm_exact,
         kw_exact, lm_far, kw_far, kappa_near
     """
     splits = []
+    d0s = cosmo_bkg.d_xy(0, z_source)
+    z_prev = 0.0
     for zi in redshift_planes:
         T_z = cosmo_bkg.T_xy(0, zi)
         x_center = float(ray_angle_interp_x(T_z))
@@ -125,7 +141,9 @@ def precompute_plane_splits(ray_angle_interp_x, ray_angle_interp_y, lens_model_f
             zi, lens_model_fixed, kwargs_lens_fixed, x_center, y_center, R_max)
         splits.append({'zi': zi, 'T_z': T_z, 'x_center': x_center, 'y_center': y_center,
                        'lm_exact': lm_e, 'kw_exact': kw_e, 'lm_far': lm_f, 'kw_far': kw_f,
-                       'kappa_near': kn})
+                       'kappa_near': kn, 'delta_T': cosmo_bkg.T_xy(z_prev, zi),
+                       'factor': d0s / cosmo_bkg.d_xy(zi, z_source)})
+        z_prev = zi
     return splits
 
 def lens_models_at_z(z, lens_model_fixed, kwargs_lens_fixed,
@@ -191,7 +209,7 @@ def lens_models_at_z(z, lens_model_fixed, kwargs_lens_fixed,
         else:
             far_idx.append(i)
 
-    lens_model_exact = LensModel(near_names)
+    lens_model_exact = _cached_lens_model(near_names)
     kwargs_lens_exact = near_kw
 
     kappa_near = 0.0
@@ -203,14 +221,14 @@ def lens_models_at_z(z, lens_model_fixed, kwargs_lens_fixed,
         far_names_in = [names[i] for i in far_idx]
         far_kw_in = [kwargs_lens_fixed[i] for i in far_idx]
         far_z = [0.0] * len(far_idx)  # single plane; z unused by the hessian
-        to_batch = set(far_names_in) - {'CONVERGENCE', 'PJAFFE', 'SPL_CORE'}  # don't batch mass sheets or GCs
+        to_batch = set(far_names_in) - {'CONVERGENCE'}  # don't batch mass sheets or GCs
         b_names, _, b_kw = batch_lens_profiles(far_names_in, far_z, far_kw_in,
                                                profiles_to_batch=to_batch, min_group=4)
-        lm_far_full = LensModel(b_names)
+        lm_far_full = _cached_lens_model(b_names)
         fxx, fxy, fyx, fyy = lm_far_full.hessian(x_center_at_plane, y_center_at_plane, b_kw)
     else:
         fxx = fxy = fyx = fyy = 0.0
-    lens_model_far = LensModel(['HESSIAN'])
+    lens_model_far = _LM_HESSIAN
     kwargs_lens_far = [{'f_xx': float(fxx), 'f_xy': float(fxy),
                         'f_yx': float(fyx), 'f_yy': float(fyy),
                         'ra_0': x_center_at_plane, 'dec_0': y_center_at_plane}]
@@ -252,7 +270,6 @@ def accumulate_distortions(ray_angle_interp_x, ray_angle_interp_y,
         relative to the central ray
     """
 
-    d0s = cosmo_bkg.d_xy(0, z_source)
     # grid rays start at the observer: comoving position 0, angle = grid offset
     x_co = np.zeros_like(x_grid, dtype=float)
     y_co = np.zeros_like(y_grid, dtype=float)
@@ -260,7 +277,8 @@ def accumulate_distortions(ray_angle_interp_x, ray_angle_interp_y,
     alpha_y = np.array(y_grid, dtype=float)
     if plane_splits is None:
         plane_splits = precompute_plane_splits(ray_angle_interp_x, ray_angle_interp_y,
-                                               lens_model_fixed, kwargs_lens_fixed, redshift_planes, cosmo_bkg, R_max)
+                                               lens_model_fixed, kwargs_lens_fixed,
+                                               redshift_planes, cosmo_bkg, R_max, z_source)
     z_prev = 0.0
     for sp in plane_splits:
         zi = sp['zi'];
@@ -268,9 +286,8 @@ def accumulate_distortions(ray_angle_interp_x, ray_angle_interp_y,
         x_center = sp['x_center'];
         y_center = sp['y_center']
         # step from the previous plane to this one (comoving)
-        delta_T = cosmo_bkg.T_xy(z_prev, zi)
-        x_co = x_co + alpha_x * delta_T
-        y_co = y_co + alpha_y * delta_T
+        x_co = x_co + alpha_x * sp['delta_T']
+        y_co = y_co + alpha_y * sp['delta_T']
 
         # per-plane distortion deflection (REDUCED) from the cached near/far split
         d_ax, d_ay = distortion_field_at_lens_plane(
@@ -279,9 +296,8 @@ def accumulate_distortions(ray_angle_interp_x, ray_angle_interp_y,
             kappa_near=sp['kappa_near'])
 
         # fixed-halo distortion: reduced -> physical for this plane, then subtract
-        factor = d0s / cosmo_bkg.d_xy(zi, z_source)
-        alpha_x = alpha_x - d_ax * factor
-        alpha_y = alpha_y - d_ay * factor
+        alpha_x = alpha_x - d_ax * sp['factor']
+        alpha_y = alpha_y - d_ay * sp['factor']
 
         # main (free/macro) deflector at the split plane -- applied as a differential
         # (relative to the central ray) with the free model's own reduced->physical
@@ -441,7 +457,10 @@ def mag_finite_single_image_distortion_adaptive(
         kwargs_lens, z_split, z_source, cosmo_bkg, x_image, y_image,
         grid_resolution, grid_size_max, R_max, ray_interp_x, ray_interp_y,
         kwargs_lens_free, n_coarse=20, rel_tol=1e-3, flux_floor_frac=1e-3,
-        rotation_angle=None, hessian_eigenvalue=None):
+        rotation_angle=None, hessian_eigenvalue=None,
+        lens_model_fixed_batched=None,
+        kwargs_lens_fixed_batched=None
+):
     """Adaptive-tiling version of mag_finite_single_image_distortion"""
 
     rix = _as_interp(ray_interp_x); riy = _as_interp(ray_interp_y)
@@ -452,7 +471,7 @@ def mag_finite_single_image_distortion_adaptive(
 
     beta_center = (kwargs_source[0]['center_x'], kwargs_source[0]['center_y'])
     plane_splits = precompute_plane_splits(rix, riy, lens_model_fixed, kwargs_lens_fixed,
-                                           redshift_planes, cosmo_bkg, R_max)
+                                           redshift_planes, cosmo_bkg, R_max, z_source)
 
     def ray_shoot(thx, thy):
         ox = np.atleast_1d(thx) - x_image
@@ -481,9 +500,12 @@ def mag_finite_single_image_distortion_adaptive(
               'rotation_angle': rotation_angle, 'hessian_eigenvalue': hessian_eigenvalue,
               'n_calls': n_calls, 'n_points': n_pts}
 
+    lm_exact = lens_model_fixed_batched if lens_model_fixed_batched is not None else lens_model_fixed
+    kw_exact = kwargs_lens_fixed_batched if kwargs_lens_fixed_batched is not None else kwargs_lens_fixed
     mu_point = exact_point_source_magnification(
-        lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
+        lm_exact, lens_model_free, kw_exact, kwargs_lens_free, kwargs_lens,
         z_split, z_source, cosmo_bkg, x_image, y_image, eps=grid_resolution)
+
     mu_discrepancy = abs(mag - mu_point) / mu_point if mu_point > 0 else np.inf
 
     return mag, flux_array, tiling, mu_discrepancy
@@ -494,7 +516,10 @@ def mag_finite_single_image_distortion(
         kwargs_lens, z_split, z_source,
         cosmo_bkg, grid_x_large, grid_y_large,
         grid_r, r_step, grid_resolution, grid_size_max,
-        R_max, ray_interp_x, ray_interp_y, x_image, y_image, kwargs_lens_free, verbose=False):
+        R_max, ray_interp_x, ray_interp_y, x_image, y_image, kwargs_lens_free,
+        lens_model_fixed_batched=None,
+        kwargs_lens_fixed_batched=None,
+        verbose=False):
     """Finite-source magnification of a single image via the near/far distortion field
 
     :param source_model: a lenstronomy LightModel for the source
@@ -542,7 +567,7 @@ def mag_finite_single_image_distortion(
     inds_compute = np.array([])
     flux_total = 0.0
     central_ray['plane_splits'] = precompute_plane_splits(
-        rix, riy, lens_model_fixed, kwargs_lens_fixed, redshift_planes, cosmo_bkg, R_max)
+        rix, riy, lens_model_fixed, kwargs_lens_fixed, redshift_planes, cosmo_bkg, R_max, z_source)
 
     while True:
         beta_x_new, beta_y_new, inds_new, _ = distortion_multiplane_rayshooting(
@@ -567,8 +592,10 @@ def mag_finite_single_image_distortion(
         else:
             magnification_last = magnification_temp
 
+    lm_exact = lens_model_fixed_batched if lens_model_fixed_batched is not None else lens_model_fixed
+    kw_exact = kwargs_lens_fixed_batched if kwargs_lens_fixed_batched is not None else kwargs_lens_fixed
     mu_point = exact_point_source_magnification(
-        lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free, kwargs_lens,
+        lm_exact, lens_model_free, kw_exact, kwargs_lens_free, kwargs_lens,
         z_split, z_source, cosmo_bkg, x_image, y_image, eps=grid_resolution)
     mu_discrepancy = abs(magnification_temp - mu_point) / mu_point if mu_point > 0 else np.inf
     return magnification_temp, flux_array, mu_discrepancy
