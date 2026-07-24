@@ -4,7 +4,6 @@ from lenstronomy.LensModel.lens_model import LensModel
 from lenstronomy.Workflow.fitting_sequence import FittingSequence
 from lenstronomy.Util.class_creator import create_im_sim
 from lenstronomy.LensModel.QuadOptimizer.optimizer import Optimizer
-from samana.forward_model_util import sample_globular_cluster_params
 from samana.param_managers import auto_param_class
 from scipy.stats import multivariate_normal
 from copy import deepcopy
@@ -416,14 +415,6 @@ def forward_model_single_iteration(data_class,
     realization_dict, realization_samples, realization_param_names = sample_prior(kwargs_sample_realization)
     source_dict, source_samples, source_param_names = sample_prior(kwargs_sample_source)
     macromodel_samples_fixed_dict, samples_macromodel_fixed, param_names_macro_fixed = sample_prior(kwargs_sample_macro_fixed)
-    if verbose:
-        print('random seed: ', seed)
-        print('SOURCE PARAMETERS: ')
-        print(source_dict)
-        print('REALIZATION PARAMETERS: ')
-        print(realization_dict)
-        print('FIXED MACROMODEL SAMPLES: ')
-        print(macromodel_samples_fixed_dict)
 
     # generate a macromodel that satisfies the lens equation for the perturbed image positions
     astropy_cosmo = dark_matter_model_class.astropy_cosmo
@@ -458,6 +449,14 @@ def forward_model_single_iteration(data_class,
                                                                     astropy_cosmo)
     # perform cuts on halo mass, position, etc, as specified in the class.
     # also return the keyword parameters for the mass sheets, which might depend on these cuts
+    if verbose:
+        print('random seed: ', seed)
+        print('SOURCE PARAMETERS: ')
+        print(source_dict)
+        print('REALIZATION PARAMETERS: ')
+        print(realization_dict)
+        print('FIXED MACROMODEL SAMPLES: ')
+        print(macromodel_samples_fixed_dict)
     realization, kwargs_mass_sheet_correction = dark_matter_model_class.process_halos(
         data_class.x_image,
         data_class.y_image,
@@ -512,7 +511,7 @@ def forward_model_single_iteration(data_class,
             lens_model_init.lens_model_list,
             list(lens_model_init.redshift_list),
             kwargs_lens_init,
-            profiles_to_batch={'CORE_COLLAPSED_HALO', 'TNFW', 'TNFWC', 'NFW', 'SPL_CORE'},
+            profiles_to_batch={'CORE_COLLAPSED_HALO', 'TNFW', 'TNFWC', 'NFW', 'KING'},
             min_group=4)
         lens_model_init_batch = LensModel(b_names_init,
                                           lens_redshift_list=list(b_z_init),
@@ -919,7 +918,7 @@ def forward_model_single_iteration(data_class,
             fig = plt.figure()
             ax = plt.subplot(111)
             if isinstance(image, list):  # adaptive: [flux_array, tiling]
-                plot_tiled_image(*image, ax=ax)  # (or however plot_image takes an axis)
+                plot_tiled_image(*image, ax=ax, show_cells=True)
             else:  # circular / elliptical / near-far: npix x npix grid
                 ax.imshow(image, origin='lower')
             ax.annotate('magnification: ' + str(np.round(mag, 2)), xy=(0.3, 0.9),

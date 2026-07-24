@@ -14,6 +14,7 @@ def sample_globular_cluster_params(kwargs_globular_cluster, verbose=False):
     kwargs_globular_cluster_out = {}
     sample_list = []
     sample_names = []
+    sampled_log10 = False
     for key in kwargs_globular_cluster.keys():
         if isinstance(kwargs_globular_cluster[key], list):
             prior_type = kwargs_globular_cluster[key][0]
@@ -27,6 +28,7 @@ def sample_globular_cluster_params(kwargs_globular_cluster, verbose=False):
                 param_mean, param_sigma = kwargs_globular_cluster[key][1], kwargs_globular_cluster[key][2]
                 sample = np.random.uniform(param_mean, param_sigma)
                 if key == 'log10_gc_surface_mass_density':
+                    sampled_log10 = True
                     kwargs_globular_cluster_out['gc_surface_mass_density'] = 10**sample
                 else:
                     kwargs_globular_cluster_out[key] = sample
@@ -38,7 +40,15 @@ def sample_globular_cluster_params(kwargs_globular_cluster, verbose=False):
         else:
             kwargs_globular_cluster_out[key] = kwargs_globular_cluster[key]
     if verbose:
-        print('globular cluster keywords: ', kwargs_globular_cluster_out)
+        print('GLOBULAR CLUSTER PARAMETERS: ')
+        if sampled_log10:
+            kwargs_globular_cluster_print = deepcopy(kwargs_globular_cluster_out)
+            kwargs_globular_cluster_print['log10_gc_surface_mass_density'] = (
+                np.log10(kwargs_globular_cluster_out['gc_surface_mass_density']))
+            del kwargs_globular_cluster_print['gc_surface_mass_density']
+            print(kwargs_globular_cluster_print)
+        else:
+            print(kwargs_globular_cluster_out)
     return kwargs_globular_cluster_out, np.array(sample_list), sample_names
 
 class KwargsLensSampler(object):

@@ -536,7 +536,7 @@ class EPLModelBase(object):
             b_names, b_z, b_kw = batch_lens_profiles(
                 lens_model_fixed.lens_model_list, list(lens_model_fixed.redshift_list),
                 kwargs_lens_fixed,
-                profiles_to_batch={'CORE_COLLAPSED_HALO', 'TNFW', 'TNFWC', 'NFW', 'SPL_CORE'},
+                profiles_to_batch={'CORE_COLLAPSED_HALO', 'TNFW', 'TNFWC', 'NFW', 'KING'},
                 min_group=4)
             lens_model_fixed_batched = LensModel(b_names, lens_redshift_list=b_z,
                                                  cosmo=astropy_cosmo, z_source=self._data.z_source,
