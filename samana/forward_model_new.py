@@ -512,7 +512,7 @@ def forward_model_single_iteration(data_class,
             lens_model_init.lens_model_list,
             list(lens_model_init.redshift_list),
             kwargs_lens_init,
-            profiles_to_batch={'CORE_COLLAPSED_HALO', 'TNFW', 'TNFWC', 'NFW'},
+            profiles_to_batch={'CORE_COLLAPSED_HALO', 'TNFW', 'TNFWC', 'NFW', 'SPL_CORE'},
             min_group=4)
         lens_model_init_batch = LensModel(b_names_init,
                                           lens_redshift_list=list(b_z_init),
