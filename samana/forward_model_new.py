@@ -798,16 +798,18 @@ def forward_model_single_iteration(data_class,
                 reconstruct_image_data = False
         else:
             reconstruct_image_data = False
+
         if split_image_data_reconstruction and reconstruct_image_data:
             image_data_grids_computed = True
-            kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split, setup_decoupled_multiplane_lens_model_output = (
+            (kwargs_model, lens_model_init, kwargs_lens_init, index_lens_split,
+             setup_decoupled_multiplane_lens_model_output, _) = (
                 model_class.setup_kwargs_model(
                     decoupled_multiplane=use_decoupled_multiplane_approximation,
-                    lens_model_list_halos=lens_model_list_halos_batch,
+                    lens_model_list_halos=lens_model_list_halos,
                     kwargs_lens_macro_init=kwargs_lens_macro_init,
                     grid_resolution=grid_resolution_image_data,
-                    redshift_list_halos=list(redshift_list_halos_batch),
-                    kwargs_halos=kwargs_halos_batch,
+                    redshift_list_halos=list(redshift_list_halos),
+                    kwargs_halos=kwargs_halos,
                     verbose=verbose,
                     macromodel_samples_fixed=macromodel_samples_fixed_dict,
                     astropy_cosmo=astropy_cosmo,
@@ -815,7 +817,8 @@ def forward_model_single_iteration(data_class,
                     y_image=data_class.y_image,
                     use_JAXstronomy=False,
                     decoupled_multiplane_grid_type='GRID',
-                    scale_window_size=scale_window_size_decoupled_multiplane
+                    scale_window_size=scale_window_size_decoupled_multiplane,
+                    batch_lens_model=batch_lens_model
                 ))
             kwargs_params = model_class.kwargs_params(kwargs_lens_macro_init=kwargs_solution,
                                                       delta_x_image=-delta_x_image,
@@ -893,7 +896,9 @@ def forward_model_single_iteration(data_class,
                     x_image=data_class.x_image,
                     y_image=data_class.y_image,
                     use_JAXstronomy=False,
-                    decoupled_multiplane_grid_type='GRID'
+                    decoupled_multiplane_grid_type='GRID',
+                    scale_window_size=scale_window_size_decoupled_multiplane,
+                    batch_lens_model=batch_lens_model
                 ))
         fitting_sequence = FittingSequence(data_class.kwargs_data_joint,
                                            kwargs_model,
