@@ -220,8 +220,8 @@ def numerics_setup(lens_ID):
         rescale_grid_res = 1.5
         rescale_grid_size = 2.0
     elif lens_ID == 'J2145':
-        rescale_grid_res = 1.5
-        rescale_grid_size = 4.0
+        rescale_grid_res = 1.4
+        rescale_grid_size = [3.5, 3.5, 1.7, 1.7]
     elif lens_ID == 'H1113':
         rescale_grid_res = 1.5
         rescale_grid_size = 1.
@@ -404,7 +404,7 @@ def quick_setup(lens_ID, use_qgrad=False):
         if use_qgrad:
             from samana.Model.j2205_model import J2205ModelEPLM3M4Shear_Qgrad as model_class
         else:
-            from samana.Model.j2205_model import J2205ModelEPLM3M4Shear_Qgrad as model_class
+            from samana.Model.j2205_model import J2205ModelEPLM3M4Shear_NIRCam as model_class
     elif lens_ID == 'J2205':
         from samana.Data.j2205 import J2205_HST as data_class
         if use_qgrad:
