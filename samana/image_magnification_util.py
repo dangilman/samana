@@ -133,6 +133,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                 flux_floor_frac=1e-4)
             magnifications.append(mag)
             flux_arrays.append([flux_array, tiling])
+            mu_discrepancy = None
 
         elif magnification_method in ['CIRCULAR_APERTURE', 'ELLIPTICAL_APERTURE']:
             if magnification_method == 'ELLIPTICAL_APERTURE':
@@ -153,6 +154,8 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
             )
             magnifications.append(mag)
             flux_arrays.append(flux_array.reshape(npix_large, npix_large))
+            mu_discrepancy = None
+
         elif magnification_method in ['NEAR_FAR_SPLITTING', 'NEAR_FAR_SPLITTING_ADAPTIVE']:
 
             from samana.image_magnification_near_far import (mag_finite_single_image_distortion,
@@ -243,8 +246,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
             raise Exception('magnification_method must be either CIRCULAR_APERTURE, ELLIPTICAL_APERTURE, or ADAPTIVE. '
                             'You specified magnification_method '+str(magnification_method))
 
-    return np.array(magnifications), flux_arrays
-
+    return np.array(magnifications), flux_arrays, mu_discrepancy
 
 """
 Edge-refining breadth-first quadtree finite-source magnification.

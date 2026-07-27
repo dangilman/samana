@@ -19,92 +19,62 @@ def _read_header(path):
 
 
 def output_to_hdf5(output_path, job_name, job_index_min, job_index_max, write_path,
-                   print_missing_files=False, S_max=np.inf, print_progress=False,
-                   return_arrays=False, use_cache=False):
-    """Signature-compatible with the original."""
+                   print_missing_files=False, S_max=np.inf, print_progress=False):
     base = os.path.join(output_path, job_name, '')
-    params_list, fluxes_list, macro_list = [], [], []
-    param_names = None
-    macromodel_sample_names = None
+    os.makedirs(write_path, exist_ok=True)
+    out_file = os.path.join(write_path, job_name + '_output.hdf5')
 
-    for i in range(job_index_min, job_index_max + 1):
-        if print_progress and i % 500 == 0:
-            print('  working on output folder ' + str(i) + '... ')
-        folder = base + 'job_' + str(i) + '/'
+    dsets, n_total, n_folders = {}, 0, 0
 
-        cache_file = folder + 'compiled_cache.npz'
-        cached = None
-        if use_cache and os.path.exists(cache_file):
-            try:
-                with np.load(cache_file) as d:
-                    cached = (d['p'], d['f'], d['m'])
-            except Exception:
-                cached = None  # corrupt cache -> re-read below
-
-        if cached is not None:
-            params, fluxes, macro = cached
-        else:
+    with h5py.File(out_file, 'w') as h:
+        for i in range(job_index_min, job_index_max + 1):
+            if print_progress and i % 500 == 0:
+                print('  working on output folder ' + str(i) + '... ')
+            folder = base + 'job_' + str(i) + '/'
             try:
                 params = _read_table(folder + 'parameters.txt', 1)
                 fluxes = _read_table(folder + 'fluxes.txt', 0)
-                macro = _read_table(folder + 'macromodel_samples.txt', 1)
+                macro  = _read_table(folder + 'macromodel_samples.txt', 1)
             except Exception as e:
                 if print_missing_files:
                     print('skipping ' + folder + ': ' + str(e))
                 continue
 
             n = params.shape[0]
-            if fluxes.shape[0] != n:
-                print('parameters and fluxes have different shape for ' + folder)
-                continue
-            if macro.shape[0] != n:
-                print('parameters and macromodel samples have different shape for ' + folder)
+            if fluxes.shape[0] != n or macro.shape[0] != n:
+                print('shape mismatch for ' + folder)
                 continue
 
-            # apply the summary-statistic cut before accumulating
             if np.isfinite(S_max):
                 keep = params[:, -4] < S_max
                 if not keep.any():
                     continue
                 params, fluxes, macro = params[keep], fluxes[keep], macro[keep]
+                n = params.shape[0]
 
-            if use_cache:
-                try:
-                    np.savez_compressed(cache_file, p=params, f=fluxes, m=macro)
-                except Exception:
-                    pass  # read-only scratch, quota, etc. -- not fatal
+            items = (('parameters', params),
+                     ('magnifications', fluxes),
+                     ('macromodel_samples', macro))
 
-        if param_names is None:
-            param_names = _read_header(folder + 'parameters.txt')
-            macromodel_sample_names = _read_header(folder + 'macromodel_samples.txt')
+            if not dsets:
+                for name, arr in items:
+                    dsets[name] = h.create_dataset(
+                        name, shape=(0, arr.shape[1]), maxshape=(None, arr.shape[1]),
+                        dtype=arr.dtype, chunks=(4096, arr.shape[1]))
+                h.create_dataset('param_names',
+                                 data=_read_header(folder + 'parameters.txt'), dtype='S30')
+                h.create_dataset('macromodel_sample_names',
+                                 data=_read_header(folder + 'macromodel_samples.txt'), dtype='S30')
 
-        params_list.append(params)
-        fluxes_list.append(fluxes)
-        macro_list.append(macro)
+            for name, arr in items:
+                d = dsets[name]
+                d.resize(d.shape[0] + n, axis=0)
+                d[-n:] = arr
 
-    if not params_list:
-        print('WARNING: no output found for ' + job_name + ' -- skipping')
-        return None
+            n_total += n
+            n_folders += 1
 
-    # single allocation instead of thousands of vstacks
-    parameters = np.concatenate(params_list, axis=0)
-    magnifications = np.concatenate(fluxes_list, axis=0)
-    macromodel_samples = np.concatenate(macro_list, axis=0)
-
-    if return_arrays:
-        return (parameters, magnifications, macromodel_samples,
-                param_names, macromodel_sample_names)
-
-    print('compiled ' + str(parameters.shape[0]) + ' realizations from '
-          + str(len(params_list)) + ' folders')
-    os.makedirs(write_path, exist_ok=True)
-    with h5py.File(os.path.join(write_path, job_name + '_output.hdf5'), 'w') as h:
-        h.create_dataset('parameters', data=parameters)
-        h.create_dataset('magnifications', data=magnifications)
-        h.create_dataset('macromodel_samples', data=macromodel_samples)
-        h.create_dataset('param_names', data=param_names, dtype='S30')
-        h.create_dataset('macromodel_sample_names', data=macromodel_sample_names,
-                         dtype='S30')
+    print('compiled ' + str(n_total) + ' realizations from ' + str(n_folders) + ' folders')
 
 class Output(object):
 

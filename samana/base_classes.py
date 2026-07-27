@@ -102,6 +102,11 @@ class SingleGaussianMagnification(object):
         self.hessian_eigenvalue_list = hessian_eigenvalue_list
         self.fallback = fallback
         self.mu_tolerance = mu_tolerance
+        self._mu_discrepancy = 0.0
+
+    @property
+    def mu_discrepancy(self):
+        return self._mu_discrepancy
 
     def grid_resolution(self, source_size):
         return self.rescale_grid_resolution * source_size
@@ -138,7 +143,7 @@ class SingleGaussianMagnification(object):
         grid_size_list = self.grid_size_list(source_dict['source_size_pc'])
         # we pass in setup_decoupled_multiplane_lens_model_output, the decoupled multiplane parameters
         # computed for the proposed macromodel in setup_kwargs_model
-        magnifications, images = model_class.image_magnification_gaussian(source_model_quasar,
+        magnifications, images, mu_discrepancy = model_class.image_magnification_gaussian(source_model_quasar,
                                                                               kwargs_source,
                                                                               lens_model_init,
                                                                               kwargs_lens_init,
@@ -156,6 +161,8 @@ class SingleGaussianMagnification(object):
                                                                               fallback=self.fallback,
                                                                               mu_tolerance=self.mu_tolerance,
                                                                               verbose=verbose)
+        if self.magnification_method in ['NEAR_FAR_SPLITTING', 'NEAR_FAR_SPLITTING_ADAPTIVE']:
+            self._mu_discrepancy = mu_discrepancy
         flux_uncertainty = None
         stat, flux_ratios, flux_ratios_data = flux_ratio_summary_statistic(data_class.magnifications,
                                                                                magnifications,
