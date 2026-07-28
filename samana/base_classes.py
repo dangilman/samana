@@ -84,7 +84,7 @@ class SingleGaussianMagnification(object):
                  rotation_angle_list,
                  hessian_eigenvalue_list,
                  fallback='ELLIPTICAL_APERTURE',
-                 mu_tolerance=0.1):
+                 mu_tolerance=0.05):
         """
 
         :param astropy_cosmo:
