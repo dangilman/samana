@@ -102,11 +102,29 @@ class SingleGaussianMagnification(object):
         self.hessian_eigenvalue_list = hessian_eigenvalue_list
         self.fallback = fallback
         self.mu_tolerance = mu_tolerance
-        self._mu_discrepancy = 0.0
+        self._mu_discrepancy_list = None
+
+    @property
+    def mu_discrepancy_list(self):
+        """
+        The point-source magnification discrepancy of the near/far splitting approximation for each
+        image, or None if the last calculation did not use a near/far splitting method. These are
+        the values compared against mu_tolerance to decide whether to fall back on exact ray tracing.
+        """
+        return self._mu_discrepancy_list
 
     @property
     def mu_discrepancy(self):
-        return self._mu_discrepancy
+        """
+        The largest point-source magnification discrepancy across the images of the last
+        calculation. Returns 0 if the last calculation did not use a near/far splitting method.
+        """
+        if self._mu_discrepancy_list is None:
+            return 0.0
+        discrepancy = np.array(self._mu_discrepancy_list, dtype=float)
+        if np.all(np.isnan(discrepancy)):
+            return 0.0
+        return float(np.nanmax(discrepancy))
 
     def grid_resolution(self, source_size):
         return self.rescale_grid_resolution * source_size
@@ -162,7 +180,9 @@ class SingleGaussianMagnification(object):
                                                                               mu_tolerance=self.mu_tolerance,
                                                                               verbose=verbose)
         if self.magnification_method in ['NEAR_FAR_SPLITTING', 'NEAR_FAR_SPLITTING_ADAPTIVE']:
-            self._mu_discrepancy = mu_discrepancy
+            self._mu_discrepancy_list = mu_discrepancy
+        else:
+            self._mu_discrepancy_list = None
         flux_uncertainty = None
         stat, flux_ratios, flux_ratios_data = flux_ratio_summary_statistic(data_class.magnifications,
                                                                                magnifications,

@@ -51,10 +51,81 @@ from lenstronomy.LensModel.lens_model import LensModel
 from lenstronomy.LensModel.lens_model_extensions import LensModelExtensions
 
 __all__ = ['LensSimulationAnalysis', 'save_lens_model', 'prompt_save_lens_model',
-           'lens_model_spec_from_forward_model']
+           'lens_model_spec_from_forward_model', 'complementary_magnification_method',
+           'print_method_comparison']
 
 # bump this if the layout of the saved dictionary changes in a backwards-incompatible way
 FILE_FORMAT_VERSION = 1
+
+# magnification methods that ray trace the full deflection field, and the near/far splitting
+# approximations that each one is the natural comparison for
+EXACT_MAGNIFICATION_METHODS = ['CIRCULAR_APERTURE', 'ELLIPTICAL_APERTURE', 'ADAPTIVE']
+NEAR_FAR_MAGNIFICATION_METHODS = ['NEAR_FAR_SPLITTING', 'NEAR_FAR_SPLITTING_ADAPTIVE']
+_COMPLEMENTARY_METHOD = {'NEAR_FAR_SPLITTING': 'CIRCULAR_APERTURE',
+                         'NEAR_FAR_SPLITTING_ADAPTIVE': 'ADAPTIVE',
+                         'CIRCULAR_APERTURE': 'NEAR_FAR_SPLITTING',
+                         'ELLIPTICAL_APERTURE': 'NEAR_FAR_SPLITTING',
+                         'ADAPTIVE': 'NEAR_FAR_SPLITTING_ADAPTIVE'}
+
+
+def complementary_magnification_method(magnification_method):
+    """
+    The method to compare a given magnification method against: exact ray tracing for the near/far
+    splitting approximations, and the matching near/far approximation for the exact methods.
+
+    :param magnification_method: the name of a magnification method
+    :return: the name of the complementary method
+    """
+    if magnification_method not in _COMPLEMENTARY_METHOD:
+        raise Exception('no complementary method is defined for ' + str(magnification_method) +
+                        '; known methods are ' +
+                        str(EXACT_MAGNIFICATION_METHODS + NEAR_FAR_MAGNIFICATION_METHODS))
+    return _COMPLEMENTARY_METHOD[magnification_method]
+
+
+def print_method_comparison(comparison):
+    """
+    Print a side by side table of the magnifications and flux ratios produced by two magnification
+    methods, along with the point-source discrepancy reported by the near/far routines.
+
+    :param comparison: the dictionary returned by LensSimulationAnalysis.compare_to_exact_ray_tracing
+    """
+    method_run = comparison['method_run']
+    method_comparison = comparison['method_comparison']
+    magnifications_run = np.atleast_1d(comparison['magnifications_run'])
+    magnifications_comparison = np.atleast_1d(comparison['magnifications_comparison'])
+    difference = np.atleast_1d(comparison['magnification_fractional_difference'])
+    mu_discrepancy = comparison.get('mu_discrepancy', None)
+    image_labels = ['A', 'B', 'C', 'D', 'E', 'F']
+
+    print('\nmagnifications')
+    header = '  image   ' + method_run.ljust(24) + method_comparison.ljust(24) + 'difference'
+    if mu_discrepancy is not None and not np.all(np.isnan(np.atleast_1d(mu_discrepancy))):
+        header += '   point-source check'
+    print(header)
+    for index in range(0, len(magnifications_run)):
+        label = image_labels[index] if index < len(image_labels) else str(index)
+        row = '  ' + label.ljust(8) + str(np.round(magnifications_run[index], 4)).ljust(24) + \
+              str(np.round(magnifications_comparison[index], 4)).ljust(24) + \
+              str(np.round(100 * difference[index], 2)) + '%'
+        if mu_discrepancy is not None and not np.all(np.isnan(np.atleast_1d(mu_discrepancy))):
+            value = np.atleast_1d(mu_discrepancy)[index]
+            row = row.ljust(70) + ('' if np.isnan(value) else str(np.round(100 * value, 2)) + '%')
+        print(row)
+
+    if comparison['flux_ratios_run'] is not None:
+        flux_ratios_run = np.atleast_1d(comparison['flux_ratios_run'])
+        flux_ratios_comparison = np.atleast_1d(comparison['flux_ratios_comparison'])
+        flux_ratio_difference = np.atleast_1d(comparison['flux_ratio_fractional_difference'])
+        print('flux ratios')
+        print('  ratio   ' + method_run.ljust(24) + method_comparison.ljust(24) + 'difference')
+        for index in range(0, len(flux_ratios_run)):
+            label = (image_labels[index + 1] if index + 1 < len(image_labels) else str(index + 1)) + '/A'
+            print('  ' + label.ljust(8) + str(np.round(flux_ratios_run[index], 4)).ljust(24) +
+                  str(np.round(flux_ratios_comparison[index], 4)).ljust(24) +
+                  str(np.round(100 * flux_ratio_difference[index], 2)) + '%')
+    print('largest fractional difference: ' +
+          str(np.round(100 * comparison['max_fractional_difference'], 2)) + '%')
 
 
 # ---------------------------------------------------------------------------------------------
@@ -351,7 +422,7 @@ def save_lens_model(filename, spec, output_dir='./', verbose=True):
 
 def prompt_save_lens_model(spec, output_dir='./', filename=None, verbose=True,
                            show_figures=True, magnifications=None, surfaces=None,
-                           kwargs_inspection_figure=None):
+                           kwargs_inspection_figure=None, comparison=None):
     """
     Show an inspection figure for a lens model, print a short summary of it, and ask the user
     whether to save it. Intended to be called from inside a forward model run with
@@ -368,6 +439,8 @@ def prompt_save_lens_model(spec, output_dir='./', filename=None, verbose=True,
      by the magnification class)
     :param kwargs_inspection_figure: keyword arguments passed to
      LensSimulationAnalysis.inspection_figure
+    :param comparison: the dictionary returned by LensSimulationAnalysis.compare_to_exact_ray_tracing.
+     If given, both methods are shown in the figure and a numerical comparison is printed
     :return: the path of the file that was written, or None if the user declined
     """
     if filename is None:
@@ -380,18 +453,27 @@ def prompt_save_lens_model(spec, output_dir='./', filename=None, verbose=True,
             import matplotlib.pyplot as plt
             simulation = LensSimulationAnalysis(spec)
             simulation.inspection_figure(magnifications=magnifications, surfaces=surfaces,
+                                         comparison=comparison,
                                          **(kwargs_inspection_figure or {}))
             plt.show()
         except Exception as exception:
             print('failed to make the inspection figure: ' + str(exception))
+
+    if comparison is not None:
+        print_method_comparison(comparison)
 
     if verbose:
         print('\n---------------- candidate model for analysis ----------------')
         print('lens ID:              ', spec.get('lens_id', None))
         print('random seed:          ', spec.get('seed', None))
         print('number of deflectors: ', len(spec['lens_model_list']))
-        print('magnifications:       ', np.round(np.atleast_1d(spec['magnifications']), 4)
-              if spec.get('magnifications', None) is not None else None)
+        magnifications_print = spec.get('magnifications', None)
+        if magnifications_print is None and magnifications is not None:
+            magnifications_print = magnifications
+        if magnifications_print is None and comparison is not None:
+            magnifications_print = comparison['magnifications_run']
+        print('magnifications:       ', None if magnifications_print is None
+              else np.round(np.atleast_1d(magnifications_print), 4))
         print('summary statistic:    ', spec.get('summary_statistic', None))
         print('logL imaging data:    ', spec.get('logL_imaging_data', None))
         print('-------------------------------------------------------------')
@@ -432,6 +514,9 @@ class LensSimulationAnalysis(object):
         """
         self.spec = spec
         self._cache = {}
+        # the per-image point-source magnification discrepancy reported by the most recent call to
+        # magnification_surfaces; NaN for methods that do not compute a near/far cross check
+        self.mu_discrepancy_last = None
 
     # -------------------------------------------------------------------- constructors / io
 
@@ -970,7 +1055,7 @@ class LensSimulationAnalysis(object):
         else:
             lens_model_batch, kwargs_lens_batch = self.lens_model, self.kwargs_lens_init
 
-        magnifications, surfaces = magnification_finite_decoupled(
+        output = magnification_finite_decoupled(
             source_model, kwargs_source, x_image, y_image,
             self.lens_model, self.kwargs_lens_init, self.kwargs_macro, self.index_lens_split,
             grid_size_list, grid_resolution_list,
@@ -986,12 +1071,90 @@ class LensSimulationAnalysis(object):
             fallback=fallback,
             MU_TOLERANCE=mu_tolerance,
             verbose=verbose)
+        # older versions of magnification_finite_decoupled return only (magnifications, surfaces)
+        if len(output) == 3:
+            magnifications, surfaces, mu_discrepancy = output
+        else:
+            magnifications, surfaces = output
+            mu_discrepancy = np.array([np.nan] * len(indexes))
+        self.mu_discrepancy_last = np.atleast_1d(np.array(mu_discrepancy, dtype=float))
         extents = []
         for counter in range(0, len(indexes)):
             half = grid_size_list[counter] / 2
             extents.append([x_image[counter] - half, x_image[counter] + half,
                             y_image[counter] - half, y_image[counter] + half])
         return np.array(magnifications), surfaces, extents
+
+    def compare_to_exact_ray_tracing(self, magnifications=None, surfaces=None, extents=None,
+                                     comparison_method=None, tolerance=0.0, verbose=False,
+                                     **kwargs):
+        """
+        Recompute the images with the complementary magnification method and report how much the two
+        disagree. If the model was run with a near/far splitting method the comparison is exact ray
+        tracing, and vice versa.
+
+        The near/far routines contain their own safeguard: when the point-source magnification
+        differs from the approximation by more than mu_tolerance, that image silently falls back on
+        exact ray tracing. This method compares the finite-source magnifications actually produced,
+        so it catches the cases where that safeguard passes but the flux ratios are still wrong.
+
+        :param magnifications: magnifications already computed with the run's method. If given
+         together with surfaces, only the comparison method is computed
+        :param surfaces: surfaces already computed with the run's method
+        :param extents: extents of those surfaces; derived from the saved grid sizes if None
+        :param comparison_method: the method to compare against; chosen automatically if None
+        :param tolerance: fractional difference above which the model is flagged. The comparison is
+         made on both the per-image magnifications and the flux ratios, and the larger of the two
+         decides. A tolerance of 0 flags everything
+        :param verbose: bool; print output from the magnification calculations
+        :param kwargs: passed to magnification_surfaces for both methods
+        :return: a dictionary with the magnifications, surfaces, extents and flux ratios of both
+         methods, the per-image fractional differences, the largest fractional difference, and a
+         'flagged' entry that is True when that difference exceeds the tolerance
+        """
+        method_run = self.spec.get('magnification_method', 'CIRCULAR_APERTURE')
+        if comparison_method is None:
+            comparison_method = complementary_magnification_method(method_run)
+
+        if magnifications is None or surfaces is None:
+            magnifications, surfaces, extents = self.magnification_surfaces(
+                magnification_method=method_run, verbose=verbose, **kwargs)
+        else:
+            magnifications = np.atleast_1d(magnifications)
+            if extents is None:
+                extents = self.image_extents()
+        mu_discrepancy = self.mu_discrepancy_last
+
+        magnifications_comparison, surfaces_comparison, extents_comparison = \
+            self.magnification_surfaces(magnification_method=comparison_method, verbose=verbose,
+                                        **kwargs)
+
+        magnification_difference = (magnifications_comparison - magnifications) / magnifications
+        flux_ratios = magnifications[1:] / magnifications[0] if len(magnifications) > 1 else None
+        flux_ratios_comparison = magnifications_comparison[1:] / magnifications_comparison[0] \
+            if len(magnifications_comparison) > 1 else None
+        if flux_ratios is None:
+            flux_ratio_difference = None
+            max_difference = float(np.max(np.absolute(magnification_difference)))
+        else:
+            flux_ratio_difference = (flux_ratios_comparison - flux_ratios) / flux_ratios
+            max_difference = float(max(np.max(np.absolute(magnification_difference)),
+                                       np.max(np.absolute(flux_ratio_difference))))
+        return {'method_run': method_run,
+                'method_comparison': comparison_method,
+                'magnifications_run': magnifications,
+                'magnifications_comparison': magnifications_comparison,
+                'magnification_fractional_difference': magnification_difference,
+                'flux_ratios_run': flux_ratios,
+                'flux_ratios_comparison': flux_ratios_comparison,
+                'flux_ratio_fractional_difference': flux_ratio_difference,
+                'max_fractional_difference': max_difference,
+                'mu_discrepancy': mu_discrepancy,
+                'surfaces_run': surfaces,
+                'extents_run': extents,
+                'surfaces_comparison': surfaces_comparison,
+                'extents_comparison': extents_comparison,
+                'flagged': max_difference > tolerance}
 
     def image_extents(self, grid_size_list=None):
         """
@@ -1142,12 +1305,15 @@ class LensSimulationAnalysis(object):
         ax.set_ylim(extent[2], extent[3])
         return ax
 
-    def plot_flux_ratios(self, ax=None, magnifications=None):
+    def plot_flux_ratios(self, ax=None, magnifications=None, comparison=None):
         """
-        Compare the model flux ratios to the measured ones as a bar chart.
+        Compare the model flux ratios to the measured ones as a bar chart. When a comparison is
+        given, the flux ratios from both magnification methods are shown side by side, which is the
+        quickest way to see whether the near/far splitting approximation matters for this model.
 
         :param ax: an existing matplotlib axis; a new figure is created if None
         :param magnifications: image magnifications to use; defaults to the values saved in the run
+        :param comparison: the dictionary returned by compare_to_exact_ray_tracing
         :return: the matplotlib axis
         """
         import matplotlib.pyplot as plt
@@ -1164,23 +1330,38 @@ class LensSimulationAnalysis(object):
                     transform=ax.transAxes)
             return ax
         flux_ratios_model = np.atleast_1d(flux_ratios_model)
-        positions = np.arange(0, len(flux_ratios_model))
-        width = 0.4 if flux_ratios_data is not None else 0.8
+
+        series = []
         if flux_ratios_data is not None:
-            flux_ratios_data = np.atleast_1d(flux_ratios_data)
-            ax.bar(positions - width / 2, flux_ratios_data, width=width, color='0.5', label='data')
-            ax.bar(positions + width / 2, flux_ratios_model, width=width, color='steelblue',
-                   label='model')
-            ax.legend(fontsize=9, frameon=False)
+            series.append(('data', np.atleast_1d(flux_ratios_data), '0.5'))
+        if comparison is None:
+            series.append(('model', flux_ratios_model, 'steelblue'))
         else:
-            ax.bar(positions, flux_ratios_model, width=width, color='steelblue', label='model')
+            series.append((comparison['method_run'], np.atleast_1d(comparison['flux_ratios_run']),
+                           'steelblue'))
+            series.append((comparison['method_comparison'],
+                           np.atleast_1d(comparison['flux_ratios_comparison']), 'darkorange'))
+
+        positions = np.arange(0, len(flux_ratios_model), dtype=float)
+        width = 0.8 / len(series)
+        for counter, (label, values, color) in enumerate(series):
+            offset = (counter - 0.5 * (len(series) - 1)) * width
+            ax.bar(positions + offset, values, width=width, color=color, label=label)
+        ax.legend(fontsize=7, frameon=False)
         labels = ['B/A', 'C/A', 'D/A', 'E/A', 'F/A']
         ax.set_xticks(positions)
-        ax.set_xticklabels([labels[i] if i < len(labels) else str(i) for i in positions])
+        ax.set_xticklabels([labels[int(i)] if int(i) < len(labels) else str(int(i))
+                            for i in positions])
         ax.set_ylabel('flux ratio', fontsize=10)
+        title = ''
         statistic = self.summary_statistic
         if statistic is not None:
-            ax.set_title('S = ' + str(np.round(np.atleast_1d(statistic)[0], 4)), fontsize=10)
+            title = 'S = ' + str(np.round(np.atleast_1d(statistic)[0], 4))
+        if comparison is not None:
+            title += ('\n' if title else '') + 'max difference ' + \
+                     str(np.round(100 * comparison['max_fractional_difference'], 2)) + '%'
+        if title:
+            ax.set_title(title, fontsize=9)
         return ax
 
     def inspection_figure(self, magnifications=None, surfaces=None, extents=None, npix=200,
@@ -1189,12 +1370,14 @@ class LensSimulationAnalysis(object):
                           decoupled_convergence=True, decoupled_convergence_zoom=False,
                           with_critical_curves=True, include_substructure_critical_curves=False,
                           grid_scale=0.02, figsize=None, source_size_pc=None,
-                          magnification_method=None):
+                          magnification_method=None, comparison=None):
         """
         Build the figure used to decide whether a lens model is worth saving.
 
         Top row: the effective convergence across the whole image plane with the critical curve and
         the image positions, followed by the ray-traced magnification surface around each image.
+        Middle row (only when a comparison is passed): the same images computed with the other
+        magnification method, titled with the fractional difference.
         Bottom row: the model and measured flux ratios, followed by the effective convergence zoomed
         in on each image, so that the halos responsible for each image's flux can be seen.
 
@@ -1225,6 +1408,8 @@ class LensSimulationAnalysis(object):
         :param source_size_pc: passed to magnification_surfaces if the surfaces must be recomputed
         :param magnification_method: passed to magnification_surfaces if the surfaces must be
          recomputed
+        :param comparison: the dictionary returned by compare_to_exact_ray_tracing. If given, a row
+         of panels for the comparison method is added and the flux ratio panel shows both methods
         :return: the matplotlib figure and the array of axes
         """
         import matplotlib.pyplot as plt
@@ -1236,12 +1421,24 @@ class LensSimulationAnalysis(object):
             magnifications = np.atleast_1d(magnifications)
             if extents is None:
                 extents = self.image_extents()
+
+        # one row of image panels per magnification method
+        method_run = comparison['method_run'] if comparison is not None else \
+            (magnification_method or self.spec.get('magnification_method', None))
+        surface_rows = [(method_run, magnifications, surfaces, extents)]
+        if comparison is not None:
+            surface_rows.append((comparison['method_comparison'],
+                                 np.atleast_1d(comparison['magnifications_comparison']),
+                                 comparison['surfaces_comparison'],
+                                 comparison['extents_comparison']))
+
         n_image = len(surfaces)
-        n_row = 2 if include_convergence_zoom else 1
+        n_row = len(surface_rows) + (1 if include_convergence_zoom else 0)
         if figsize is None:
             figsize = (3.6 * (n_image + 1), 3.8 * n_row)
         fig, axes = plt.subplots(n_row, n_image + 1, figsize=figsize, squeeze=False)
 
+        # left hand column: convergence, then the flux ratio comparison, then blank
         try:
             self.plot_convergence(ax=axes[0, 0], npix=npix, vmin=vmin, vmax=vmax,
                                   with_critical_curves=with_critical_curves,
@@ -1253,16 +1450,34 @@ class LensSimulationAnalysis(object):
             self.plot_convergence(ax=axes[0, 0], npix=npix, vmin=vmin, vmax=vmax,
                                   with_critical_curves=False, decoupled=decoupled_convergence)
         axes[0, 0].set_title(r'$\kappa - \kappa_{\rm{macro}}$, full image plane', fontsize=10)
+        if n_row > 1:
+            self.plot_flux_ratios(ax=axes[1, 0], magnifications=magnifications,
+                                  comparison=comparison)
+        for row in range(2, n_row):
+            axes[row, 0].axis('off')
 
         image_labels = ['A', 'B', 'C', 'D', 'E', 'F']
-        for index in range(0, n_image):
-            label = image_labels[index] if index < len(image_labels) else str(index)
-            ax = axes[0, index + 1]
-            self._plot_surface(ax, surfaces[index], extents[index])
-            ax.set_title(label + r': $\mu = $' + str(np.round(magnifications[index], 2)),
-                         fontsize=10)
-            if include_convergence_zoom:
-                ax = axes[1, index + 1]
+        reference_magnifications = surface_rows[0][1]
+        for row, (label_row, magnifications_row, surfaces_row, extents_row) in \
+                enumerate(surface_rows):
+            for index in range(0, n_image):
+                label = image_labels[index] if index < len(image_labels) else str(index)
+                ax = axes[row, index + 1]
+                self._plot_surface(ax, surfaces_row[index], extents_row[index])
+                title = label + r': $\mu = $' + str(np.round(magnifications_row[index], 3))
+                if row > 0:
+                    difference = (magnifications_row[index] - reference_magnifications[index]) / \
+                                 reference_magnifications[index]
+                    title += '\n' + str(np.round(100 * difference, 2)) + '%'
+                ax.set_title(title, fontsize=10)
+                if index == 0 and label_row is not None:
+                    ax.set_ylabel(str(label_row), fontsize=9)
+
+        if include_convergence_zoom:
+            row = len(surface_rows)
+            for index in range(0, n_image):
+                label = image_labels[index] if index < len(image_labels) else str(index)
+                ax = axes[row, index + 1]
                 kappa, extent = self.convergence_around_image(index, grid_size=zoom_grid_size,
                                                               npix=zoom_npix,
                                                               decoupled=decoupled_convergence_zoom)
@@ -1280,11 +1495,12 @@ class LensSimulationAnalysis(object):
                              str(float(np.format_float_scientific(scale, precision=1))),
                              fontsize=10)
 
-        if include_convergence_zoom:
-            self.plot_flux_ratios(ax=axes[1, 0], magnifications=magnifications)
-
         title = 'lens ' + str(self.lens_id) + ', seed ' + str(self.seed) + ', ' + \
                 str(len(self.lens_model_list) - len(self.index_lens_split)) + ' halos'
+        if comparison is not None:
+            title += ', largest ' + comparison['method_run'] + ' vs ' + \
+                     comparison['method_comparison'] + ' difference ' + \
+                     str(np.round(100 * comparison['max_fractional_difference'], 2)) + '%'
         fig.suptitle(title, fontsize=12)
         plt.tight_layout()
         return fig, axes

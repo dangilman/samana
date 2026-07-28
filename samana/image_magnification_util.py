@@ -111,6 +111,8 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
 
     magnifications = []
     flux_arrays = []
+    # one entry per image; NaN for methods that do not compute a point-source cross check
+    mu_discrepancy_list = []
 
     for j, (x_img, y_img) in enumerate(zip(x_image, y_image)):
 
@@ -133,7 +135,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                 flux_floor_frac=1e-4)
             magnifications.append(mag)
             flux_arrays.append([flux_array, tiling])
-            mu_discrepancy = None
+            mu_discrepancy_list.append(np.nan)
 
         elif magnification_method in ['CIRCULAR_APERTURE', 'ELLIPTICAL_APERTURE']:
             if magnification_method == 'ELLIPTICAL_APERTURE':
@@ -154,7 +156,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
             )
             magnifications.append(mag)
             flux_arrays.append(flux_array.reshape(npix_large, npix_large))
-            mu_discrepancy = None
+            mu_discrepancy_list.append(np.nan)
 
         elif magnification_method in ['NEAR_FAR_SPLITTING', 'NEAR_FAR_SPLITTING_ADAPTIVE']:
 
@@ -237,6 +239,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                     tiling = None  # don't return tiling if we use the fallback
 
             magnifications.append(mag)
+            mu_discrepancy_list.append(mu_discrepancy)
             if tiling is not None:
                 flux_arrays.append([flux_array, tiling])
             else:
@@ -246,7 +249,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
             raise Exception('magnification_method must be either CIRCULAR_APERTURE, ELLIPTICAL_APERTURE, or ADAPTIVE. '
                             'You specified magnification_method '+str(magnification_method))
 
-    return np.array(magnifications), flux_arrays, mu_discrepancy
+    return np.array(magnifications), flux_arrays, np.array(mu_discrepancy_list, dtype=float)
 
 """
 Edge-refining breadth-first quadtree finite-source magnification.
