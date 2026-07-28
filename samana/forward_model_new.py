@@ -708,7 +708,6 @@ def forward_model_single_iteration(data_class,
             flux_ratios = np.array([1.0] * 3)
             flux_ratios_data = np.array([1.0] * 3)
         else:
-            # don't care about the magnifications if we are reconstructing the arcs
             halo_masses = []
             for halo in realization.halos:
                 if halo.is_subhalo:
@@ -716,7 +715,6 @@ def forward_model_single_iteration(data_class,
                 else:
                     m = halo.mass
                 halo_masses += [m] * len(halo.lenstronomy_ID)
-
             halo_masses += [np.nan] * (len(lens_model_list_halos) - len(halo_masses))
             magnifications, images, stat, flux_ratios, flux_ratios_data = magnification_class(
                 source_dict, source_x, source_y, data_class, model_class,

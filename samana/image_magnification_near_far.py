@@ -506,7 +506,18 @@ def mag_finite_single_image_distortion_adaptive(
         lm_exact, lens_model_free, kw_exact, kwargs_lens_free, kwargs_lens,
         z_split, z_source, cosmo_bkg, x_image, y_image, eps=grid_resolution)
 
-    mu_discrepancy = abs(mag - mu_point) / mu_point if mu_point > 0 else np.inf
+    eps = grid_resolution
+    _tx = np.array([x_image + eps, x_image - eps, x_image, x_image])
+    _ty = np.array([y_image, y_image, y_image + eps, y_image - eps])
+    _bx, _by = ray_shoot(_tx, _ty)
+    Axx = (_bx[0] - _bx[1]) / (2 * eps);
+    Ayx = (_by[0] - _by[1]) / (2 * eps)
+    Axy = (_bx[2] - _bx[3]) / (2 * eps);
+    Ayy = (_by[2] - _by[3]) / (2 * eps)
+    det = Axx * Ayy - Axy * Ayx
+    mu_point_nearfar = 1.0 / abs(det) if det != 0 else np.inf
+    mu_discrepancy = (abs(mu_point_nearfar - mu_point) / mu_point
+                      if mu_point > 0 and np.isfinite(mu_point_nearfar) else np.inf)
 
     return mag, flux_array, tiling, mu_discrepancy
 

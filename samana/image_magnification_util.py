@@ -332,7 +332,7 @@ def adaptive_quadtree_magnification(
     :return: (magnification, n_calls, n_points[, leaves])
     """
     rs = _Counter(ray_shoot)
-    r_ap = box_size / 2.0
+    r_ap = box_size / 1.41
 
     def in_aperture(cx, cy):
         return _aperture_radius(cx, cy, rotation_angle, hessian_eigenvalue) <= r_ap
@@ -532,7 +532,7 @@ def plot_tiled_image(flux_array, tiling, ax=None, cmap='inferno',
     import matplotlib.pyplot as plt
     from matplotlib.patches import Rectangle
 
-    box = tiling['box_size']; h = box / 2.0
+    box = tiling['box_size']; h = box / 2
     if ax is None:
         _, ax = plt.subplots(figsize=(5, 5))
     img = flux_array
@@ -551,7 +551,7 @@ def plot_tiled_image(flux_array, tiling, ax=None, cmap='inferno',
     if show_aperture:
         ang = tiling.get('rotation_angle'); qe = tiling.get('hessian_eigenvalue')
         phi = np.linspace(0, 2 * np.pi, 200)
-        xr = h * np.cos(phi); yr = (h if qe is None else h * qe) * np.sin(phi)
+        xr = h * np.cos(phi) ; yr = (h if qe is None else h * qe) * np.sin(phi)
         if ang is None or qe is None:
             ax_bx, ax_by = xr, yr
         else:
