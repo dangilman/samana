@@ -45,11 +45,7 @@ def forward_model(output_path,
                   tolerance_source_reconstruction=None,
                   fr_logL_source_reconstruction=None,
                   return_astrometric_rejections=False,
-                  batch_lens_model=False,
-                  save_for_analysis=False,
-                  save_for_analysis_path=None,
-                  lens_id=None,
-                  kwargs_inspection_figure=None
+                  batch_lens_model=False
                   ):
     """
     Top-level function for forward modeling strong lenses with substructure. This function makes repeated calls to
@@ -103,18 +99,8 @@ def forward_model(output_path,
     should be abs(log_likelihood), which triggers the source light modeling if abs(logL) < fr_logL_source_reconstruction
     :param return_astrometric_rejections: if True, will return the macromodel parameters that produced a lens model that
     doesn't fit the image positions; if False, these solutions will be rejected and not saved as output
-    :param save_for_analysis: bool; after each realization is computed, display an inspection figure, print a summary of
-    the lens model, and ask the user whether to save it to disk for later analysis. Saved models are written as gzipped
-    JSON and can be re-loaded with samana.model_storage.LensSimulationAnalysis
-    :param save_for_analysis_path: directory in which to write the saved models; defaults to output_path + 'saved_models/'
-    :param lens_id: an optional string identifying the lens; used to name the files written when save_for_analysis=True
-    :param kwargs_inspection_figure: keyword arguments passed to LensSimulationAnalysis.inspection_figure, which controls
-    the figure displayed when save_for_analysis=True (resolution, color scale, zoom size, whether to include the
-    substructure critical curve, etc.)
     :return:
     """
-    if save_for_analysis and save_for_analysis_path is None:
-        save_for_analysis_path = os.path.join(output_path, 'saved_models')
 
     filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, filename_acceptance_ratio, \
     filename_macromodel_samples = filenames(output_path, job_index)
@@ -226,11 +212,7 @@ def forward_model(output_path,
             fr_logL_source_reconstruction=fr_logL_source_reconstruction,
             scale_window_size_decoupled_multiplane=scale_window_size_decoupled_multiplane,
             return_astrometric_rejections=return_astrometric_rejections,
-            batch_lens_model=batch_lens_model,
-            save_for_analysis=save_for_analysis,
-            save_for_analysis_path=save_for_analysis_path,
-            lens_id=lens_id,
-            kwargs_inspection_figure=kwargs_inspection_figure)
+            batch_lens_model=batch_lens_model)
 
         seed_counter += 1
         acceptance_rate_counter += 1
@@ -377,11 +359,7 @@ def forward_model_single_iteration(data_class,
                                    fr_logL_source_reconstruction=None,
                                    scale_window_size_decoupled_multiplane=1.0,
                                    return_astrometric_rejections=False,
-                                   batch_lens_model=False,
-                                   save_for_analysis=False,
-                                   save_for_analysis_path=None,
-                                   lens_id=None,
-                                   kwargs_inspection_figure=None
+                                   batch_lens_model=False
                            ):
     """
 
@@ -413,11 +391,6 @@ def forward_model_single_iteration(data_class,
     :param fr_logL_source_reconstruction:
     :param scale_window_size_decoupled_multiplane:
     :param return_astrometric_rejections:
-    :param save_for_analysis: bool; display an inspection figure and prompt the user to save this lens model to disk
-    for later analysis
-    :param save_for_analysis_path: directory in which to write the saved model
-    :param lens_id: an optional string identifying the lens, used to name the output file
-    :param kwargs_inspection_figure: keyword arguments passed to LensSimulationAnalysis.inspection_figure
     :return:
     """
     # set the random seed for reproducibility
@@ -938,103 +911,6 @@ def forward_model_single_iteration(data_class,
         kwargs_model_plot = {'multi_band_list': data_class.kwargs_data_joint['multi_band_list'],
                              'kwargs_model': kwargs_model,
                              'kwargs_params': kwargs_result}
-
-    if save_for_analysis and np.max(magnifications)<50 and magnification_class.mu_discrepancy > 0.15:
-        # assemble a lightweight specification of this lens model, print a summary of it, and ask the user
-        # whether they want to write it to disk. The saved file can be re-loaded and inspected with
-        # samana.model_storage.LensSimulationAnalysis
-        from samana.model_storage import lens_model_spec_from_forward_model, prompt_save_lens_model
-        samples_dict = {}
-        for names, values in [(realization_param_names, realization_samples),
-                              (source_param_names, source_samples),
-                              (param_names_macro, samples_macromodel),
-                              (param_names_macro_fixed, samples_macromodel_fixed)]:
-            if names is None or values is None:
-                continue
-            for name, value in zip(list(names), np.atleast_1d(values)):
-                samples_dict[name] = value
-        try:
-            pixel_size_data, _, _, _, window_size_data = data_class.coordinate_properties
-        except Exception:
-            pixel_size_data, window_size_data = None, None
-        source_size_pc = source_dict.get('source_size_pc', None)
-        if source_size_pc is None:
-            source_size_pc = source_dict.get('source_size_pc_1', None)
-        try:
-            grid_size_list_save = magnification_class.grid_size_list(source_size_pc)
-        except Exception:
-            grid_size_list_save = None
-        try:
-            from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_resolution
-            rescale_resolution = magnification_class.rescale_grid_resolution
-            base_resolution = auto_raytracing_grid_resolution(source_size_pc)
-            if isinstance(rescale_resolution, (list, np.ndarray)):
-                grid_resolution_list_save = [r * base_resolution for r in rescale_resolution]
-            else:
-                grid_resolution_list_save = [rescale_resolution * base_resolution] * len(data_class.x_image)
-        except Exception:
-            grid_resolution_list_save = None
-        # one mass per lenstronomy profile, needed to reproduce the near/far splitting calculation
-        try:
-            halo_masses_save = []
-            for halo in realization.halos:
-                mass = halo.bound_mass if halo.is_subhalo else halo.mass
-                halo_masses_save += [mass] * len(halo.lenstronomy_ID)
-            halo_masses_save += [np.nan] * (len(lens_model_list_halos) - len(halo_masses_save))
-        except Exception:
-            halo_masses_save = None
-        kwargs_light_save = None
-        try:
-            kwargs_light_save = {key: kwargs_result[key] for key in
-                                 ['kwargs_source', 'kwargs_lens_light', 'kwargs_ps', 'kwargs_special']
-                                 if key in kwargs_result}
-        except Exception:
-            pass
-        spec = lens_model_spec_from_forward_model(
-            lens_model_init=lens_model_init,
-            kwargs_lens_init=kwargs_lens_init,
-            kwargs_solution=kwargs_solution,
-            index_lens_split=index_lens_split,
-            astropy_cosmo=astropy_cosmo,
-            z_lens=z_lens,
-            z_source=data_class.z_source,
-            x_image=data_class.x_image,
-            y_image=data_class.y_image,
-            source_x=source_x,
-            source_y=source_y,
-            source_size_pc=source_size_pc,
-            magnification_method=getattr(magnification_class, 'magnification_method', None),
-            grid_size_list=grid_size_list_save,
-            grid_resolution_list=grid_resolution_list_save,
-            rotation_angle_list=getattr(magnification_class, 'rotation_angle_list', None),
-            hessian_eigenvalue_list=getattr(magnification_class, 'hessian_eigenvalue_list', None),
-            halo_masses=halo_masses_save,
-            magnifications=magnifications,
-            flux_ratios=flux_ratios,
-            flux_ratios_data=flux_ratios_data,
-            summary_statistic=stat,
-            logL_imaging_data=logL_imaging_data,
-            bic=bic,
-            samples=samples_dict,
-            macromodel_samples_fixed=macromodel_samples_fixed_dict,
-            window_size=window_size_data,
-            pixel_size=pixel_size_data,
-            decoupled_multiplane=use_decoupled_multiplane_approximation,
-            grid_resolution_image_data=grid_resolution_image_data,
-            scale_window_size=scale_window_size_decoupled_multiplane,
-            kwargs_light=kwargs_light_save,
-            seed=seed,
-            lens_id=lens_id,
-            data_class_name=type(data_class).__name__,
-            model_class_name=type(model_class).__name__)
-        # the magnification surfaces were already computed above, so pass them straight through to
-        # the inspection figure rather than repeating the ray tracing
-        prompt_save_lens_model(spec,
-                               output_dir=save_for_analysis_path or './',
-                               show_figures=True,
-                               magnifications=magnifications,
-                               surfaces=images,
-                               kwargs_inspection_figure=kwargs_inspection_figure)
 
     if test_mode:
 
