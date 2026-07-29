@@ -17,6 +17,102 @@ def _read_header(path):
     with open(path, 'r') as f:
         return f.readline().split()
 
+from concurrent.futures import ThreadPoolExecutor
+
+
+def _read_folder(folder, S_max):
+    """Read one output folder. Returns (status, payload)."""
+    try:
+        params = _read_table(folder + 'parameters.txt', 1)
+        fluxes = _read_table(folder + 'fluxes.txt', 0)
+        macro  = _read_table(folder + 'macromodel_samples.txt', 1)
+    except Exception as e:
+        return 'missing', str(e)
+
+    n = params.shape[0]
+    if fluxes.shape[0] != n or macro.shape[0] != n:
+        return 'mismatch', None
+
+    if np.isfinite(S_max):
+        keep = params[:, -4] < S_max
+        if not keep.any():
+            return 'empty', None
+        params, fluxes, macro = params[keep], fluxes[keep], macro[keep]
+
+    return 'ok', (params, fluxes, macro)
+
+def output_to_hdf5_parallel(output_path, job_name, job_index_min, job_index_max, write_path,
+                            print_missing_files=False, S_max=np.inf, print_progress=False,
+                            nproc=None):
+    """
+    Parallel-read version of output_to_hdf5. Folders are parsed concurrently by a
+    thread pool; the HDF5 file is written serially by this thread, in folder order.
+
+    nproc defaults to SLURM_CPUS_PER_TASK, else os.cpu_count().
+    """
+    base = os.path.join(output_path, job_name, '')
+    os.makedirs(write_path, exist_ok=True)
+    out_file = os.path.join(write_path, job_name + '_output.hdf5')
+
+    if nproc is None:
+        nproc = int(os.getenv('SLURM_CPUS_PER_TASK', os.cpu_count() or 1))
+    batch = max(4 * nproc, 32)
+
+    indices = list(range(job_index_min, job_index_max + 1))
+    dsets, n_total, n_folders = {}, 0, 0
+
+    with h5py.File(out_file, 'w') as h, ThreadPoolExecutor(max_workers=nproc) as ex:
+        for start in range(0, len(indices), batch):
+            chunk = indices[start:start + batch]
+            folders = [base + 'job_' + str(i) + '/' for i in chunk]
+
+            if print_progress:
+                print('  working on output folders ' + str(chunk[0])
+                      + '-' + str(chunk[-1]) + '... ')
+
+            results = ex.map(lambda f: _read_folder(f, S_max), folders)
+
+            for folder, (status, payload) in zip(folders, results):
+                if status != 'ok':
+                    if status == 'missing' and print_missing_files:
+                        print('skipping ' + folder + ': ' + str(payload))
+                    elif status == 'mismatch':
+                        print('parameters, fluxes and macromodel samples have '
+                              'different shape for ' + folder)
+                    continue
+
+                params, fluxes, macro = payload
+                n = params.shape[0]
+                items = (('parameters', params),
+                         ('magnifications', fluxes),
+                         ('macromodel_samples', macro))
+
+                if not dsets:
+                    for name, arr in items:
+                        dsets[name] = h.create_dataset(
+                            name, shape=(0, arr.shape[1]), maxshape=(None, arr.shape[1]),
+                            dtype=arr.dtype, chunks=(4096, arr.shape[1]))
+                    h.create_dataset('param_names',
+                                     data=_read_header(folder + 'parameters.txt'),
+                                     dtype='S30')
+                    h.create_dataset('macromodel_sample_names',
+                                     data=_read_header(folder + 'macromodel_samples.txt'),
+                                     dtype='S30')
+
+                for name, arr in items:
+                    d = dsets[name]
+                    d.resize(d.shape[0] + n, axis=0)
+                    d[-n:] = arr
+
+                n_total += n
+                n_folders += 1
+
+    if n_folders == 0:
+        print('WARNING: no output found for ' + job_name)
+        return None
+
+    print('compiled ' + str(n_total) + ' realizations from '
+          + str(n_folders) + ' folders')
 
 def output_to_hdf5(output_path, job_name, job_index_min, job_index_max, write_path,
                    print_missing_files=False, S_max=np.inf, print_progress=False):
