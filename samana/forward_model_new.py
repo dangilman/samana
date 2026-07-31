@@ -775,7 +775,7 @@ def forward_model_single_iteration(data_class,
                                                            'specified')
             if verbose and split_image_data_reconstruction: print('triggering image data modeling with a flux ratio summary statistic tolerance of '
                               +str(tolerance_source_reconstruction))
-            if stat < tolerance_source_reconstruction:
+            if np.all(np.atleast_1d(stat) < tolerance_source_reconstruction):
                 reconstruct_image_data = True
             else:
                 reconstruct_image_data = False
