@@ -147,8 +147,14 @@ class SingleGaussianMagnification(object):
                  lens_model_init_batch, kwargs_lens_init_batch,
                  halo_masses=None,
                  setup_decoupled_multiplane_lens_model_output_batch=None,
+                 R_max_grid_size_list=None,
                  verbose=False):
-
+        """
+        :param R_max_grid_size_list: optional per-image grid size list used only to set the
+            near/far split radius (NEAR_FAR_SPLITTING* methods); defaults to this source's own
+            grid_size_list. Lets a caller composing multiple sources (e.g. DoubleGaussianMagnification)
+            share a single, larger split radius across all of them.
+        """
         source_model_quasar, kwargs_source = setup_gaussian_source(source_dict['source_size_pc'],
                                                                    np.mean(source_x), np.mean(source_y),
                                                                    self.astropy_cosmo, data_class.z_source)
@@ -178,6 +184,7 @@ class SingleGaussianMagnification(object):
                                                                               halo_masses=halo_masses,
                                                                               fallback=self.fallback,
                                                                               mu_tolerance=self.mu_tolerance,
+                                                                              R_max_grid_size_list=R_max_grid_size_list,
                                                                               verbose=verbose)
         if self.magnification_method in ['NEAR_FAR_SPLITTING', 'NEAR_FAR_SPLITTING_ADAPTIVE']:
             self._mu_discrepancy_list = mu_discrepancy
@@ -249,10 +256,18 @@ class DoubleGaussianMagnification(object):
         source_x_2 = source_x + source_dict.get('source_x_offset_2', 0.0)
         source_y_2 = source_y + source_dict.get('source_y_offset_2', 0.0)
 
+        # near/far splitting's R_max floor scales with grid size (image_magnification_util.py);
+        # use the larger source's grid size for both, so neither source gets a less conservative
+        # (more approximate) near/far split than the other.
+        grid_size_list_1 = self._single_source_magnification.grid_size_list(source_dict['source_size_pc_1'])
+        grid_size_list_2 = self._single_source_magnification.grid_size_list(source_dict['source_size_pc_2'])
+        R_max_grid_size_list = list(np.maximum(grid_size_list_1, grid_size_list_2))
+
         common_args = (data_class, model_class, lens_model_init, kwargs_lens_init, kwargs_solution,
                        setup_decoupled_multiplane_lens_model_output, lens_model_init_batch, kwargs_lens_init_batch)
         common_kwargs = dict(halo_masses=halo_masses,
                              setup_decoupled_multiplane_lens_model_output_batch=setup_decoupled_multiplane_lens_model_output_batch,
+                             R_max_grid_size_list=R_max_grid_size_list,
                              verbose=verbose)
 
         mags_1, images_1, stat_1, flux_ratios_1, flux_ratios_data = self._single_source_magnification(

@@ -310,6 +310,7 @@ class EPLModelBase(object):
                                      halo_masses=None,
                                      fallback='ELLIPTICAL_APERTURE',
                                      mu_tolerance=0.05,
+                                     R_max_grid_size_list=None,
                                      verbose=False):
         """
 
@@ -340,6 +341,7 @@ class EPLModelBase(object):
             setup_decoupled_multiplane_lens_model_output_batch=setup_decoupled_multiplane_lens_model_output_batch,
             fallback=fallback,
             MU_TOLERANCE=mu_tolerance,
+            R_max_grid_size_list=R_max_grid_size_list,
             verbose=verbose)
 
         return mags

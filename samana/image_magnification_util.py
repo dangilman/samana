@@ -74,6 +74,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                                    setup_decoupled_multiplane_lens_model_output_batch=None,
                                    fallback='ELLIPTICAL_APERTURE',
                                    MU_TOLERANCE=0.05,
+                                   R_max_grid_size_list=None,
                                    verbose=False):
     """
 
@@ -164,11 +165,15 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                                                              mag_finite_single_image_distortion_adaptive)
             from samana.forward_model_util import interpolate_ray_paths
             R_max_0 = 0.4
+            # when magnification_class composes multiple sources (e.g. DoubleGaussianMagnification),
+            # R_max_grid_size_list lets the near/far split radius be set from the larger source's
+            # grid size, so every source gets the same (more conservative) exact-halo treatment
+            rmax_grid_size = R_max_grid_size_list[j] if R_max_grid_size_list is not None else grid_size_list[j]
             if halo_masses is None:
                 R_max = R_max_0
             else:
                 R_max = np.maximum(R_max_0 * (np.array(halo_masses) / 10 ** 8) ** 0.333,
-                                   2.0*grid_size_list[j])
+                                   2.0*rmax_grid_size)
                 R_max[np.where(np.log10(halo_masses) > 9)[0]] = 1e9
             grid_r = np.hypot(grid_x_large, grid_y_large).ravel()
             r_step = grid_size_list[j] / grid_increment_factor
