@@ -9,8 +9,13 @@ import pandas as pd
 
 def _read_table(path, skiprows):
     """Return a 2D float array. ~20-50x faster than np.loadtxt."""
-    arr = pd.read_csv(path, sep=r'\s+', header=None, skiprows=skiprows,
-                      dtype=np.float64, engine='c', na_filter=False).to_numpy()
+    try:
+        arr = pd.read_csv(path, sep=r'\s+', header=None, skiprows=skiprows,
+                          dtype=np.float64, engine='c', na_filter=False).to_numpy()
+    except ValueError:
+        arr = pd.read_csv(path, sep=r'\s+', header=None, skiprows=skiprows,
+                          dtype=np.float64, engine='c').to_numpy()
+
     return arr if arr.ndim == 2 else arr.reshape(1, -1)
 
 def _read_header(path):
@@ -116,6 +121,7 @@ def output_to_hdf5_parallel(output_path, job_name, job_index_min, job_index_max,
 
 def output_to_hdf5(output_path, job_name, job_index_min, job_index_max, write_path,
                    print_missing_files=False, S_max=np.inf, print_progress=False):
+
     base = os.path.join(output_path, job_name, '')
     os.makedirs(write_path, exist_ok=True)
     out_file = os.path.join(write_path, job_name + '_output.hdf5')

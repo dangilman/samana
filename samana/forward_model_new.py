@@ -918,6 +918,7 @@ def forward_model_single_iteration(data_class,
         from samana.image_magnification_util import plot_tiled_image
 
         for mag, image in zip(magnifications, images):
+            if image is None: break
             fig = plt.figure()
             ax = plt.subplot(111)
             if isinstance(image, list):  # adaptive: [flux_array, tiling]
