@@ -145,7 +145,7 @@ def numerics_setup(lens_ID):
         rescale_grid_size = 1.4
         rescale_grid_res = 1.5
     elif lens_ID == 'J0607':
-        rescale_grid_res = 1.5
+        rescale_grid_res = 1.4
         rescale_grid_size = [2.5, 4.0, 5.0, 2.5]
     elif lens_ID == 'J0608':
         rescale_grid_size = 2.0
@@ -356,7 +356,13 @@ def quick_setup(lens_ID, use_qgrad=False):
         if use_qgrad:
             from samana.Model.j0607_model import J0607ModelEPLM3M4Shear_Qgrad as model_class
         else:
-            from samana.Model.j0607_model import J0607ModelEPLM3M4Shear as model_class
+            from samana.Model.j0607_model import J0607ModelEPLM1M3M4Shear as model_class
+    elif lens_ID == 'J0607_HST':
+        from samana.Data.j0607 import J0607_HSTF160W as data_class
+        if use_qgrad:
+            from samana.Model.j0607_model import J0607ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.j0607_model import J0607ModelEPLM1M3M4ShearHST as model_class
     elif lens_ID == 'J0608':
         from samana.Data.j0608 import J0608_MIRI as data_class
         if use_qgrad:

@@ -83,7 +83,7 @@ class SingleGaussianMagnification(object):
                  magnification_method,
                  rotation_angle_list,
                  hessian_eigenvalue_list,
-                 fallback='ELLIPTICAL_APERTURE',
+                 fallback='ADAPTIVE',
                  mu_tolerance=0.05):
         """
 
