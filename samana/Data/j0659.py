@@ -95,7 +95,7 @@ class _J0659(ImagingDataBase):
             # Pixel noise is strongly correlated: expect chi2/dof ~ 0.54 from a
             # good fit and inflate parameter uncertainties by ~1.5-2x.
             self._noise_map = noise_map
-            self._supersampling_convolution = True
+            self._supersampling_convolution = False
 
         else:
             raise Exception('image data type must be HST814W, MIRI540W or NIRCam200')
