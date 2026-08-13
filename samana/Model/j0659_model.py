@@ -1,3 +1,4 @@
+from samana.Data.j0659 import J0659_MIRI
 from samana.Model.model_base import EPLModelBase
 import numpy as np
 from samana.forward_model_util import macromodel_readout_function_eplshear_satellite
@@ -96,15 +97,15 @@ class _J0659ModelBase(EPLModelBase):
                              'prior_lens': self.prior_lens,
                              'image_likelihood_mask_list': [self._data.likelihood_mask],
                              'astrometric_likelihood': True,
-                             'custom_logL_addition': self.axis_ratio_masslight_alignment
+                             'custom_logL_addition': None
                              }
         return kwargs_likelihood
 
-class J0659ModelEPLM3M4Shear(_J0659ModelBase):
+class J0659ModelEPLM1M3M4Shear(_J0659ModelBase):
 
     @property
     def prior_lens(self):
-        return self.population_gamma_prior
+        return None
 
     @property
     def macromodel_readout_function(self):
@@ -152,8 +153,146 @@ class J0659ModelEPLM3M4Shear(_J0659ModelBase):
                              kwargs_upper_lens]
         return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
 
+class J0659ModelEPLM1M3M4ShearNIRCam200(J0659ModelEPLM1M3M4Shear):
 
-class J0659ModelEPLM3M4Shear_Qgrad(J0659ModelEPLM3M4Shear):
+    def setup_source_light_model(self):
+
+        source_model_list = ['SERSIC_ELLIPSE']
+        kwargs_source_init = [
+            {'amp': np.float64(0.09166711698547299), 'R_sersic': np.float64(0.5162697742507565),
+             'n_sersic': np.float64(4.263565650284715), 'e1': np.float64(-0.43177835207214504),
+             'e2': np.float64(-0.03468580483304195), 'center_x': np.float64(-0.3849432969021575),
+             'center_y': np.float64(-0.10449429790448476)}
+        ]
+        kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
+                                'center_y': 0.1}]
+        kwargs_lower_source = [{'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -11, 'center_y': -11.0}]
+        kwargs_upper_source = [{'R_sersic': 5.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 11.0, 'center_y': 11.0}]
+        kwargs_source_fixed = [{}]
+
+        if self._shapelets_order is not None:
+            n_max = int(self._shapelets_order)
+            shapelets_source_list, kwargs_shapelets_init, kwargs_shapelets_sigma, \
+            kwargs_shapelets_fixed, kwargs_lower_shapelets, kwargs_upper_shapelets = \
+                self.add_shapelets_source(n_max)
+            source_model_list += shapelets_source_list
+            kwargs_source_init += kwargs_shapelets_init
+            kwargs_source_fixed += kwargs_shapelets_fixed
+            kwargs_source_sigma += kwargs_shapelets_sigma
+            kwargs_lower_source += kwargs_lower_shapelets
+            kwargs_upper_source += kwargs_upper_shapelets
+        source_params = [kwargs_source_init, kwargs_source_sigma, kwargs_source_fixed, kwargs_lower_source,
+                         kwargs_upper_source]
+        return source_model_list, source_params
+
+    @property
+    def kwargs_constraints(self):
+        joint_source_with_point_source = [[0, 0]]
+        joint_lens_with_light = [[1, 2, ['center_x', 'center_y']], [2, 2, ['center_x', 'center_y']]]
+        kwargs_constraints = {
+            'joint_source_with_point_source': joint_source_with_point_source,
+            'num_point_source_list': [len(self._data.x_image)],
+            'solver_type': 'PROFILE_SHEAR',
+            'point_source_offset': True,
+            'joint_lens_with_light': joint_lens_with_light
+        }
+        if self._shapelets_order is not None:
+            kwargs_constraints['joint_source_with_source'] = [[0, 1, ['center_x', 'center_y']]]
+        return kwargs_constraints
+
+    def setup_lens_light_model(self):
+
+        lens_light_model_list = ['SERSIC_ELLIPSE', 'SERSIC', 'SERSIC']
+        kwargs_lens_light_init = [
+            {'amp': np.float64(5.1315766455055), 'R_sersic': np.float64(1.7275779092147099),
+             'n_sersic': np.float64(5.667381589446984), 'e1': np.float64(-0.025170549343634295),
+             'e2': np.float64(-0.12383172454780926), 'center_x': np.float64(-0.008504932069085494),
+             'center_y': np.float64(-0.08130832077661247)},
+            {'amp': np.float64(57.12319682495667), 'R_sersic': np.float64(0.13792729169276555),
+             'n_sersic': np.float64(2.291674417054025), 'center_x': np.float64(0.4067480402888538),
+             'center_y': np.float64(1.6157137156539276)},
+            {'amp': np.float64(1029.593341048323), 'R_sersic': np.float64(0.021463728359259054),
+             'n_sersic': np.float64(0.29225659900181156), 'center_x': np.float64(0.41880015945944404),
+             'center_y': np.float64(1.5619588523361694)}
+        ]
+        kwargs_lens_light_sigma = [
+            {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1},
+            {'R_sersic': 0.05, 'n_sersic': 1, 'center_x': 0.05, 'center_y': 0.05},
+        {'R_sersic': 0.05, 'n_sersic': 1, 'center_x': 0.05, 'center_y': 0.05}]
+        kwargs_lower_lens_light = [
+            {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10.0, 'center_y': -10.0},
+            {'R_sersic': 0.0, 'n_sersic': 0.1, 'center_x': -10.0, 'center_y': -10.0},
+            {'R_sersic': 0.0, 'n_sersic': 0.1, 'center_x': -10.0, 'center_y': -10.0}]
+        kwargs_upper_lens_light = [
+            {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10},
+            {'R_sersic': 1.0, 'n_sersic': 10.0, 'center_x': 10.0, 'center_y': 10.0},
+        {'R_sersic': 1.0, 'n_sersic': 10.0, 'center_x': 10.0, 'center_y': 10.0}]
+        kwargs_lens_light_fixed = [{}, {}, {}]
+        include_uniform_comp = True
+        if include_uniform_comp:
+            kwargs_light_uniform, kwargs_light_sigma_uniform, kwargs_light_fixed_uniform, \
+                kwargs_lower_light_uniform, kwargs_upper_light_uniform = \
+                self.add_uniform_lens_light(3.7, 1.0)
+            lens_light_model_list += ['UNIFORM']
+            kwargs_lens_light_init += kwargs_light_uniform
+            kwargs_lens_light_sigma += kwargs_light_sigma_uniform
+            kwargs_lower_lens_light += kwargs_lower_light_uniform
+            kwargs_upper_lens_light += kwargs_upper_light_uniform
+            kwargs_lens_light_fixed += kwargs_light_fixed_uniform
+
+        lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_lens_light_fixed,
+                             kwargs_lower_lens_light,
+                             kwargs_upper_lens_light]
+
+        return lens_light_model_list, lens_light_params
+
+    def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None, assume_star=False):
+
+        star_x, star_y = self._data.satellite_or_star_coords
+        lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS']
+        kwargs_lens_macro = [
+            {'theta_E': np.float64(2.1422846375218008), 'gamma': np.float64(1.9240765974436087),
+             'e1': np.float64(-0.0055276345125970915), 'e2': np.float64(-0.029268016728840756),
+             'center_x': np.float64(-0.07464762823527696), 'center_y': np.float64(-0.1682202923299064),
+             'a1_a': np.float64(0.02193385880385233), 'delta_phi_m1': np.float64(0.270581872313791), 'a3_a': 0.0,
+             'delta_phi_m3': np.float64(-0.2160537795184223), 'a4_a': 0.0,
+             'delta_phi_m4': np.float64(1.5234683823852633)},
+            {'gamma1': np.float64(0.053366093802753825), 'gamma2': np.float64(0.06915722639950167), 'ra_0': 0.0,
+             'dec_0': 0.0}, {'theta_E': np.float64(0.256130593774684), 'center_x': np.float64(0.41880015945944404),
+                             'center_y': np.float64(1.5619588523361694)}
+        ]
+        redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
+        index_lens_split = [0, 1, 2]
+        if kwargs_lens_macro_init is not None:
+            for i in range(0, len(kwargs_lens_macro_init)):
+                for param_name in kwargs_lens_macro_init[i].keys():
+                    kwargs_lens_macro[i][param_name] = kwargs_lens_macro_init[i][param_name]
+        kwargs_lens_init = kwargs_lens_macro
+        kwargs_lens_sigma = [{'theta_E': 0.2, 'center_x': 0.1, 'center_y': 0.1, 'e1': 0.2, 'e2': 0.2, 'gamma': 0.1,
+                              'a1_a': 0.01, 'delta_phi_m1': 0.1, 'a4_a': 0.01, 'a3_a': 0.005, 'delta_phi_m3': np.pi / 12, 'delta_phi_m4': np.pi / 16},
+                             {'gamma1': 0.1, 'gamma2': 0.1},
+                             {'theta_E': 0.2, 'center_x': 0.05, 'center_y': 0.05}]
+
+        kwargs_lens_fixed = [{},
+                             {'ra_0': 0.0, 'dec_0': 0.0},
+                             {}]
+        kwargs_lower_lens = [
+            {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.5, 'a4_a': -0.1,
+             'a1_a': -0.1, 'delta_phi_m1': -np.pi,'a3_a': -0.1, 'delta_phi_m3': -np.pi / 6, 'delta_phi_m4': -10.0},
+            {'gamma1': -0.5, 'gamma2': -0.5},
+            {'theta_E': 0.0, 'center_x': star_x - 0.4, 'center_y': star_y - 0.4}]
+        kwargs_upper_lens = [
+            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.5, 'a4_a': 0.1,
+             'a1_a': 0.1, 'delta_phi_m1': np.pi,'a3_a': 0.1, 'delta_phi_m3': np.pi / 6, 'delta_phi_m4': 10.0},
+            {'gamma1': 0.5, 'gamma2': 0.5},
+            {'theta_E': 1.0, 'center_x': star_x + 0.4, 'center_y': star_y + 0.4}]
+        kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
+                                                                             kwargs_lens_init, macromodel_samples_fixed)
+        lens_model_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_lens_fixed, kwargs_lower_lens,
+                             kwargs_upper_lens]
+        return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
+
+class J0659ModelEPLM1M3M4Shear_Qgrad(J0659ModelEPLM1M3M4Shear):
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None, assume_star=False):
 

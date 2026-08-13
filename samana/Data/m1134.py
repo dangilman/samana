@@ -5,7 +5,7 @@ class _2M1134(ImagingDataBase):
 
     def __init__(self, x_image, y_image, magnifications, image_position_uncertainties, flux_uncertainties,
                  uncertainty_in_fluxes, supersample_factor=1,
-                 mask_quasar_images_for_logL=True, band='HST814W'):
+                 mask_quasar_images_for_logL=True, band='HST814W', filename_image_data=None):
 
         self._mask_quasar_images_for_logL = mask_quasar_images_for_logL
         z_lens = 0.66 # Anguita et al. in prep
@@ -47,9 +47,53 @@ class _2M1134(ImagingDataBase):
             self._background_rms = None
             self._exposure_time = None
             self._noise_map = noise_map
-        else:
-            raise Exception('imaging data band must be 814W (HST) or MMIRI56W')
 
+        elif band == 'NIRCam200':
+            # JWST/NIRCam F200W SWarp mosaic + companion RMS map, in microJy (ZP 23.9).
+            # native SW pixel scale; the mosaic is N-up / E-left so transform_pix2angle
+            # is diagonal, the same orientation as the HST814W frame above -- which is
+            # why _mask_rotation reuses the HST value rather than the MIRI one.
+            # psf_model is the STARRED reconstruction (supersampling 3, 447x447).
+            # psf_variance_map is STARRED's psf_error_map SQUARED: that file is a standard
+            # error in kernel units, while lenstronomy wants a variance in kernel**2 units.
+            if filename_image_data is not None:
+                psf_model = np.loadtxt(filename_image_data[0])
+                image_data = np.loadtxt(filename_image_data[1])
+                noise_map = np.loadtxt(filename_image_data[2])
+                psf_variance_map = np.loadtxt(filename_image_data[3]) if len(filename_image_data) > 3 else None
+            else:
+                # ImageData/m1134_NIRCam200.py holds the pixel data inline and is kept out of
+                # the public repository; use filename_image_data to load it from text instead.
+                try:
+                    from samana.Data.ImageData.m1134_NIRCam200 import (psf_model, image_data, noise_map,
+                                                                       psf_variance_map)
+                except ImportError:
+                    raise Exception('M1134 NIRCam200 pixel data not available in this checkout. Pass '
+                                    'filename_image_data=[psf_txt, imgdata_txt, noise_txt, psfvar_txt]; '
+                                    'the fourth entry is optional and sets psf_variance_map to None if omitted.')
+            self._custom_mask = 1.0
+            self._mask_rotation = 0.25
+            self._psf_estimate_init = psf_model
+            self._psf_error_map_init = psf_variance_map
+            self._image_data = image_data
+            self._psf_supersampling_factor = 3
+            self._deltaPix = 0.0309004492
+            self._window_size = 6.9835015194
+            self._ra_at_xy_0 = 3.4908467476
+            self._dec_at_xy_0 = -3.4861786532
+            self._transform_pix2angle = np.array([[-0.0309004492, 0.0],
+                                                  [0.0, 0.0309004492]])
+            self._background_rms = None
+            self._exposure_time = None
+            # supplied SWarp RMS map, 1-sigma per pixel, used unmodified. It is correctly
+            # normalised per pixel (blank-sky z has sigma 1.03) but carries no covariance
+            # term; empty-aperture noise exceeds rms*sqrt(N) by 1.8x at r=0.15" and 5.2x
+            # at 1", so inflate final parameter uncertainties by roughly 1.5-2x.
+            self._noise_map = noise_map
+
+        else:
+            raise Exception('imaging data band must be HST814W, MIRI560W or NIRCam200')
+        self._band = band
         keep_flux_ratio_index = [0, 1, 2]
         self._supersample_factor = supersample_factor
         image_band = [self.kwargs_data, self.kwargs_psf, self.kwargs_numerics]
@@ -78,6 +122,14 @@ class _2M1134(ImagingDataBase):
         inds = np.where(np.sqrt(_xx_rot ** 2 + (_yy_rot / q) ** 2) >= window_size / 1.9)
         likelihood_mask[inds] = 0.0
 
+        if self._band == 'NIRCam200':
+            # MASK CENTER OF DEFLECTOR
+            likelihood_mask = self.quasar_image_mask(
+                likelihood_mask,
+                [0.0],
+                [0.0],
+                self._image_data.shape, radius_arcsec=0.4
+            )
         if self._mask_quasar_images_for_logL:
             likelihood_mask_imaging_weights = self.quasar_image_mask(
                 likelihood_mask,
@@ -184,4 +236,42 @@ class M1134_MIRI(_2M1134):
                                           uncertainty_in_fluxes=False,
                                          supersample_factor=supersample_factor,
                                          band='MIRI560W')
+
+class M1134_NIRCAM(_2M1134):
+    band = 'NIRCam'
+
+    def __init__(self, supersample_factor=1, filename_image_data=None):
+        """
+        JWST/NIRCam F200W.
+
+        Image positions are centroids measured directly on the F200W mosaic, in a
+        frame centred on the deflector with x = +East, y = +North.  They reproduce
+        the positions already used by M1134_HST / M1134_MIRI to under 2.7 mas, so no
+        shift is applied here.
+
+        :param image_position_uncertainties: list of astrometric uncertainties for each image
+        i.e. [0.003, 0.003, 0.003, 0.003]
+        :param flux_uncertainties: list of flux ratio uncertainties in percentage, or None if these are handled
+        post-processing
+        :param magnifications: image magnifications; can also be a vector of 1s if tolerance is set to infintiy
+        :param uncertainty_in_fluxes: bool; the uncertainties quoted are for fluxes or flux ratios
+        :param filename_image_data: optional [psf_txt, image_txt, noise_txt] paths, so the
+        pixel data can be kept out of the repository
+        """
+        x_image = np.array([-1.24355627, -0.53926016, 1.43687313, 0.70594330])
+        y_image = np.array([-1.44905590, 0.68926229, 1.07907354, -0.67927994])
+        horizontal_shift = 0.0
+        vertical_shift = 0.0
+        x_image += horizontal_shift
+        y_image += vertical_shift
+        image_position_uncertainties = [0.005] * 4 # 5 mas
+        flux_uncertainties = None
+        magnifications = np.array([1.0] * 4)
+        super(M1134_NIRCAM, self).__init__(x_image, y_image, magnifications,
+                                           image_position_uncertainties,
+                                           flux_uncertainties,
+                                           uncertainty_in_fluxes=False,
+                                           supersample_factor=supersample_factor,
+                                           band='NIRCam200',
+                                           filename_image_data=filename_image_data)
 

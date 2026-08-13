@@ -1,7 +1,7 @@
 from samana.Model.model_base import EPLModelBase
 import numpy as np
 import pickle
-from samana.forward_model_util import macromodel_readout_function_eplshear_satellite
+from samana.forward_model_util import macromodel_readout_function_eplshear_satellite, macromodel_readout_function_eplshear
 
 
 class _M1134ModelBase(EPLModelBase):
@@ -184,6 +184,170 @@ class M1134ModelEPLM3M4ShearSatellite(_M1134ModelBase):
                              kwargs_upper_lens]
         return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
 
+class M1134ModelEPLM3M4ShearSatelliteNIRCam(M1134ModelEPLM3M4ShearSatellite):
+
+    def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
+
+        lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS']
+        kwargs_lens_macro = [
+            {'theta_E': 1.1977973522694216, 'gamma': 2.1811804820363756, 'e1': -0.049259366198138886,
+             'e2': 0.03393966515095142, 'center_x': 0.01310572691186353, 'center_y': -0.040971570963843316,
+             'a1_a': 0.0, 'delta_phi_m1': 0.0946244679093586, 'a3_a': 0.0, 'delta_phi_m3': -0.5205287918514736,
+             'a4_a': 0.0, 'delta_phi_m4': 0.7240750564861568},
+            {'gamma1': -0.001539234313987411, 'gamma2': 0.3660613471494284, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.1, 'center_x': 3.3841857914879068, 'center_y': -3.998138778021614}
+        ]
+        redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
+        index_lens_split = [0, 1, 2]
+        if kwargs_lens_macro_init is not None:
+            for i in range(0, len(kwargs_lens_macro_init)):
+                for param_name in kwargs_lens_macro_init[i].keys():
+                    kwargs_lens_macro[i][param_name] = kwargs_lens_macro_init[i][param_name]
+        kwargs_lens_init = kwargs_lens_macro
+        kwargs_lens_sigma = [{'theta_E': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'e1': 0.2, 'e2': 0.2, 'gamma': 0.1,
+                              'a1_a': 0.01, 'delta_phi_m1': 0.1, 'a4_a': 0.01, 'a3_a': 0.005,
+                              'delta_phi_m3': np.pi / 12, 'delta_phi_m4': np.pi / 16},
+                             {'gamma1': 0.1, 'gamma2': 0.1},
+                             {'theta_E': 0.2, 'center_x': 0.05, 'center_y': 0.05}]
+        kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}, {}]
+        kwargs_lower_lens = [
+            {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.7, 'a4_a': -0.1,
+             'a1_a': -0.1, 'delta_phi_m1': -np.pi, 'a3_a': -0.1, 'delta_phi_m3': -np.pi / 6, 'delta_phi_m4': -10.0},
+            {'gamma1': -0.5, 'gamma2': -0.5},
+            {'theta_E': 0.0, 'center_x': self.satellite_x - 0.3, 'center_y': self.satellite_y - 0.3}]
+        kwargs_upper_lens = [
+            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.6, 'a4_a': 0.1,
+             'a1_a': 0.1, 'delta_phi_m1': np.pi, 'a3_a': 0.1, 'delta_phi_m3': np.pi / 6, 'delta_phi_m4': 10.0},
+            {'gamma1': 0.5, 'gamma2': 0.5},
+            {'theta_E': 0.4, 'center_x': self.satellite_x + 0.3, 'center_y': self.satellite_y + 0.3}]
+        kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
+                                                                             kwargs_lens_init, macromodel_samples_fixed)
+        lens_model_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_lens_fixed, kwargs_lower_lens,
+                             kwargs_upper_lens]
+        return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
+
+class M1134NIRCamGroupSIS(M1134ModelEPLM3M4ShearSatellite):
+    """
+    EPL + multipole + shear, plus a single SIS on the bright group galaxy 31" to the
+    north-west, as a candidate physical origin for the large external shear.
+
+    The galaxy is the brightest resolved object in the mosaic apart from the deflector
+    itself (F200W AB 17.28, R_sersic 2.13"), sitting at the centre of the bright-galaxy
+    overdensity around the lens.  Position measured on the F200W mosaic:
+
+        RA 173.6624559, Dec -21.0502067
+        dE = -21.619",  dN = +21.726",  r = 30.649",  PA = 134.9 deg CCW from +x(E)
+
+    Why it is a good candidate: the shear carried by the other M1134 classes is
+    |gamma| = 0.366 with an axis at PA 45.1 deg, and 134.9 - 45.1 = 89.8 deg.  For a
+    2-phase quantity that is exact alignment (or exact anti-alignment, depending on the
+    sign convention of lenstronomy's SHEAR), so the shear axis and this galaxy's
+    direction coincide to better than a degree.
+
+    An SIS at that separation contributes kappa = gamma = theta_E / (2 r):
+
+        theta_E =  5"  ->  0.082
+        theta_E = 10"  ->  0.163      <-- the default here
+        theta_E = 15"  ->  0.245
+        theta_E = 22.4" ->  0.366     (would account for the whole external shear)
+
+    so theta_E = 10" supplies about 44% of it.  SHEAR is retained because
+    kwargs_constraints uses solver_type = 'PROFILE_SHEAR', which requires it; its init
+    is set to the residual that the SIS does not supply, 0.203 along the same axis.
+    If the fit instead pushes the shear UP, the sign convention is the opposite of the
+    one assumed here and the SIS is adding to the shear rather than replacing it -- in
+    that case flip the sign of shear_init.
+
+    Note the SIS also puts kappa = 0.163 at the lens, which is not a pure shear: it will
+    shift the inferred theta_E of the main deflector and any time-delay prediction.  That
+    is physical, not a bug, but it means results are not directly comparable to the
+    shear-only classes.
+
+    NOTE the inherited macromodel_readout_function is written for a single satellite at
+    kwargs_lens[2], which here is the group SIS rather than a satellite galaxy.
+    """
+
+    group_x = -21.619
+    group_y = 21.726
+    group_theta_E = 20.0
+    free_group_theta_E = False
+    free_group_position = False
+    group_theta_E_max = 25.0
+    # residual shear after a 10" SIS at 30.6" removes 0.163 from |gamma| = 0.366,
+    # keeping the original axis (PA 45.1 deg)
+    shear_init = (0.0, 0.05)
+
+    @property
+    def macromodel_readout_function(self):
+        return macromodel_readout_function_eplshear
+
+    @property
+    def kwargs_likelihood(self):
+        kwargs_likelihood = {'check_bounds': True,
+                             'force_no_add_image': False,
+                             'source_marg': False,
+                             'image_position_uncertainty': 5e-3,
+                             'source_position_tolerance': 0.00001,
+                             'source_position_likelihood': True,
+                             'prior_lens': self.prior_lens,
+                             'image_likelihood_mask_list': [self._data.likelihood_mask],
+                             'astrometric_likelihood': True,
+                             'custom_logL_addition': self.axis_ratio_prior,
+                             }
+        return kwargs_likelihood
+
+    def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
+
+        lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS']
+        kwargs_lens_macro = [
+            {'theta_E': np.float64(0.8061841511210835), 'gamma': np.float64(1.9090064868695527),
+             'e1': np.float64(-0.08199815788123434), 'e2': np.float64(0.29094249545952683),
+             'center_x': np.float64(-0.060945434274900886), 'center_y': np.float64(0.0828832881327979), 'a1_a': 0.0,
+             'delta_phi_m1': np.float64(0.3427382795835311), 'a3_a': 0.0,
+             'delta_phi_m3': np.float64(-0.41245947917280523), 'a4_a': 0.0,
+             'delta_phi_m4': np.float64(0.7805467520301529)},
+            {'gamma1': np.float64(-0.026275566106520865), 'gamma2': np.float64(-0.04529427898946263), 'ra_0': 0.0,
+             'dec_0': 0.0},
+            {'theta_E': self.group_theta_E, 'center_x': self.group_x, 'center_y': self.group_y}
+        ]
+        if self.z_satellite is None:
+            z_group = self._data.z_lens
+        else:
+            z_group = self.z_satellite
+        redshift_list_macro = [self._data.z_lens, self._data.z_lens, z_group]
+        index_lens_split = [0, 1, 2]
+        if kwargs_lens_macro_init is not None:
+            for i in range(0, len(kwargs_lens_macro_init)):
+                for param_name in kwargs_lens_macro_init[i].keys():
+                    kwargs_lens_macro[i][param_name] = kwargs_lens_macro_init[i][param_name]
+        kwargs_lens_init = kwargs_lens_macro
+        kwargs_lens_sigma = [{'theta_E': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'e1': 0.2, 'e2': 0.2, 'gamma': 0.1,
+                              'a1_a': 0.01, 'delta_phi_m1': 0.1, 'a4_a': 0.01, 'a3_a': 0.005,
+                              'delta_phi_m3': np.pi / 12, 'delta_phi_m4': np.pi / 16},
+                             {'gamma1': 0.1, 'gamma2': 0.1},
+                             {'theta_E': 2.0, 'center_x': 1.0, 'center_y': 1.0}]
+        _group_fixed = {}
+        if not self.free_group_theta_E:
+            _group_fixed['theta_E'] = self.group_theta_E
+        if not self.free_group_position:
+            _group_fixed['center_x'] = self.group_x
+            _group_fixed['center_y'] = self.group_y
+        kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}, _group_fixed]
+        kwargs_lower_lens = [
+            {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.7, 'a4_a': -0.1,
+             'a1_a': -0.1, 'delta_phi_m1': -np.pi, 'a3_a': -0.1, 'delta_phi_m3': -np.pi / 6, 'delta_phi_m4': -10.0},
+            {'gamma1': -0.5, 'gamma2': -0.5},
+            {'theta_E': 0.0, 'center_x': self.group_x - 5.0, 'center_y': self.group_y - 5.0}]
+        kwargs_upper_lens = [
+            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.6, 'a4_a': 0.1,
+             'a1_a': 0.1, 'delta_phi_m1': np.pi, 'a3_a': 0.1, 'delta_phi_m3': np.pi / 6, 'delta_phi_m4': 10.0},
+            {'gamma1': 0.5, 'gamma2': 0.5},
+            {'theta_E': self.group_theta_E_max, 'center_x': self.group_x + 5.0, 'center_y': self.group_y + 5.0}]
+        kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
+                                                                            kwargs_lens_init, macromodel_samples_fixed)
+        lens_model_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_lens_fixed, kwargs_lower_lens,
+                             kwargs_upper_lens]
+        return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
 
 class M1134ModelEPLM3M4ShearSatellite_Qgrad(M1134ModelEPLM3M4ShearSatellite):
 

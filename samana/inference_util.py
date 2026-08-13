@@ -14,6 +14,18 @@ def select_best_samples(sim, measured_flux_ratios, flux_ratio_cov, keep_index_li
     inds = np.where(fr_logL > tol_fr_logL)[0]
     return sim.down_select(inds)
 
+def compute_fluxratio_loglikelihood(flux_ratios,
+                                    measured_flux_ratios,
+                                    flux_ratio_covariance_matrix,
+                                    keep_index_list):
+
+    fr_logL = multivariate_normal.logpdf(flux_ratios[:,keep_index_list],
+                                   mean=measured_flux_ratios[keep_index_list],
+                                   cov=flux_ratio_covariance_matrix)
+    fr_logL_ref = multivariate_normal.logpdf(measured_flux_ratios[keep_index_list],
+                                         mean=measured_flux_ratios[keep_index_list],
+                                         cov=flux_ratio_covariance_matrix)
+    return fr_logL - fr_logL_ref
 
 def rescale_flux_uncertainties(measured_flux_ratios, covariance_matrix, minimum_uncertainty):
     eigenvalues = np.linalg.eig(covariance_matrix)[0]
