@@ -461,6 +461,7 @@ def forward_model_single_iteration(data_class,
         data_class.x_image,
         data_class.y_image,
         realization_init,
+        realization_dict['log_mlow'],
         verbose=verbose)
     # perform additional operations on realization after operations in process halos
     realization = dark_matter_model_class.halo_modifications(
