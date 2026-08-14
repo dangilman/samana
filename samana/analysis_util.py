@@ -112,6 +112,9 @@ def raytracing_grid_orientation(lens_ID, min_q=0.25):
     elif lens_ID == 'WGD2038':
         rotation_angle_list = np.array([-1.87, -2.58, -0.52, -0.67])
         hessian_eigenvalue_list = np.array([0.253, 0.202, 0.175, 0.364])
+    elif lens_ID == 'B2045':
+        rotation_angle_list = np.array([1.0, 1.15, 1.44, 2.77 - np.pi/2])
+        hessian_eigenvalue_list = np.array([0.2, 0.2, 0.2, 0.5])
     else:
         raise ValueError('lens_ID '+str(lens_ID)+' not recognized')
     hessian_eigenvalue_list[np.where(hessian_eigenvalue_list < min_q)[0]] = min_q
@@ -130,8 +133,6 @@ def numerics_setup(lens_ID):
     elif lens_ID == 'WFI2026':
         rescale_grid_size = [1.5, 1.5, 1.0, 1.0]
         rescale_grid_res = 1.5
-    elif lens_ID == 'B2045':
-        raise Exception('not yet implemented')
     elif lens_ID == 'HE0435':
         rescale_grid_size = 1.
         rescale_grid_res = 1.5
@@ -225,6 +226,9 @@ def numerics_setup(lens_ID):
     elif lens_ID == 'H1113':
         rescale_grid_res = 1.5
         rescale_grid_size = 1.
+    elif lens_ID == 'B2045':
+        rescale_grid_res = 1.4
+        rescale_grid_size = [4.0, 4.0, 4.0, 0.5]
     else:
         raise Exception('lens ID '+str(lens_ID)+' not recognized!')
     return rescale_grid_size, rescale_grid_res
