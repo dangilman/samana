@@ -936,10 +936,10 @@ def forward_model_single_iteration(data_class,
             print('num degrees of freedom: ', fitting_sequence.likelihoodModule.effective_num_data_points(**kwargs_result))
 
         f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
-        modelPlot.data_plot(ax=axes[0, 0], vmin=-2, vmax=2)
-        modelPlot.model_plot(ax=axes[0, 1], vmin=-2, vmax=2)
+        modelPlot.data_plot(ax=axes[0, 0], vmin=-4, vmax=2)
+        modelPlot.model_plot(ax=axes[0, 1], vmin=-4, vmax=2)
         modelPlot.normalized_residual_plot(ax=axes[0, 2], vmin=-6, vmax=6)
-        modelPlot.source_plot(ax=axes[1, 0], delta_pix_source=0.01, num_pix=100)
+        modelPlot.source_plot(ax=axes[1, 0], delta_pix_source=0.01, num_pix=100, vmin=-5, vmax=-2)
         modelPlot.convergence_plot(ax=axes[1, 1], vmax=1)
         modelPlot.magnification_plot(ax=axes[1, 2])
 
