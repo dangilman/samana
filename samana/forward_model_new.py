@@ -437,7 +437,7 @@ def forward_model_single_iteration(data_class,
     realization_init = dark_matter_model_class(z_lens,
                                           data_class.z_source,
                                           realization_dict,
-                                               verbose=verbose)
+                                          verbose=verbose)
     if return_realization:
         return realization_init
     realization_init, ray_align_x, ray_align_y, _, _ = align_realization(realization_init,
@@ -461,7 +461,7 @@ def forward_model_single_iteration(data_class,
         data_class.x_image,
         data_class.y_image,
         realization_init,
-        realization_dict['log_mlow'],
+        log_mlow_sheets=realization_dict['log_mlow'],
         verbose=verbose)
     # perform additional operations on realization after operations in process halos
     realization = dark_matter_model_class.halo_modifications(
@@ -564,7 +564,6 @@ def forward_model_single_iteration(data_class,
             print(likelihood_module.log_likelihood(kwargs_result, verbose=True))
         kwargs_solution = kwargs_result['kwargs_lens']
         kwargs_multiplane_model = kwargs_model['kwargs_multiplane_model']
-
     else:
         image_data_grids_computed = False
         param_class_4pointsolver = model_class.param_class_4pointsolver(lens_model_init.lens_model_list,
@@ -946,14 +945,17 @@ def forward_model_single_iteration(data_class,
 
         f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
         modelPlot.decomposition_plot(ax=axes[0, 0], kwargs_title={'text': 'Lens light'}, lens_light_add=True,
-                                     unconvolved=True)
-        modelPlot.decomposition_plot(ax=axes[1, 0], kwargs_title={'text': 'Lens light convolved'}, lens_light_add=True)
+                                     unconvolved=True, vmin=-2, vmax=2)
+        modelPlot.decomposition_plot(ax=axes[1, 0],
+                                     kwargs_title={'text': 'Lens light convolved'},
+                                     lens_light_add=True, vmin=-2, vmax=2)
         modelPlot.decomposition_plot(ax=axes[0, 1], kwargs_title={'text': 'Source light'}, source_add=True,
-                                     unconvolved=True)
-        modelPlot.decomposition_plot(ax=axes[1, 1], kwargs_title={'text': 'Source light convolved'}, source_add=True)
+                                     unconvolved=True, vmin=-2, vmax=2)
+        modelPlot.decomposition_plot(ax=axes[1, 1], kwargs_title={'text': 'Source light convolved'},
+                                     source_add=True, vmin=-2, vmax=2)
         modelPlot.decomposition_plot(ax=axes[0, 2], kwargs_title={'text': 'All components'}, source_add=True,
                                      lens_light_add=True,
-                                     unconvolved=True)
+                                     unconvolved=True, vmin=-2, vmax=2)
 
         try:
             modelPlot.decomposition_plot(ax=axes[1, 2], text='All components convolved', source_add=True,
