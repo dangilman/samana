@@ -456,7 +456,7 @@ def mag_finite_single_image_distortion_adaptive(
         source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
         kwargs_lens, z_split, z_source, cosmo_bkg, x_image, y_image,
         grid_resolution, grid_size_max, R_max, ray_interp_x, ray_interp_y,
-        kwargs_lens_free, n_coarse=20, rel_tol=1e-3, flux_floor_frac=1e-3,
+        kwargs_lens_free, n_coarse=40, rel_tol=5e-4, flux_floor_frac=1e-4,
         rotation_angle=None, hessian_eigenvalue=None,
         lens_model_fixed_batched=None,
         kwargs_lens_fixed_batched=None

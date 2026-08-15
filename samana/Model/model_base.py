@@ -310,6 +310,7 @@ class EPLModelBase(object):
                                      halo_masses=None,
                                      fallback='ELLIPTICAL_APERTURE',
                                      mu_tolerance=0.05,
+                                     kwargs_adaptive_tiling=None,
                                      verbose=False):
         """
 
@@ -340,6 +341,7 @@ class EPLModelBase(object):
             setup_decoupled_multiplane_lens_model_output_batch=setup_decoupled_multiplane_lens_model_output_batch,
             fallback=fallback,
             MU_TOLERANCE=mu_tolerance,
+            kwargs_adaptive_tiling=kwargs_adaptive_tiling,
             verbose=verbose)
 
         return mags

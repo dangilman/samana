@@ -72,8 +72,9 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                                    kwargs_lens_batch=None,
                                    halo_masses=None,
                                    setup_decoupled_multiplane_lens_model_output_batch=None,
-                                   fallback='ELLIPTICAL_APERTURE',
+                                   fallback='ADAPTIVE',
                                    MU_TOLERANCE=0.05,
+                                   kwargs_adaptive_tiling=None,
                                    verbose=False):
     """
 
@@ -123,16 +124,17 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
         grid_y_large = grid_y_large.ravel()
 
         if magnification_method == 'ADAPTIVE':
-            # batching is slower here, don't use it
+            if kwargs_adaptive_tiling is None:
+                kwargs_adaptive_tiling = {'n_coarse': 40,
+                                          'rel_tol': 5e-4,
+                                          'flux_floor_frac': 1e-4}
             mag, flux_array, tiling = mag_finite_single_image_adaptive(
                 source_model, kwargs_source, lens_model_fixed_batch, lens_model_free,
                 kwargs_lens_fixed_batch, kwargs_lens_free, kwargs_lens,
                 z_split, z_source, cosmo_bkg, x_img, y_img, grid_resolution_list[j],
                 grid_size_list[j], z_split, z_source, rotation_angle_list[j],
                 hessian_eigenvalue_list[j],
-                n_coarse=40,
-                rel_tol=5e-4,
-                flux_floor_frac=1e-4)
+                **kwargs_adaptive_tiling)
             magnifications.append(mag)
             flux_arrays.append([flux_array, tiling])
             mu_discrepancy_list.append(np.nan)
@@ -191,18 +193,20 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                 )
 
             else:
+                if kwargs_adaptive_tiling is None:
+                    kwargs_adaptive_tiling = {'n_coarse': 40,
+                                              'rel_tol': 5e-4,
+                                              'flux_floor_frac': 1e-4}
                 mag, flux_array, tiling, mu_discrepancy = mag_finite_single_image_distortion_adaptive(
                     source_model, kwargs_source, lens_model_fixed, lens_model_free, kwargs_lens_fixed,
                     kwargs_lens, z_split, z_source, cosmo_bkg, x_img, y_img,
                     grid_resolution_list[j], grid_size_list[j], R_max, ray_interp_x_list[0], ray_interp_y_list[0],
                     kwargs_lens_free,
-                    n_coarse=40,
-                    rel_tol=5e-4,
-                    flux_floor_frac=1e-4,
                     rotation_angle=rotation_angle_list[j],
                     hessian_eigenvalue=hessian_eigenvalue_list[j],
                     lens_model_fixed_batched=lens_model_fixed_batch,
-                    kwargs_lens_fixed_batched=kwargs_lens_fixed_batch
+                    kwargs_lens_fixed_batched=kwargs_lens_fixed_batch,
+                    **kwargs_adaptive_tiling
                 )
             if verbose: print('point-source mag discrepancy: ', mu_discrepancy)
             # FLAGS IMAGES WHERE APPROXIMATION BREAKS DOWN
@@ -211,15 +215,17 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                     print('image '+str(j+1)+' exceeds threshold '+str(MU_TOLERANCE)+', using exact ray tracing')
 
                 if fallback == 'ADAPTIVE':
+                    if kwargs_adaptive_tiling is None:
+                        kwargs_adaptive_tiling = {'n_coarse': 40,
+                                                  'rel_tol': 5e-4,
+                                                  'flux_floor_frac': 1e-4}
                     mag, flux_array, tiling = mag_finite_single_image_adaptive(
                         source_model, kwargs_source, lens_model_fixed_batch, lens_model_free,
                         kwargs_lens_fixed_batch, kwargs_lens_free, kwargs_lens,
                         z_split, z_source, cosmo_bkg, x_img, y_img, grid_resolution_list[j],
                         grid_size_list[j], z_split, z_source, rotation_angle_list[j],
                         hessian_eigenvalue_list[j],
-                        n_coarse=40,
-                        rel_tol=5e-4,
-                        flux_floor_frac=1e-4)
+                        **kwargs_adaptive_tiling)
                 else:
 
                     if hessian_eigenvalue_list is not None:
@@ -456,7 +462,7 @@ def mag_finite_single_image_adaptive(
         kwargs_lens_free, kwargs_lens, z_split, z_source,
         cosmo_bkg, x_image, y_image, grid_resolution, grid_size_max, zlens, zsource,
         rotation_angle=None, hessian_eigenvalue=None,
-        n_coarse=16, rel_tol=1e-3, flux_floor_frac=1e-3):
+        n_coarse=40, rel_tol=5e-4, flux_floor_frac=1e-4):
     """Edge-refining quadtree magnification through the exact decoupled multiplane model.
     Drop-in for samana.image_magnification_util.mag_finite_single_image_adaptive.
 
@@ -481,7 +487,6 @@ def mag_finite_single_image_adaptive(
     """
     from lenstronomy.LensModel.Util.decouple_multi_plane_util import coordinates_and_deflections
     from samana.image_magnification_util import calc_source_sb
-
     Td = cosmo_bkg.T_xy(0, zlens)
     Ts = cosmo_bkg.T_xy(0, zsource)
     Tds = cosmo_bkg.T_xy(zlens, zsource)

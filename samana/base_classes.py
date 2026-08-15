@@ -84,7 +84,8 @@ class SingleGaussianMagnification(object):
                  rotation_angle_list,
                  hessian_eigenvalue_list,
                  fallback='ADAPTIVE',
-                 mu_tolerance=0.05):
+                 mu_tolerance=0.05,
+                 kwargs_adaptive_tiling=None):
         """
 
         :param astropy_cosmo:
@@ -102,6 +103,7 @@ class SingleGaussianMagnification(object):
         self.hessian_eigenvalue_list = hessian_eigenvalue_list
         self.fallback = fallback
         self.mu_tolerance = mu_tolerance
+        self.kwargs_adaptive_tiling = kwargs_adaptive_tiling
         self._mu_discrepancy_list = None
 
     @property
@@ -178,6 +180,7 @@ class SingleGaussianMagnification(object):
                                                                               halo_masses=halo_masses,
                                                                               fallback=self.fallback,
                                                                               mu_tolerance=self.mu_tolerance,
+                                                                            kwargs_adaptive_tiling=self.kwargs_adaptive_tiling,
                                                                               verbose=verbose)
         if self.magnification_method in ['NEAR_FAR_SPLITTING', 'NEAR_FAR_SPLITTING_ADAPTIVE']:
             self._mu_discrepancy_list = mu_discrepancy
