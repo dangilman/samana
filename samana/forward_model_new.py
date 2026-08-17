@@ -917,16 +917,17 @@ def forward_model_single_iteration(data_class,
         import matplotlib.pyplot as plt
         from samana.image_magnification_util import plot_tiled_image
 
-        for mag, image in zip(magnifications, images):
+        for ind, (mag, image) in enumerate(zip(magnifications, images)):
             if image is None: break
             fig = plt.figure()
             ax = plt.subplot(111)
             if isinstance(image, list):  # adaptive: [flux_array, tiling]
-                plot_tiled_image(*image, ax=ax, show_cells=True)
+                plot_tiled_image(*image, ax=ax, show_cells=True, show_aperture=False)
             else:  # circular / elliptical / near-far: npix x npix grid
                 ax.imshow(image, origin='lower')
-            ax.annotate('magnification: ' + str(np.round(mag, 2)), xy=(0.3, 0.9),
-                        xycoords='axes fraction', color='w', fontsize=12)
+            ax.annotate('magnification: ' + str(np.round(mag, 2)), xy=(0.35, 0.9),
+                        xycoords='axes fraction', color='w', fontsize=14)
+
         modelPlot = ModelPlot(data_class.kwargs_data_joint['multi_band_list'],
                               kwargs_model, kwargs_result,
                               fast_caustic=True,
@@ -972,9 +973,9 @@ def forward_model_single_iteration(data_class,
         kwargs_plot = {'ax': ax,
                        'index_macromodel': list(np.arange(0, len(kwargs_result['kwargs_lens']))),
                        'with_critical_curves': True,
-                       'vmin': -0.075, 'vmax': 0.075,
+                       'vmin': -0.06, 'vmax': 0.06,
                        'super_sample_factor': 5,
-                       'subtract_mean': False}
+                       'subtract_mean': True}
         modelPlot.substructure_plot(band_index=0, **kwargs_plot)
         plt.show()
 

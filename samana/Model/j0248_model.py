@@ -1,7 +1,7 @@
 from samana.Model.model_base import EPLModelBase
 import numpy as np
 import pickle
-from samana.forward_model_util import macromodel_readout_function_eplshear_satellite
+from samana.forward_model_util import macromodel_readout_function_eplshear_satellite, macromodel_readout_function_2033
 
 class _J0248ModelBase(EPLModelBase):
 
@@ -159,7 +159,7 @@ class J0248ModelEPLM3M4ShearSatellite(_J0248ModelBase):
 
     @property
     def prior_lens(self):
-        return self.population_gamma_prior
+        return None
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
@@ -202,6 +202,75 @@ class J0248ModelEPLM3M4ShearSatellite(_J0248ModelBase):
         {'theta_E': 0.3, 'center_x': self.satellite_x3+0.3, 'center_y': self.satellite_y3+0.3}]
         kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
                                                                              kwargs_lens_init, macromodel_samples_fixed)
+        lens_model_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_lens_fixed, kwargs_lower_lens,
+                             kwargs_upper_lens]
+        return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
+
+
+class J0248ModelEPLM3M4ShearSpiral(J0248ModelEPLM3M4ShearSatellite):
+
+    spiral_x = -4.344
+    spiral_y = -1.478
+    spiral_theta_E_init = 1.0
+    spiral_theta_E_max = 3.0
+    spiral_position_delta = 0.3
+    z_spiral = None
+
+    @property
+    def macromodel_readout_function(self):
+        # inherited readout records only kwargs_lens[2] (the original satellite); the
+        # spiral at index 3 will not appear in the readout unless this is overridden
+        return macromodel_readout_function_2033
+
+    @property
+    def prior_lens(self):
+        return None
+
+    def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
+
+        lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS', 'SIS']
+        kwargs_lens_macro = [
+            {'theta_E': np.float64(0.7143410012253131), 'gamma': np.float64(2.264571440878724),
+             'e1': np.float64(-0.1836003696222383), 'e2': np.float64(0.0013160747475222405),
+             'center_x': np.float64(-0.004830369532977817), 'center_y': np.float64(0.010581316524915639), 'a1_a': 0.0,
+             'delta_phi_m1': 0.0, 'a3_a': 0.0, 'delta_phi_m3': 0.0, 'a4_a': 0.0, 'delta_phi_m4': 0.0},
+            {'gamma1': np.float64(-0.0812102015683743), 'gamma2': np.float64(-0.073518035083327), 'ra_0': 0.0,
+             'dec_0': 0.0}, {'theta_E': np.float64(0.10011683118605984), 'center_x': np.float64(1.2753861076679625),
+                             'center_y': np.float64(-1.1600205315062864)},
+            {'theta_E': 0.5, 'center_x': np.float64(-4.5116805331825285), 'center_y': np.float64(-1.5736598898014227)}
+        ]
+        z_sp = self._data.z_lens if self.z_spiral is None else self.z_spiral
+        redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens, z_sp]
+        index_lens_split = [0, 1, 2, 3]
+        if kwargs_lens_macro_init is not None:
+            for i in range(0, len(kwargs_lens_macro_init)):
+                for param_name in kwargs_lens_macro_init[i].keys():
+                    kwargs_lens_macro[i][param_name] = kwargs_lens_macro_init[i][param_name]
+        kwargs_lens_init = kwargs_lens_macro
+        kwargs_lens_sigma = [
+            {'theta_E': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'e1': 0.2, 'e2': 0.2, 'gamma': 0.1,
+             'a1_a': 0.01, 'delta_phi_m1': 0.1, 'a4_a': 0.01, 'a3_a': 0.005,
+             'delta_phi_m3': np.pi / 12, 'delta_phi_m4': np.pi / 16},
+            {'gamma1': 0.1, 'gamma2': 0.1},
+            {'theta_E': 0.04, 'center_x': 0.05, 'center_y': 0.05},
+            {'theta_E': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
+        kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}, {}, {}]
+        kwargs_lower_lens = [
+            {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.6, 'a4_a': -0.1,
+             'a1_a': -0.1, 'delta_phi_m1': -np.pi, 'a3_a': -0.1, 'delta_phi_m3': -np.pi / 6, 'delta_phi_m4': -10.0},
+            {'gamma1': -0.5, 'gamma2': -0.5},
+            {'theta_E': 0.0, 'center_x': self.satellite_x3 - 0.3, 'center_y': self.satellite_y3 - 0.3},
+            {'theta_E': 0.0, 'center_x': self.spiral_x - self.spiral_position_delta,
+             'center_y': self.spiral_y - self.spiral_position_delta}]
+        kwargs_upper_lens = [
+            {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.5, 'a4_a': 0.1,
+             'a1_a': 0.1, 'delta_phi_m1': np.pi, 'a3_a': 0.1, 'delta_phi_m3': np.pi / 6, 'delta_phi_m4': 10.0},
+            {'gamma1': 0.5, 'gamma2': 0.5},
+            {'theta_E': 0.3, 'center_x': self.satellite_x3 + 0.3, 'center_y': self.satellite_y3 + 0.3},
+            {'theta_E': self.spiral_theta_E_max, 'center_x': self.spiral_x + self.spiral_position_delta,
+             'center_y': self.spiral_y + self.spiral_position_delta}]
+        kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
+                                                                            kwargs_lens_init, macromodel_samples_fixed)
         lens_model_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_lens_fixed, kwargs_lower_lens,
                              kwargs_upper_lens]
         return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
