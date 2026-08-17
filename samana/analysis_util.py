@@ -32,7 +32,7 @@ def raytracing_grid_orientation(lens_ID, min_q=0.25):
     if lens_ID == 'J0248':
         #rotation_angle_list = np.array([0.5376, 1.8694, 0.8062, 2.4399])
         rotation_angle_list = np.array([-2.8 + 0.2, -1.21, -2.43 + 0.2, -0.63 - 0.1])
-        hessian_eigenvalue_list = np.array([0.13, 0.082, 0.091, 0.079])
+        hessian_eigenvalue_list = np.array([0.3, 0.3, 0.3, 0.3])
     elif lens_ID == 'J0607':
         rotation_angle_list = np.array([-2.4, -1.15, -0.26, -1.62])
         hessian_eigenvalue_list = np.array([0.118, 0.052, 0.014, 0.012])
@@ -139,7 +139,7 @@ def numerics_setup(lens_ID):
         rescale_grid_size = 1.
         rescale_grid_res = 1.5
     elif lens_ID in ['J0248', 'J0248_HST']:
-        rescale_grid_size = [2.0, 2.0, 2.0, 2.0]
+        rescale_grid_size = [2.5, 2.5, 2.5, 2.5]
         rescale_grid_res = 1.5
     elif lens_ID in ['J0259', 'J0259_HST_475X']:
         rescale_grid_size = 1.4
