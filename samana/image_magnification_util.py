@@ -5,61 +5,6 @@ from lenstronomy.LensModel.Util.decouple_multi_plane_util import (
     setup_grids, coordinates_and_deflections, setup_lens_model,
 )
 
-def perturbed_flux_ratios_from_flux_ratios(flux_ratios, flux_ratio_measurement_uncertainties_percentage):
-    """
-
-    :param flux_ratios:
-    :param flux_ratio_measurement_uncertainties_percentage:
-    :return:
-    """
-    if flux_ratios.ndim == 1:
-        flux_ratios_perturbed = [np.random.normal(flux_ratios[i],
-                                        flux_ratios[i] *
-                                        flux_ratio_measurement_uncertainties_percentage[i]) for i in range(0, 3)]
-    else:
-        flux_ratios_perturbed = deepcopy(flux_ratios)
-        for i in range(0,3):
-            flux_ratios_perturbed[:, i] += np.random.normal(0.0,
-                                                            flux_ratios_perturbed[:, i] *
-                                                            flux_ratio_measurement_uncertainties_percentage[i])
-    return np.array(flux_ratios_perturbed)
-
-def perturbed_flux_ratios_from_fluxes(fluxes, flux_measurement_uncertainties_percentage):
-    """
-
-    :param fluxes:
-    :param flux_measurement_uncertainties_percentage:
-    :return:
-    """
-    fluxes_perturbed = perturbed_fluxes_from_fluxes(fluxes, flux_measurement_uncertainties_percentage)
-    fluxes = np.array(fluxes)
-    if fluxes.ndim == 1:
-        flux_ratios = fluxes_perturbed[1:] / fluxes_perturbed[0]
-    else:
-        flux_ratios = fluxes_perturbed[:, 1:] / fluxes_perturbed[:,0,np.newaxis]
-    return flux_ratios
-
-def perturbed_fluxes_from_fluxes(fluxes, flux_measurement_uncertainties_percentage):
-    """
-
-    :param fluxes:
-    :param flux_measurement_uncertainties_percentage:
-    :return:
-    """
-    fluxes = np.array(fluxes)
-    if fluxes.ndim == 1:
-        fluxes_perturbed = []
-        for i in range(0, 4):
-            df = np.random.normal(0.0, fluxes[i] * flux_measurement_uncertainties_percentage[i])
-            fluxes_perturbed.append(fluxes[i] + df)
-        fluxes_perturbed = np.array(fluxes_perturbed)
-    else:
-        fluxes_perturbed = np.empty_like(fluxes)
-        for i in range(0, 4):
-            df = np.random.normal(0.0, fluxes[:, i] * flux_measurement_uncertainties_percentage[i])
-            fluxes_perturbed[:, i] = fluxes[:, i] + df
-    return fluxes_perturbed
-
 def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image,
                                    lens_model_init, kwargs_lens_init, kwargs_lens, index_lens_split,
                                    grid_size_list, grid_resolution_list,
@@ -75,6 +20,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                                    fallback='ADAPTIVE',
                                    MU_TOLERANCE=0.05,
                                    kwargs_adaptive_tiling=None,
+                                   R_max_0 = 0.4,
                                    verbose=False):
     """
 
@@ -165,7 +111,6 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
             from samana.image_magnification_near_far import (mag_finite_single_image_distortion,
                                                              mag_finite_single_image_distortion_adaptive)
             from samana.forward_model_util import interpolate_ray_paths
-            R_max_0 = 0.4
             if halo_masses is None:
                 R_max = R_max_0
             else:

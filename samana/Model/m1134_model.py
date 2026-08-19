@@ -248,12 +248,12 @@ class M1134NIRCamGroupSIS(M1134ModelEPLM3M4ShearSatellite):
     group_theta_E = 20.0
     free_group_theta_E = True
     free_group_position = True
-    group_theta_E_max = 25.0
+    group_theta_E_max = 30.0
     shear_init = (0.0, 0.05)
 
     @property
     def macromodel_readout_function(self):
-        return macromodel_readout_function_eplshear
+        return macromodel_readout_function_eplshear_satellite
 
     @property
     def kwargs_likelihood(self):

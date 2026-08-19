@@ -126,7 +126,7 @@ class _RXJ1131(ImagingDataBase):
     @property
     def kwargs_numerics(self):
         kwargs_numerics = {
-            'supersampling_factor': int(self._supersample_factor * max(1, self._psf_supersampling_factor)),
+            'supersampling_factor': int(self._supersample_factor),
             'supersampling_convolution': False,  # try with True
             'point_source_supersampling_factor': self._psf_supersampling_factor}
         return kwargs_numerics
