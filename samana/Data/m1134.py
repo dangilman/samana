@@ -49,21 +49,12 @@ class _2M1134(ImagingDataBase):
             self._noise_map = noise_map
 
         elif band == 'NIRCam200':
-            # JWST/NIRCam F200W SWarp mosaic + companion RMS map, in microJy (ZP 23.9).
-            # native SW pixel scale; the mosaic is N-up / E-left so transform_pix2angle
-            # is diagonal, the same orientation as the HST814W frame above -- which is
-            # why _mask_rotation reuses the HST value rather than the MIRI one.
-            # psf_model is the STARRED reconstruction (supersampling 3, 447x447).
-            # psf_variance_map is STARRED's psf_error_map SQUARED: that file is a standard
-            # error in kernel units, while lenstronomy wants a variance in kernel**2 units.
             if filename_image_data is not None:
                 psf_model = np.loadtxt(filename_image_data[0])
                 image_data = np.loadtxt(filename_image_data[1])
                 noise_map = np.loadtxt(filename_image_data[2])
                 psf_variance_map = np.loadtxt(filename_image_data[3]) if len(filename_image_data) > 3 else None
             else:
-                # ImageData/m1134_NIRCam200.py holds the pixel data inline and is kept out of
-                # the public repository; use filename_image_data to load it from text instead.
                 try:
                     from samana.Data.ImageData.m1134_NIRCam200 import (psf_model, image_data, noise_map,
                                                                        psf_variance_map)
@@ -121,7 +112,6 @@ class _2M1134(ImagingDataBase):
         q = 0.7
         inds = np.where(np.sqrt(_xx_rot ** 2 + (_yy_rot / q) ** 2) >= window_size / 1.9)
         likelihood_mask[inds] = 0.0
-
         if self._band == 'NIRCam200':
             # MASK CENTER OF DEFLECTOR
             likelihood_mask = self.quasar_image_mask(
@@ -166,7 +156,7 @@ class _2M1134(ImagingDataBase):
     @property
     def kwargs_numerics(self):
         kwargs_numerics = {
-            'supersampling_factor': int(self._supersample_factor * max(1, self._psf_supersampling_factor)),
+            'supersampling_factor': int(self._supersample_factor),
             'supersampling_convolution': False,  # try with True
             'point_source_supersampling_factor': self._psf_supersampling_factor}
         return kwargs_numerics

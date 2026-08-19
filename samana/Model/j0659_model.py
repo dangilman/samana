@@ -159,10 +159,10 @@ class J0659ModelEPLM1M3M4ShearNIRCam200(J0659ModelEPLM1M3M4Shear):
 
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': np.float64(0.09166711698547299), 'R_sersic': np.float64(0.5162697742507565),
-             'n_sersic': np.float64(4.263565650284715), 'e1': np.float64(-0.43177835207214504),
-             'e2': np.float64(-0.03468580483304195), 'center_x': np.float64(-0.3849432969021575),
-             'center_y': np.float64(-0.10449429790448476)}
+            {'amp': np.float64(0.07614651348971704), 'R_sersic': np.float64(0.530444042712249),
+             'n_sersic': np.float64(4.191534641743025), 'e1': np.float64(-0.42310365221463886),
+             'e2': np.float64(-0.03405821163088186), 'center_x': np.float64(-0.39940989661046694),
+             'center_y': np.float64(-0.10120445593512986)}
         ]
         kwargs_source_sigma = [{'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
                                 'center_y': 0.1}]
@@ -251,15 +251,15 @@ class J0659ModelEPLM1M3M4ShearNIRCam200(J0659ModelEPLM1M3M4Shear):
         star_x, star_y = self._data.satellite_or_star_coords
         lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS']
         kwargs_lens_macro = [
-            {'theta_E': np.float64(2.1422846375218008), 'gamma': np.float64(1.9240765974436087),
-             'e1': np.float64(-0.0055276345125970915), 'e2': np.float64(-0.029268016728840756),
-             'center_x': np.float64(-0.07464762823527696), 'center_y': np.float64(-0.1682202923299064),
-             'a1_a': np.float64(0.02193385880385233), 'delta_phi_m1': np.float64(0.270581872313791), 'a3_a': 0.0,
-             'delta_phi_m3': np.float64(-0.2160537795184223), 'a4_a': 0.0,
-             'delta_phi_m4': np.float64(1.5234683823852633)},
-            {'gamma1': np.float64(0.053366093802753825), 'gamma2': np.float64(0.06915722639950167), 'ra_0': 0.0,
-             'dec_0': 0.0}, {'theta_E': np.float64(0.256130593774684), 'center_x': np.float64(0.41880015945944404),
-                             'center_y': np.float64(1.5619588523361694)}
+            {'theta_E': np.float64(2.142987175100762), 'gamma': np.float64(2.0604531526689733),
+             'e1': np.float64(-0.013644510412446407), 'e2': np.float64(-0.032341979398787454),
+             'center_x': np.float64(-0.04495069462507218), 'center_y': np.float64(-0.16570209072542497), 'a1_a': 0.0,
+             'delta_phi_m1': np.float64(0.2799996836703217), 'a3_a': 0.0,
+             'delta_phi_m3': np.float64(0.3357269555989401), 'a4_a': 0.0,
+             'delta_phi_m4': np.float64(1.5595591283833674)},
+            {'gamma1': np.float64(0.058268424141255146), 'gamma2': np.float64(0.08159791469013095), 'ra_0': 0.0,
+             'dec_0': 0.0}, {'theta_E': np.float64(0.281665428348713), 'center_x': np.float64(0.4203604439499384),
+                             'center_y': np.float64(1.559433919924923)}
         ]
         redshift_list_macro = [self._data.z_lens, self._data.z_lens, self._data.z_lens]
         index_lens_split = [0, 1, 2]

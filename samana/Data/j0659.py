@@ -3,24 +3,6 @@ import numpy as np
 
 class _J0659(ImagingDataBase):
 
-    # --- NIRCam200 western mask ---------------------------------------------------
-    # The outer mask radius is reduced from window_size/2 (4.004") to
-    # west_mask_radius inside a wedge of half-width west_mask_pa_width/2 about
-    # west_mask_pa_center, so the region removed is a partial annulus.
-    #
-    # Position angle is measured in DEGREES WEST OF NORTH, i.e.
-    # PA = degrees(arctan2(-ra, dec)) with ra = +East.  For reference in this frame:
-    #   counter image (img 1)            PA = +112.6 deg,  r = 3.11"
-    #   images 0 / 2 / 3                 PA = -115.5 / -22.0 / -61.0 deg (east side)
-    #   compact bright feature NNE       PA =  -14 deg
-    # The default wedge 60-110 deg therefore lies north of the counter image and
-    # west of that feature, and excludes all four images.
-    #
-    # west_mask_radius = 2.8" is set so the wedge clears the lensed arc: inside
-    # r = 2.2" the high-pass signal in this sector is flat at 0.8-2.3 sigma, and the
-    # discrete features that motivate the mask all sit at r >= 3.08" (the four
-    # brightest are at r = 3.08, 3.18, 3.61, 3.83", PA 102-123 deg).
-    # Set west_mask_radius = 4.004 (= window_size/2) to switch the wedge off.
     west_mask_radius = 2.8
     west_mask_pa_center = 85.0
     west_mask_pa_width = 50.0
@@ -138,16 +120,6 @@ class _J0659(ImagingDataBase):
                 [0.0],
                 self._image_data.shape, radius_arcsec=1.4
             )
-            # Shrink the mask radius inside a wedge to the west, so what gets removed
-            # is a partial annulus: west_mask_radius < r < window_size/2 within
-            # west_mask_pa_width degrees about west_mask_pa_center.  There are faint
-            # curved features out there, probably lensed background galaxies, which the
-            # lens model does not describe and which show up as a coherent positive
-            # residual.
-            #
-            # This uses the TRUE coordinate grid rather than the _xx/_yy linspace proxy
-            # above.  That matters: this mosaic is N-up/E-left, so _xx increases toward
-            # WEST and its sign is the opposite of the sky RA offset.  ra_grid is +East.
             ra_grid, dec_grid = self.coordinate_system.coordinate_grid(*self._image_data.shape)
             rr = np.sqrt(ra_grid ** 2 + dec_grid ** 2)
             pa = np.degrees(np.arctan2(-ra_grid, dec_grid))   # degrees west of north
@@ -193,7 +165,7 @@ class _J0659(ImagingDataBase):
     @property
     def kwargs_numerics(self):
         kwargs_numerics = {
-            'supersampling_factor': int(self._supersample_factor * max(1, self._psf_supersampling_factor)),
+            'supersampling_factor': int(self._supersample_factor),
             'supersampling_convolution': self._supersampling_convolution,
             'point_source_supersampling_factor': self._psf_supersampling_factor}
         return kwargs_numerics
@@ -267,8 +239,8 @@ class J0659_NIRCAM(_J0659):
         """
         x_image = np.array([1.80108812, -2.86662765, 0.82118058, 1.88327995])
         y_image = np.array([-0.85803028, -1.19468746, 2.02849772, 1.04438631])
-        horizontal_shift = 0.0
-        vertical_shift = 0.0
+        horizontal_shift = 0.003
+        vertical_shift = 0.005
         x_image += horizontal_shift
         y_image += vertical_shift
         image_position_uncertainties = [0.005] * 4 # 5 mas

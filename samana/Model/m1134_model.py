@@ -29,9 +29,13 @@ class _M1134ModelBase(EPLModelBase):
             ]
         else:
             kwargs_source_init = [
-                {'amp': 2.1185751163399558, 'R_sersic': 1.4776136937531457, 'n_sersic': 3.9437525404186053,
-                 'e1': -0.09472006972243252, 'e2': -0.23604200716782295, 'center_x': 0.10381092761860801,
-                 'center_y': -0.18719810606822243}
+                {'amp': np.float64(25.378758882407134),
+                 'R_sersic': np.float64(0.4008966533733798),
+                 'n_sersic': np.float64(7.136887752176083),
+                 'e1': np.float64(-0.05384715633638714),
+                 'e2': np.float64(-0.14085041538673967),
+                 'center_x': np.float64(-0.03467344912896598),
+                 'center_y': np.float64(0.11238549268539987)}
             ]
 
         kwargs_source_sigma = [{'R_sersic': 0.1, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1,
@@ -66,10 +70,17 @@ class _M1134ModelBase(EPLModelBase):
                  'e1': -0.1202898797182632, 'e2': 0.0067593098640644994, 'center_x': 0.009134769676769624,
                  'center_y': 0.015374389413448142}
             ]
-        else:
+        elif self._data.band == 'MIRI560W':
             kwargs_lens_light_init = [
                 {'amp': 1, 'R_sersic': 1.2942967883289467, 'n_sersic': 7.697747494985299, 'e1': -0.36132931126429374,
                  'e2': -0.1062427449413843, 'center_x': -0.06085505726650964, 'center_y': 0.12707496720879105}
+            ]
+        else:
+            kwargs_lens_light_init = [
+                {'amp': np.float64(2.835132902565724), 'R_sersic': np.float64(1.267285428640119),
+                 'n_sersic': np.float64(6.958655483820412), 'e1': np.float64(-0.060933464918506826),
+                 'e2': np.float64(-0.11594604129012832), 'center_x': np.float64(-0.04604460366691842),
+                 'center_y': np.float64(0.18249085850115218)}
             ]
         kwargs_lens_light_sigma = [
             {'R_sersic': 0.05, 'n_sersic': 0.25, 'e1': 0.1, 'e2': 0.1, 'center_x': 0.1, 'center_y': 0.1}]
@@ -79,7 +90,7 @@ class _M1134ModelBase(EPLModelBase):
             {'R_sersic': 10, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
         kwargs_lens_light_fixed = [{}]
 
-        if self._data.band == 'HST814W':
+        if self._data.band in ['HST814W', 'NIRCam200']:
             add_uniform_light = False
         else:
             add_uniform_light = True
@@ -238,8 +249,6 @@ class M1134NIRCamGroupSIS(M1134ModelEPLM3M4ShearSatellite):
     free_group_theta_E = True
     free_group_position = True
     group_theta_E_max = 25.0
-    # residual shear after a 10" SIS at 30.6" removes 0.163 from |gamma| = 0.366,
-    # keeping the original axis (PA 45.1 deg)
     shear_init = (0.0, 0.05)
 
     @property
