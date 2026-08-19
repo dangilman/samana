@@ -260,8 +260,8 @@ class M1134_NIRCAM(_2M1134):
         """
         x_image = np.array([-1.24355627, -0.53926016, 1.43687313, 0.70594330])
         y_image = np.array([-1.44905590, 0.68926229, 1.07907354, -0.67927994])
-        horizontal_shift = 0.0
-        vertical_shift = 0.0
+        horizontal_shift = 0.002
+        vertical_shift = 0.006
         x_image += horizontal_shift
         y_image += vertical_shift
         image_position_uncertainties = [0.005] * 4 # 5 mas

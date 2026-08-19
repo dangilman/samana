@@ -140,6 +140,49 @@ class HE0435ModelNircamEPLM1M3M4Shear(_HE0435NircamModelBase):
 
         return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
 
+class HE0435ModelNircamEPLM1M3M4Shear_Qgrad(HE0435ModelNircamEPLM1M3M4Shear):
+
+    def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
+
+        lens_model_list_macro = ['EPL_QGRAD_MULTIPOLE_M1M3M4', 'SHEAR', 'SIS']
+        kwargs_lens_macro = [
+            {'dq': 0.0, 'dphi': 0.0, 'theta_E': 1.1867706147476293, 'gamma': 2.2509955547335396, 'e1': -0.11585039820631118,
+             'e2': -0.05971715525093999, 'center_x': 0.020668536627685426, 'center_y': 0.04274439485435772, 'a1_a': 0.0,
+             'delta_phi_m1': 0.05157145536290328, 'a3_a': 0.0, 'delta_phi_m3': 0.07896001268401007, 'a4_a': 0.0,
+             'delta_phi_m4': -0.33601875762082783},
+            {'gamma1': 0.04812456296487067, 'gamma2': 0.04638746729302123, 'ra_0': 0.0, 'dec_0': 0.0},
+            {'theta_E': 0.31577441117835725, 'center_x': -1.8331799956624266, 'center_y': -3.0505306900867226}
+        ]
+        redshift_list_macro = [self._data.z_lens, self._data.z_lens,
+                               0.78]
+        index_lens_split = [0, 1]
+        if kwargs_lens_macro_init is not None:
+            for i in range(0, len(kwargs_lens_macro_init)):
+                for param_name in kwargs_lens_macro_init[i].keys():
+                    kwargs_lens_macro[i][param_name] = kwargs_lens_macro_init[i][param_name]
+        kwargs_lens_init = kwargs_lens_macro
+        kwargs_lens_sigma = [{'dq': 0.05, 'dphi': 0.05, 'theta_E': 0.05, 'center_x': 0.1, 'center_y': 0.1, 'e1': 0.2, 'e2': 0.2, 'gamma': 0.1,
+                              'a1_a': 0.01, 'delta_phi_m1': 0.1, 'a4_a': 0.01, 'a3_a': 0.005, 'delta_phi_m3': np.pi/12, 'delta_phi_m4': np.pi/16},
+                             {'gamma1': 0.05, 'gamma2': 0.05},
+                             {'theta_E': 0.05, 'center_x': 0.05, 'center_y': 0.05}]
+        kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}, {}]
+        kwargs_lower_lens = [
+            {'dq': -0.2, 'dphi': -0.2, 'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.6, 'a4_a': -0.1,
+             'a1_a': -0.1, 'delta_phi_m1': -np.pi, 'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -np.pi/8},
+            {'gamma1': -0.5, 'gamma2': -0.5},
+            {'theta_E': 0.001, 'center_x': self.gx_phys-0.5, 'center_y': self.gy_phys-0.5}]
+        kwargs_upper_lens = [
+            {'dq': 0.2, 'dphi': 0.2, 'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.5, 'a4_a': 0.1,
+             'a1_a': 0.1, 'delta_phi_m1': np.pi, 'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': np.pi/8},
+            {'gamma1': 0.5, 'gamma2': 0.5},
+        {'theta_E': 0.5, 'center_x': self.gx_phys+0.5, 'center_y': self.gy_phys+0.5}]
+        kwargs_lens_fixed, kwargs_lens_init = self.update_kwargs_fixed_macro(lens_model_list_macro, kwargs_lens_fixed,
+                                                                             kwargs_lens_init, macromodel_samples_fixed)
+        lens_model_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_lens_fixed, kwargs_lower_lens,
+                             kwargs_upper_lens]
+
+        return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
+
 class HE0435ModelNircamEPLM1M3M4ShearObservedConvention(_HE0435NircamModelBase):
 
     gx = -2.45

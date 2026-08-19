@@ -636,13 +636,16 @@ def batch_lens_profiles(lens_model_list, redshift_array, kwargs_lens,
     :param min_group: don't bother batching groups smaller than this.
     """
     redshift_array = np.asarray(redshift_array, dtype=float)
-    # bucket indices by (profile_name, rounded redshift)
+    # bucket indices by (profile_name, rounded redshift). The rounding is vectorized and
+    # converted to Python floats in one pass: this is called once per lens plane per image,
+    # so a per-element round(float(z), 8) here was a measurable share of runtime
+    z_keys = np.round(redshift_array, 8).tolist()
     buckets = {}
-    for i, (name, z) in enumerate(zip(lens_model_list, redshift_array)):
+    for i, (name, z_key) in enumerate(zip(lens_model_list, z_keys)):
         if profiles_to_batch is not None and name not in profiles_to_batch:
             buckets.setdefault(("__passthrough__", i), []).append(i)
         else:
-            buckets.setdefault((name, round(float(z), 8)), []).append(i)
+            buckets.setdefault((name, z_key), []).append(i)
 
     out_names, out_z, out_kw = [], [], []
     for key, idx in buckets.items():

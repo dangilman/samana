@@ -111,8 +111,122 @@ def distortion_field_at_lens_plane(x_co, y_co, x_center_at_plane, y_center_at_pl
         ay = ay + ayk
     return ax, ay
 
+def build_plane_index(lens_model_fixed, kwargs_lens_fixed, R_max, exclude_names=()):
+    """Parse the fixed model into flat arrays ONCE so that lens_models_at_z does not have
+    to walk the full halo list (and rebuild the redshift array) at every lens plane.
+
+    Everything here depends only on (lens_model_fixed, kwargs_lens_fixed, R_max), all of
+    which are constant across the planes of an image and across the images of an
+    iteration, whereas the central-ray position that lens_models_at_z tests against is
+    not. Halos are bucketed by redshift up front, so selecting the halos at a plane costs
+    O(n_unique_z) instead of an np.isclose scan over every halo.
+
+    :param lens_model_fixed: the multiplane LensModel of the fixed (halo) deflectors
+    :param kwargs_lens_fixed: kwargs for lens_model_fixed
+    :param R_max: near/far angular split radius; scalar or per-halo array (see lens_models_at_z)
+    :param exclude_names: profile names to skip entirely
+    :return: dict consumed by lens_models_at_z
+    """
+    names = list(lens_model_fixed.lens_model_list)
+    zlist = np.asarray(lens_model_fixed.redshift_list, dtype=float)
+    n = len(names)
+
+    center_x = np.full(n, np.nan)
+    center_y = np.full(n, np.nan)
+    for i in range(n):
+        kw = kwargs_lens_fixed[i]
+        if isinstance(kw, dict):
+            center_x[i] = kw.get('center_x', np.nan)
+            center_y[i] = kw.get('center_y', np.nan)
+
+    # per-halo split radius, aligned to lens_model_list indices. lens_model_fixed can LEAD
+    # with non-halo macro deflectors absent from a per-halo R_max array (e.g. HE0435's SIS
+    # background galaxy); those occupy the first n_extra indices and are forced near, as in
+    # the original scalar implementation
+    R_max_arr = np.atleast_1d(np.asarray(R_max, dtype=float))
+    scalar_rmax = R_max_arr.size == 1
+    n_extra = 0 if scalar_rmax else max(n - R_max_arr.size, 0)
+    r_split = np.empty(n)
+    force_near = np.zeros(n, dtype=bool)
+    if scalar_rmax:
+        r_split[:] = R_max_arr[0]
+    else:
+        for i in range(n):
+            j = i - n_extra
+            if 0 <= j < R_max_arr.size:
+                r_split[i] = R_max_arr[j]
+            else:
+                r_split[i] = np.inf
+                force_near[i] = True
+
+    keep = np.ones(n, dtype=bool)
+    if exclude_names:
+        for i in range(n):
+            if names[i] in exclude_names:
+                keep[i] = False
+
+    # bucket halo indices by unique redshift; a plane query then only has to np.isclose
+    # against the (short) unique-redshift list rather than every halo
+    unique_z, inverse = np.unique(zlist, return_inverse=True)
+    order = np.argsort(inverse, kind='stable')
+    bounds = np.concatenate([[0], np.cumsum(np.bincount(inverse, minlength=unique_z.size))])
+    buckets = [order[bounds[k]:bounds[k + 1]] for k in range(unique_z.size)]
+
+    return {'names': names, 'center_x': center_x, 'center_y': center_y,
+            'r_split': r_split, 'force_near': force_near, 'keep': keep,
+            'unique_z': unique_z, 'buckets': buckets, 'n': n}
+
+
+def _indices_at_z(plane_index, z):
+    """Halo indices at redshift z, matching np.where(np.isclose(redshift_list, z))[0]
+    exactly (np.isclose on the unique redshifts selects the same halos, since every halo
+    in a bucket shares one redshift value).
+
+    :param plane_index: output of build_plane_index
+    :param z: lens-plane redshift
+    :return: ascending array of indices into lens_model_list
+    """
+    hits = np.flatnonzero(np.isclose(plane_index['unique_z'], z))
+    if hits.size == 0:
+        return np.empty(0, dtype=int)
+    if hits.size == 1:
+        return plane_index['buckets'][hits[0]]
+    return np.sort(np.concatenate([plane_index['buckets'][k] for k in hits]))
+
+
+def _split_near_far(plane_index, at_z, x_center_at_plane, y_center_at_plane):
+    """Vectorized near/far partition of the halos at one plane.
+
+    Reproduces the original per-halo predicate exactly, including that only center_x is
+    tested for finiteness and that np.hypot (not a squared-distance comparison) sets the
+    boundary:
+
+        force_near or (isfinite(center_x) and isfinite(r_split)
+                       and hypot(dx, dy) <= r_split)
+
+    :param plane_index: output of build_plane_index
+    :param at_z: indices of halos at this plane
+    :param x_center_at_plane: angular x of the central ray at this plane
+    :param y_center_at_plane: angular y of the central ray at this plane
+    :return: (near_idx, far_idx), both ascending
+    """
+    if at_z.size == 0:
+        return at_z, at_z
+    at_z = at_z[plane_index['keep'][at_z]]
+    if at_z.size == 0:
+        return at_z, at_z
+    cx = plane_index['center_x'][at_z]
+    cy = plane_index['center_y'][at_z]
+    r = plane_index['r_split'][at_z]
+    with np.errstate(invalid='ignore'):
+        within = np.hypot(cx - x_center_at_plane, cy - y_center_at_plane) <= r
+    near = plane_index['force_near'][at_z] | (np.isfinite(cx) & np.isfinite(r) & within)
+    return at_z[near], at_z[~near]
+
+
 def precompute_plane_splits(ray_angle_interp_x, ray_angle_interp_y, lens_model_fixed,
-                            kwargs_lens_fixed, redshift_planes, cosmo_bkg, R_max, z_source):
+                            kwargs_lens_fixed, redshift_planes, cosmo_bkg, R_max, z_source,
+                            plane_index=None):
     """Precompute the per-plane near/far split ONCE for an image (it depends only on the
     fixed central ray, not on the annulus grid points, so it is identical for every
     annulus). Reuse the result across annuli to avoid re-splitting the halos and
@@ -133,12 +247,16 @@ def precompute_plane_splits(ray_angle_interp_x, ray_angle_interp_y, lens_model_f
     splits = []
     d0s = cosmo_bkg.d_xy(0, z_source)
     z_prev = 0.0
+    # parse the fixed model once and reuse it at every plane
+    if plane_index is None:
+        plane_index = build_plane_index(lens_model_fixed, kwargs_lens_fixed, R_max)
     for zi in redshift_planes:
         T_z = cosmo_bkg.T_xy(0, zi)
         x_center = float(ray_angle_interp_x(T_z))
         y_center = float(ray_angle_interp_y(T_z))
         (lm_e, kw_e), (lm_f, kw_f), kn = lens_models_at_z(
-            zi, lens_model_fixed, kwargs_lens_fixed, x_center, y_center, R_max)
+            zi, lens_model_fixed, kwargs_lens_fixed, x_center, y_center, R_max,
+            plane_index=plane_index)
         splits.append({'zi': zi, 'T_z': T_z, 'x_center': x_center, 'y_center': y_center,
                        'lm_exact': lm_e, 'kw_exact': kw_e, 'lm_far': lm_f, 'kw_far': kw_f,
                        'kappa_near': kn, 'delta_T': cosmo_bkg.T_xy(z_prev, zi),
@@ -148,7 +266,7 @@ def precompute_plane_splits(ray_angle_interp_x, ray_angle_interp_y, lens_model_f
 
 def lens_models_at_z(z, lens_model_fixed, kwargs_lens_fixed,
                      x_center_at_plane, y_center_at_plane, R_max,
-                     exclude_names=(), verbose=False):
+                     exclude_names=(), verbose=False, plane_index=None):
     """Split the fixed-model halos at redshift z into a near/exact single-plane LensModel
     and a single far-field HESSIAN about the central ray. Distance is measured in the sky
     (angular) plane to the central-ray position at z. A halo is "near" if it has a finite
@@ -168,46 +286,24 @@ def lens_models_at_z(z, lens_model_fixed, kwargs_lens_fixed,
     :param exclude_names: profile names to skip entirely. Default () -- nothing is
         excluded. In particular CONVERGENCE sheets are kept (they fold exactly into the
         far Hessian); excluding them drops the pyHalo mean-field and biases the result.
+    :param plane_index: optional output of build_plane_index for this (lens_model_fixed,
+        kwargs_lens_fixed, R_max). Passing it avoids re-parsing the full halo list at every
+        plane; built on the fly when omitted. Must be rebuilt whenever the halo population
+        or R_max changes.
     :return: (lens_model_exact, kwargs_lens_exact), (lens_model_far, kwargs_lens_far),
         kappa_near -- the near/exact model, the single far-field HESSIAN model, and the
         mean convergence of the near halos within R_max
     """
-    zlist = np.asarray(lens_model_fixed.redshift_list, dtype=float)
-    names = lens_model_fixed.lens_model_list
-    at_z = np.where(np.isclose(zlist, z))[0]
+    if plane_index is None:
+        plane_index = build_plane_index(lens_model_fixed, kwargs_lens_fixed, R_max,
+                                       exclude_names=exclude_names)
+    names = plane_index['names']
+    at_z = _indices_at_z(plane_index, z)
+    near_idx, far_idx = _split_near_far(plane_index, at_z,
+                                        x_center_at_plane, y_center_at_plane)
 
-    # R_max may be a scalar (shared) or a per-halo array indexed like lens_model_list
-    R_max_arr = np.atleast_1d(np.asarray(R_max, dtype=float))
-    scalar_rmax = R_max_arr.size == 1
-    # lens_model_fixed can LEAD with non-halo macro deflectors absent from the per-halo
-    # R_max array -- e.g. HE0435's SIS background galaxy at another plane, which
-    # index_lens_split=[0,1] leaves in the fixed model. These
-    # occupy the first n_extra fixed indices, so offset the lookup
-    n_extra = 0 if scalar_rmax else max(len(names) - R_max_arr.size, 0)
-
-    near_names, near_kw, far_idx = [], [], []
-
-    for i in at_z:
-        if names[i] in exclude_names:  # skip mass sheets etc. entirely
-            continue
-        kw = kwargs_lens_fixed[i]
-        cxi = kw.get('center_x', np.nan) if isinstance(kw, dict) else np.nan
-        cyi = kw.get('center_y', np.nan) if isinstance(kw, dict) else np.nan
-        force_near = False
-        if scalar_rmax:
-            rmi = R_max_arr[0]
-        else:
-            j = i - n_extra
-            if 0 <= j < R_max_arr.size:
-                rmi = R_max_arr[j]
-            else:
-                rmi, force_near = np.inf, True  # extra macro deflector (bkg galaxy) -> keep exact
-        if force_near or (np.isfinite(cxi) and np.isfinite(rmi)
-                          and np.hypot(cxi - x_center_at_plane, cyi - y_center_at_plane) <= rmi):
-            near_names.append(names[i])
-            near_kw.append(kw)
-        else:
-            far_idx.append(i)
+    near_names = [names[i] for i in near_idx]
+    near_kw = [kwargs_lens_fixed[i] for i in near_idx]
 
     lens_model_exact = _cached_lens_model(near_names)
     kwargs_lens_exact = near_kw
@@ -216,7 +312,7 @@ def lens_models_at_z(z, lens_model_fixed, kwargs_lens_fixed,
     # far field: sum the far halos' Hessian at the central ray, represent as one HESSIAN.
     # Group the far halos into MULTI_HALO_BATCH entries (per profile type) so the Hessian
     # sum is vectorized; CONVERGENCE sheets pass through individually.
-    if far_idx:
+    if far_idx.size:  # far_idx is an array; .size avoids numpy truthiness ambiguity
         from samana.forward_model_util import batch_lens_profiles
         far_names_in = [names[i] for i in far_idx]
         far_kw_in = [kwargs_lens_fixed[i] for i in far_idx]

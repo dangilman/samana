@@ -229,49 +229,14 @@ class M1134ModelEPLM3M4ShearSatelliteNIRCam(M1134ModelEPLM3M4ShearSatellite):
 class M1134NIRCamGroupSIS(M1134ModelEPLM3M4ShearSatellite):
     """
     EPL + multipole + shear, plus a single SIS on the bright group galaxy 31" to the
-    north-west, as a candidate physical origin for the large external shear.
-
-    The galaxy is the brightest resolved object in the mosaic apart from the deflector
-    itself (F200W AB 17.28, R_sersic 2.13"), sitting at the centre of the bright-galaxy
-    overdensity around the lens.  Position measured on the F200W mosaic:
-
-        RA 173.6624559, Dec -21.0502067
-        dE = -21.619",  dN = +21.726",  r = 30.649",  PA = 134.9 deg CCW from +x(E)
-
-    Why it is a good candidate: the shear carried by the other M1134 classes is
-    |gamma| = 0.366 with an axis at PA 45.1 deg, and 134.9 - 45.1 = 89.8 deg.  For a
-    2-phase quantity that is exact alignment (or exact anti-alignment, depending on the
-    sign convention of lenstronomy's SHEAR), so the shear axis and this galaxy's
-    direction coincide to better than a degree.
-
-    An SIS at that separation contributes kappa = gamma = theta_E / (2 r):
-
-        theta_E =  5"  ->  0.082
-        theta_E = 10"  ->  0.163      <-- the default here
-        theta_E = 15"  ->  0.245
-        theta_E = 22.4" ->  0.366     (would account for the whole external shear)
-
-    so theta_E = 10" supplies about 44% of it.  SHEAR is retained because
-    kwargs_constraints uses solver_type = 'PROFILE_SHEAR', which requires it; its init
-    is set to the residual that the SIS does not supply, 0.203 along the same axis.
-    If the fit instead pushes the shear UP, the sign convention is the opposite of the
-    one assumed here and the SIS is adding to the shear rather than replacing it -- in
-    that case flip the sign of shear_init.
-
-    Note the SIS also puts kappa = 0.163 at the lens, which is not a pure shear: it will
-    shift the inferred theta_E of the main deflector and any time-delay prediction.  That
-    is physical, not a bug, but it means results are not directly comparable to the
-    shear-only classes.
-
-    NOTE the inherited macromodel_readout_function is written for a single satellite at
-    kwargs_lens[2], which here is the group SIS rather than a satellite galaxy.
+    north-west
     """
 
     group_x = -21.619
     group_y = 21.726
     group_theta_E = 20.0
-    free_group_theta_E = False
-    free_group_position = False
+    free_group_theta_E = True
+    free_group_position = True
     group_theta_E_max = 25.0
     # residual shear after a 10" SIS at 30.6" removes 0.163 from |gamma| = 0.366,
     # keeping the original axis (PA 45.1 deg)
@@ -300,15 +265,15 @@ class M1134NIRCamGroupSIS(M1134ModelEPLM3M4ShearSatellite):
 
         lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS']
         kwargs_lens_macro = [
-            {'theta_E': np.float64(0.8061841511210835), 'gamma': np.float64(1.9090064868695527),
-             'e1': np.float64(-0.08199815788123434), 'e2': np.float64(0.29094249545952683),
-             'center_x': np.float64(-0.060945434274900886), 'center_y': np.float64(0.0828832881327979), 'a1_a': 0.0,
-             'delta_phi_m1': np.float64(0.3427382795835311), 'a3_a': 0.0,
-             'delta_phi_m3': np.float64(-0.41245947917280523), 'a4_a': 0.0,
-             'delta_phi_m4': np.float64(0.7805467520301529)},
-            {'gamma1': np.float64(-0.026275566106520865), 'gamma2': np.float64(-0.04529427898946263), 'ra_0': 0.0,
-             'dec_0': 0.0},
-            {'theta_E': self.group_theta_E, 'center_x': self.group_x, 'center_y': self.group_y}
+            {'theta_E': np.float64(0.8632363295407629), 'gamma': np.float64(2.2981357748929243),
+             'e1': np.float64(-0.10034337029825754), 'e2': np.float64(-0.2954597962903369),
+             'center_x': np.float64(-0.09881812948924164), 'center_y': np.float64(0.1516707939719446), 'a1_a': 0.0,
+             'delta_phi_m1': np.float64(0.36263194659439485), 'a3_a': 0.0,
+             'delta_phi_m3': np.float64(-0.517258238703208), 'a4_a': 0.0,
+             'delta_phi_m4': np.float64(0.9914872308696114)},
+            {'gamma1': np.float64(-0.0065253681813304465), 'gamma2': np.float64(-0.14934610898965608), 'ra_0': 0.0,
+             'dec_0': 0.0}, {'theta_E': np.float64(23.43075788126181), 'center_x': np.float64(-21.174339722978715),
+                             'center_y': np.float64(21.323566315453363)}
         ]
         if self.z_satellite is None:
             z_group = self._data.z_lens
