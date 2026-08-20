@@ -45,7 +45,8 @@ def forward_model(output_path,
                   tolerance_source_reconstruction=None,
                   fr_logL_source_reconstruction=None,
                   return_astrometric_rejections=False,
-                  batch_lens_model=False
+                  batch_lens_model=False,
+                  tolerance_lens_equation_solution=1e-4
                   ):
     """
     Top-level function for forward modeling strong lenses with substructure. This function makes repeated calls to
@@ -99,6 +100,9 @@ def forward_model(output_path,
     should be abs(log_likelihood), which triggers the source light modeling if abs(logL) < fr_logL_source_reconstruction
     :param return_astrometric_rejections: if True, will return the macromodel parameters that produced a lens model that
     doesn't fit the image positions; if False, these solutions will be rejected and not saved as output
+    :param batch_lens_model: combines profiles at the same redshift into a single "batched" lens model and uses numpy
+    vectorization to compute deflection angles
+    :param tolerance_lens_equation_solution: sets the tolerance in the source plane for solving the lens equation for 4 images
     :return:
     """
 
@@ -212,7 +216,8 @@ def forward_model(output_path,
             fr_logL_source_reconstruction=fr_logL_source_reconstruction,
             scale_window_size_decoupled_multiplane=scale_window_size_decoupled_multiplane,
             return_astrometric_rejections=return_astrometric_rejections,
-            batch_lens_model=batch_lens_model)
+            batch_lens_model=batch_lens_model,
+            tolerance_lens_equation_solution=tolerance_lens_equation_solution)
 
         seed_counter += 1
         acceptance_rate_counter += 1
@@ -359,7 +364,8 @@ def forward_model_single_iteration(data_class,
                                    fr_logL_source_reconstruction=None,
                                    scale_window_size_decoupled_multiplane=1.0,
                                    return_astrometric_rejections=False,
-                                   batch_lens_model=False
+                                   batch_lens_model=False,
+                                   tolerance_lens_equation_solution=1e-4
                            ):
     """
 
@@ -668,7 +674,9 @@ def forward_model_single_iteration(data_class,
     if verbose and use_imaging_data:
         print('recovered source position: ', source_x, source_y)
     # verify that the lens equation is satisfied to high precision
-    source_plane_image_solution = check_lens_equation_solution(source_x, source_y, tolerance=0.0001)
+    source_plane_image_solution = check_lens_equation_solution(source_x,
+                                                               source_y,
+                                                               tolerance=tolerance_lens_equation_solution)
     output_vector_none = [None] * 18
     return_sampling_distribution = False
     if return_astrometric_rejections or return_sampling_distribution:
