@@ -54,8 +54,7 @@ def _cached_lens_model(names):
 
 def distortion_field_at_lens_plane(x_co, y_co, x_center_at_plane, y_center_at_plane,
                                    T_z, lens_model_exact, lens_model_far,
-                                   kwargs_lens_exact, kwargs_lens_far, kappa_near=0.0,
-                                   subtract_near_kappa=False, subtract_far_kappa=False):
+                                   kwargs_lens_exact, kwargs_lens_far):
     """Reduced distortion-deflection of the grid rays at one lens plane, referenced to
     the central ray (the deflection at the central ray is zero by construction).
 
@@ -71,13 +70,6 @@ def distortion_field_at_lens_plane(x_co, y_co, x_center_at_plane, y_center_at_pl
         centered at (x_center_at_plane, y_center_at_plane) so alpha_far(center) = 0
     :param kwargs_lens_exact: kwargs for lens_model_exact
     :param kwargs_lens_far: kwargs for lens_model_far
-    :param kappa_near: mean convergence of the near halos within R_max (from
-        lens_models_at_z); only used if subtract_near_kappa is True
-    :param subtract_near_kappa: if True, subtract the near halos' mean-convergence sheet
-        (removes the 0th-order magnification boost from locally adding mass). Default
-        False -- see module note; leaving it on double-removes the mean field.
-    :param subtract_far_kappa: if True, also subtract the far field's net convergence.
-        Default False.
     :return: (ax, ay), the reduced distortion-deflection components of the grid rays at
         this plane (zero at the central ray)
     """
@@ -95,20 +87,6 @@ def distortion_field_at_lens_plane(x_co, y_co, x_center_at_plane, y_center_at_pl
     ax = ax_exact + ax_far - ax_c
     ay = ay_exact + ay_far - ay_c
 
-    # ---- optionally remove the 0th-order (mean-convergence) effect of the added halos ----
-    kappa_sheet = 0.0
-    if subtract_near_kappa:
-        kappa_sheet += kappa_near                                    # mean near-halo convergence
-    if subtract_far_kappa:
-        fxx, fxy, fyx, fyy = lens_model_far.hessian(
-            x_center_at_plane, y_center_at_plane, kwargs_lens_far)   # far field is smooth -> Hessian trace = its convergence
-        kappa_sheet += 0.5 * (fxx + fyy)
-    if kappa_sheet != 0.0:
-        lm_k = LensModel(['CONVERGENCE'])
-        kw_k = [{'kappa': -kappa_sheet, 'ra_0': x_center_at_plane, 'dec_0': y_center_at_plane}]  # cancels the sheet
-        axk, ayk = lm_k.alpha(theta_x, theta_y, kw_k)
-        ax = ax + axk
-        ay = ay + ayk
     return ax, ay
 
 def build_plane_index(lens_model_fixed, kwargs_lens_fixed, R_max, exclude_names=()):
@@ -254,12 +232,18 @@ def precompute_plane_splits(ray_angle_interp_x, ray_angle_interp_y, lens_model_f
         T_z = cosmo_bkg.T_xy(0, zi)
         x_center = float(ray_angle_interp_x(T_z))
         y_center = float(ray_angle_interp_y(T_z))
-        (lm_e, kw_e), (lm_f, kw_f), kn = lens_models_at_z(
+        (lm_e, kw_e), (lm_f, kw_f) = lens_models_at_z(
             zi, lens_model_fixed, kwargs_lens_fixed, x_center, y_center, R_max,
             plane_index=plane_index)
-        splits.append({'zi': zi, 'T_z': T_z, 'x_center': x_center, 'y_center': y_center,
-                       'lm_exact': lm_e, 'kw_exact': kw_e, 'lm_far': lm_f, 'kw_far': kw_f,
-                       'kappa_near': kn, 'delta_T': cosmo_bkg.T_xy(z_prev, zi),
+        splits.append({'zi': zi,
+                       'T_z': T_z,
+                       'x_center': x_center,
+                       'y_center': y_center,
+                       'lm_exact': lm_e,
+                       'kw_exact': kw_e,
+                       'lm_far': lm_f,
+                       'kw_far': kw_f,
+                       'delta_T': cosmo_bkg.T_xy(z_prev, zi),
                        'factor': d0s / cosmo_bkg.d_xy(zi, z_source)})
         z_prev = zi
     return splits
@@ -291,8 +275,7 @@ def lens_models_at_z(z, lens_model_fixed, kwargs_lens_fixed,
         plane; built on the fly when omitted. Must be rebuilt whenever the halo population
         or R_max changes.
     :return: (lens_model_exact, kwargs_lens_exact), (lens_model_far, kwargs_lens_far),
-        kappa_near -- the near/exact model, the single far-field HESSIAN model, and the
-        mean convergence of the near halos within R_max
+         -- the near/exact model, the single far-field HESSIAN model
     """
     if plane_index is None:
         plane_index = build_plane_index(lens_model_fixed, kwargs_lens_fixed, R_max,
@@ -308,7 +291,6 @@ def lens_models_at_z(z, lens_model_fixed, kwargs_lens_fixed,
     lens_model_exact = _cached_lens_model(near_names)
     kwargs_lens_exact = near_kw
 
-    kappa_near = 0.0
     # far field: sum the far halos' Hessian at the central ray, represent as one HESSIAN.
     # Group the far halos into MULTI_HALO_BATCH entries (per profile type) so the Hessian
     # sum is vectorized; CONVERGENCE sheets pass through individually.
@@ -328,7 +310,7 @@ def lens_models_at_z(z, lens_model_fixed, kwargs_lens_fixed,
     kwargs_lens_far = [{'f_xx': float(fxx), 'f_xy': float(fxy),
                         'f_yx': float(fyx), 'f_yy': float(fyy),
                         'ra_0': x_center_at_plane, 'dec_0': y_center_at_plane}]
-    return (lens_model_exact, kwargs_lens_exact), (lens_model_far, kwargs_lens_far), float(kappa_near)
+    return (lens_model_exact, kwargs_lens_exact), (lens_model_far, kwargs_lens_far)
 
 
 def accumulate_distortions(ray_angle_interp_x, ray_angle_interp_y,
@@ -357,11 +339,7 @@ def accumulate_distortions(ray_angle_interp_x, ray_angle_interp_y,
     :param cosmo_bkg: lenstronomy Background (provides T_xy comoving and d_xy angular distances)
     :param z_source: source redshift
     :param z_split: redshift of the free/macro deflector (the "main" plane)
-    :param R_max: near/far angular split radius (scalar; or mass-scale it in lens_models_at_z)
-    :param z_source_convention: redshift the fixed model's reduced deflections are defined
-        against; defaults to z_source. The per-plane reduced->physical factor is
-        d_xy(0, z_conv) / d_xy(z_plane, z_conv), matching lenstronomy's
-        MultiPlaneBase._reduced2physical_deflection.
+    :param R_max: near/far angular split radius (scalar; or mass-scale it in lens_models_at_z
     :return: (dbeta_x, dbeta_y), the deviation source-plane positions of the grid rays
         relative to the central ray
     """
@@ -388,8 +366,7 @@ def accumulate_distortions(ray_angle_interp_x, ray_angle_interp_y,
         # per-plane distortion deflection (REDUCED) from the cached near/far split
         d_ax, d_ay = distortion_field_at_lens_plane(
             x_co, y_co, x_center, y_center, T_z,
-            sp['lm_exact'], sp['lm_far'], sp['kw_exact'], sp['kw_far'],
-            kappa_near=sp['kappa_near'])
+            sp['lm_exact'], sp['lm_far'], sp['kw_exact'], sp['kw_far'])
 
         # fixed-halo distortion: reduced -> physical for this plane, then subtract
         alpha_x = alpha_x - d_ax * sp['factor']
