@@ -21,6 +21,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                                    MU_TOLERANCE=0.05,
                                    kwargs_adaptive_tiling=None,
                                    R_max_0 = 0.4,
+                                   freeze_background=False,
                                    verbose=False):
     """
 
@@ -33,12 +34,22 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
     :param kwargs_lens:
     :param index_lens_split:
     :param grid_size_list:
-    :param grid_resolution:
+    :param grid_resolution_list:
     :param grid_increment_factor:
     :param setup_decoupled_multiplane_lens_model_output:
     :param magnification_method:
     :param rotation_angle_list:
     :param hessian_eigenvalue_list:
+    :param lens_model_batch:
+    :param kwargs_lens_batch:
+    :param halo_masses:
+    :param setup_decoupled_multiplane_lens_model_output_batch:
+    :param fallback:
+    :param MU_TOLERANCE:
+    :param kwargs_adaptive_tiling:
+    :param R_max_0:
+    :param freeze_background:
+    :param verbose:
     :return:
     """
 
@@ -134,6 +145,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                     R_max, ray_interp_x_list[0], ray_interp_y_list[0], x_img, y_img, kwargs_lens_free,
                     lens_model_fixed_batched=lens_model_fixed_batch,
                     kwargs_lens_fixed_batched=kwargs_lens_fixed_batch,
+                    freeze_background=freeze_background,
                     verbose=verbose
                 )
 
@@ -151,6 +163,7 @@ def magnification_finite_decoupled(source_model, kwargs_source, x_image, y_image
                     hessian_eigenvalue=hessian_eigenvalue_list[j],
                     lens_model_fixed_batched=lens_model_fixed_batch,
                     kwargs_lens_fixed_batched=kwargs_lens_fixed_batch,
+                    freeze_background=freeze_background,
                     **kwargs_adaptive_tiling
                 )
             if verbose: print('point-source mag discrepancy: ', mu_discrepancy)

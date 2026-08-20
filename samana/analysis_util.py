@@ -188,7 +188,7 @@ def numerics_setup(lens_ID):
         rescale_grid_size = [1., 1., 3.0, 3.0]
     elif lens_ID == 'PSJ0147':
         rescale_grid_res = [1.5, 1.5, 1.5, 1.0]
-        rescale_grid_size = [3.0, 2.5, 2.5, 0.1]
+        rescale_grid_size = [3.0, 2.5, 2.5, 0.3]
     elif lens_ID == 'PSJ1606':
         rescale_grid_res = 1.1
         rescale_grid_size = 0.6

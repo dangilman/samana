@@ -312,6 +312,7 @@ class EPLModelBase(object):
                                      mu_tolerance=0.05,
                                      kwargs_adaptive_tiling=None,
                                      R_max_0=0.4,
+                                     freeze_background=False,
                                      verbose=False):
         """
 
@@ -344,6 +345,7 @@ class EPLModelBase(object):
             MU_TOLERANCE=mu_tolerance,
             kwargs_adaptive_tiling=kwargs_adaptive_tiling,
             R_max_0=R_max_0,
+            freeze_background=freeze_background,
             verbose=verbose)
 
         return mags
