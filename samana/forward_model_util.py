@@ -228,6 +228,16 @@ def sample_prior(kwargs_prior):
             prior_samples_dict['dphi'] = dphi
             sample_list += [dq, dphi]
             sample_names += ['dq', 'dphi']
+        elif param_name == 'timescale_extension_cdm':
+            while True:
+                log10_tclow = np.random.uniform(-0.3, 2.3)
+                log10_tchigh = np.random.uniform(-0.3, 2.3)
+                if log10_tclow > 2.0 or log10_tchigh > 2.0:
+                    break
+            sample_list += [log10_tclow, log10_tchigh]
+            sample_names += ['log10_tclow', 'log10_tchigh']
+            prior_samples_dict['log10_tclow'] = log10_tclow
+            prior_samples_dict['log10_tchigh'] = log10_tchigh
         else:
             prior_type = kwargs_prior[param_name][0]
             if prior_type == 'FIXED':
