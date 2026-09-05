@@ -1,5 +1,6 @@
 from samana.forward_model_util import filenames, sample_prior, \
-    split_kwargs_params, check_lens_equation_solution, align_realization
+    split_kwargs_params, check_lens_equation_solution, align_realization, \
+    interpolate_ray_paths
 from lenstronomy.LensModel.lens_model import LensModel
 from lenstronomy.Workflow.fitting_sequence import FittingSequence
 from lenstronomy.Util.class_creator import create_im_sim
@@ -357,6 +358,7 @@ def forward_model_single_iteration(data_class,
                                    use_decoupled_multiplane_approximation=True,
                                    macromodel_readout_function=None,
                                    return_realization=False,
+                                   return_realization_final=False,
                                    run_initial_PSO=True,
                                    minimize_method='COBYQA_import',
                                    split_image_data_reconstruction=False,
@@ -389,7 +391,13 @@ def forward_model_single_iteration(data_class,
     :param test_mode:
     :param use_decoupled_multiplane_approximation:
     :param macromodel_readout_function:
-    :param return_realization:
+    :param return_realization: if True, returns the realization immediately after it is created,
+    before halos are aligned/filtered and before globular clusters are added
+    :param return_realization_final: if True, appends two extra elements to the output tuple.
+    The 19th is the fully-processed realization (aligned, filtered, SIDM modifications applied,
+    globular clusters added), i.e. the realization the lens model was actually built from. The
+    20th is (ray_interp_x_list, ray_interp_y_list), the per-image ray paths through the full
+    batched lens model, each a list of interp1d mapping comoving distance to angular coordinate
     :param run_initial_PSO:
     :param minimize_method:
     :param split_image_data_reconstruction:
@@ -677,7 +685,18 @@ def forward_model_single_iteration(data_class,
     source_plane_image_solution = check_lens_equation_solution(source_x,
                                                                source_y,
                                                                tolerance=tolerance_lens_equation_solution)
-    output_vector_none = [None] * 18
+    if return_realization_final:
+        ray_interp_x_list, ray_interp_y_list = interpolate_ray_paths(
+            data_class.x_image,
+            data_class.y_image,
+            lens_model_init_batch,
+            kwargs_lens_init_batch,
+            data_class.z_source,
+            terminate_at_source=False)
+        realization_extras = (realization, (ray_interp_x_list, ray_interp_y_list))
+    else:
+        realization_extras = ()
+    output_vector_none = [None] * (18 + len(realization_extras))
     return_sampling_distribution = False
     if return_astrometric_rejections or return_sampling_distribution:
         if source_plane_image_solution > 1 or return_sampling_distribution:
@@ -695,6 +714,7 @@ def forward_model_single_iteration(data_class,
                              source_param_names, param_names_macro, \
                              param_names_macro_fixed, kwargs_model_plot, lens_model, kwargs_solution,
                              source_plane_image_solution)
+            output_vector = output_vector + realization_extras
             return output_vector
         else:
             return output_vector_none
@@ -929,13 +949,15 @@ def forward_model_single_iteration(data_class,
             if image is None: break
             fig = plt.figure()
             ax = plt.subplot(111)
+            image_label_list = ['A', 'B', 'C', 'D']
             if isinstance(image, list):  # adaptive: [flux_array, tiling]
-                plot_tiled_image(*image, ax=ax, show_cells=True, show_aperture=False)
+                plot_tiled_image(*image, ax=ax, show_cells=True, show_aperture=False,
+                                 image_label=image_label_list[ind])
             else:  # circular / elliptical / near-far: npix x npix grid
                 ax.imshow(image, origin='lower')
             ax.annotate('magnification: ' + str(np.round(mag, 2)), xy=(0.35, 0.9),
                         xycoords='axes fraction', color='w', fontsize=14)
-
+            # plt.savefig('rxj1131_image_'+str(image_label_list[ind])+'.png',bbox_inches='tight')
         modelPlot = ModelPlot(data_class.kwargs_data_joint['multi_band_list'],
                               kwargs_model, kwargs_result,
                               fast_caustic=True,
@@ -1019,4 +1041,5 @@ def forward_model_single_iteration(data_class,
            stat, bic, realization_param_names, \
            source_param_names, param_names_macro, \
            param_names_macro_fixed, kwargs_model_plot, lens_model, kwargs_solution, source_plane_image_solution)
+    output_vector = output_vector + realization_extras
     return output_vector

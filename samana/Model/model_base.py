@@ -355,7 +355,8 @@ class EPLModelBase(object):
                            grid_resolution=0.05, verbose=False, macromodel_samples_fixed=None,
                            observed_convention_index=None, astropy_cosmo=None, x_image=None, y_image=None,
                            use_JAXstronomy=False, decoupled_multiplane_grid_type='GRID',
-                           scale_window_size=1.0, batch_lens_model=False):
+                           scale_window_size=1.0, batch_lens_model=False,
+                           grid_size=None, grid_center_x=0.0, grid_center_y=0.0):
 
         lens_model_list_macro, redshift_list_macro, _, lens_model_params = self.setup_lens_model(
             kwargs_lens_macro_init,
@@ -445,7 +446,10 @@ class EPLModelBase(object):
                 scale_window_size=scale_window_size,
                 use_JAXstronomy=use_JAXstronomy,
                 decoupled_multiplane_grid_type=decoupled_multiplane_grid_type,
-                batch_lens_model=batch_lens_model)
+                batch_lens_model=batch_lens_model,
+                grid_size=grid_size,
+                grid_center_x=grid_center_x,
+                grid_center_y=grid_center_y)
             if verbose:
                 print('done.')
             kwargs_model['kwargs_multiplane_model'] = kwargs_decoupled_class_setup['kwargs_multiplane_model']
@@ -509,7 +513,10 @@ class EPLModelBase(object):
                                           scale_window_size=1.25, use_JAXstronomy=False,
                                           do_decoupled_multiplane_raytracing=True,
                                           decoupled_multiplane_grid_type='GRID',
-                                          batch_lens_model=False):
+                                          batch_lens_model=False,
+                                          grid_size=None,
+                                          grid_center_x=0.0,
+                                          grid_center_y=0.0):
 
         lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params = \
             self.setup_lens_model(kwargs_macro_init, macromodel_samples_fixed)
@@ -556,9 +563,12 @@ class EPLModelBase(object):
 
         if do_decoupled_multiplane_raytracing:
             if decoupled_multiplane_grid_type == 'GRID':
-                deltaPix, _, _, _, window_size = self._data.coordinate_properties
-                grid_size = window_size * scale_window_size
-                x_grid, y_grid, interp_points, npix = setup_grids(grid_size, grid_resolution)
+                if grid_size is None:
+                    # default: cover the full imaging data frame
+                    deltaPix, _, _, _, window_size = self._data.coordinate_properties
+                    grid_size = window_size * scale_window_size
+                x_grid, y_grid, interp_points, npix = setup_grids(grid_size, grid_resolution,
+                                                                  grid_center_x, grid_center_y)
             elif decoupled_multiplane_grid_type == 'POINT':
                 x_grid, y_grid = 0., 0. # this doesn't matter
                 interp_points = (0.0, 0.0)

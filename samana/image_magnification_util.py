@@ -479,7 +479,7 @@ def mag_finite_single_image_adaptive(
 
 def plot_tiled_image(flux_array, tiling, ax=None, cmap='inferno',
                      show_cells=False, cell_color='white', cell_lw=0.3, cell_alpha=0.35,
-               show_aperture=True, log=False):
+               show_aperture=True, log=False, image_label=None, zoom_factor=1.0):
     """Show the finite-source image with the adaptive quadtree cell boundaries and the
     aperture (circle or ellipse) overlaid.
 
@@ -490,12 +490,20 @@ def plot_tiled_image(flux_array, tiling, ax=None, cmap='inferno',
     :param show_cells: draw the leaf-cell rectangles (the subdivided grid)
     :param show_aperture: draw the circular/elliptical aperture outline
     :param log: display log10(flux) (clipped) instead of linear
+    :param zoom_factor: shrinks the displayed field of view about the image position by
+        this factor; the visible window is tiling['box_size'] / zoom_factor. Values > 1
+        zoom in, 1.0 (default) shows the full tiling box
     :return: the Axes
     """
     import matplotlib.pyplot as plt
     from matplotlib.patches import Rectangle
 
+    if zoom_factor <= 0:
+        raise ValueError('zoom_factor must be positive, got ' + str(zoom_factor))
     box = tiling['box_size']; h = box / 2
+    # half-width of the displayed window; the image is drawn at full extent and clipped
+    # by the axis limits, so no resampling of flux_array is needed
+    h_view = h / zoom_factor
     if ax is None:
         _, ax = plt.subplots(figsize=(5, 5))
     img = flux_array
@@ -508,6 +516,9 @@ def plot_tiled_image(flux_array, tiling, ax=None, cmap='inferno',
     if show_cells:
         cx = tiling['cx']; cy = tiling['cy']; ch = tiling['half']
         for k in range(len(cx)):
+            # skip cells that fall entirely outside the zoomed window
+            if max(abs(cx[k]), abs(cy[k])) - ch[k] > h_view:
+                continue
             ax.add_patch(Rectangle((cx[k] - ch[k], cy[k] - ch[k]), 2 * ch[k], 2 * ch[k],
                                    fill=False, edgecolor=cell_color,
                                    linewidth=cell_lw, alpha=cell_alpha))
@@ -523,10 +534,14 @@ def plot_tiled_image(flux_array, tiling, ax=None, cmap='inferno',
             ax_by = xr * sa + yr * ca
         ax.plot(ax_bx, ax_by, color='cyan', lw=1.0, alpha=0.8)
 
-    ax.set_xlim(-h, h); ax.set_ylim(-h, h)
+    ax.set_xlim(-h_view, h_view); ax.set_ylim(-h_view, h_view)
     ax.set_xlabel('arcsec'); ax.set_ylabel('arcsec')
-    ax.set_title('%d cells, %d calls, %d ray-shoots'
-                 % (len(tiling['cx']), tiling['n_calls'], tiling['n_points']))
+    if image_label is not None:
+        ax.set_title(
+            'Image '+image_label, fontsize=18
+        )
+    # ax.set_title('%d cells, %d calls, %d ray-shoots'
+    #              % (len(tiling['cx']), tiling['n_calls'], tiling['n_points']))
     return ax
 
 def calc_source_sb(x, y, alpha_x_foreground, alpha_y_foreground, alpha_x_background, alpha_y_background,
