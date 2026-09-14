@@ -190,3 +190,83 @@ class WFI2033_NIRCAM(_WFI2033):
         transform_pix2angle = np.array([[-0.01654499,  0.02591725],
                 [ 0.02592996,  0.01653688]])
         return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
+
+class WFI2033_MIRI(_WFI2033):
+
+    def __init__(self, supersample_factor=1.0):
+        """
+        JWST/MIRI F560W.  The image positions are the NIRCam astrometry *without* the
+        horizontal_shift/vertical_shift applied in WFI2033_NIRCAM: the MIRI coordinate system
+        was solved for by matching these exact values to the quasar centroids in the cutout,
+        so shifting them here would move the model off the data by the same amount.
+
+        Flux ratio constraints are carried over unchanged from WFI2033_HST / WFI2033_NIRCAM;
+        they are published ratios and do not depend on the imaging band.
+
+        :param supersample_factor: ray-tracing supersampling, multiplied by the factor 3 by
+        which the PSF model is supersampled
+        """
+        x_image = np.array([-0.71107849, 0.00229477, 1.48697986, -0.62619614])
+        y_image = np.array([0.91023049, 1.02759605, -0.34851774, -0.6293088])
+        from samana.Data.ImageData.wfi2033_MIRI560W import image_data, psf_model, noise_map
+        self._psf_supersampling_convolution = False
+        self._psf_supersampling_factor = 3
+        magnifications = [1., 0.65, 0.5, 0.53]
+        image_position_uncertainties = [0.005] * 4
+        flux_uncertainties = [0.03, 0.03/0.64, 0.02/0.5, 0.02/0.53]
+        uncertainty_in_fluxes = True
+        super(WFI2033_MIRI, self).__init__(x_image, y_image, magnifications, image_position_uncertainties,
+                                           flux_uncertainties, uncertainty_in_fluxes,
+                                           supersample_factor, image_data, psf_model, None,
+                                           noise_map)
+
+    @property
+    def kwargs_numerics(self):
+        kwargs_numerics = {
+            'supersampling_factor': int(self._supersample_factor * self._psf_supersampling_factor),
+            'supersampling_convolution': self._psf_supersampling_convolution,
+            'point_source_supersampling_factor': self._psf_supersampling_factor}
+        return kwargs_numerics
+
+    @property
+    def kwargs_psf(self):
+        kwargs_psf = {'psf_type': 'PIXEL',
+                      'kernel_point_source': self._psf_estimate_init / np.sum(self._psf_estimate_init),
+                      'psf_variance_map': self._psf_error_map_init,
+                      'point_source_supersampling_factor': self._psf_supersampling_factor
+                      }
+        return kwargs_psf
+
+    @property
+    def kwargs_data(self):
+        # the pipeline sigma array is used directly; no scalar Poisson term
+        _, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, _ = self.coordinate_properties
+        kwargs_data = {'background_rms': None,
+                       'exposure_time': None,
+                       'ra_at_xy_0': ra_at_xy_0,
+                       'dec_at_xy_0': dec_at_xy_0,
+                       'transform_pix2angle': transform_pix2angle,
+                       'image_data': self._image_data,
+                       'noise_map': self._noise_map}
+        return kwargs_data
+
+    @property
+    def coordinate_properties(self):
+        # The F560W cutout carries no WCS, so this solution was fit by matching the four
+        # quasar centroids in the cutout to the NIRCam astrometry used by WFI2033_NIRCAM
+        # (a scale + rotation + parity flip + translation, 4 free parameters for 8
+        # constraints).  rms residual 1.6 mas, i.e. 0.014 pixel.  The recovered pixel scale
+        # 0.110982" is an output of that fit, not an input, and agrees with the 0.110909"
+        # used for MIRI560W elsewhere in samana to 0.07%.
+        #
+        # The delivered 90 pixel (10.0") cutout was trimmed to 48 pixels, a little wider than
+        # the 4.683" NIRCam field; ra/dec_at_xy_0 below are for the trimmed array.  The trim
+        # drops the S/N ~ 31 source 4.2" north of the lens, which is not modelled, and the
+        # 2.66" mask radius stays well clear of it.
+        deltaPix = 0.110981638
+        window_size = 48 * deltaPix
+        ra_at_xy_0 = 2.44274354
+        dec_at_xy_0 = 2.73276708
+        transform_pix2angle = np.array([[0.00778126, -0.11070852],
+                                        [-0.11070852, -0.00778126]])
+        return deltaPix, ra_at_xy_0, dec_at_xy_0, transform_pix2angle, window_size
