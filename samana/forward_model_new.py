@@ -420,7 +420,9 @@ def forward_model_single_iteration(data_class,
         delta_x_image, delta_y_image = np.zeros(len(data_class.x_image)), np.zeros(len(data_class.y_image))
 
     if data_class.redshift_sampling:
-        z_lens = data_class.sample_z_lens()
+        z_lens = data_class.sample_z_lens(astropy_instance=dark_matter_model_class.astropy_cosmo)
+        data_class.set_z_lens(z_lens)
+        data_class._z_lens = z_lens
         if verbose: print('deflector redshift: ', z_lens)
     else:
         z_lens = data_class.z_lens
@@ -681,6 +683,7 @@ def forward_model_single_iteration(data_class,
     t0 = time()
     if verbose and use_imaging_data:
         print('recovered source position: ', source_x, source_y)
+
     # verify that the lens equation is satisfied to high precision
     source_plane_image_solution = check_lens_equation_solution(source_x,
                                                                source_y,

@@ -1,5 +1,7 @@
 from samana.Data.data_base import ImagingDataBase
 import numpy as np
+from samana.deflector_redshift_sampling import sample_z_lens_from_theta_E
+
 
 class _J2145(ImagingDataBase):
 
@@ -189,6 +191,7 @@ class J2145_HST(_J2145):
         uncertainty_in_fluxes = False
         magnifications = np.array([1.0] * 4)
         image_data_type = 'HST814W'
+        self._redshift_sampling = False
         super(J2145_HST, self).__init__(x_image,
                                      y_image,
                                      magnifications,
@@ -197,6 +200,13 @@ class J2145_HST(_J2145):
                                      uncertainty_in_fluxes,
                                      supersample_factor,
                                      image_data_type)
+
+    def set_redshift_sampling(self, redshift_sampling):
+        self._redshift_sampling = redshift_sampling
+
+    @property
+    def redshift_sampling(self):
+        return self._redshift_sampling
 
 class J2145_HST_WIDEFIELD(_J2145):
     # satellite positions relative to image 0
@@ -265,6 +275,7 @@ class J2145_MIRI(_J2145):
         uncertainty_in_fluxes = False
         magnifications = np.array([1.0] * 4)
         image_data_type = 'MIRI560W'
+        self._redshift_sampling = False
         super(J2145_MIRI, self).__init__(x_image,
                                      y_image,
                                      magnifications,
@@ -273,3 +284,16 @@ class J2145_MIRI(_J2145):
                                      uncertainty_in_fluxes,
                                      supersample_factor,
                                      image_data_type)
+
+    def set_redshift_sampling(self, redshift_sampling):
+        self._redshift_sampling = redshift_sampling
+
+    @property
+    def redshift_sampling(self):
+        return self._redshift_sampling
+
+    def sample_z_lens(self, theta_E=0.94, astropy_instance=None):
+        z_lens = sample_z_lens_from_theta_E(theta_E,
+                                          self.z_source,
+                                          astropy_instance)
+        return np.round(z_lens, 2)

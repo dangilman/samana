@@ -1,6 +1,8 @@
 from samana.Data.data_base import ImagingDataBase
 import numpy as np
 from samana.Data.ImageData.j0405_814w import image_data, psf_error_map, psf_model
+from samana.deflector_redshift_sampling import sample_z_lens_from_theta_E
+
 
 class _DESJ0405(ImagingDataBase):
 
@@ -103,5 +105,20 @@ class J0405_HST(_DESJ0405):
         magnifications = np.array([1.00, 0.70, 1.07, 1.28])
         flux_uncertainties = np.array([0.03] * 3)
         uncertainty_in_fluxes = False
+        self._redshift_sampling = False
         super(J0405_HST, self).__init__(x_image, y_image, magnifications, image_position_uncertainties,
                                         flux_uncertainties, uncertainty_in_fluxes, supersample_factor)
+
+    def set_redshift_sampling(self, redshift_sampling):
+        self._redshift_sampling = redshift_sampling
+
+    @property
+    def redshift_sampling(self):
+        return self._redshift_sampling
+
+    def sample_z_lens(self, theta_E=0.70, astropy_instance=None):
+
+        z_lens = sample_z_lens_from_theta_E(theta_E,
+                                          self.z_source,
+                                          astropy_instance)
+        return np.round(z_lens, 2)

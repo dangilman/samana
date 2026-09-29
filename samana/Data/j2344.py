@@ -1,5 +1,7 @@
 from samana.Data.data_base import ImagingDataBase
 import numpy as np
+from samana.deflector_redshift_sampling import sample_z_lens_from_theta_E
+
 
 class _J2344(ImagingDataBase):
 
@@ -133,6 +135,7 @@ class J2344_MIRI(_J2344):
         image_position_uncertainties = [0.005] * 4  # 5 arcsec
         flux_uncertainties = None
         uncertainty_in_fluxes = False
+        self._redshift_sampling = False
         magnifications = np.array([1.0] * 4)
         image_data_type = 'MIRI560W'
         super(J2344_MIRI, self).__init__(x_image,
@@ -143,4 +146,18 @@ class J2344_MIRI(_J2344):
                                          uncertainty_in_fluxes,
                                          supersample_factor,
                                          image_data_type)
+
+    def set_redshift_sampling(self, redshift_sampling):
+        self._redshift_sampling = redshift_sampling
+
+    @property
+    def redshift_sampling(self):
+        return self._redshift_sampling
+
+    def sample_z_lens(self, theta_E=0.5, astropy_instance=None):
+
+        z_lens = sample_z_lens_from_theta_E(theta_E,
+                                          self.z_source,
+                                          astropy_instance)
+        return np.round(z_lens, 2)
 
