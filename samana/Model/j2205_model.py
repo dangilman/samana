@@ -263,7 +263,7 @@ class J2205ModelEPLM3M4Shear_NIRCam(J2205ModelEPLM3M4Shear):
                                    {}
                                    ]
 
-        add_uniform_component = False
+        add_uniform_component = True
         if add_uniform_component:
             lens_light_model_list += ['UNIFORM']
             kwargs_light_uniform, kwargs_light_sigma_uniform, kwargs_light_fixed_uniform, \

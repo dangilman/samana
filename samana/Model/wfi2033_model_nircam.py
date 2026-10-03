@@ -167,7 +167,7 @@ class WFI2033NircamModelEPLM3M4Shear(_WFI2033ModelNircamBase):
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
-        lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4', 'SHEAR', 'SIS', 'SIS']
+        lens_model_list_macro = ['EPL_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS', 'SIS']
         # used in forward modeling before swithcing to exact dataset from https://arxiv.org/pdf/2503.00099
         # kwargs_lens_macro = [
         #     {'theta_E': 1.0534360481718583, 'gamma': 2.171762510566768, 'e1': 0.1020681308697495, 'e2': -0.1443852511147689,
@@ -295,17 +295,8 @@ class WFI2033NircamModelEPLM3M4Shear_Qgrad(WFI2033NircamModelEPLM3M4Shear):
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None):
 
-        lens_model_list_macro = ['EPL_QGRAD_MULTIPOLE_M1M3M4', 'SHEAR', 'SIS', 'SIS']
-        # used in forward modeling before swithcing to exact dataset from https://arxiv.org/pdf/2503.00099
-        # kwargs_lens_macro = [
-        #     {'theta_E': 1.0534360481718583, 'gamma': 2.171762510566768, 'e1': 0.1020681308697495, 'e2': -0.1443852511147689,
-        #      'center_x': 0.10864691301522046, 'center_y': -0.027685070187009064,
-        #      'a1_a': 0.0, 'delta_phi_m1': 0.0, 'a3_a': 0.0, 'delta_phi_m3': 0.0,
-        #      'a4_a': 0.0, 'delta_phi_m4': 0.0},
-        #     {'gamma1': 0.15493703472766196, 'gamma2': -0.14691208945427703, 'ra_0': 0.0, 'dec_0': 0.0},
-        #     {'theta_E': 0.10385813844247266, 'center_x': 0.27996727180682557, 'center_y': 2.0044560444528003},
-        #     {'theta_E': 0.5004528970016093, 'center_x': -3.596830704357751, 'center_y': -0.21494848752766837}
-        # ]
+        lens_model_list_macro = ['EPL_QGRAD_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS', 'SIS']
+
         kwargs_lens_macro = [
             {'dq': 0.0, 'dphi': 0.0, 'theta_E': 1.0140790106976274, 'gamma': 1.8705312654746549, 'e1': -0.0467082787555793,
              'e2': 0.10796984573471909, 'center_x': -0.022432523430405006, 'center_y': -0.004210965016325727,
@@ -356,7 +347,7 @@ class WFI2033NircamModelEPLM3M4ShearObservedConvention_Qgrad(WFI2033NircamModelE
         # -1.578481764045944, 1.3689577497404388 first satellite
         # -2.165625453981066 -3.3645306348834603 second bigger satellite
 
-        lens_model_list_macro = ['EPL_QGRAD_MULTIPOLE_M1M3M4', 'SHEAR', 'SIS', 'SIS']
+        lens_model_list_macro = ['EPL_QGRAD_MULTIPOLE_M1M3M4_ELL', 'SHEAR', 'SIS', 'SIS']
         kwargs_lens_macro = [
             {'dq': 0.0, 'dphi': 0.0, 'theta_E': 0.9819352178051077, 'gamma': 2.1840487253312193, 'e1': -0.060421075894487926,
              'e2': -0.08953109900982839, 'center_x': -0.009227587610902884, 'center_y': 0.010009574939230213,

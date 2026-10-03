@@ -394,19 +394,22 @@ def adaptive_quadtree_magnification(
     return total, rs.n_calls, rs.n_pts
 
 
-def rasterize_leaves(leaves, box_size, npix):
-    """Paint accepted quadtree leaves onto an (npix, npix) image. Leaf edges are
-    rounded to pixel boundaries so adjacent leaves share the same integer edge --
-    no fp cracks at cell seams (the box center is a seam at every level)."""
+def rasterize_leaves(leaves, box_size, npix, eps=1e-9):
     lcx, lcy, lh, lsb = leaves
     img = np.zeros((npix, npix))
     px = box_size / npix
     half_box = box_size / 2.0
+    def idx(v):
+        # floor(v + 0.5) with a nudge: a boundary landing on a half-pixel is a rounding
+        # tie, and neighbouring leaves evaluate it to floats differing in the last bits
+        # (cancellation in lcx +/- lh + half_box), so round() sends them opposite ways
+        # and the straddled pixel is painted by neither.
+        return int(np.floor(v / px + 0.5 + eps))
     for k in range(len(lcx)):
-        i0 = max(int(round((lcx[k] - lh[k] + half_box) / px)), 0)
-        i1 = min(int(round((lcx[k] + lh[k] + half_box) / px)), npix)
-        j0 = max(int(round((lcy[k] - lh[k] + half_box) / px)), 0)
-        j1 = min(int(round((lcy[k] + lh[k] + half_box) / px)), npix)
+        i0 = max(idx(lcx[k] - lh[k] + half_box), 0)
+        i1 = min(idx(lcx[k] + lh[k] + half_box), npix)
+        j0 = max(idx(lcy[k] - lh[k] + half_box), 0)
+        j1 = min(idx(lcy[k] + lh[k] + half_box), npix)
         img[j0:j1, i0:i1] = lsb[k]
     return img
 

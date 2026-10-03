@@ -329,7 +329,10 @@ def quick_setup(lens_ID, use_qgrad=False):
             from samana.Model.j2026_model import J2026ModelEPLM3M4Shear as model_class
     elif lens_ID == 'B2045':
         from samana.Data.b2045 import B2045_MIRI as data_class
-        from samana.Model.b2045_model import B2045ModelEPLM3M4Shear as model_class
+        if use_qgrad:
+            from samana.Model.b2045_model import B2045ModelEPLM3M4Shear_Qgrad as model_class
+        else:
+            from samana.Model.b2045_model import B2045ModelEPLM3M4Shear as model_class
     elif lens_ID == 'HE0435':
         from samana.Data.he0435 import HE0435_NIRCAM as data_class
         if use_qgrad:
@@ -339,9 +342,9 @@ def quick_setup(lens_ID, use_qgrad=False):
     elif lens_ID == 'J0248':
         from samana.Data.j0248 import J0248_MIRI as data_class
         if use_qgrad:
-            from samana.Model.j0248_model import J0248ModelEPLM3M4ShearSatellite_Qgrad as model_class
+            from samana.Model.j0248_model import J0248ModelEPLM3M4ShearSpiral_Qgrad as model_class
         else:
-            from samana.Model.j0248_model import J0248ModelEPLM3M4ShearSatellite as model_class
+            from samana.Model.j0248_model import J0248ModelEPLM3M4ShearSpiral as model_class
     elif lens_ID == 'J0248_HST':
         from samana.Data.j0248 import J0248_HST as data_class
         if use_qgrad:
@@ -355,17 +358,23 @@ def quick_setup(lens_ID, use_qgrad=False):
         else:
             from samana.Model.j0259_model import J0259ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J0607':
+        from samana.Data.j0607 import J0607_HSTF160W as data_class
+        if use_qgrad:
+            from samana.Model.j0607_model import J0607ModelEPLM1M3M4ShearHST_Qgrad as model_class
+        else:
+            from samana.Model.j0607_model import J0607ModelEPLM1M3M4ShearHST as model_class
+    elif lens_ID == 'J0607_HST':
+        from samana.Data.j0607 import J0607_HSTF160W as data_class
+        if use_qgrad:
+            from samana.Model.j0607_model import J0607ModelEPLM1M3M4ShearHST_Qgrad as model_class
+        else:
+            from samana.Model.j0607_model import J0607ModelEPLM1M3M4ShearHST as model_class
+    elif lens_ID == 'J0607_MIRI':
         from samana.Data.j0607 import J0607_MIRI as data_class
         if use_qgrad:
             from samana.Model.j0607_model import J0607ModelEPLM3M4Shear_Qgrad as model_class
         else:
             from samana.Model.j0607_model import J0607ModelEPLM1M3M4Shear as model_class
-    elif lens_ID == 'J0607_HST':
-        from samana.Data.j0607 import J0607_HSTF160W as data_class
-        if use_qgrad:
-            from samana.Model.j0607_model import J0607ModelEPLM3M4Shear_Qgrad as model_class
-        else:
-            from samana.Model.j0607_model import J0607ModelEPLM1M3M4ShearHST as model_class
     elif lens_ID == 'J0608':
         from samana.Data.j0608 import J0608_MIRI as data_class
         if use_qgrad:
@@ -373,11 +382,11 @@ def quick_setup(lens_ID, use_qgrad=False):
         else:
             from samana.Model.j0608_model import J0608ModelEPLM3M4Shear as model_class
     elif lens_ID == 'J0659':
-        from samana.Data.j0659 import J0659_MIRI as data_class
+        from samana.Data.j0659 import J0659_NIRCAM as data_class
         if use_qgrad:
-            from samana.Model.j0659_model import J0659ModelEPLM1M3M4Shear_Qgrad as model_class
+            from samana.Model.j0659_model import J0659ModelEPLM1M3M4ShearNIRCam200_Qgrad as model_class
         else:
-            from samana.Model.j0659_model import J0659ModelEPLM1M3M4Shear as model_class
+            from samana.Model.j0659_model import J0659ModelEPLM1M3M4ShearNIRCam200 as model_class
     elif lens_ID == 'J1042':
         from samana.Data.j1042 import J1042_HST_160W as data_class
         if use_qgrad:
@@ -415,7 +424,7 @@ def quick_setup(lens_ID, use_qgrad=False):
         else:
             from samana.Model.j2205_model import J2205ModelEPLM3M4Shear_NIRCam as model_class
     elif lens_ID == 'J2205':
-        from samana.Data.j2205 import J2205_HST as data_class
+        from samana.Data.j2205 import J2205_NIRCAM as data_class
         if use_qgrad:
             from samana.Model.j2205_model import J2205ModelEPLM3M4Shear_NIRCam_Qgrad as model_class
         else:
@@ -493,11 +502,11 @@ def quick_setup(lens_ID, use_qgrad=False):
         else:
             from samana.Model.mg0414_model import MG0414ModelEPLM3M4Shear as model_class
     elif lens_ID == 'M1134':
-        from samana.Data.m1134 import M1134_HST as data_class
+        from samana.Data.m1134 import M1134_NIRCAM as data_class
         if use_qgrad:
-            from samana.Model.m1134_model import M1134ModelEPLM3M4ShearSatellite_Qgrad as model_class
+            from samana.Model.m1134_model import M1134NIRCamGroupSIS_Qgrad as model_class
         else:
-            from samana.Model.m1134_model import M1134ModelEPLM3M4ShearSatellite as model_class
+            from samana.Model.m1134_model import M1134NIRCamGroupSIS as model_class
     elif lens_ID == 'M1134_MIRI':
         from samana.Data.m1134 import M1134_MIRI as data_class
         if use_qgrad:
