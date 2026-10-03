@@ -220,10 +220,11 @@ def sample_prior(kwargs_prior):
         elif param_name == 'QGRAD_FROM_LIGHT':
             # implement a prior on ellipticty gradients/twists based on stellar isophote measurements
             # from Hao et al.
-            dq = np.random.normal(0.0, 0.05)
-            dq = max(min(dq, 0.15), -0.15)
-            dphi = np.random.normal(0.0, 0.1)
-            dphi = max(min(dphi, 0.2), -0.2)
+            dq_sigma, dq_max = 0.05, 0.15
+            dphi_sigma, dphi_max = 0.1, 0.2
+            dq = truncnorm.rvs(-dq_max / dq_sigma, dq_max / dq_sigma, loc=0.0, scale=dq_sigma)
+            dphi = truncnorm.rvs(-dphi_max / dphi_sigma, dphi_max / dphi_sigma, loc=0.0,
+                                 scale=dphi_sigma)
             prior_samples_dict['dq'] = dq
             prior_samples_dict['dphi'] = dphi
             sample_list += [dq, dphi]
