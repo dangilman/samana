@@ -350,14 +350,14 @@ class J2205ModelEPLM3M4Shear_NIRCam_Qgrad(J2205ModelEPLM3M4Shear_NIRCam):
                              ]
         kwargs_lower_lens = [
             {'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.4, 'e2': -0.4,
-             'dq': -0.2, 'dphi': -0.2, 'gamma': 1.6, 'a4_a': -0.1,
+             'dq': -0.3, 'dphi': -0.3, 'gamma': 1.6, 'a4_a': -0.1,
              'a1_a': -0.1, 'delta_phi_m1': -np.pi,'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
             {'gamma1': -0.5, 'gamma2': -0.5},
         #{'theta_E': 0.0, 'center_x': gal_x - 0.2, 'center_y': gal_y - 0.2}
         ]
         kwargs_upper_lens = [
             {'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.4, 'e2': 0.4, 'gamma': 2.5,
-             'dq': 0.2, 'dphi': 0.2,  'a4_a': 0.1,
+             'dq': 0.3, 'dphi': 0.3,  'a4_a': 0.1,
              'a1_a': 0.1, 'delta_phi_m1': np.pi,'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
             {'gamma1': 0.5, 'gamma2': 0.5},
         #{'theta_E': 0.5, 'center_x': gal_x + 0.2, 'center_y': gal_y + 0.2}
@@ -402,13 +402,13 @@ class J2205ModelEPLM3M4Shear_Qgrad(J2205ModelEPLM3M4Shear):
                              #{}
                              ]
         kwargs_lower_lens = [
-            {'dq': -0.2, 'dphi': -0.2, 'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.4, 'e2': -0.4, 'gamma': 1.7, 'a4_a': -0.1,
+            {'dq': -0.3, 'dphi': -0.3, 'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.4, 'e2': -0.4, 'gamma': 1.7, 'a4_a': -0.1,
              'a1_a': -0.1, 'delta_phi_m1': -np.pi,'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
             {'gamma1': -0.5, 'gamma2': -0.5},
         #{'theta_E': 0.0, 'center_x': gal_x - 0.2, 'center_y': gal_y - 0.2}
         ]
         kwargs_upper_lens = [
-            {'dq': 0.2, 'dphi': 0.2, 'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.4, 'e2': 0.4, 'gamma': 2.5, 'a4_a': 0.1,
+            {'dq': 0.3, 'dphi': 0.3, 'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.4, 'e2': 0.4, 'gamma': 2.5, 'a4_a': 0.1,
              'a1_a': 0.1, 'delta_phi_m1': np.pi,'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': 10.0},
             {'gamma1': 0.5, 'gamma2': 0.5},
         #{'theta_E': 0.5, 'center_x': gal_x + 0.2, 'center_y': gal_y + 0.2}

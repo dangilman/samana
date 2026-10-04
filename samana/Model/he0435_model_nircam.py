@@ -167,12 +167,12 @@ class HE0435ModelNircamEPLM1M3M4Shear_Qgrad(HE0435ModelNircamEPLM1M3M4Shear):
                              {'theta_E': 0.05, 'center_x': 0.05, 'center_y': 0.05}]
         kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}, {}]
         kwargs_lower_lens = [
-            {'dq': -0.2, 'dphi': -0.2, 'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.6, 'a4_a': -0.1,
+            {'dq': -0.3, 'dphi': -0.3, 'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.6, 'a4_a': -0.1,
              'a1_a': -0.1, 'delta_phi_m1': -np.pi, 'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -np.pi/8},
             {'gamma1': -0.5, 'gamma2': -0.5},
             {'theta_E': 0.001, 'center_x': self.gx_phys-0.5, 'center_y': self.gy_phys-0.5}]
         kwargs_upper_lens = [
-            {'dq': 0.2, 'dphi': 0.2, 'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.5, 'a4_a': 0.1,
+            {'dq': 0.3, 'dphi': 0.3, 'theta_E': 5.0, 'center_x': 10.0, 'center_y': 10.0, 'e1': 0.5, 'e2': 0.5, 'gamma': 2.5, 'a4_a': 0.1,
              'a1_a': 0.1, 'delta_phi_m1': np.pi, 'a3_a': 0.1, 'delta_phi_m3': np.pi/6, 'delta_phi_m4': np.pi/8},
             {'gamma1': 0.5, 'gamma2': 0.5},
         {'theta_E': 0.5, 'center_x': self.gx_phys+0.5, 'center_y': self.gy_phys+0.5}]
