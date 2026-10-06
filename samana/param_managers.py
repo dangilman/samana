@@ -312,8 +312,11 @@ class EPLQgradMultipole134LensMassPrior(EPLQgradMultipole134):
         self._sigmaxy = sigma_xy
         self._q = q
         self._gamma_ext = gamma_ext
-        super(EPLQgradMultipole134, self).__init__(kwargs_lens_init, a1a_init, a3a_init, a4a_init,
-                 delta_phi_m1, delta_phi_m3, delta_phi_m4, q, gamma_ext, dq, dphi)
+        super(EPLQgradMultipole134LensMassPrior, self).__init__(
+            kwargs_lens_init, a1a_init, a3a_init, a4a_init,
+            delta_phi_m1, delta_phi_m3, delta_phi_m4, q, gamma_ext,
+            dq, dphi
+        )
 
     def param_chi_square_penalty(self, args, q_min=0.1):
         """
