@@ -527,6 +527,12 @@ def macromodel_readout_function_0435(kwargs_solution, samples_fixed_dict):
     samples_macromodel.append(satellite_1_x)
     samples_macromodel.append(satellite_1_y)
     param_names_macro = param_names_epl + param_names_shear + param_names_satellite
+    if 'dq' in samples_fixed_dict.keys():
+        samples_macromodel.append(samples_fixed_dict['dq'])
+        param_names_macro += ['dq']
+    if 'dphi' in samples_fixed_dict.keys():
+        samples_macromodel.append(samples_fixed_dict['dphi'])
+        param_names_macro += ['dphi']
     return np.array(samples_macromodel), param_names_macro
 
 def macromodel_readout_function_2033(kwargs_solution, samples_fixed_dict):
@@ -552,6 +558,12 @@ def macromodel_readout_function_2033(kwargs_solution, samples_fixed_dict):
     samples_macromodel.append(satellite_2_x)
     samples_macromodel.append(satellite_2_y)
     param_names_macro = param_names_epl + param_names_shear + param_names_satellite_1 + param_names_satellite_2
+    if 'dq' in samples_fixed_dict.keys():
+        samples_macromodel.append(samples_fixed_dict['dq'])
+        param_names_macro += ['dq']
+    if 'dphi' in samples_fixed_dict.keys():
+        samples_macromodel.append(samples_fixed_dict['dphi'])
+        param_names_macro += ['dphi']
     return np.array(samples_macromodel), param_names_macro
 
 def macromodel_readout_function_3satellite(kwargs_solution, samples_fixed_dict):
@@ -585,6 +597,12 @@ def macromodel_readout_function_3satellite(kwargs_solution, samples_fixed_dict):
     samples_macromodel.append(satellite_3_y)
     param_names_macro = (param_names_epl + param_names_shear + param_names_satellite_1 +
                          param_names_satellite_2 + param_names_satellite_3)
+    if 'dq' in samples_fixed_dict.keys():
+        samples_macromodel.append(samples_fixed_dict['dq'])
+        param_names_macro += ['dq']
+    if 'dphi' in samples_fixed_dict.keys():
+        samples_macromodel.append(samples_fixed_dict['dphi'])
+        param_names_macro += ['dphi']
     return np.array(samples_macromodel), param_names_macro
 
 def macromodel_readout_function_eplshear(kwargs_solution,
