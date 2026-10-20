@@ -292,7 +292,7 @@ class J0659ModelEPLM1M3M4ShearNIRCam200(J0659ModelEPLM1M3M4Shear):
                              kwargs_upper_lens]
         return lens_model_list_macro, redshift_list_macro, index_lens_split, lens_model_params
 
-class J0659ModelEPLM1M3M4Shear_Qgrad(J0659ModelEPLM1M3M4Shear):
+class J0659ModelEPLM1M3M4Shear_Qgrad(J0659ModelEPLM1M3M4ShearNIRCam200):
 
     def setup_lens_model(self, kwargs_lens_macro_init=None, macromodel_samples_fixed=None, assume_star=False):
 
