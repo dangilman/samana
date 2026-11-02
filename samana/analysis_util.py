@@ -384,7 +384,7 @@ def quick_setup(lens_ID, use_qgrad=False):
     elif lens_ID == 'J0659':
         from samana.Data.j0659 import J0659_NIRCAM as data_class
         if use_qgrad:
-            from samana.Model.j0659_model import J0659ModelEPLM1M3M4ShearNIRCam200_Qgrad as model_class
+            from samana.Model.j0659_model import J0659ModelEPLM1M3M4Shear_Qgrad as model_class
         else:
             from samana.Model.j0659_model import J0659ModelEPLM1M3M4ShearNIRCam200 as model_class
     elif lens_ID == 'J1042':
