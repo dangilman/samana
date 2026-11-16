@@ -218,9 +218,10 @@ def sample_prior(kwargs_prior):
             sample_names += ['scale_multipole', 'a1_a', 'a3_a', 'a4_a', 'delta_phi_m1', 'delta_phi_m3', 'delta_phi_m4']
             joint_multipole_prior_used = True
         elif param_name == 'QGRAD_FROM_LIGHT':
-            # implement a prior on ellipticity gradients/twists based on stellar isophote measurements
-            # from Hao et al. (2006): their Eq. 7 double Gaussian in delta_eps = eps(R50) - eps(1.5 R50),
-            # converted to dq per e-fold (dq = delta_eps / ln 1.5) and truncated to the EPL_QGRAD table range
+            # implement a prior on ellipticity gradients/twists of the total mass, dq = dq/dln m (per e-fold) and
+            # dphi = dPA/dln m [rad]; the dq prior matches the narrow component of Hao et al. (2006) Eq. 7
+            # (dq = delta_eps / ln 1.5), which forward modeling stars + NFW halos shows is also appropriate for the total
+            # mass near theta_E (the broad component is erased by the halo); truncated to the EPL_QGRAD table range
             dphi_sigma, dphi_max = 0.1, 0.25
             dq_mean, dq_sigma = -0.044, 0.09
             dq_min, dq_max = -0.5, 0.3
