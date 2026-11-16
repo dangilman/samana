@@ -362,7 +362,7 @@ class M1134NIRCamGroupSIS_Qgrad(M1134NIRCamGroupSIS):
             _group_fixed['center_y'] = self.group_y
         kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}, _group_fixed]
         kwargs_lower_lens = [
-            {'dq': -0.3, 'dphi': -0.3, 'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.7, 'a4_a': -0.1,
+            {'dq': -0.5, 'dphi': -0.3, 'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.7, 'a4_a': -0.1,
              'a1_a': -0.1, 'delta_phi_m1': -np.pi, 'a3_a': -0.1, 'delta_phi_m3': -np.pi / 6, 'delta_phi_m4': -10.0},
             {'gamma1': -0.5, 'gamma2': -0.5},
             {'theta_E': 0.0, 'center_x': self.group_x - 5.0, 'center_y': self.group_y - 5.0}]

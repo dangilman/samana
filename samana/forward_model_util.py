@@ -218,13 +218,17 @@ def sample_prior(kwargs_prior):
             sample_names += ['scale_multipole', 'a1_a', 'a3_a', 'a4_a', 'delta_phi_m1', 'delta_phi_m3', 'delta_phi_m4']
             joint_multipole_prior_used = True
         elif param_name == 'QGRAD_FROM_LIGHT':
-            # implement a prior on ellipticty gradients/twists based on stellar isophote measurements
-            # from Hao et al.
+            # implement a prior on ellipticity gradients/twists based on stellar isophote measurements
+            # from Hao et al. (2006): their Eq. 7 double Gaussian in delta_eps = eps(R50) - eps(1.5 R50),
+            # converted to dq per e-fold (dq = delta_eps / ln 1.5) and truncated to the EPL_QGRAD table range
             dphi_sigma, dphi_max = 0.1, 0.25
-            dq_mean, dq_sigma, dq_max = -0.044, 0.086, 0.3
-            dq = truncnorm.rvs((-dq_max - dq_mean) / dq_sigma,
-                               (dq_max - dq_mean) / dq_sigma,
-                               loc=dq_mean, scale=dq_sigma)
+            dq_weights = [0.8957, 0.1043]  # component weights renormalized for the truncation
+            dq_means, dq_sigmas = [-0.0444, -0.3058], [0.0863, 0.0839]
+            dq_min, dq_max = -0.5, 0.3
+            k = 0 if np.random.uniform() < dq_weights[0] else 1
+            dq = truncnorm.rvs((dq_min - dq_means[k]) / dq_sigmas[k],
+                               (dq_max - dq_means[k]) / dq_sigmas[k],
+                               loc=dq_means[k], scale=dq_sigmas[k])
             dphi = truncnorm.rvs(-dphi_max / dphi_sigma, dphi_max / dphi_sigma, loc=0.0,
                                  scale=dphi_sigma)
             prior_samples_dict['dq'] = dq

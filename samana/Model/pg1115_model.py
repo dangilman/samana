@@ -178,7 +178,7 @@ class PG1115ModelEPLM1M3M4Shear_Qgrad(PG1115ModelEPLM1M3M4Shear):
                              {'gamma1': 0.05, 'gamma2': 0.05}]
         kwargs_lens_fixed = [{}, {'ra_0': 0.0, 'dec_0': 0.0}]
         kwargs_lower_lens = [
-            {'dq': -0.3, 'dphi': -0.3, 'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.6, 'a4_a': -0.1,
+            {'dq': -0.5, 'dphi': -0.3, 'theta_E': 0.05, 'center_x': -10.0, 'center_y': -10.0, 'e1': -0.5, 'e2': -0.5, 'gamma': 1.6, 'a4_a': -0.1,
              'a1_a': -0.1, 'delta_phi_m1': -np.pi,'a3_a': -0.1, 'delta_phi_m3': -np.pi/6, 'delta_phi_m4': -10.0},
             {'gamma1': -0.5, 'gamma2': -0.5}]
         kwargs_upper_lens = [
